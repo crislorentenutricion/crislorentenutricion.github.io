@@ -94,6 +94,8 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .main-nav ul { display: flex; align-items: center; gap: 32px; }
 .main-nav a { font-size: 0.95rem; color: var(--color-black); font-weight: var(--font-weight-regular); }
 .main-nav a:hover, .main-nav a.active { color: var(--color-green); text-decoration: none; }
+.main-nav .btn-primary { color: var(--color-white); }
+.main-nav .btn-primary:hover { color: var(--color-white); }
 .menu-toggle { display: none; flex-direction: column; justify-content: space-between; width: 24px; height: 18px; background: none; border: none; cursor: pointer; padding: 0; }
 .menu-toggle span { display: block; height: 2px; background-color: var(--color-black); border-radius: 2px; transition: all 0.3s ease; }
 
@@ -102,6 +104,8 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
 .hero-centered { grid-template-columns: 1fr; max-width: 700px; text-align: center; }
 .hero-text h1 { margin-bottom: 20px; }
+.hero-image { display: block; }
+.hero-image img { border-radius: 16px; width: 100%; height: 400px; object-fit: cover; object-position: top; display: block; }
 .hero-subtitle { color: var(--color-gray); font-size: 1.1rem; margin-bottom: 32px; line-height: 1.7; }
 .hero-img-placeholder { background-color: var(--color-green-light); border-radius: 16px; height: 400px; width: 100%; }
 
@@ -178,6 +182,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 /* About */
 .about-hero-inner { display: grid; grid-template-columns: 280px 1fr; gap: 60px; align-items: center; }
 .about-img-placeholder { background-color: var(--color-green-light); border-radius: 50%; width: 280px; height: 280px; flex-shrink: 0; }
+.about-hero-inner img { border-radius: 50%; width: 280px; height: 280px; object-fit: cover; object-position: top; flex-shrink: 0; }
 .about-title { font-size: 1rem; color: var(--color-green); font-weight: var(--font-weight-semibold); margin-bottom: 16px; margin-top: 8px; }
 .about-intro p { color: var(--color-gray); line-height: 1.7; }
 .prose-container { max-width: 720px; margin: 0 auto; }
@@ -238,6 +243,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
   .about-hero-inner { grid-template-columns: 1fr; text-align: center; }
   .about-img-placeholder { margin: 0 auto; }
+  .about-hero-inner img { margin: 0 auto; display: block; }
   .values-grid { grid-template-columns: 1fr; }
   .categories-grid { grid-template-columns: 1fr; }
 }
