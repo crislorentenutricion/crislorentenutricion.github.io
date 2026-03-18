@@ -26,6 +26,8 @@ jobs:
 
       - name: Build with 11ty
         run: npm run build
+        env:
+          AMPLITUDE_API_KEY: ${{ secrets.AMPLITUDE_API_KEY }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
