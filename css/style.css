@@ -251,6 +251,10 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .error-content h2 { margin-bottom: 16px; }
 .error-content p { color: var(--color-gray); margin-bottom: 32px; }
 
+/* WhatsApp floating button */
+.whatsapp-btn { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background-color: #25d366; color: white; box-shadow: 0 4px 16px rgba(0,0,0,0.18); transition: transform 0.2s, box-shadow 0.2s; text-decoration: none; }
+.whatsapp-btn:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(0,0,0,0.22); text-decoration: none; color: white; }
+
 /* Instagram section */
 .instagram-cta { max-width: 520px; margin: 0 auto; text-align: center; }
 .instagram-avatar-wrap { display: inline-block; padding: 3px; border-radius: 50%; background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af); margin-bottom: 24px; }
