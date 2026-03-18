@@ -2,42 +2,72 @@
 
 ## Qué es este repo
 
-Sitio web estático de **Cris Lorente Nutrición** alojado en GitHub Pages. HTML/CSS/JS puro, sin generador estático.
+Sitio web estático de **Cris Lorente Nutrición** alojado en GitHub Pages. Generado con **11ty (Eleventy) v3** a partir de templates Nunjucks en `src/`. El output es HTML estático servido desde la rama `gh-pages` via GitHub Actions.
 
 > **Convenciones de negocio, clínica e integraciones** están en el directorio padre (`../`). Este CLAUDE.md solo cubre la gestión técnica de la web.
 
 ## Workflow de edición
 
-```bash
-# editar archivo(s)
-git add archivo.html css/style.css
-git commit -m "descripción del cambio"
-git push
-# GitHub Pages se actualiza en ~1-2 minutos
+```
+editar src/**/*.njk o src/_data/*.json
+  → commit + push a main
+  → GitHub Actions: build 11ty → despliega _site/ a gh-pages
+  → web live en ~2 min
 ```
 
-**Regla**: los cambios en la web se guardan primero como commit sin push para revisión de Cristina antes de publicar. Solo hacer push con su aprobación.
+**Regla**: los cambios se guardan como commit sin push para revisión de Cristina. Solo hacer push con su aprobación.
 
 ## Estructura de archivos
 
 ```
-├── index.html              # Inicio
-├── servicios.html          # Servicios + FAQ + formulario de contacto
-├── sobre-mi.html           # Sobre mí
-├── blog/index.html         # Hub "Aprende" (3 categorías)
-├── legal/
-│   ├── privacidad.html     # Pendiente textos definitivos
-│   ├── aviso-legal.html    # Pendiente textos definitivos
-│   └── condiciones.html    # Pendiente textos definitivos
-├── css/style.css           # Design system completo
-├── js/main.js              # Menú hamburguesa, nav activo, scroll suave
-├── img/
-│   ├── cristina.jpg        # Foto lifestyle → INICIO
-│   └── cristina-profesional.jpg  # Foto profesional → SOBRE MÍ
-├── sitemap.xml
-├── robots.txt
-└── 404.html
+├── src/                            ← EDITAR AQUÍ
+│   ├── _data/
+│   │   ├── blog.json               ← "BD" del blog: 18 posts
+│   │   └── site.json               ← datos globales (nombre, URL, redes)
+│   ├── _includes/
+│   │   ├── layouts/
+│   │   │   ├── base.njk            ← HTML base (<html>, <head>, scripts)
+│   │   │   ├── page.njk            ← layout para páginas normales
+│   │   │   └── post.njk            ← layout para artículos de blog
+│   │   ├── header.njk              ← navegación
+│   │   ├── footer.njk              ← footer
+│   │   ├── blog-card.njk           ← card de blog (homepage + index)
+│   │   ├── cta-valoracion.njk      ← CTA "Reserva gratuita"
+│   │   └── head-meta.njk           ← meta tags, OG, canonical
+│   ├── index.njk                   ← Inicio
+│   ├── servicios.njk               ← Servicios + FAQ + formulario
+│   ├── sobre-mi.njk                ← Sobre mí
+│   ├── 404.njk                     ← Error (permalink → /404.html)
+│   ├── blog/
+│   │   ├── index.njk               ← Hub "Aprende" (filtros por categoría)
+│   │   └── posts/                  ← 18 posts (solo contenido, sin boilerplate)
+│   ├── legal/
+│   │   ├── privacidad.njk
+│   │   ├── aviso-legal.njk
+│   │   └── condiciones.njk
+│   ├── css/style.css               ← Design system completo
+│   ├── js/main.js                  ← Menú hamburguesa, nav activo, scroll
+│   ├── img/                        ← Imágenes
+│   ├── sitemap.xml                 ← Sitemap estático (actualizar al añadir páginas)
+│   └── robots.txt
+├── .eleventy.js                    ← Config 11ty (input: src, output: _site)
+├── package.json                    ← Dependencia: @11ty/eleventy
+├── .github/workflows/deploy.yml   ← CI/CD: build + deploy automático
+└── _site/                          ← OUTPUT generado (gitignoreado)
 ```
+
+## URLs generadas por 11ty
+
+| Página | URL |
+|--------|-----|
+| Inicio | `/` |
+| Servicios | `/servicios/` |
+| Sobre mí | `/sobre-mi/` |
+| Blog hub | `/blog/` |
+| Post educación | `/blog/educacion/{slug}/` |
+| Post CristiFood | `/blog/cristifood/{slug}/` |
+| Post Bienestar | `/blog/bienestar/{slug}/` |
+| Legal | `/legal/privacidad/`, `/legal/aviso-legal/`, `/legal/condiciones/` |
 
 ## Design system
 
@@ -84,17 +114,25 @@ Alternar fondos blanco/crema para ritmo visual. Padding vertical: 80px (desktop)
 Inicio | Servicios | Sobre mí | Aprende (blog) | [botón] Reserva gratuita
 ```
 
-El botón "Reserva gratuita" apunta a `servicios.html#formulario-contacto`.
+El botón "Reserva gratuita" apunta a `/servicios/#formulario-contacto`.
+
+## Blog: añadir un post nuevo
+
+1. Añadir entrada a `src/_data/blog.json` (slug, title, description, category, date, image, imageAlt)
+2. Crear `src/blog/posts/{slug}.njk` con frontmatter + contenido
+3. Subir imagen a `src/img/blog/{slug}.jpg`
+4. Commit + push → GitHub Actions genera y despliega
+
+O usar la skill `/publicar-post` que automatiza todo desde Notion.
 
 ## SEO implementado
 
-- `<meta name="description">` en todas las páginas
-- Open Graph (`og:title`, `og:description`, `og:image`, `og:url`)
-- Twitter card en index.html
-- `<link rel="canonical">` en todas las páginas
-- `sitemap.xml` + `robots.txt`
+- Meta description + Open Graph + Twitter card en todas las páginas (via `head-meta.njk`)
+- `<link rel="canonical">` dinámico via `{{ site.url }}{{ page.url }}`
+- `sitemap.xml` con las 26 URLs del sitio
+- `robots.txt`
 
-**Al crear páginas nuevas**: mantener meta description y Open Graph.
+**Al crear páginas nuevas**: añadir frontmatter `title`, `description` y actualizar `sitemap.xml`.
 
 ## Bugs CSS conocidos y fixes aplicados
 
@@ -125,5 +163,5 @@ Cristina ha decidido **no incluir NIF ni dirección postal**. Los archivos de `l
 1. **Marca**: "asesoría nutricional personalizada" (nunca "alimentaria"). "Menú mensual" (nunca "de la semana").
 2. **Tono**: cercano, empático, sin tecnicismos, sin juzgar.
 3. **Legal**: cualquier cambio en textos legales requiere confirmación de Cristina.
-4. **SEO**: mantener meta description y Open Graph en cada página nueva.
+4. **SEO**: mantener meta description y Open Graph en cada página nueva. Actualizar sitemap.xml.
 5. **Convenciones completas**: para negocio, clínica, integraciones → consultar `../convenciones/`.
