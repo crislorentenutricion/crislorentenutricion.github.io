@@ -50,17 +50,17 @@
       <div class="container">
         <h2 class="section-title">Categorías</h2>
         <div class="categories-grid">
-          <div class="category-card card">
+          <div class="category-card card" data-filter="educacion" role="button" tabindex="0" aria-pressed="false">
             <div class="category-icon">🧠</div>
             <h3>Educación</h3>
             <p>Nutrición sin mitos. Entiende cómo funciona tu cuerpo y toma decisiones informadas.</p>
           </div>
-          <div class="category-card card">
+          <div class="category-card card" data-filter="cristifood" role="button" tabindex="0" aria-pressed="false">
             <div class="category-icon">🍳</div>
             <h3>CristiFood</h3>
             <p>Recetas rápidas, sabrosas y saludables. Para semanas reales, no para instágram.</p>
           </div>
-          <div class="category-card card">
+          <div class="category-card card" data-filter="bienestar" role="button" tabindex="0" aria-pressed="false">
             <div class="category-icon">🌿</div>
             <h3>Bienestar</h3>
             <p>Estrés, sueño, hormonas, emociones. Todo lo que afecta a cómo comes y cómo te sientes.</p>
@@ -71,13 +71,7 @@
 
     <section class="section section-cream">
       <div class="container">
-        <h2 class="section-title">Todos los artículos</h2>
-        <div class="blog-filters">
-          <button class="filter-btn active" data-filter="all">Todos</button>
-          <button class="filter-btn" data-filter="educacion">🧠 Educación</button>
-          <button class="filter-btn" data-filter="cristifood">🍳 CristiFood</button>
-          <button class="filter-btn" data-filter="bienestar">🌿 Bienestar</button>
-        </div>
+        <h2 class="section-title" id="articles-title">Todos los artículos</h2>
         <div class="blog-grid">
 
           <!-- Granada, de sueño a realidad — 2026-03-11 -->
@@ -315,6 +309,9 @@
           </a>
 
         </div>
+        <div class="blog-more-wrap" id="blog-more-wrap" style="display:none; text-align:center; margin-top:32px;">
+          <button class="btn btn-secondary" id="btn-ver-mas">Ver más artículos</button>
+        </div>
       </div>
     </section>
   </main>
@@ -339,19 +336,73 @@
   </footer>
   <script src="../js/main.js"></script>
   <script>
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', function () {
-        const filter = this.dataset.filter;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        document.querySelectorAll('.blog-card-link').forEach(card => {
-          if (filter === 'all' || card.dataset.category === filter) {
-            card.style.display = '';
-          } else {
-            card.style.display = 'none';
-          }
-        });
+    const categoryNames = {
+      educacion: '🧠 Educación',
+      cristifood: '🍳 CristiFood',
+      bienestar: '🌿 Bienestar'
+    };
+    const ROW_SIZE = 3;
+    const moreWrap = document.getElementById('blog-more-wrap');
+    const btnVerMas = document.getElementById('btn-ver-mas');
+
+    function applyFilter(filter) {
+      const allCards = Array.from(document.querySelectorAll('.blog-card-link'));
+      const matching = filter === 'all'
+        ? allCards
+        : allCards.filter(a => a.dataset.category === filter);
+      const rest = filter === 'all'
+        ? []
+        : allCards.filter(a => a.dataset.category !== filter);
+
+      // Hide non-matching
+      rest.forEach(a => a.style.display = 'none');
+
+      // Show only first row of matching, hide the rest
+      matching.forEach((a, i) => {
+        a.style.display = i < ROW_SIZE ? '' : 'none';
       });
+
+      // Show "Ver más" button if there are hidden matching articles
+      if (matching.length > ROW_SIZE) {
+        const hidden = matching.length - ROW_SIZE;
+        btnVerMas.textContent = `Ver ${hidden} artículo${hidden > 1 ? 's' : ''} más`;
+        moreWrap.style.display = '';
+        btnVerMas.onclick = () => {
+          matching.forEach(a => a.style.display = '');
+          moreWrap.style.display = 'none';
+        };
+      } else {
+        moreWrap.style.display = 'none';
+      }
+    }
+
+    // Initial state: show first row of all articles
+    applyFilter('all');
+
+    document.querySelectorAll('.category-card[data-filter]').forEach(card => {
+      function toggleFilter() {
+        const filter = card.dataset.filter;
+        const isActive = card.classList.contains('active');
+        const title = document.getElementById('articles-title');
+
+        document.querySelectorAll('.category-card[data-filter]').forEach(c => {
+          c.classList.remove('active');
+          c.setAttribute('aria-pressed', 'false');
+        });
+
+        if (isActive) {
+          title.textContent = 'Todos los artículos';
+          applyFilter('all');
+        } else {
+          card.classList.add('active');
+          card.setAttribute('aria-pressed', 'true');
+          title.textContent = categoryNames[filter];
+          applyFilter(filter);
+        }
+      }
+
+      card.addEventListener('click', toggleFilter);
+      card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFilter(); } });
     });
   </script>
 </body>
