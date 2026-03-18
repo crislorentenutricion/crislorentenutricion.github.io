@@ -254,7 +254,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 /* Instagram section */
 .instagram-cta { max-width: 520px; margin: 0 auto; text-align: center; }
 .instagram-avatar-wrap { display: inline-block; padding: 3px; border-radius: 50%; background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af); margin-bottom: 24px; }
-.instagram-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; object-position: top; display: block; border: 3px solid white; }
+.instagram-avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; object-position: 50% 20%; display: block; border: 3px solid white; }
 .instagram-subtitle { color: var(--color-gray); font-size: 1.05rem; line-height: 1.7; margin-bottom: 32px; }
 .btn-instagram { display: inline-flex; align-items: center; gap: 10px; background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af); color: var(--color-white); border: none; padding: 14px 32px; border-radius: var(--border-radius-btn); font-family: var(--font-family); font-size: 0.95rem; font-weight: var(--font-weight-semibold); cursor: pointer; transition: opacity 0.2s, transform 0.2s; text-decoration: none; line-height: 1; }
 .btn-instagram:hover { opacity: 0.88; transform: translateY(-2px); text-decoration: none; color: var(--color-white); }
@@ -280,8 +280,8 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 @media (max-width: 900px) {
   .steps-grid { grid-template-columns: repeat(2, 1fr); }
   .hero-inner { grid-template-columns: 1fr; }
-  .hero-image { max-width: 280px; margin: 0 auto; }
-  .hero-image img { height: 320px; object-fit: cover; object-position: 50% 15%; }
+  .hero-image { max-width: 220px; margin: 0 auto; }
+  .hero-image img { height: 260px; object-fit: cover; object-position: 50% 12%; }
   .problem-solution { grid-template-columns: 1fr; gap: 40px; }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
   .about-hero-inner { grid-template-columns: 1fr; text-align: center; }
