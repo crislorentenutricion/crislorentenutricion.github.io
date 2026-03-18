@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://crislorentenutricion.github.io/sitemap.xml
