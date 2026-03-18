@@ -1,0 +1,17 @@
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/" class="logo">{{ site.name }}</a>
+      <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="main-nav" id="main-nav">
+        <ul>
+          <li><a href="/" {% if navActive == 'inicio' %}class="active"{% endif %}>Inicio</a></li>
+          <li><a href="/servicios/" {% if navActive == 'servicios' %}class="active"{% endif %}>Servicios</a></li>
+          <li><a href="/sobre-mi/" {% if navActive == 'sobre-mi' %}class="active"{% endif %}>Sobre mí</a></li>
+          <li><a href="/blog/" {% if navActive == 'blog' %}class="active"{% endif %}>Aprende</a></li>
+          <li><a href="/servicios/#formulario-contacto" class="btn btn-primary btn-sm">Reserva gratuita</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>

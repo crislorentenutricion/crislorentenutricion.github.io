@@ -1,0 +1,120 @@
+---
+layout: layouts/base.njk
+title: Aprende
+description: Artículos sobre nutrición, recetas saludables y bienestar. Educación, CristiFood y consejos para cuidarte sin obsesionarte.
+ogImage: /img/cristina.jpg
+navActive: blog
+---
+
+<section class="hero section-cream">
+  <div class="container hero-inner hero-centered">
+    <div class="hero-text">
+      <h1>Aprende a comer bien con tu vida real</h1>
+      <p class="hero-subtitle">Nutrición sin mitos, recetas rápidas y consejos de bienestar para mujeres ocupadas.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section section-white">
+  <div class="container">
+    <h2 class="section-title">Categorías</h2>
+    <div class="categories-grid">
+      <div class="category-card card" data-filter="educacion" role="button" tabindex="0" aria-pressed="false">
+        <div class="category-icon">🧠</div>
+        <h3>Educación</h3>
+        <p>Nutrición sin mitos. Entiende cómo funciona tu cuerpo y toma decisiones informadas.</p>
+      </div>
+      <div class="category-card card" data-filter="cristifood" role="button" tabindex="0" aria-pressed="false">
+        <div class="category-icon">🍳</div>
+        <h3>CristiFood</h3>
+        <p>Recetas sencillas y nutritivas para comer bien sin pasarte horas en la cocina.</p>
+      </div>
+      <div class="category-card card" data-filter="bienestar" role="button" tabindex="0" aria-pressed="false">
+        <div class="category-icon">🌿</div>
+        <h3>Bienestar</h3>
+        <p>Estrés, sueño, hormonas, emociones. Todo lo que afecta a cómo comes y cómo te sientes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-cream">
+  <div class="container">
+    <h2 class="section-title" id="articles-title">Todos los artículos</h2>
+    <div class="blog-grid">
+      {% for post in blog | ordenarPorFecha %}
+        {% set post = post %}
+        {% include "blog-card.njk" %}
+      {% endfor %}
+    </div>
+    <div class="blog-more-wrap" id="blog-more-wrap" style="display:none; text-align:center; margin-top:32px;">
+      <button class="btn btn-secondary" id="btn-ver-mas">Ver más artículos</button>
+    </div>
+  </div>
+</section>
+
+<script>
+  const categoryNames = {
+    educacion: '🧠 Educación',
+    cristifood: '🍳 CristiFood',
+    bienestar: '🌿 Bienestar'
+  };
+  const ROW_SIZE = 3;
+  const moreWrap = document.getElementById('blog-more-wrap');
+  const btnVerMas = document.getElementById('btn-ver-mas');
+
+  function applyFilter(filter) {
+    const allCards = Array.from(document.querySelectorAll('.blog-card-link'));
+    const matching = filter === 'all'
+      ? allCards
+      : allCards.filter(a => a.dataset.category === filter);
+    const rest = filter === 'all'
+      ? []
+      : allCards.filter(a => a.dataset.category !== filter);
+
+    rest.forEach(a => a.style.display = 'none');
+    matching.forEach((a, i) => {
+      a.style.display = i < ROW_SIZE ? '' : 'none';
+    });
+
+    if (matching.length > ROW_SIZE) {
+      const hidden = matching.length - ROW_SIZE;
+      btnVerMas.textContent = `Ver ${hidden} artículo${hidden > 1 ? 's' : ''} más`;
+      moreWrap.style.display = '';
+      btnVerMas.onclick = () => {
+        matching.forEach(a => a.style.display = '');
+        moreWrap.style.display = 'none';
+      };
+    } else {
+      moreWrap.style.display = 'none';
+    }
+  }
+
+  applyFilter('all');
+
+  document.querySelectorAll('.category-card[data-filter]').forEach(card => {
+    function toggleFilter() {
+      const filter = card.dataset.filter;
+      const isActive = card.classList.contains('active');
+      const title = document.getElementById('articles-title');
+
+      document.querySelectorAll('.category-card[data-filter]').forEach(c => {
+        c.classList.remove('active');
+        c.setAttribute('aria-pressed', 'false');
+      });
+
+      if (isActive) {
+        title.textContent = 'Todos los artículos';
+        applyFilter('all');
+      } else {
+        card.classList.add('active');
+        card.setAttribute('aria-pressed', 'true');
+        title.textContent = categoryNames[filter];
+        applyFilter(filter);
+      }
+    }
+
+    card.addEventListener('click', toggleFilter);
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFilter(); } });
+  });
+</script>

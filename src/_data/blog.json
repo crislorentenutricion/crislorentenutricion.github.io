@@ -1,0 +1,200 @@
+[
+  {
+    "slug": "comer-sano-no-es-comer-menos",
+    "title": "Comer sano no es comer menos",
+    "description": "Comer bien no significa comer menos, sino comer mejor. Te cuento qué significa realmente alimentarse de forma saludable y cómo aplicarlo en tu día a día.",
+    "category": "educacion",
+    "categoryLabel": "Educación",
+    "date": "2025-08-24",
+    "image": "comer-sano-no-es-comer-menos.jpg",
+    "imageAlt": "Comer sano no es comer menos",
+    "featured": false
+  },
+  {
+    "slug": "como-empezar-a-cuidarte-sin-dietas-ni-obsesiones",
+    "title": "Cómo empezar a cuidarte sin dietas ni obsesiones",
+    "description": "6 pasos para empezar a cuidarte desde el respeto a tu cuerpo, sin restricciones ni culpa. Cuidarte no debería ser sinónimo de pasar hambre.",
+    "category": "educacion",
+    "categoryLabel": "Educación",
+    "date": "2025-06-20",
+    "image": "como-empezar-cuidarte.jpg",
+    "imageAlt": "Cómo empezar a cuidarte sin dietas ni obsesiones",
+    "featured": false
+  },
+  {
+    "slug": "como-llegue-hasta-aqui",
+    "title": "Cómo llegué hasta aquí (y por qué no creo en las dietas estrictas)",
+    "description": "Mi historia personal: cocina, farmacia, dietética y la culpa que casi me rompe. Por qué rechazo las dietas estrictas y cómo eso se convirtió en mi vocación.",
+    "category": "educacion",
+    "categoryLabel": "Educación",
+    "date": "2026-03-04",
+    "image": "como-llegue-hasta-aqui.jpg",
+    "imageAlt": "Cómo llegué hasta aquí",
+    "featured": true
+  },
+  {
+    "slug": "como-organizar-tus-comidas",
+    "title": "Cómo organizar tus comidas (sin morir en el intento)",
+    "description": "Guía básica y realista para planificar tus comidas semanales: menú, lista de la compra y batch cooking sin agobios.",
+    "category": "educacion",
+    "categoryLabel": "Educación",
+    "date": "2025-06-09",
+    "image": "como-organizar-comidas.jpg",
+    "imageAlt": "Cómo organizar tus comidas",
+    "featured": false
+  },
+  {
+    "slug": "5-ensaladas-de-verano",
+    "title": "5 ensaladas de verano que debes probar",
+    "description": "Cinco recetas de ensaladas frescas, completas y sabrosas para el verano. Para tupper, playa o cenas en casa.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-05-21",
+    "image": "5-ensaladas-de-verano.jpg",
+    "imageAlt": "5 ensaladas de verano",
+    "featured": false
+  },
+  {
+    "slug": "agua-de-frutas",
+    "title": "Agua de frutas",
+    "description": "Agua infusionada con limón, naranja, frambuesas y menta. Refrescante, antioxidante y perfecta para hidratarte sin esfuerzo.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-06-13",
+    "image": "agua-de-frutas.jpg",
+    "imageAlt": "Agua de frutas",
+    "featured": false
+  },
+  {
+    "slug": "batido-veraniego",
+    "title": "Batido veraniego",
+    "description": "Un desayuno fresco y lleno de energía. Batido de plátano y frutos rojos, cremoso, saciante y 100% personalizable.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-07-19",
+    "image": "batido-veraniego.jpg",
+    "imageAlt": "Batido veraniego de plátano y frutos rojos",
+    "featured": false
+  },
+  {
+    "slug": "galletas-de-avena-sin-azucar",
+    "title": "Galletas de avena sin azúcar",
+    "description": "Galletas saludables sin azúcar añadido, ricas en fibra y listas en 30 minutos. El snack perfecto para cuando el cuerpo te pide algo dulce.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-06-13",
+    "image": "galletas-de-avena.jpg",
+    "imageAlt": "Galletas de avena sin azúcar",
+    "featured": false
+  },
+  {
+    "slug": "pizza-casera",
+    "title": "Pizza casera",
+    "description": "Masa de pizza casera desde cero: tierna por dentro, crujiente por fuera. Con base de tomate, mozzarella, queso de cabra y pollo salteado.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-11-10",
+    "image": "pizza-casera.jpg",
+    "imageAlt": "Pizza casera",
+    "featured": true
+  },
+  {
+    "slug": "pollo-al-horno-con-arroz-y-verduras",
+    "title": "Pollo al horno con arroz y verduras",
+    "description": "Comida completa y equilibrada en 45 minutos. Pollo marinado al horno con arroz integral salteado con verduras de temporada.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-06-13",
+    "image": "pollo-al-horno.jpg",
+    "imageAlt": "Pollo al horno con arroz y verduras",
+    "featured": false
+  },
+  {
+    "slug": "tortilla-de-espinacas-y-cebolla",
+    "title": "Tortilla de espinacas y cebolla",
+    "description": "Cena ligera y nutritiva lista en 20 minutos. Baja en carbohidratos, alta en proteína y con todo el sabor.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-06-13",
+    "image": "tortilla-espinacas.jpg",
+    "imageAlt": "Tortilla de espinacas y cebolla",
+    "featured": false
+  },
+  {
+    "slug": "tortilla-de-patata-con-verduras",
+    "title": "Tortilla de patata con verduras",
+    "description": "La tortilla de patata de siempre, enriquecida con calabacín, pimiento y berenjena. Más fibra, más vitaminas, igual de buena.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-07-20",
+    "image": "tortilla-patata.jpg",
+    "imageAlt": "Tortilla de patata con verduras",
+    "featured": false
+  },
+  {
+    "slug": "tostadas-integrales-con-aguacate-y-huevo",
+    "title": "Tostadas integrales con aguacate y huevo",
+    "description": "Desayuno o cena rápida en 15 minutos, alta en proteína y fibra. Tostadas integrales con huevos revueltos cremosos y aguacate.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2025-06-05",
+    "image": "tostadas-aguacate-huevo.jpg",
+    "imageAlt": "Tostadas integrales con aguacate y huevo",
+    "featured": false
+  },
+  {
+    "slug": "bienestar-personal-introduccion",
+    "title": "Bienestar personal: introducción al bienestar y salud mental",
+    "description": "Primera publicación del apartado Bienestar: un espacio de salud integral para compartir lo que me hace sentir bien, desde el selfcare hasta los viajes.",
+    "category": "bienestar",
+    "categoryLabel": "Bienestar",
+    "date": "2025-06-05",
+    "image": "bienestar-personal.jpg",
+    "imageAlt": "Bienestar personal",
+    "featured": false
+  },
+  {
+    "slug": "cuando-acepte-que-tenia-un-cuerpo",
+    "title": "Cuando acepté que tenía un cuerpo",
+    "description": "De vivir en la mente preocupada por el qué dirán, a valorar y disfrutar mi cuerpo tal como es. Querernos y aceptarnos no es un destino, sino un camino.",
+    "category": "bienestar",
+    "categoryLabel": "Bienestar",
+    "date": "2025-07-07",
+    "image": "cuando-acepte-cuerpo.jpg",
+    "imageAlt": "Cuando acepté que tenía un cuerpo",
+    "featured": false
+  },
+  {
+    "slug": "elegir-nuestro-destino",
+    "title": "Elegir nuestro destino o cómo llegar a él",
+    "description": "Todos compartimos el mismo destino. Lo que nos diferencia es cómo elegimos recorrer el camino. Una reflexión sobre vivir con propósito.",
+    "category": "bienestar",
+    "categoryLabel": "Bienestar",
+    "date": "2025-10-12",
+    "image": "elegir-nuestro-destino.jpg",
+    "imageAlt": "Elegir nuestro destino",
+    "featured": false
+  },
+  {
+    "slug": "granada-de-sueno-a-realidad",
+    "title": "Granada, de sueño a realidad — Día 1",
+    "description": "El primer viaje de 2026, lleno de cosas bonitas, desconexión y paz. Granada, el Albaicín, el Bar Bultaco y dos personas muy especiales.",
+    "category": "bienestar",
+    "categoryLabel": "Bienestar",
+    "date": "2026-03-11",
+    "image": "granada-viaje.jpg",
+    "imageAlt": "Granada, de sueño a realidad",
+    "featured": true
+  },
+  {
+    "slug": "la-importancia-de-dejar-ir",
+    "title": "La importancia de dejar ir lo que no es para ti",
+    "description": "Soltar no siempre duele. A veces lo que hace es liberarnos. Mi experiencia dejando ir relaciones, trabajos y formas de vivir que no eran para mí.",
+    "category": "bienestar",
+    "categoryLabel": "Bienestar",
+    "date": "2025-07-13",
+    "image": "la-importancia-dejar-ir.jpg",
+    "imageAlt": "La importancia de dejar ir",
+    "featured": false
+  }
+]

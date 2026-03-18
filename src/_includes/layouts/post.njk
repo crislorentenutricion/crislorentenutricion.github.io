@@ -1,0 +1,27 @@
+---
+layout: layouts/base.njk
+ogType: article
+---
+<section class="section-cream article-header">
+  <div class="container">
+    <p class="article-back"><a href="/blog/">← Volver al blog</a></p>
+    <span class="blog-category">{{ categoryLabel }}</span>
+    <h1>{{ title }}</h1>
+    <p class="article-meta">{{ date | fechaEs }} · Cris Lorente</p>
+    {% if postImage %}
+    <div class="article-hero-img">
+      <img src="/img/blog/{{ postImage }}" alt="{{ title }}" width="1100" height="340" loading="eager">
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="article-body section-white">
+  <div class="container">
+    <div class="article-content">
+      {{ content | safe }}
+    </div>
+  </div>
+</section>
+
+{% include "cta-valoracion.njk" %}

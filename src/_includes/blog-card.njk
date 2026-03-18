@@ -1,0 +1,16 @@
+{% set post = post %}
+<a href="/blog/{{ post.category }}/{{ post.slug }}/" class="blog-card-link" data-category="{{ post.category }}">
+  <article class="blog-card card">
+    {% if post.image %}
+      <img src="/img/blog/{{ post.image }}" alt="{{ post.imageAlt }}" class="blog-card-img" loading="lazy" width="400" height="180">
+    {% else %}
+      <div class="blog-img-placeholder"></div>
+    {% endif %}
+    <div class="blog-content">
+      <span class="blog-category">{{ post.categoryLabel }}</span>
+      <h3>{{ post.title }}</h3>
+      <p>{{ post.description }}</p>
+      <span class="blog-date">{{ post.date | fechaEs }}</span>
+    </div>
+  </article>
+</a>
