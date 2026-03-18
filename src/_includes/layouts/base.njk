@@ -12,7 +12,10 @@
   <script src="/js/main.js"></script>
   {% if env.amplitudeApiKey %}
   <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz"></script>
+  <script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.9.1-min.js.gz"></script>
   <script>
+    var sessionReplayTracking = window.sessionReplay.plugin({ sampleRate: 1 });
+    window.amplitude.add(sessionReplayTracking);
     window.amplitude.init('{{ env.amplitudeApiKey }}', { autocapture: true });
   </script>
   {% endif %}
