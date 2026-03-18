@@ -195,6 +195,20 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .credentials-list li { padding-left: 20px; position: relative; color: var(--color-gray); }
 .credentials-list li::before { content: '\2713'; position: absolute; left: 0; color: var(--color-green); font-weight: bold; }
 
+/* Credentials grid (sobre mí) */
+.credentials-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.credential-block { display: flex; flex-direction: column; gap: 16px; }
+.credential-icon { font-size: 2rem; }
+.credential-block h3 { font-size: 1rem; color: var(--color-green); margin: 0; }
+.credential-list { display: flex; flex-direction: column; gap: 16px; margin: 0; padding: 0; }
+.credential-list li { display: flex; flex-direction: column; gap: 2px; font-size: 0.9rem; }
+.credential-list li strong { color: var(--color-black); font-weight: var(--font-weight-semibold); }
+.credential-list li span { color: var(--color-gray); }
+.credential-year { font-size: 0.8rem !important; color: var(--color-green) !important; font-weight: var(--font-weight-semibold); }
+.credential-list.plain li { color: var(--color-gray); padding-left: 16px; position: relative; }
+.credential-list.plain li::before { content: '·'; position: absolute; left: 0; color: var(--color-green); font-weight: bold; }
+@media (max-width: 900px) { .credentials-grid { grid-template-columns: 1fr; } }
+
 /* Blog page */
 .categories-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
 .category-card { text-align: center; }
