@@ -8,10 +8,10 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/CNAME");
 
   // Filtro para formatear fechas en español
-  eleventyConfig.addFilter("fechaEs", function(dateStr) {
+  eleventyConfig.addFilter("fechaEs", function(dateVal) {
     const meses = ["enero","febrero","marzo","abril","mayo","junio",
                    "julio","agosto","septiembre","octubre","noviembre","diciembre"];
-    const d = new Date(dateStr + "T00:00:00");
+    const d = dateVal instanceof Date ? dateVal : new Date(dateVal + "T00:00:00");
     return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
   });
 
