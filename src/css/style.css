@@ -130,7 +130,8 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 /* Plans */
 .plans-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 16px; }
 .plan-card { position: relative; display: flex; flex-direction: column; }
-.plan-card h3 { font-size: 1.2rem; margin-bottom: 12px; }
+.plan-card h3 { font-size: 1.2rem; margin-bottom: 6px; }
+.plan-description { font-size: 0.85rem; color: var(--color-gray); margin-bottom: 12px; line-height: 1.4; }
 .plan-price { margin-bottom: 24px; }
 .price { font-size: 2rem; font-weight: var(--font-weight-bold); color: var(--color-green); }
 .period { font-size: 1rem; color: var(--color-gray); margin-left: 4px; }
