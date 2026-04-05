@@ -19,17 +19,18 @@
   <link rel="canonical" href="https://www.crislorentenutricion.com/blog/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400;1,600&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
-<!-- Favicons -->
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 
 </head>
 <body>
-    <header class="site-header">
+    <div class="header-accent"></div>
+  <header class="site-header">
     <div class="container header-inner">
       <a href="/" class="logo">Cris Lorente Nutrición</a>
       <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
@@ -52,27 +53,27 @@
 <section class="hero section-cream">
   <div class="container hero-inner hero-centered">
     <div class="hero-text">
-      <h1>Aprende a comer bien con tu vida real</h1>
-      <p class="hero-subtitle">Nutrición sin mitos, recetas rápidas y consejos de bienestar para mujeres ocupadas.</p>
+      <h1 class="hero-animate hero-animate-1">Aprende a comer bien con tu vida real</h1>
+      <p class="hero-subtitle hero-animate hero-animate-2">Nutrición sin mitos, recetas rápidas y consejos de bienestar para mujeres ocupadas.</p>
     </div>
   </div>
 </section>
 
 <section class="section section-white">
   <div class="container">
-    <h2 class="section-title">Categorías</h2>
+    <h2 class="section-title reveal">Categorías</h2>
     <div class="categories-grid">
-      <div class="category-card card" data-filter="educacion" role="button" tabindex="0" aria-pressed="false">
+      <div class="category-card card reveal reveal-delay-1" data-filter="educacion" role="button" tabindex="0" aria-pressed="false">
         <div class="category-icon">🧠</div>
         <h3>Educación</h3>
         <p>Nutrición sin mitos. Entiende cómo funciona tu cuerpo y toma decisiones informadas.</p>
       </div>
-      <div class="category-card card" data-filter="cristifood" role="button" tabindex="0" aria-pressed="false">
+      <div class="category-card card reveal reveal-delay-2" data-filter="cristifood" role="button" tabindex="0" aria-pressed="false">
         <div class="category-icon">🍳</div>
         <h3>CristiFood</h3>
         <p>Recetas sencillas y nutritivas para comer bien sin pasarte horas en la cocina.</p>
       </div>
-      <div class="category-card card" data-filter="bienestar" role="button" tabindex="0" aria-pressed="false">
+      <div class="category-card card reveal reveal-delay-3" data-filter="bienestar" role="button" tabindex="0" aria-pressed="false">
         <div class="category-icon">🌿</div>
         <h3>Bienestar</h3>
         <p>Estrés, sueño, hormonas, emociones. Todo lo que afecta a cómo comes y cómo te sientes.</p>
@@ -90,9 +91,11 @@
         
 <a href="/blog/bienestar/granada-de-sueno-a-realidad/" class="blog-card-link" data-category="bienestar">
   <article class="blog-card card">
-    
-      <img src="/img/blog/granada-viaje.jpg" alt="Granada, de sueño a realidad" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/granada-viaje.jpg" alt="Granada, de sueño a realidad" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Bienestar</span>
       <h3>Granada, de sueño a realidad — Día 1</h3>
@@ -107,9 +110,11 @@
         
 <a href="/blog/educacion/como-llegue-hasta-aqui/" class="blog-card-link" data-category="educacion">
   <article class="blog-card card">
-    
-      <img src="/img/blog/como-llegue-hasta-aqui.jpg" alt="Cómo llegué hasta aquí" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/como-llegue-hasta-aqui.jpg" alt="Cómo llegué hasta aquí" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Educación</span>
       <h3>Cómo llegué hasta aquí (y por qué no creo en las dietas estrictas)</h3>
@@ -124,9 +129,11 @@
         
 <a href="/blog/cristifood/pizza-casera/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/pizza-casera.jpg" alt="Pizza casera" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/pizza-casera.jpg" alt="Pizza casera" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Pizza casera</h3>
@@ -141,9 +148,11 @@
         
 <a href="/blog/bienestar/elegir-nuestro-destino/" class="blog-card-link" data-category="bienestar">
   <article class="blog-card card">
-    
-      <img src="/img/blog/elegir-nuestro-destino.jpg" alt="Elegir nuestro destino" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/elegir-nuestro-destino.jpg" alt="Elegir nuestro destino" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Bienestar</span>
       <h3>Elegir nuestro destino o cómo llegar a él</h3>
@@ -158,9 +167,11 @@
         
 <a href="/blog/educacion/comer-sano-no-es-comer-menos/" class="blog-card-link" data-category="educacion">
   <article class="blog-card card">
-    
-      <img src="/img/blog/comer-sano-no-es-comer-menos.jpg" alt="Comer sano no es comer menos" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/comer-sano-no-es-comer-menos.jpg" alt="Comer sano no es comer menos" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Educación</span>
       <h3>Comer sano no es comer menos</h3>
@@ -175,9 +186,11 @@
         
 <a href="/blog/cristifood/tortilla-de-patata-con-verduras/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/tortilla-patata.jpg" alt="Tortilla de patata con verduras" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/tortilla-patata.jpg" alt="Tortilla de patata con verduras" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Tortilla de patata con verduras</h3>
@@ -192,9 +205,11 @@
         
 <a href="/blog/cristifood/batido-veraniego/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/batido-veraniego.jpg" alt="Batido veraniego de plátano y frutos rojos" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/batido-veraniego.jpg" alt="Batido veraniego de plátano y frutos rojos" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Batido veraniego</h3>
@@ -209,9 +224,11 @@
         
 <a href="/blog/bienestar/la-importancia-de-dejar-ir/" class="blog-card-link" data-category="bienestar">
   <article class="blog-card card">
-    
-      <img src="/img/blog/la-importancia-dejar-ir.jpg" alt="La importancia de dejar ir" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/la-importancia-dejar-ir.jpg" alt="La importancia de dejar ir" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Bienestar</span>
       <h3>La importancia de dejar ir lo que no es para ti</h3>
@@ -226,9 +243,11 @@
         
 <a href="/blog/bienestar/cuando-acepte-que-tenia-un-cuerpo/" class="blog-card-link" data-category="bienestar">
   <article class="blog-card card">
-    
-      <img src="/img/blog/cuando-acepte-cuerpo.jpg" alt="Cuando acepté que tenía un cuerpo" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/cuando-acepte-cuerpo.jpg" alt="Cuando acepté que tenía un cuerpo" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Bienestar</span>
       <h3>Cuando acepté que tenía un cuerpo</h3>
@@ -243,9 +262,11 @@
         
 <a href="/blog/educacion/como-empezar-a-cuidarte-sin-dietas-ni-obsesiones/" class="blog-card-link" data-category="educacion">
   <article class="blog-card card">
-    
-      <img src="/img/blog/como-empezar-cuidarte.jpg" alt="Cómo empezar a cuidarte sin dietas ni obsesiones" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/como-empezar-cuidarte.jpg" alt="Cómo empezar a cuidarte sin dietas ni obsesiones" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Educación</span>
       <h3>Cómo empezar a cuidarte sin dietas ni obsesiones</h3>
@@ -260,9 +281,11 @@
         
 <a href="/blog/cristifood/agua-de-frutas/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/agua-de-frutas.jpg" alt="Agua de frutas" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/agua-de-frutas.jpg" alt="Agua de frutas" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Agua de frutas</h3>
@@ -277,9 +300,11 @@
         
 <a href="/blog/cristifood/galletas-de-avena-sin-azucar/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/galletas-de-avena.jpg" alt="Galletas de avena sin azúcar" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/galletas-de-avena.jpg" alt="Galletas de avena sin azúcar" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Galletas de avena sin azúcar</h3>
@@ -294,9 +319,11 @@
         
 <a href="/blog/cristifood/pollo-al-horno-con-arroz-y-verduras/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/pollo-al-horno.jpg" alt="Pollo al horno con arroz y verduras" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/pollo-al-horno.jpg" alt="Pollo al horno con arroz y verduras" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Pollo al horno con arroz y verduras</h3>
@@ -311,9 +338,11 @@
         
 <a href="/blog/cristifood/tortilla-de-espinacas-y-cebolla/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/tortilla-espinacas.jpg" alt="Tortilla de espinacas y cebolla" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/tortilla-espinacas.jpg" alt="Tortilla de espinacas y cebolla" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Tortilla de espinacas y cebolla</h3>
@@ -328,9 +357,11 @@
         
 <a href="/blog/educacion/como-organizar-tus-comidas/" class="blog-card-link" data-category="educacion">
   <article class="blog-card card">
-    
-      <img src="/img/blog/como-organizar-comidas.jpg" alt="Cómo organizar tus comidas" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/como-organizar-comidas.jpg" alt="Cómo organizar tus comidas" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Educación</span>
       <h3>Cómo organizar tus comidas (sin morir en el intento)</h3>
@@ -345,9 +376,11 @@
         
 <a href="/blog/cristifood/tostadas-integrales-con-aguacate-y-huevo/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/tostadas-aguacate-huevo.jpg" alt="Tostadas integrales con aguacate y huevo" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/tostadas-aguacate-huevo.jpg" alt="Tostadas integrales con aguacate y huevo" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>Tostadas integrales con aguacate y huevo</h3>
@@ -362,9 +395,11 @@
         
 <a href="/blog/bienestar/bienestar-personal-introduccion/" class="blog-card-link" data-category="bienestar">
   <article class="blog-card card">
-    
-      <img src="/img/blog/bienestar-personal.jpg" alt="Bienestar personal" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/bienestar-personal.jpg" alt="Bienestar personal" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">Bienestar</span>
       <h3>Bienestar personal: introducción al bienestar y salud mental</h3>
@@ -379,9 +414,11 @@
         
 <a href="/blog/cristifood/5-ensaladas-de-verano/" class="blog-card-link" data-category="cristifood">
   <article class="blog-card card">
-    
-      <img src="/img/blog/5-ensaladas-de-verano.jpg" alt="5 ensaladas de verano" class="blog-card-img" loading="lazy" width="400" height="180">
-    
+    <div class="blog-card-img-wrap">
+      
+        <img src="/img/blog/5-ensaladas-de-verano.jpg" alt="5 ensaladas de verano" class="blog-card-img" loading="lazy" width="400" height="200">
+      
+    </div>
     <div class="blog-content">
       <span class="blog-category">CristiFood</span>
       <h3>5 ensaladas de verano que debes probar</h3>
@@ -466,12 +503,13 @@
 </script>
 
   </main>
-    <footer class="site-footer">
+    <div class="footer-accent"></div>
+  <footer class="site-footer">
     <div class="container footer-inner">
       <div class="footer-brand">
         <p class="footer-logo">Cris Lorente Nutrición</p>
         <p>Asesoría nutricional personalizada online</p>
-        <p><a href="mailto:crislorentenutricion@gmail.com">crislorentenutricion@gmail.com</a></p>
+        <p style="margin-top: 8px;"><a href="mailto:crislorentenutricion@gmail.com">crislorentenutricion@gmail.com</a></p>
       </div>
       <div class="footer-nav">
         <ul>
@@ -498,7 +536,7 @@
     </div>
     <div class="footer-legal">
       <div class="container">
-        <p>© Cris Lorente Nutrición. Todos los derechos reservados.</p>
+        <p>&copy; Cris Lorente Nutrición. Todos los derechos reservados.</p>
       </div>
     </div>
   </footer>
