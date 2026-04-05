@@ -30,7 +30,7 @@ document.querySelectorAll('.main-nav a:not(.btn)').forEach(link => {
 
 // WhatsApp floating button
 (function() {
-  const btn = document.createElement('a');
+  var btn = document.createElement('a');
   btn.href = 'https://wa.me/34622279695';
   btn.target = '_blank';
   btn.rel = 'noopener';
@@ -43,10 +43,28 @@ document.querySelectorAll('.main-nav a:not(.btn)').forEach(link => {
 // Smooth scroll for hash links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', e => {
-    const target = document.querySelector(anchor.getAttribute('href'));
+    var target = document.querySelector(anchor.getAttribute('href'));
     if (target) {
       e.preventDefault();
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   });
 });
+
+// Scroll reveal animations
+(function() {
+  var reveals = document.querySelectorAll('.reveal');
+  if (!reveals.length || !('IntersectionObserver' in window)) {
+    reveals.forEach(function(el) { el.classList.add('revealed'); });
+    return;
+  }
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(function(el) { observer.observe(el); });
+})();
