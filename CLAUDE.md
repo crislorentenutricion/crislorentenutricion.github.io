@@ -21,7 +21,7 @@ src/
 ├── blog/posts/                    ← 18 posts (.njk, solo contenido)
 ├── legal/                         ← privacidad, aviso-legal, condiciones
 ├── css/style.css, js/main.js, img/
-├── sitemap.xml, robots.txt
+├── sitemap.njk (genera sitemap.xml dinámico), robots.txt
 ```
 
 ## Blog: añadir post
@@ -35,5 +35,6 @@ src/
 
 - Marca: "asesoría nutricional personalizada" (nunca "alimentaria")
 - Legal: cambios requieren confirmación de Cristina
-- SEO: mantener title, description, ogImage en frontmatter. Actualizar sitemap.xml
+- SEO: mantener title, description, ogImage en frontmatter. El sitemap.xml se genera solo desde blog.json
+- SEO: posts de recetas deben incluir JSON-LD Recipe inline. Todos los posts heredan BlogPosting + BreadcrumbList de post.njk
 - Design system, bugs CSS, textos legales → ver `../convenciones/negocio/web-legal-seo.md`
