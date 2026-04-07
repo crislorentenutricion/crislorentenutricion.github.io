@@ -50,6 +50,7 @@
 
   <main>
     
+
 <section class="hero section-cream">
   <div class="container hero-inner hero-centered">
     <div class="hero-text">
@@ -61,6 +62,72 @@
     </div>
   </div>
 </section>
+
+
+<section class="section section-white">
+  <div class="container">
+    <h2 class="section-title reveal">Así de fácil</h2>
+    <p class="section-subtitle reveal">Tres pasos para empezar a cuidarte</p>
+    <div class="steps-grid steps-grid--3">
+      <div class="step-card reveal reveal-delay-1">
+        <span class="step-number">1</span>
+        <h3>Rellena el formulario</h3>
+        <p>Cuéntame un poco sobre ti. Te contesto en menos de 24 horas.</p>
+      </div>
+      <div class="step-card reveal reveal-delay-2">
+        <span class="step-number">2</span>
+        <h3>Valoración gratuita</h3>
+        <p>Videollamada de 30 min para conocernos. Sin compromiso.</p>
+      </div>
+      <div class="step-card reveal reveal-delay-3">
+        <span class="step-number">3</span>
+        <h3>Empezamos juntas</h3>
+        <p>Recibo tu pago, preparo tu menú personalizado y arrancamos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section section-cream">
+  <div class="container">
+    <h2 class="section-title reveal">Lo que dicen mis pacientes</h2>
+    <p class="section-subtitle reveal">Resultados reales, sin dietas milagro</p>
+    <div class="testimonials-grid">
+      <div class="testimonial-card card reveal reveal-delay-1">
+        <p class="testimonial-text">Siempre había odiado las dietas. Con Cristina aprendí a comer bien sin sentir que me estoy privando de nada. Mi menú se adapta a mi vida, no al revés.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">L</div>
+          <div>
+            <div class="testimonial-name">Laura M.</div>
+            <div class="testimonial-detail">3 meses con el plan Esencial</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card card reveal reveal-delay-2">
+        <p class="testimonial-text">Lo mejor es el acompañamiento. Saber que puedo escribirle por WhatsApp cuando tengo dudas me da mucha tranquilidad. He perdido 5 kg sin pasar hambre.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">M</div>
+          <div>
+            <div class="testimonial-name">Marina R.</div>
+            <div class="testimonial-detail">5 meses con el plan Premium</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card card reveal reveal-delay-3">
+        <p class="testimonial-text">Trabajo por turnos y nunca encontraba un plan que encajara con mis horarios. Cristina lo ha hecho posible. Las recetas son fáciles y riquísimas.</p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">A</div>
+          <div>
+            <div class="testimonial-name">Ana P.</div>
+            <div class="testimonial-detail">2 meses con el plan Esencial</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 
 <section class="section section-white">
   <div class="container">
@@ -78,7 +145,7 @@
           <li>WhatsApp (respuesta en 48h)</li>
           <li>Valoración inicial gratuita (30 min)</li>
         </ul>
-        <a href="#formulario-contacto" class="btn btn-secondary">Elegir Básico →</a>
+        <a href="#formulario-contacto" class="btn btn-secondary plan-btn" data-plan="Básico">Elegir Básico →</a>
       </div>
       <div class="plan-card card plan-featured reveal reveal-delay-2">
         <span class="plan-badge">Más popular</span>
@@ -92,7 +159,7 @@
           <li>WhatsApp (respuesta en 24h)</li>
           <li>Valoración inicial gratuita (30 min)</li>
         </ul>
-        <a href="#formulario-contacto" class="btn btn-primary">Elegir Esencial →</a>
+        <a href="#formulario-contacto" class="btn btn-primary plan-btn" data-plan="Esencial">Elegir Esencial →</a>
       </div>
       <div class="plan-card card reveal reveal-delay-3">
         <h3>Premium</h3>
@@ -106,12 +173,71 @@
           <li>Recetas personalizadas</li>
           <li>Valoración inicial gratuita (30 min)</li>
         </ul>
-        <a href="#formulario-contacto" class="btn btn-secondary">Elegir Premium →</a>
+        <a href="#formulario-contacto" class="btn btn-secondary plan-btn" data-plan="Premium">Elegir Premium →</a>
       </div>
+    </div>
+
+    
+    <div class="compare-table-wrap reveal">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Básico<br><span class="compare-price">40 €/mes</span></th>
+            <th class="compare-featured">Esencial<br><span class="compare-price">55 €/mes</span></th>
+            <th>Premium<br><span class="compare-price">75 €/mes</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Menú mensual con gramajes</td>
+            <td><span class="compare-check" aria-label="incluido"></span></td>
+            <td class="compare-featured"><span class="compare-check" aria-label="incluido"></span></td>
+            <td><span class="compare-check" aria-label="incluido"></span></td>
+          </tr>
+          <tr>
+            <td>Lista de la compra</td>
+            <td><span class="compare-check" aria-label="incluido"></span></td>
+            <td class="compare-featured"><span class="compare-check" aria-label="incluido"></span></td>
+            <td><span class="compare-check" aria-label="incluido"></span></td>
+          </tr>
+          <tr>
+            <td>Valoración inicial gratuita</td>
+            <td><span class="compare-check" aria-label="incluido"></span></td>
+            <td class="compare-featured"><span class="compare-check" aria-label="incluido"></span></td>
+            <td><span class="compare-check" aria-label="incluido"></span></td>
+          </tr>
+          <tr>
+            <td>Seguimientos mensuales</td>
+            <td>1 al mes</td>
+            <td class="compare-featured"><strong>2 al mes</strong></td>
+            <td><strong>2 al mes</strong></td>
+          </tr>
+          <tr>
+            <td>WhatsApp</td>
+            <td>Respuesta 48h</td>
+            <td class="compare-featured"><strong>Respuesta 24h</strong></td>
+            <td><strong>Prioritario</strong></td>
+          </tr>
+          <tr>
+            <td>Recetas personalizadas</td>
+            <td><span class="compare-dash" aria-label="no incluido"></span></td>
+            <td class="compare-featured"><span class="compare-dash" aria-label="no incluido"></span></td>
+            <td><span class="compare-check" aria-label="incluido"></span></td>
+          </tr>
+          <tr class="compare-cta-row">
+            <td></td>
+            <td><a href="#formulario-contacto" class="btn btn-secondary btn-sm plan-btn" data-plan="Básico">Elegir →</a></td>
+            <td class="compare-featured"><a href="#formulario-contacto" class="btn btn-primary btn-sm plan-btn" data-plan="Esencial">Elegir →</a></td>
+            <td><a href="#formulario-contacto" class="btn btn-secondary btn-sm plan-btn" data-plan="Premium">Elegir →</a></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <p class="plans-note reveal">Sin permanencia · Pago previo al servicio · Cambio de plan con 7 días de antelación</p>
   </div>
 </section>
+
 
 <section class="section section-cream">
   <div class="container">
@@ -141,10 +267,27 @@
   </div>
 </section>
 
+
 <section class="section section-white" id="formulario-contacto">
   <div class="container form-container reveal">
     <h2>Reserva tu valoración gratuita</h2>
-    <p class="form-subtitle">30 minutos, sin compromiso. Cuéntame un poco sobre ti y me pongo en contacto contigo en menos de 24h.</p>
+    <p class="form-subtitle">30 minutos por videollamada, sin compromiso. Cuéntame un poco sobre ti y me pongo en contacto contigo en menos de 24h.</p>
+
+    <div class="form-promise">
+      <div class="form-promise-item">
+        <span class="form-promise-icon">&#128222;</span>
+        <span>Te contesto en <strong>menos de 24h</strong></span>
+      </div>
+      <div class="form-promise-item">
+        <span class="form-promise-icon">&#128249;</span>
+        <span>Videollamada de <strong>30 minutos</strong></span>
+      </div>
+      <div class="form-promise-item">
+        <span class="form-promise-icon">&#10004;</span>
+        <span><strong>Sin compromiso</strong> ninguno</span>
+      </div>
+    </div>
+
     <form class="contact-form" action="https://formspree.io/f/xeerpnrq" method="POST">
       <div class="form-group">
         <label for="nombre">Nombre *</label>
@@ -158,6 +301,7 @@
         <label for="telefono">Teléfono (opcional)</label>
         <input type="tel" id="telefono" name="telefono" placeholder="612 345 678">
       </div>
+      <input type="hidden" id="plan-elegido" name="plan" value="">
       <div class="form-group">
         <label for="objetivo">¿Qué te gustaría mejorar? *</label>
         <textarea id="objetivo" name="objetivo" rows="4" required placeholder="Ej: quiero organizarme mejor con las comidas y perder algo de grasa"></textarea>
@@ -170,6 +314,12 @@
       </div>
       <button type="submit" class="btn btn-primary btn-full">Reservar mi valoración gratuita →</button>
     </form>
+
+    <div class="form-mini-testimonial">
+      <p>"He perdido 5 kg sin pasar hambre. Lo mejor es el acompañamiento."</p>
+      <span>— Marina R., 5 meses con el plan Premium</span>
+    </div>
+
     <p class="form-reassurance">Sin compromiso · Sin permanencia · Valoración 100% gratuita</p>
   </div>
 </section>
