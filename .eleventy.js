@@ -4,7 +4,6 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/js");
   eleventyConfig.addPassthroughCopy("src/img");
   eleventyConfig.addPassthroughCopy("src/robots.txt");
-  eleventyConfig.addPassthroughCopy("src/sitemap.xml");
   eleventyConfig.addPassthroughCopy("src/CNAME");
   eleventyConfig.addPassthroughCopy("src/favicon.ico");
   eleventyConfig.addPassthroughCopy("src/favicon-32x32.png");
@@ -17,6 +16,14 @@ module.exports = function(eleventyConfig) {
                    "julio","agosto","septiembre","octubre","noviembre","diciembre"];
     const d = dateVal instanceof Date ? dateVal : new Date(dateVal + "T00:00:00");
     return `${d.getDate()} de ${meses[d.getMonth()]} de ${d.getFullYear()}`;
+  });
+
+  // Filtro para fechas en formato ISO (JSON-LD / SEO)
+  // Usa UTC para evitar desfase de timezone (11ty crea Date en UTC)
+  eleventyConfig.addFilter("fechaISO", function(dateVal) {
+    if (typeof dateVal === "string") return dateVal;
+    const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
+    return d.toISOString().substring(0, 10);
   });
 
   // Filtro para ordenar posts por fecha descendente

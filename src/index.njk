@@ -1,10 +1,72 @@
 ---
 layout: layouts/base.njk
-title: "Cris Lorente Nutrición — Asesoría nutricional personalizada online"
+title: "Asesoría nutricional personalizada online"
 description: "Asesoría nutricional personalizada online para mujeres con estrés y poco tiempo. Pierde grasa sin dietas estrictas. Menú mensual + acompañamiento real."
 ogImage: /img/cristina.jpg
 navActive: inicio
+jsonLd: true
 ---
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": "Cris Lorente Nutrición",
+  "description": "Asesoría nutricional personalizada online para mujeres. Menú mensual con gramajes, lista de la compra y acompañamiento por videollamada.",
+  "url": "https://www.crislorentenutricion.com",
+  "logo": "https://www.crislorentenutricion.com/img/cristina.jpg",
+  "image": "https://www.crislorentenutricion.com/img/cristina.jpg",
+  "telephone": "+34622279695",
+  "email": "crislorentenutricion@gmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "ES"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "España"
+  },
+  "serviceType": "Asesoría nutricional personalizada",
+  "priceRange": "40€–75€/mes",
+  "founder": {
+    "@type": "Person",
+    "name": "Cristina Lorente Piquer",
+    "jobTitle": "Técnica Superior en Dietética y Técnica en Farmacia",
+    "url": "https://www.crislorentenutricion.com/sobre-mi/"
+  },
+  "sameAs": [
+    "https://instagram.com/crislorente_nutricion",
+    "https://linkedin.com/in/cristina-lorente-piquer-86029331b"
+  ],
+  "hasOfferCatalog": {
+    "@type": "OfferCatalog",
+    "name": "Planes de asesoría nutricional",
+    "itemListElement": [
+      {
+        "@type": "Offer",
+        "name": "Plan Básico",
+        "price": "40",
+        "priceCurrency": "EUR",
+        "description": "Menú mensual personalizado, lista de la compra, 1 seguimiento/mes"
+      },
+      {
+        "@type": "Offer",
+        "name": "Plan Esencial",
+        "price": "55",
+        "priceCurrency": "EUR",
+        "description": "Menú mensual personalizado, lista de la compra, 2 seguimientos/mes"
+      },
+      {
+        "@type": "Offer",
+        "name": "Plan Premium",
+        "price": "75",
+        "priceCurrency": "EUR",
+        "description": "Menú mensual personalizado, lista de la compra, 2 seguimientos/mes, recetas personalizadas, WhatsApp prioritario"
+      }
+    ]
+  }
+}
+</script>
 
 {# ── HERO — FULL VIEWPORT ── #}
 <section class="hero hero-home section-white">

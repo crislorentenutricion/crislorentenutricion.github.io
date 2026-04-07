@@ -2,6 +2,47 @@
 layout: layouts/base.njk
 ogType: article
 ---
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ title }}",
+  "description": "{{ description }}",
+  "image": "https://www.crislorentenutricion.com/img/blog/{{ postImage }}",
+  "datePublished": "{{ date | fechaISO }}",
+  "dateModified": "{{ date | fechaISO }}",
+  "author": {
+    "@type": "Person",
+    "name": "Cristina Lorente Piquer",
+    "url": "https://www.crislorentenutricion.com/sobre-mi/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Cris Lorente Nutrición",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.crislorentenutricion.com/img/cristina.jpg"
+    }
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://www.crislorentenutricion.com{{ page.url }}"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.crislorentenutricion.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://www.crislorentenutricion.com/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "{{ title }}" }
+  ]
+}
+</script>
+
 <section class="section-cream article-header">
   <div class="container">
     <p class="article-back"><a href="/blog/">← Volver al blog</a></p>
@@ -23,5 +64,25 @@ ogType: article
     </div>
   </div>
 </section>
+
+{% set related = [] %}
+{% for post in blog | ordenarPorFecha %}
+  {% if post.category == category and post.slug != page.fileSlug and related | length < 3 %}
+    {% set related = (related.push(post), related) %}
+  {% endif %}
+{% endfor %}
+
+{% if related | length > 0 %}
+<section class="section section-cream">
+  <div class="container">
+    <h2 class="section-title">Artículos relacionados</h2>
+    <div class="blog-grid">
+      {% for post in related %}
+        {% include "blog-card.njk" %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
 {% include "cta-valoracion.njk" %}

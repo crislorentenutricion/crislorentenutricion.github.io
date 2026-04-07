@@ -7,7 +7,7 @@
     "categoryLabel": "Educación",
     "date": "2025-08-24",
     "image": "comer-sano-no-es-comer-menos.jpg",
-    "imageAlt": "Comer sano no es comer menos",
+    "imageAlt": "Plato colorido con verduras y proteína representando una alimentación equilibrada",
     "featured": false
   },
   {
@@ -18,7 +18,7 @@
     "categoryLabel": "Educación",
     "date": "2025-06-20",
     "image": "como-empezar-cuidarte.jpg",
-    "imageAlt": "Cómo empezar a cuidarte sin dietas ni obsesiones",
+    "imageAlt": "Mujer preparando comida saludable en la cocina de forma relajada",
     "featured": false
   },
   {
@@ -29,7 +29,7 @@
     "categoryLabel": "Educación",
     "date": "2026-03-04",
     "image": "como-llegue-hasta-aqui.jpg",
-    "imageAlt": "Cómo llegué hasta aquí",
+    "imageAlt": "Cristina Lorente sonriendo, camino hacia la nutrición sin dietas estrictas",
     "featured": true
   },
   {
@@ -40,7 +40,7 @@
     "categoryLabel": "Educación",
     "date": "2025-06-09",
     "image": "como-organizar-comidas.jpg",
-    "imageAlt": "Cómo organizar tus comidas",
+    "imageAlt": "Tuppers organizados con comidas semanales preparadas con batch cooking",
     "featured": false
   },
   {
@@ -51,7 +51,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-05-21",
     "image": "5-ensaladas-de-verano.jpg",
-    "imageAlt": "5 ensaladas de verano",
+    "imageAlt": "Bol de ensalada fresca con verduras de colores y aderezo casero",
     "featured": false
   },
   {
@@ -62,7 +62,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-06-13",
     "image": "agua-de-frutas.jpg",
-    "imageAlt": "Agua de frutas",
+    "imageAlt": "Jarra de agua infusionada con rodajas de limón, naranja, frambuesas y menta",
     "featured": false
   },
   {
@@ -73,7 +73,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-07-19",
     "image": "batido-veraniego.jpg",
-    "imageAlt": "Batido veraniego de plátano y frutos rojos",
+    "imageAlt": "Vaso de batido cremoso rosa de plátano y frutos rojos con fruta fresca encima",
     "featured": false
   },
   {
@@ -84,7 +84,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-06-13",
     "image": "galletas-de-avena.jpg",
-    "imageAlt": "Galletas de avena sin azúcar",
+    "imageAlt": "Galletas de avena caseras doradas sobre bandeja de horno recién sacadas",
     "featured": false
   },
   {
@@ -95,7 +95,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-11-10",
     "image": "pizza-casera.jpg",
-    "imageAlt": "Pizza casera",
+    "imageAlt": "Pizza casera recién horneada con mozzarella, queso de cabra y albahaca fresca",
     "featured": true
   },
   {
@@ -106,7 +106,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-06-13",
     "image": "pollo-al-horno.jpg",
-    "imageAlt": "Pollo al horno con arroz y verduras",
+    "imageAlt": "Plato de pollo al horno dorado con arroz integral y verduras salteadas de temporada",
     "featured": false
   },
   {
@@ -117,7 +117,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-06-13",
     "image": "tortilla-espinacas.jpg",
-    "imageAlt": "Tortilla de espinacas y cebolla",
+    "imageAlt": "Tortilla jugosa de espinacas y cebolla cortada por la mitad mostrando el relleno verde",
     "featured": false
   },
   {
@@ -128,7 +128,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-07-20",
     "image": "tortilla-patata.jpg",
-    "imageAlt": "Tortilla de patata con verduras",
+    "imageAlt": "Tortilla de patata española con calabacín, pimiento y berenjena en plato de cerámica",
     "featured": false
   },
   {
@@ -139,7 +139,7 @@
     "categoryLabel": "CristiFood",
     "date": "2025-06-05",
     "image": "tostadas-aguacate-huevo.jpg",
-    "imageAlt": "Tostadas integrales con aguacate y huevo",
+    "imageAlt": "Tostadas integrales con huevos revueltos cremosos, dados de aguacate y cebollino",
     "featured": false
   },
   {
@@ -150,7 +150,7 @@
     "categoryLabel": "Bienestar",
     "date": "2025-06-05",
     "image": "bienestar-personal.jpg",
-    "imageAlt": "Bienestar personal",
+    "imageAlt": "Espacio tranquilo con luz natural que transmite calma y bienestar",
     "featured": false
   },
   {
@@ -161,7 +161,7 @@
     "categoryLabel": "Bienestar",
     "date": "2025-07-07",
     "image": "cuando-acepte-cuerpo.jpg",
-    "imageAlt": "Cuando acepté que tenía un cuerpo",
+    "imageAlt": "Silueta de mujer mirando al horizonte, reflexionando sobre aceptación corporal",
     "featured": false
   },
   {
@@ -172,7 +172,7 @@
     "categoryLabel": "Bienestar",
     "date": "2025-10-12",
     "image": "elegir-nuestro-destino.jpg",
-    "imageAlt": "Elegir nuestro destino",
+    "imageAlt": "Camino abierto entre naturaleza simbolizando la elección de nuestro destino",
     "featured": false
   },
   {
@@ -183,7 +183,7 @@
     "categoryLabel": "Bienestar",
     "date": "2026-03-11",
     "image": "granada-viaje.jpg",
-    "imageAlt": "Granada, de sueño a realidad",
+    "imageAlt": "Vista del Albaicín de Granada con la Alhambra al fondo durante un viaje personal",
     "featured": true
   },
   {
@@ -194,7 +194,7 @@
     "categoryLabel": "Bienestar",
     "date": "2025-07-13",
     "image": "la-importancia-dejar-ir.jpg",
-    "imageAlt": "La importancia de dejar ir",
+    "imageAlt": "Manos soltando hojas al viento, simbolizando dejar ir lo que no es para ti",
     "featured": false
   }
 ]
