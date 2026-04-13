@@ -2,4 +2,40 @@ User-agent: *
 Allow: /
 Disallow: /mi-seguimiento/
 
+User-agent: GPTBot
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: Perplexity-User
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: Claude-Web
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /mi-seguimiento/
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /mi-seguimiento/
+
 Sitemap: https://www.crislorentenutricion.com/sitemap.xml
