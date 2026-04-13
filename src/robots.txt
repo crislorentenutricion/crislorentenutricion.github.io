@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /mi-seguimiento/
 
 Sitemap: https://www.crislorentenutricion.com/sitemap.xml
