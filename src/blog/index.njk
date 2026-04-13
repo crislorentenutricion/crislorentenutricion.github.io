@@ -43,7 +43,6 @@ navActive: blog
     <h2 class="section-title" id="articles-title">Todos los artículos</h2>
     <div class="blog-grid">
       {% for post in blog | ordenarPorFecha %}
-        {% set post = post %}
         {% include "blog-card.njk" %}
       {% endfor %}
     </div>

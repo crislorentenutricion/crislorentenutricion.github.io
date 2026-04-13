@@ -147,7 +147,7 @@ jsonLd: true
         <span class="plan-badge">🌿 Oferta de lanzamiento</span>
         <h3>Plan completo</h3>
         <div class="plan-price"><span class="price">15 €</span><span class="period"> el primer mes</span></div>
-        <p style="color: var(--color-green); font-size: 0.95rem; margin-top: -0.75rem; margin-bottom: 1.25rem;">Después: 40 €/mes</p>
+        <p class="plan-subprice">Después: 40 €/mes</p>
         <ul class="plan-features"><li>Menú mensual personalizado con gramajes</li><li>Lista de la compra</li><li>2 seguimientos/mes (30 min, videollamada)</li><li>WhatsApp (respuesta 24h)</li><li>Ajustes del menú durante el mes</li></ul>
         <a href="/servicios/#formulario-contacto" class="btn btn-primary btn-full">Empezar por 15 € →</a>
       </div>
@@ -212,7 +212,6 @@ jsonLd: true
     <div class="blog-grid">
       {% for post in blog | ordenarPorFecha %}
         {% if post.featured %}
-          {% set post = post %}
           {% include "blog-card.njk" %}
         {% endif %}
       {% endfor %}
