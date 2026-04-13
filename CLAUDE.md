@@ -2,7 +2,8 @@
 
 Sitio web de **Cris Lorente Nutrición** — 11ty (Eleventy) v3 + Nunjucks, desplegado en GitHub Pages via GitHub Actions.
 
-> Convenciones completas de negocio, clínica, legal y SEO → `../convenciones/negocio/web-legal-seo.md`
+> Convenciones técnicas (stack, SEO, bugs) → `../convenciones/negocio/web-tecnico.md`
+> Textos legales y embudo → `../convenciones/negocio/web-legal.md`
 
 ## Workflow
 
@@ -37,4 +38,5 @@ src/
 - Legal: cambios requieren confirmación de Cristina
 - SEO: mantener title, description, ogImage en frontmatter. El sitemap.xml se genera solo desde blog.json
 - SEO: posts de recetas deben incluir JSON-LD Recipe inline. Todos los posts heredan BlogPosting + BreadcrumbList de post.njk
-- Design system, bugs CSS, textos legales → ver `../convenciones/negocio/web-legal-seo.md`
+- Design system, bugs CSS → `../convenciones/negocio/web-tecnico.md`
+- Textos legales → `../convenciones/negocio/web-legal.md`
