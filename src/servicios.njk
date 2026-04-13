@@ -115,7 +115,21 @@ permalink: /servicios/
       "availability": "https://schema.org/InStock"
     }
   ],
-  "termsOfService": "https://www.crislorentenutricion.com/legal/condiciones/"
+  "termsOfService": "https://www.crislorentenutricion.com/legal/condiciones/",
+  "potentialAction": {
+    "@type": "ReserveAction",
+    "name": "Reservar valoración gratuita",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.crislorentenutricion.com/servicios/#formulario-contacto",
+      "inLanguage": "es-ES",
+      "actionPlatform": ["https://schema.org/DesktopWebPlatform", "https://schema.org/MobileWebPlatform"]
+    },
+    "result": {
+      "@type": "Reservation",
+      "name": "Valoración gratuita de 30 minutos"
+    }
+  }
 }
 </script>
 
