@@ -409,10 +409,6 @@ eleventyExcludeFromCollections: true
   .ms-cal-cell.is-ok    { background: var(--color-green); }
   .ms-cal-cell.is-mid   { background: #d9b36a; }
   .ms-cal-cell.is-no    { background: #d9a08e; }
-  .ms-cal-cell.is-comodin {
-    background: #fdfbf4;
-    border: 1.5px dashed var(--color-green);
-  }
   .ms-cal-cell.is-today {
     box-shadow: 0 0 0 1.5px var(--color-green-dark);
   }
@@ -436,11 +432,6 @@ eleventyExcludeFromCollections: true
   .ms-legend-dot.is-ok  { background: var(--color-green); }
   .ms-legend-dot.is-mid { background: #d9b36a; }
   .ms-legend-dot.is-no  { background: #d9a08e; }
-  .ms-legend-dot.is-comodin {
-    background: #fdfbf4;
-    border: 1.5px dashed var(--color-green);
-    box-sizing: border-box;
-  }
 
   /* ---------- footer ---------- */
   .ms-foot {
@@ -462,7 +453,7 @@ eleventyExcludeFromCollections: true
   }
   .ms-signout:hover { color: var(--color-green); }
 
-  /* ---------- check hint + comodines counter ---------- */
+  /* ---------- check hint ---------- */
   .ms-check-hint {
     margin: 14px 2px 0;
     font-family: 'Lora', serif;
@@ -471,19 +462,6 @@ eleventyExcludeFromCollections: true
     color: #8a8678;
     text-align: center;
     line-height: 1.55;
-  }
-  .ms-comodines {
-    font-family: 'Lora', serif;
-    font-style: italic;
-    font-size: 0.85rem;
-    color: #8a8678;
-    text-align: center;
-    margin: 8px 0 0;
-  }
-  .ms-comodines strong {
-    font-style: normal;
-    font-weight: 600;
-    color: #6b6759;
   }
 
   /* ---------- PDF link in foot ---------- */
@@ -563,7 +541,6 @@ eleventyExcludeFromCollections: true
   .ms-modal-list .is-mid { color: #a37a2a; }
   .ms-modal-list .is-no  { color: #a14d3a; }
   .ms-modal-list .is-streak { color: #c86838; }
-  .ms-modal-list .is-joker { color: #8a8678; }
   .ms-modal-ok {
     width: 100%;
     padding: 14px 22px;
@@ -763,7 +740,6 @@ eleventyExcludeFromCollections: true
         </button>
       </div>
       <p class="ms-check-hint">El amarillo también cuenta. Solo gris rompe la racha.</p>
-      <p class="ms-comodines" id="ms-comodines">Comodines este mes: <strong><span id="ms-comodines-usados">0</span>/2</strong></p>
     </section>
 
     <section class="ms-calendar" aria-labelledby="ms-month-title">
@@ -778,7 +754,6 @@ eleventyExcludeFromCollections: true
         <span><span class="ms-legend-dot is-ok"></span>lo seguí</span>
         <span><span class="ms-legend-dot is-mid"></span>a medias</span>
         <span><span class="ms-legend-dot is-no"></span>hoy no</span>
-        <span><span class="ms-legend-dot is-comodin"></span>comodín</span>
       </p>
     </section>
 
@@ -798,7 +773,6 @@ eleventyExcludeFromCollections: true
       <ul class="ms-modal-list">
         <li><span class="ms-modal-ico is-ok">✓</span><span>Al final del día marca cómo te ha ido: <strong>lo seguí</strong>, <strong>a medias</strong> o <strong>hoy no</strong>.</span></li>
         <li><span class="ms-modal-ico is-streak">🔥</span><span>Tu <strong>racha</strong> crece con cada día que marcas verde o amarillo. El amarillo también cuenta.</span></li>
-        <li><span class="ms-modal-ico is-joker">✦</span><span>Tienes <strong>2 comodines al mes</strong>: si un día se te pasa, se usan solos para no perder la racha.</span></li>
       </ul>
       <button type="button" class="ms-modal-ok" id="ms-modal-ok">Entendido, empezamos</button>
     </div>
@@ -920,7 +894,7 @@ eleventyExcludeFromCollections: true
     }).join('');
   }
 
-  const CUENTAN_PARA_RACHA = new Set(['seguido', 'parcial', 'comodin']);
+  const CUENTAN_PARA_RACHA = new Set(['seguido', 'parcial']);
 
   // Milestones de racha (días). 28 = MENÚ 1 completo (4 semanas).
   const MILESTONES = [7, 14, 28, 30];
@@ -967,24 +941,8 @@ eleventyExcludeFromCollections: true
     return n;
   }
 
-  // Cuenta comodines ya consumidos en el mes calendario de `hoy` (Date).
-  function calcularComodines(checkinsMap, hoy) {
-    const prefix = toISO(hoy).slice(0, 7); // YYYY-MM
-    let usados = 0;
-    for (const [iso, estado] of checkinsMap) {
-      if (estado === 'comodin' && iso.startsWith(prefix)) usados++;
-    }
-    return { usados, disponibles: Math.max(0, 2 - usados) };
-  }
-
-  function parseISO(iso) {
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Date(y, m - 1, d);
-  }
-
-  // Detecta gap entre último checkin y ayer. Consume hasta 2 comodines/mes en el mes actual.
-  // Devuelve { consumidos: [iso], rota: bool, disponibles: N } para el toast.
-  async function autoFillComodines(checkinsMap) {
+  // Detecta si hay gap entre el último checkin y ayer → racha rota.
+  function detectarRachaRota(checkinsMap) {
     const now = new Date(); now.setHours(0, 0, 0, 0);
     const todayISO = toISO(now);
     const yesterdayISO = toISO(new Date(now.getTime() - 864e5));
@@ -993,46 +951,7 @@ eleventyExcludeFromCollections: true
     for (const [iso] of checkinsMap) {
       if (iso < todayISO && (!lastISO || iso > lastISO)) lastISO = iso;
     }
-    if (!lastISO || lastISO >= yesterdayISO) {
-      return { consumidos: [], rota: false, disponibles: calcularComodines(checkinsMap, now).disponibles };
-    }
-
-    const gapDays = [];
-    const cursor = parseISO(lastISO);
-    cursor.setDate(cursor.getDate() + 1);
-    while (toISO(cursor) <= yesterdayISO) {
-      const iso = toISO(cursor);
-      if (!checkinsMap.has(iso)) gapDays.push(iso);
-      cursor.setDate(cursor.getDate() + 1);
-    }
-    if (gapDays.length === 0) {
-      return { consumidos: [], rota: false, disponibles: calcularComodines(checkinsMap, now).disponibles };
-    }
-
-    const mesActual = todayISO.slice(0, 7);
-    const gapEnMes = gapDays.filter(iso => iso.startsWith(mesActual));
-    const { disponibles } = calcularComodines(checkinsMap, now);
-    const aConsumir = gapEnMes.slice(0, disponibles);
-
-    const consumidos = [];
-    for (const iso of aConsumir) {
-      const { error } = await supa.from('checkins').upsert({
-        paciente_id: paciente.id,
-        fecha: iso,
-        estado: 'comodin'
-      }, { onConflict: 'paciente_id,fecha' });
-      if (!error) {
-        checkinsMap.set(iso, 'comodin');
-        consumidos.push(iso);
-      } else {
-        console.error('comodin upsert', error);
-      }
-    }
-
-    // Hay racha rota si quedó algún día de gap sin cubrir por comodín.
-    const rota = gapDays.length > consumidos.length;
-    const { disponibles: quedan } = calcularComodines(checkinsMap, now);
-    return { consumidos, rota, disponibles: quedan };
+    return !!lastISO && lastISO < yesterdayISO;
   }
 
   function renderCalendar(checkinsMap) {
@@ -1061,7 +980,6 @@ eleventyExcludeFromCollections: true
       if (estado === 'seguido') c.classList.add('is-ok');
       else if (estado === 'parcial') c.classList.add('is-mid');
       else if (estado === 'no') c.classList.add('is-no');
-      else if (estado === 'comodin') c.classList.add('is-comodin');
       if (iso === todayISO) c.classList.add('is-today');
       frag.appendChild(c);
     }
@@ -1075,11 +993,6 @@ eleventyExcludeFromCollections: true
 
   function setActiveCheck(estado) {
     $$('.ms-check-btn').forEach(b => b.classList.toggle('is-active', b.dataset.estado === estado));
-  }
-
-  function renderComodinesCounter(checkinsMap) {
-    const { usados } = calcularComodines(checkinsMap, new Date());
-    $('#ms-comodines-usados').textContent = usados;
   }
 
   function renderPdfLink(menu) {
@@ -1224,17 +1137,15 @@ eleventyExcludeFromCollections: true
     renderPdfLink(menu);
     renderTip();
 
-    // Auto-consume comodines for gaps in the current month before rendering.
-    const comodinResult = await autoFillComodines(map);
+    const rota = detectarRachaRota(map);
 
     const racha = renderStreak(map);
     renderCalendar(map);
-    renderComodinesCounter(map);
 
     const estadoHoy = map.get(today);
     if (estadoHoy) setActiveCheck(estadoHoy);
 
-    return { ...(comodinResult || {}), racha };
+    return { racha, rota };
   }
 
   // -------- auth wiring --------
@@ -1244,11 +1155,7 @@ eleventyExcludeFromCollections: true
       authedView.hidden = false;
       authedView.classList.add('ms-fade-in');
       const result = await hydrate();
-      if (result && result.consumidos && result.consumidos.length > 0) {
-        const n = result.consumidos.length;
-        const quedan = result.disponibles;
-        showToast(`Hemos usado ${n === 1 ? 'un comodín' : n + ' comodines'} por ti — te ${quedan === 1 ? 'queda' : 'quedan'} ${quedan}/2 este mes.`);
-      } else if (result && result.rota) {
+      if (result && result.rota) {
         showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
       }
       maybeShowOnboarding();
@@ -1310,7 +1217,6 @@ eleventyExcludeFromCollections: true
       const map = new Map(checkins.map(c => [c.fecha, c.estado]));
       const racha = renderStreak(map);
       renderCalendar(map);
-      renderComodinesCounter(map);
       maybeCelebrarMilestone(racha);
     });
   });
