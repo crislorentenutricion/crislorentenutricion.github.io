@@ -903,7 +903,7 @@ eleventyExcludeFromCollections: true
   }
 
   // Racha: cuenta días completados (desde ayer hacia atrás).
-  // verde (seguido) suma 1 · amarillo (parcial) mantiene · rojo (no) o sin marcar rompe.
+  // «lo he seguido» suma 1 · «a medias» mantiene · «hoy no» o sin marcar rompe.
   function renderStreak(checkinsMap) {
     let n = 0;
     const d = new Date(); d.setHours(0,0,0,0);
@@ -916,7 +916,7 @@ eleventyExcludeFromCollections: true
       } else if (estado === 'parcial') {
         // mantiene la racha, no suma
       } else {
-        break; // 'no' (rojo) o día sin marcar rompe la racha
+        break; // 'no' («hoy no») o día sin marcar rompe la racha
       }
       d.setDate(d.getDate() - 1);
     }
@@ -983,7 +983,7 @@ eleventyExcludeFromCollections: true
   const TIPS = [
     'Hidrátate antes de comer: medio vaso de agua 15 minutos antes ayuda a comer con más calma.',
     'Mastica sin prisa. La saciedad tarda unos 20 minutos en llegar al cerebro.',
-    'El amarillo también cuenta. Progreso no es perfección.',
+    '«A medias» también cuenta. Progreso no es perfección.',
     'Come siempre sentada, sin pantalla delante. El cuerpo se entera mejor de lo que comes.',
     'Si tienes hambre entre horas, bebe agua primero. A veces es sed disfrazada.',
     'Verdura en comida y cena. Media ración como mínimo, cruda o cocinada.',
