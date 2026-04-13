@@ -772,7 +772,7 @@
           <span class="ms-check-label">Hoy no</span>
         </button>
       </div>
-      <p class="ms-check-hint">El amarillo también cuenta. Solo gris rompe la racha.</p>
+      <p class="ms-check-hint">«A medias» mantiene la racha. Solo «hoy no» la reinicia.</p>
     </section>
 
     <section class="ms-calendar" aria-labelledby="ms-month-title">
@@ -805,7 +805,7 @@
       </p>
       <ul class="ms-modal-list">
         <li><span class="ms-modal-ico is-ok">✓</span><span>Al final del día marca cómo te ha ido: <strong>lo seguí</strong>, <strong>a medias</strong> o <strong>hoy no</strong>.</span></li>
-        <li><span class="ms-modal-ico is-streak">🔥</span><span>Tu <strong>racha</strong> crece con cada día que marcas verde o amarillo. El amarillo también cuenta.</span></li>
+        <li><span class="ms-modal-ico is-streak">🔥</span><span>Tu <strong>racha</strong> suma un día cada vez que marcas <strong>«lo seguí»</strong>. Con <strong>«a medias»</strong> se mantiene; con <strong>«hoy no»</strong> vuelve a cero.</span></li>
       </ul>
       <button type="button" class="ms-modal-ok" id="ms-modal-ok">Entendido, empezamos</button>
     </div>
@@ -927,8 +927,6 @@
     }).join('');
   }
 
-  const CUENTAN_PARA_RACHA = new Set(['seguido', 'parcial']);
-
   // Milestones de racha (días). 28 = MENÚ 1 completo (4 semanas).
   const MILESTONES = [7, 14, 28, 30];
 
@@ -951,23 +949,23 @@
     return actualizado;
   }
 
+  // Racha: cuenta días completados (desde ayer hacia atrás).
+  // verde (seguido) suma 1 · amarillo (parcial) mantiene · rojo (no) o sin marcar rompe.
   function renderStreak(checkinsMap) {
     let n = 0;
     const d = new Date(); d.setHours(0,0,0,0);
-    let first = true;
+    d.setDate(d.getDate() - 1); // el día de hoy no cuenta hasta mañana
     while (true) {
       const iso = toISO(d);
       const estado = checkinsMap.get(iso);
-      if (CUENTAN_PARA_RACHA.has(estado)) {
+      if (estado === 'seguido') {
         n++;
-        d.setDate(d.getDate() - 1);
-      } else if (first) {
-        // today not marked yet — don't break streak, continue from yesterday
-        d.setDate(d.getDate() - 1);
+      } else if (estado === 'parcial') {
+        // mantiene la racha, no suma
       } else {
-        break;
+        break; // 'no' (rojo) o día sin marcar rompe la racha
       }
-      first = false;
+      d.setDate(d.getDate() - 1);
     }
     $('#ms-streak-num').textContent = n;
     $('.ms-streak-label').textContent = n === 1 ? 'día' : 'días';
@@ -1028,15 +1026,24 @@
     $$('.ms-check-btn').forEach(b => b.classList.toggle('is-active', b.dataset.estado === estado));
   }
 
+  // pdf_url guarda la ruta dentro del bucket privado (ej. "{uuid}/menu-1.pdf").
+  // Firmamos la URL al hacer clic para que siempre sea fresca (sin enlaces caducados).
+  let pdfPathActual = null;
   function renderPdfLink(menu) {
     const link = $('#ms-pdf-link');
-    if (menu && menu.pdf_url) {
-      link.href = menu.pdf_url;
-      link.hidden = false;
-    } else {
-      link.hidden = true;
-    }
+    pdfPathActual = (menu && menu.pdf_url) || null;
+    link.hidden = !pdfPathActual;
   }
+  $('#ms-pdf-link').addEventListener('click', async (e) => {
+    if (!pdfPathActual) return;
+    if (/^https?:\/\//i.test(pdfPathActual)) return; // ya es URL absoluta
+    e.preventDefault();
+    const { data, error } = await supa.storage
+      .from('menus-pdf')
+      .createSignedUrl(pdfPathActual, 60);
+    if (error || !data) { console.error('signed url', error); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
+  });
 
   const TIPS = [
     'Hidrátate antes de comer: medio vaso de agua 15 minutos antes ayuda a comer con más calma.',
