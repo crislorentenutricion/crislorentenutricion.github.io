@@ -334,6 +334,25 @@
     font-style: italic;
   }
 
+  /* ---------- tip del día ---------- */
+  .ms-tip {
+    margin: -20px 4px 44px;
+    padding: 14px 18px 0;
+    border-top: 1px solid #ece7d6;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--color-green-dark);
+    text-align: center;
+  }
+  .ms-tip::before {
+    content: "✦ ";
+    color: #c8b98a;
+    font-style: normal;
+    margin-right: 4px;
+  }
+
   /* ---------- check buttons ---------- */
   .ms-check { margin-bottom: 52px; }
   .ms-check-btns {
@@ -593,6 +612,49 @@
   }
   .ms-modal-ok:hover { background: var(--color-green-dark); }
 
+  /* ---------- milestone celebration ---------- */
+  .ms-milestone { z-index: 55; }
+  .ms-milestone .ms-modal {
+    padding: 44px 30px 30px;
+    background:
+      radial-gradient(600px 240px at 50% -80px, #fff4dc 0%, transparent 70%),
+      #fffdf6;
+  }
+  .ms-milestone-emoji {
+    font-size: 4.8rem;
+    line-height: 1;
+    margin-bottom: 14px;
+    display: block;
+    animation: msMilestonePop 0.6s ease-out both;
+  }
+  @keyframes msMilestonePop {
+    0%   { transform: scale(0.4); opacity: 0; }
+    60%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .ms-milestone-title {
+    font-family: 'Lora', serif;
+    font-weight: 400;
+    font-size: 1.75rem;
+    line-height: 1.18;
+    color: #2d2a24;
+    margin: 0 0 10px;
+  }
+  .ms-milestone-title em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .ms-milestone-msg {
+    font-size: 0.98rem;
+    color: #55524a;
+    line-height: 1.6;
+    margin: 0 0 26px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ms-milestone-emoji { animation: none; }
+  }
+
   /* ---------- toast ---------- */
   .ms-toast {
     position: fixed;
@@ -622,6 +684,18 @@
   @keyframes msFade {
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .ms-check-btn.ms-pulsing {
+    animation: msCheckPulse 220ms ease-out;
+  }
+  @keyframes msCheckPulse {
+    0%   { transform: scale(1); }
+    45%  { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ms-check-btn.ms-pulsing { animation: none; }
   }
 
   @media (max-width: 380px) {
@@ -703,6 +777,8 @@
       </ol>
     </section>
 
+    <p class="ms-tip" id="ms-tip" hidden></p>
+
     <section class="ms-check" aria-labelledby="ms-check-title">
       <h2 id="ms-check-title" class="ms-section-title"><span>¿cómo ha ido hoy?</span></h2>
       <div class="ms-check-btns" id="ms-check-btns" role="group" aria-label="Check-in del día">
@@ -758,6 +834,16 @@
         <li><span class="ms-modal-ico is-joker">✦</span><span>Tienes <strong>2 comodines al mes</strong>: si un día se te pasa, se usan solos para no perder la racha.</span></li>
       </ul>
       <button type="button" class="ms-modal-ok" id="ms-modal-ok">Entendido, empezamos</button>
+    </div>
+  </div>
+
+  
+  <div id="ms-milestone" class="ms-modal-backdrop ms-milestone" role="dialog" aria-modal="true" aria-labelledby="ms-milestone-title" hidden>
+    <div class="ms-modal">
+      <span id="ms-milestone-emoji" class="ms-milestone-emoji" aria-hidden="true">🔥</span>
+      <h2 id="ms-milestone-title" class="ms-milestone-title">Una <em>semana</em> seguida</h2>
+      <p id="ms-milestone-msg" class="ms-milestone-msg">Siete días cuidándote. Esto ya no es casualidad.</p>
+      <button type="button" class="ms-modal-ok" id="ms-milestone-ok">Seguimos</button>
     </div>
   </div>
 
@@ -869,6 +955,28 @@
 
   const CUENTAN_PARA_RACHA = new Set(['seguido', 'parcial', 'comodin']);
 
+  // Milestones de racha (días). 28 = MENÚ 1 completo (4 semanas).
+  const MILESTONES = [7, 14, 28, 30];
+
+  // Devuelve el mayor milestone alcanzado aún no celebrado, o null.
+  function detectarMilestone(racha, vistos) {
+    const set = new Set(vistos || []);
+    let alcanzado = null;
+    for (const m of MILESTONES) {
+      if (racha >= m && !set.has(m)) alcanzado = m;
+    }
+    return alcanzado;
+  }
+
+  async function marcarMilestoneVisto(pacienteId, nuevo, actual) {
+    const actualizado = [...(actual || []), nuevo];
+    const { error } = await supa.from('pacientes')
+      .update({ milestones_vistos: actualizado })
+      .eq('id', pacienteId);
+    if (error) console.error('milestones update', error);
+    return actualizado;
+  }
+
   function renderStreak(checkinsMap) {
     let n = 0;
     const d = new Date(); d.setHours(0,0,0,0);
@@ -889,6 +997,7 @@
     }
     $('#ms-streak-num').textContent = n;
     $('.ms-streak-label').textContent = n === 1 ? 'día' : 'días';
+    return n;
   }
 
   // Cuenta comodines ya consumidos en el mes calendario de `hoy` (Date).
@@ -1016,6 +1125,77 @@
     }
   }
 
+  const TIPS = [
+    'Hidrátate antes de comer: medio vaso de agua 15 minutos antes ayuda a comer con más calma.',
+    'Mastica sin prisa. La saciedad tarda unos 20 minutos en llegar al cerebro.',
+    'El amarillo también cuenta. Progreso no es perfección.',
+    'Come siempre sentada, sin pantalla delante. El cuerpo se entera mejor de lo que comes.',
+    'Si tienes hambre entre horas, bebe agua primero. A veces es sed disfrazada.',
+    'Verdura en comida y cena. Media ración como mínimo, cruda o cocinada.',
+    'No te saltes el desayuno si tu cuerpo lo pide. Escúchalo, no lo fuerces.',
+    'Compra con lista. Si no entra en casa, no se come.',
+    'Un plato colorido suele ser un plato completo.',
+    'El azúcar que no ves (salsas, panes, yogures) suma más que el que sí ves.',
+    'Descansar bien es parte del plan. Dormir poco dispara el hambre del día siguiente.',
+    'Si un día te desmadras, el siguiente no lo compenses: retoma con normalidad.',
+    'Proteína en cada comida principal: huevo, pescado, legumbre, carne magra, tofu.',
+    'La fruta entera sacia más que el zumo. Muerde antes de exprimir.',
+    'Cocina de más: tener comida lista evita decisiones malas con hambre.',
+    'Andar 20 minutos después de comer ayuda a la digestión y al ánimo.',
+    'Grasas buenas sí: aguacate, frutos secos, aceite de oliva. No todas engordan igual.',
+    'Pesarse cada día es ruido. Una vez por semana, mismo día, en ayunas, basta.',
+    'La paciencia es parte del método. Los cambios reales son lentos y aburridos.',
+    'Celebra lo que marcas, no sólo lo que pesas. La constancia también es resultado.'
+  ];
+
+  function dayOfYear(d) {
+    const start = new Date(d.getFullYear(), 0, 0);
+    const diff = d - start + ((start.getTimezoneOffset() - d.getTimezoneOffset()) * 60 * 1000);
+    return Math.floor(diff / 864e5);
+  }
+
+  function tipDelDia(hoy) {
+    return TIPS[dayOfYear(hoy) % TIPS.length];
+  }
+
+  function renderTip() {
+    const el = $('#ms-tip');
+    el.textContent = tipDelDia(new Date());
+    el.hidden = false;
+  }
+
+  const MILESTONE_MSGS = {
+    7:  { emoji: '🔥', titulo: 'Una <em>semana</em> seguida', msg: 'Siete días cuidándote. Esto ya no es casualidad.' },
+    14: { emoji: '🌱', titulo: 'Dos <em>semanas</em>', msg: 'Ya es un hábito incipiente. Sigue así, sin prisa.' },
+    28: { emoji: '🏆', titulo: 'MENÚ 1 <em>completo</em>', msg: 'Cuatro semanas. Has recorrido tu primer menú entero.' },
+    30: { emoji: '⭐', titulo: 'Un <em>mes</em> entero', msg: 'Un mes cuidándote cada día. Ahora viene mantenerlo.' }
+  };
+
+  function showMilestone(n) {
+    const cfg = MILESTONE_MSGS[n];
+    if (!cfg) return;
+    $('#ms-milestone-emoji').textContent = cfg.emoji;
+    $('#ms-milestone-title').innerHTML   = cfg.titulo;
+    $('#ms-milestone-msg').textContent   = cfg.msg;
+    const modal = $('#ms-milestone');
+    modal.hidden = false;
+    const ok = $('#ms-milestone-ok');
+    ok.focus();
+    const cerrar = async () => {
+      modal.hidden = true;
+      paciente.milestones_vistos = await marcarMilestoneVisto(
+        paciente.id, n, paciente.milestones_vistos
+      );
+    };
+    ok.addEventListener('click', cerrar, { once: true });
+  }
+
+  async function maybeCelebrarMilestone(racha) {
+    if (!paciente) return;
+    const m = detectarMilestone(racha, paciente.milestones_vistos || []);
+    if (m) showMilestone(m);
+  }
+
   let toastTimer = null;
   function showToast(msg) {
     const t = $('#ms-toast');
@@ -1075,18 +1255,19 @@
 
     renderMeals(menu);
     renderPdfLink(menu);
+    renderTip();
 
     // Auto-consume comodines for gaps in the current month before rendering.
     const comodinResult = await autoFillComodines(map);
 
-    renderStreak(map);
+    const racha = renderStreak(map);
     renderCalendar(map);
     renderComodinesCounter(map);
 
     const estadoHoy = map.get(today);
     if (estadoHoy) setActiveCheck(estadoHoy);
 
-    return comodinResult;
+    return { ...(comodinResult || {}), racha };
   }
 
   // -------- auth wiring --------
@@ -1104,6 +1285,10 @@
         showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
       }
       maybeShowOnboarding();
+      // Celebra milestone sólo si el onboarding no está en pantalla (ya visto).
+      if (result && typeof result.racha === 'number' && paciente && paciente.onboarding) {
+        maybeCelebrarMilestone(result.racha);
+      }
     } else {
       authedView.hidden = true;
       loginView.hidden  = false;
@@ -1145,6 +1330,10 @@
     btn.addEventListener('click', async () => {
       if (!paciente) return;
       const estado = btn.dataset.estado;
+      btn.classList.remove('ms-pulsing');
+      void btn.offsetWidth; // reinicia la animación si se clica rápido dos veces
+      btn.classList.add('ms-pulsing');
+      btn.addEventListener('animationend', () => btn.classList.remove('ms-pulsing'), { once: true });
       setActiveCheck(estado);
       const err = await upsertCheckin(estado);
       if (err) { console.error(err); return; }
@@ -1152,9 +1341,10 @@
       const from = toISO(new Date(Date.now() - 60 * 864e5));
       const checkins = await loadCheckins(from);
       const map = new Map(checkins.map(c => [c.fecha, c.estado]));
-      renderStreak(map);
+      const racha = renderStreak(map);
       renderCalendar(map);
       renderComodinesCounter(map);
+      maybeCelebrarMilestone(racha);
     });
   });
 
