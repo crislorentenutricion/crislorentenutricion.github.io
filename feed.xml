@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="es">
+  <title>Cris Lorente Nutrición — Blog</title>
+  <subtitle>Asesoría nutricional personalizada para mujeres. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
+  <link href="https://www.crislorentenutricion.com/feed.xml" rel="self"/>
+  <link href="https://www.crislorentenutricion.com/"/>
+  <updated>2026-03-11T00:00:00Z</updated>
+  <id>https://www.crislorentenutricion.com/</id>
+  <author>
+    <name>Cristina Lorente Piquer</name>
+    <email>crislorentenutricion@gmail.com</email>
+    <uri>https://www.crislorentenutricion.com/sobre-mi/</uri>
+  </author>
+  <entry>
+    <title>Granada, de sueño a realidad — Día 1</title>
+    <link href="https://www.crislorentenutricion.com/blog/bienestar/granada-de-sueno-a-realidad/"/>
+    <updated>2026-03-11T00:00:00Z</updated>
+    <published>2026-03-11T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/bienestar/granada-de-sueno-a-realidad/</id>
+    <category term="bienestar" label="Bienestar"/>
+    <summary>El primer viaje de 2026, lleno de cosas bonitas, desconexión y paz. Granada, el Albaicín, el Bar Bultaco y dos personas muy especiales.</summary>
+  </entry>
+  <entry>
+    <title>Cómo llegué hasta aquí (y por qué no creo en las dietas estrictas)</title>
+    <link href="https://www.crislorentenutricion.com/blog/educacion/como-llegue-hasta-aqui/"/>
+    <updated>2026-03-04T00:00:00Z</updated>
+    <published>2026-03-04T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/educacion/como-llegue-hasta-aqui/</id>
+    <category term="educacion" label="Educación"/>
+    <summary>Mi historia personal: cocina, farmacia, dietética y la culpa que casi me rompe. Por qué rechazo las dietas estrictas y cómo eso se convirtió en mi vocación.</summary>
+  </entry>
+  <entry>
+    <title>Pizza casera</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/pizza-casera/"/>
+    <updated>2025-11-10T00:00:00Z</updated>
+    <published>2025-11-10T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/pizza-casera/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Masa de pizza casera desde cero: tierna por dentro, crujiente por fuera. Con base de tomate, mozzarella, queso de cabra y pollo salteado.</summary>
+  </entry>
+  <entry>
+    <title>Elegir nuestro destino o cómo llegar a él</title>
+    <link href="https://www.crislorentenutricion.com/blog/bienestar/elegir-nuestro-destino/"/>
+    <updated>2025-10-12T00:00:00Z</updated>
+    <published>2025-10-12T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/bienestar/elegir-nuestro-destino/</id>
+    <category term="bienestar" label="Bienestar"/>
+    <summary>Todos compartimos el mismo destino. Lo que nos diferencia es cómo elegimos recorrer el camino. Una reflexión sobre vivir con propósito.</summary>
+  </entry>
+  <entry>
+    <title>Comer sano no es comer menos</title>
+    <link href="https://www.crislorentenutricion.com/blog/educacion/comer-sano-no-es-comer-menos/"/>
+    <updated>2025-08-24T00:00:00Z</updated>
+    <published>2025-08-24T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/educacion/comer-sano-no-es-comer-menos/</id>
+    <category term="educacion" label="Educación"/>
+    <summary>Comer sano no es comer menos: es comer mejor. Una dietista online te explica qué significa realmente una alimentación saludable y cómo aplicarlo sin obsesionarte.</summary>
+  </entry>
+  <entry>
+    <title>Tortilla de patata con verduras</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/tortilla-de-patata-con-verduras/"/>
+    <updated>2025-07-20T00:00:00Z</updated>
+    <published>2025-07-20T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/tortilla-de-patata-con-verduras/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>La tortilla de patata de siempre, enriquecida con calabacín, pimiento y berenjena. Más fibra, más vitaminas, igual de buena.</summary>
+  </entry>
+  <entry>
+    <title>Batido veraniego</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/batido-veraniego/"/>
+    <updated>2025-07-19T00:00:00Z</updated>
+    <published>2025-07-19T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/batido-veraniego/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Un desayuno fresco y lleno de energía. Batido de plátano y frutos rojos, cremoso, saciante y 100% personalizable.</summary>
+  </entry>
+  <entry>
+    <title>La importancia de dejar ir lo que no es para ti</title>
+    <link href="https://www.crislorentenutricion.com/blog/bienestar/la-importancia-de-dejar-ir/"/>
+    <updated>2025-07-13T00:00:00Z</updated>
+    <published>2025-07-13T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/bienestar/la-importancia-de-dejar-ir/</id>
+    <category term="bienestar" label="Bienestar"/>
+    <summary>Soltar no siempre duele. A veces lo que hace es liberarnos. Mi experiencia dejando ir relaciones, trabajos y formas de vivir que no eran para mí.</summary>
+  </entry>
+  <entry>
+    <title>Cuando acepté que tenía un cuerpo</title>
+    <link href="https://www.crislorentenutricion.com/blog/bienestar/cuando-acepte-que-tenia-un-cuerpo/"/>
+    <updated>2025-07-07T00:00:00Z</updated>
+    <published>2025-07-07T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/bienestar/cuando-acepte-que-tenia-un-cuerpo/</id>
+    <category term="bienestar" label="Bienestar"/>
+    <summary>De vivir en la mente preocupada por el qué dirán, a valorar y disfrutar mi cuerpo tal como es. Querernos y aceptarnos no es un destino, sino un camino.</summary>
+  </entry>
+  <entry>
+    <title>Cómo empezar a cuidarte sin dietas ni obsesiones</title>
+    <link href="https://www.crislorentenutricion.com/blog/educacion/como-empezar-a-cuidarte-sin-dietas-ni-obsesiones/"/>
+    <updated>2025-06-20T00:00:00Z</updated>
+    <published>2025-06-20T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/educacion/como-empezar-a-cuidarte-sin-dietas-ni-obsesiones/</id>
+    <category term="educacion" label="Educación"/>
+    <summary>6 pasos para empezar a cuidarte sin dietas estrictas ni culpa. Guía de una nutricionista online para perder grasa respetando tu cuerpo y tu ritmo.</summary>
+  </entry>
+  <entry>
+    <title>Agua de frutas</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/agua-de-frutas/"/>
+    <updated>2025-06-13T00:00:00Z</updated>
+    <published>2025-06-13T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/agua-de-frutas/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Agua infusionada con limón, naranja, frambuesas y menta. Refrescante, antioxidante y perfecta para hidratarte sin esfuerzo.</summary>
+  </entry>
+  <entry>
+    <title>Galletas de avena sin azúcar</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/galletas-de-avena-sin-azucar/"/>
+    <updated>2025-06-13T00:00:00Z</updated>
+    <published>2025-06-13T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/galletas-de-avena-sin-azucar/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Receta de galletas de avena sin azúcar: saludables, ricas en fibra y listas en 30 minutos. El snack saludable perfecto para matar el antojo sin culpa.</summary>
+  </entry>
+  <entry>
+    <title>Pollo al horno con arroz y verduras</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/pollo-al-horno-con-arroz-y-verduras/"/>
+    <updated>2025-06-13T00:00:00Z</updated>
+    <published>2025-06-13T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/pollo-al-horno-con-arroz-y-verduras/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Comida completa y equilibrada en 45 minutos. Pollo marinado al horno con arroz integral salteado con verduras de temporada.</summary>
+  </entry>
+  <entry>
+    <title>Tortilla de espinacas y cebolla</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/tortilla-de-espinacas-y-cebolla/"/>
+    <updated>2025-06-13T00:00:00Z</updated>
+    <published>2025-06-13T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/tortilla-de-espinacas-y-cebolla/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Receta de tortilla de espinacas: cena saludable en 20 minutos, baja en carbohidratos y alta en proteína. Receta fácil y nutritiva.</summary>
+  </entry>
+  <entry>
+    <title>Cómo organizar tus comidas (sin morir en el intento)</title>
+    <link href="https://www.crislorentenutricion.com/blog/educacion/como-organizar-tus-comidas/"/>
+    <updated>2025-06-09T00:00:00Z</updated>
+    <published>2025-06-09T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/educacion/como-organizar-tus-comidas/</id>
+    <category term="educacion" label="Educación"/>
+    <summary>Cómo organizar tus comidas semanales paso a paso: menú semanal, lista de la compra y batch cooking. Guía práctica para comer sano sin perder tiempo.</summary>
+  </entry>
+  <entry>
+    <title>Tostadas integrales con aguacate y huevo</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/tostadas-integrales-con-aguacate-y-huevo/"/>
+    <updated>2025-06-05T00:00:00Z</updated>
+    <published>2025-06-05T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/tostadas-integrales-con-aguacate-y-huevo/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Receta de tostadas con aguacate y huevo: desayuno saludable en 15 minutos, alto en proteína y fibra. Fácil, nutritivo y perfecto para empezar el día.</summary>
+  </entry>
+  <entry>
+    <title>Bienestar personal: introducción al bienestar y salud mental</title>
+    <link href="https://www.crislorentenutricion.com/blog/bienestar/bienestar-personal-introduccion/"/>
+    <updated>2025-06-05T00:00:00Z</updated>
+    <published>2025-06-05T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/bienestar/bienestar-personal-introduccion/</id>
+    <category term="bienestar" label="Bienestar"/>
+    <summary>Primera publicación del apartado Bienestar: un espacio de salud integral para compartir lo que me hace sentir bien, desde el selfcare hasta los viajes.</summary>
+  </entry>
+  <entry>
+    <title>5 ensaladas de verano que debes probar</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/5-ensaladas-de-verano/"/>
+    <updated>2025-05-21T00:00:00Z</updated>
+    <published>2025-05-21T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/5-ensaladas-de-verano/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>5 recetas de ensaladas saludables y completas para verano: fáciles, rápidas y perfectas para tupper o cena. Recetas de una dietista online.</summary>
+  </entry>
+</feed>
