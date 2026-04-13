@@ -136,6 +136,30 @@ eleventyExcludeFromCollections: true
   .ms-status.is-ok    { color: var(--color-green-dark); }
   .ms-status.is-error { color: #a14d3a; }
 
+  .ms-consent {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin: 2px 6px 4px;
+    font-family: 'Lora', serif;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #6b6759;
+    cursor: pointer;
+  }
+  .ms-consent-box {
+    flex: 0 0 auto;
+    margin-top: 3px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-green);
+    cursor: pointer;
+  }
+  .ms-consent a {
+    color: var(--color-green);
+    text-decoration: underline;
+  }
+
   .ms-login-hint {
     margin: 4px 6px 0;
     font-family: 'Lora', serif;
@@ -606,6 +630,10 @@ eleventyExcludeFromCollections: true
         autocomplete="email"
         inputmode="email"
       >
+      <label class="ms-consent" for="ms-consent">
+        <input id="ms-consent" type="checkbox" class="ms-consent-box" required>
+        <span>Acepto el tratamiento de mis datos según la <a href="/privacidad-seguimiento/" target="_blank" rel="noopener">política de privacidad de la zona de seguimiento</a>.</span>
+      </label>
       <button type="submit" id="ms-login-submit" class="ms-submit">Enviar enlace</button>
       <p class="ms-login-hint">Revisa tu bandeja de entrada (y spam, por si acaso).</p>
     </form>
@@ -1049,10 +1077,17 @@ eleventyExcludeFromCollections: true
     }
   }
 
+  const consentBox = $('#ms-consent');
+
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = emailInput.value.trim().toLowerCase();
     if (!email) return;
+    if (!consentBox.checked) {
+      showStatus('Para recibir el enlace tienes que aceptar la política de privacidad.', 'error');
+      consentBox.focus();
+      return;
+    }
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Enviando…';
