@@ -8,21 +8,23 @@ ogType: article
   "@type": "BlogPosting",
   "headline": "{{ title }}",
   "description": "{{ description }}",
+  "url": "https://www.crislorentenutricion.com{{ page.url }}",
   "image": "https://www.crislorentenutricion.com/img/blog/{{ postImage }}",
   "datePublished": "{{ date | fechaISO }}",
   "dateModified": "{{ date | fechaISO }}",
+  "inLanguage": "es-ES",
+  "articleSection": "{{ categoryLabel }}",
   "author": {
     "@type": "Person",
+    "@id": "https://www.crislorentenutricion.com/sobre-mi/#person",
     "name": "Cristina Lorente Piquer",
     "url": "https://www.crislorentenutricion.com/sobre-mi/"
   },
   "publisher": {
-    "@type": "Organization",
-    "name": "Cris Lorente Nutrición",
-    "logo": {
-      "@type": "ImageObject",
-      "url": "https://www.crislorentenutricion.com/img/cristina.jpg"
-    }
+    "@id": "https://www.crislorentenutricion.com/#organization"
+  },
+  "isPartOf": {
+    "@id": "https://www.crislorentenutricion.com/#website"
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
