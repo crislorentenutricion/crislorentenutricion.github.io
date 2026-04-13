@@ -62,6 +62,66 @@ permalink: /servicios/
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
+  "@type": "Service",
+  "@id": "https://www.crislorentenutricion.com/servicios/#service",
+  "name": "Asesoría nutricional personalizada online",
+  "serviceType": "Asesoría nutricional personalizada",
+  "description": "Menú mensual personalizado con gramajes, lista de la compra, 2 seguimientos al mes por videollamada y WhatsApp 24h. Sin permanencia. Primer mes a 15 €.",
+  "url": "https://www.crislorentenutricion.com/servicios/",
+  "provider": { "@id": "https://www.crislorentenutricion.com/#organization" },
+  "areaServed": { "@type": "Country", "name": "España" },
+  "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Mujeres adultas con poco tiempo y estrés que buscan perder grasa o mejorar su relación con la comida sin dietas estrictas"
+  },
+  "availableChannel": {
+    "@type": "ServiceChannel",
+    "serviceUrl": "https://www.crislorentenutricion.com/servicios/",
+    "availableLanguage": "es"
+  },
+  "offers": [
+    {
+      "@type": "Offer",
+      "name": "Primer mes (prueba)",
+      "price": "15",
+      "priceCurrency": "EUR",
+      "url": "https://www.crislorentenutricion.com/servicios/#formulario-contacto",
+      "availability": "https://schema.org/InStock",
+      "category": "Prueba",
+      "eligibleCustomerType": "https://schema.org/NewCustomer"
+    },
+    {
+      "@type": "Offer",
+      "name": "Asesoría nutricional mensual",
+      "price": "40",
+      "priceCurrency": "EUR",
+      "url": "https://www.crislorentenutricion.com/servicios/#formulario-contacto",
+      "availability": "https://schema.org/InStock",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "40",
+        "priceCurrency": "EUR",
+        "unitText": "MON",
+        "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": "MON" }
+      }
+    },
+    {
+      "@type": "Offer",
+      "name": "Valoración gratuita",
+      "price": "0",
+      "priceCurrency": "EUR",
+      "url": "https://www.crislorentenutricion.com/servicios/#formulario-contacto",
+      "description": "Videollamada de 30 minutos sin compromiso.",
+      "availability": "https://schema.org/InStock"
+    }
+  ],
+  "termsOfService": "https://www.crislorentenutricion.com/legal/condiciones/"
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
     { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.crislorentenutricion.com/" },

@@ -6,6 +6,43 @@ ogImage: /img/cristina.jpg
 navActive: blog
 ---
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "@id": "https://www.crislorentenutricion.com/blog/#blog",
+  "name": "Aprende — Cris Lorente Nutrición",
+  "description": "Artículos sobre nutrición, recetas saludables y bienestar.",
+  "url": "https://www.crislorentenutricion.com/blog/",
+  "inLanguage": "es-ES",
+  "publisher": { "@id": "https://www.crislorentenutricion.com/#organization" },
+  "author": { "@id": "https://www.crislorentenutricion.com/sobre-mi/#person" },
+  "blogPost": [
+    {%- for post in blog | ordenarPorFecha -%}
+    {
+      "@type": "BlogPosting",
+      "headline": "{{ post.title | replace('"', '\\"') }}",
+      "url": "https://www.crislorentenutricion.com/blog/{{ post.category }}/{{ post.slug }}/",
+      "datePublished": "{{ post.date | fechaISO }}",
+      "image": "https://www.crislorentenutricion.com/img/blog/{{ post.image }}",
+      "articleSection": "{{ post.categoryLabel }}"
+    }{% if not loop.last %},{% endif %}
+    {%- endfor -%}
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.crislorentenutricion.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Aprende" }
+  ]
+}
+</script>
+
 <section class="hero section-cream">
   <div class="container hero-inner hero-centered">
     <div class="hero-text">
