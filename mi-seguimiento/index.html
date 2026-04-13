@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+  <meta name="google-site-verification" content="a5hA-WBmBo4Hp1V61UimY41b1McnSKxFXM2HGxGRsP8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi seguimiento — Cris Lorente Nutrición</title>
+  <meta name="description" content="Espacio privado de seguimiento nutricional.">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.crislorentenutricion.com/mi-seguimiento/">
+  <meta property="og:title" content="Mi seguimiento — Cris Lorente Nutrición">
+  <meta property="og:description" content="Espacio privado de seguimiento nutricional.">
+  <meta property="og:image" content="https://www.crislorentenutricion.com/img/cristina.jpg">
+  <meta property="og:locale" content="es_ES">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Mi seguimiento — Cris Lorente Nutrición">
+  <meta name="twitter:description" content="Espacio privado de seguimiento nutricional.">
+  <meta name="twitter:image" content="https://www.crislorentenutricion.com/img/cristina.jpg">
+  <link rel="canonical" href="https://www.crislorentenutricion.com/mi-seguimiento/">
+  <link rel="alternate" hreflang="es" href="https://www.crislorentenutricion.com/mi-seguimiento/">
+  <meta name="geo.region" content="ES">
+  <meta name="geo.placename" content="España">
+  <meta name="content-language" content="es">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400;1,600&family=Manrope:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400;1,600&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
+  <link rel="stylesheet" href="/css/style.css">
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+
+  <meta name="robots" content="noindex, nofollow">
+</head>
+<body class="ms-body">
+  <main>
+    
+<style>
+  /* ============================================================
+     /mi-seguimiento — editorial-matutino
+     Espacio íntimo tipo diario de mañana. Sin header ni footer.
+     Reusa tokens del sitio (Manrope + Lora + verde bosque + crema)
+     y añade una paleta cálida sólo para esta página.
+     ============================================================ */
+
+  .ms-body {
+    background:
+      radial-gradient(1100px 500px at 50% -180px, #f3eddc 0%, transparent 60%),
+      var(--color-cream);
+    color: #2d2a24;
+  }
+
+  .ms-page {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 36px 22px 72px;
+    position: relative;
+  }
+
+  .ms-brand {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #8a8678;
+    text-align: center;
+    letter-spacing: 0.04em;
+    margin-bottom: 18px;
+  }
+  .ms-brand a { color: inherit; }
+  .ms-brand a:hover { color: var(--color-green); text-decoration: none; }
+
+  /* ---------- decorative sprig ---------- */
+  .ms-sprig {
+    width: 58px; height: 58px;
+    margin: 12px auto 28px;
+    display: block;
+    color: var(--color-green);
+    opacity: 0.8;
+  }
+
+  /* ============================================================
+     LOGIN VIEW
+     ============================================================ */
+  .ms-login { padding-top: 4vh; }
+  .ms-login-title {
+    font-family: 'Lora', serif;
+    font-weight: 400;
+    font-size: clamp(1.85rem, 6.2vw, 2.55rem);
+    line-height: 1.12;
+    letter-spacing: -0.012em;
+    text-align: center;
+    margin-bottom: 18px;
+    color: #2d2a24;
+  }
+  .ms-login-title em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .ms-login-intro {
+    font-size: 1rem;
+    color: #55524a;
+    max-width: 430px;
+    margin: 0 auto 44px;
+    line-height: 1.65;
+    text-align: center;
+  }
+  .ms-login-form {
+    max-width: 380px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ms-label {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #6b6759;
+    margin-left: 6px;
+  }
+  .ms-input {
+    font-family: var(--font-family);
+    font-size: 1rem;
+    padding: 15px 18px;
+    border: 1px solid #d9d3c3;
+    border-radius: 14px;
+    background: #fffefa;
+    color: #2d2a24;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .ms-input::placeholder { color: #a8a394; }
+  .ms-input:focus {
+    border-color: var(--color-green);
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.12);
+  }
+  .ms-submit {
+    margin-top: 6px;
+    padding: 15px 22px;
+    background: var(--color-green);
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+  }
+  .ms-submit:hover { background: var(--color-green-dark); }
+  .ms-submit:active { transform: translateY(1px); }
+  .ms-submit[disabled] { opacity: 0.6; cursor: progress; }
+
+  .ms-status {
+    margin-top: 22px;
+    text-align: center;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #55524a;
+    line-height: 1.55;
+    padding: 0 12px;
+  }
+  .ms-status.is-ok    { color: var(--color-green-dark); }
+  .ms-status.is-error { color: #a14d3a; }
+
+  .ms-login-foot {
+    margin-top: 44px;
+    text-align: center;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: #a29e91;
+  }
+
+  /* ============================================================
+     AUTHED VIEW
+     ============================================================ */
+  .ms-authed { padding-top: 4px; }
+
+  .ms-hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 44px;
+  }
+  .ms-hero-text { flex: 1; min-width: 0; }
+  .ms-eyebrow {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    color: #8a8678;
+    margin-bottom: 4px;
+    letter-spacing: 0.01em;
+  }
+  .ms-greeting {
+    font-family: 'Lora', serif;
+    font-weight: 400;
+    font-size: clamp(1.65rem, 5.4vw, 2rem);
+    line-height: 1.12;
+    color: #2d2a24;
+  }
+  .ms-greeting em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+
+  /* streak — cálido, como un pequeño talismán */
+  .ms-streak {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    min-width: 84px;
+    padding: 14px 12px 12px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #fff4dc 0%, #ffe2b8 100%);
+    box-shadow:
+      0 2px 14px rgba(193, 125, 60, 0.14),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+    text-align: center;
+  }
+  .ms-flame { width: 22px; height: 22px; color: #c86838; margin-bottom: 1px; }
+  .ms-streak-num {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    font-size: 1.75rem;
+    color: #9d4820;
+    line-height: 1;
+  }
+  .ms-streak-label {
+    font-size: 0.7rem;
+    color: #7a5538;
+    letter-spacing: 0.03em;
+    margin-top: 2px;
+  }
+
+  /* section titles — italic, delicados */
+  .ms-section-title {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.02rem;
+    color: #8a8678;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-transform: lowercase;
+    letter-spacing: 0.01em;
+  }
+  .ms-section-title::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #e4dfcf;
+  }
+
+  /* ---------- meals (menú del día) ---------- */
+  .ms-today { margin-bottom: 44px; }
+  .ms-meals {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ms-meal {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 16px 20px;
+    background: #fdfbf4;
+    border: 1px solid rgba(224, 221, 212, 0.65);
+    border-radius: 14px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .ms-meal-time {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--color-green);
+    padding-top: 3px;
+    letter-spacing: 0.015em;
+  }
+  .ms-meal-text {
+    font-size: 0.96rem;
+    color: #3e3b34;
+    line-height: 1.55;
+  }
+  .ms-meal.is-skeleton .ms-meal-text {
+    color: #a8a394;
+    font-style: italic;
+  }
+
+  /* ---------- check buttons ---------- */
+  .ms-check { margin-bottom: 52px; }
+  .ms-check-btns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .ms-check-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 8px 16px;
+    border: 1.5px solid #e4dfcf;
+    background: #fffefa;
+    border-radius: 18px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .ms-check-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(50, 40, 20, 0.06);
+  }
+  .ms-check-btn:focus-visible {
+    outline: none;
+    border-color: currentColor;
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.12);
+  }
+  .ms-check-btn.is-active {
+    border-color: currentColor;
+    background: #fdfbf4;
+  }
+  .ms-check-emoji {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-family: 'Lora', serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+  .ms-check-ok  { color: #4a7c59; }
+  .ms-check-ok  .ms-check-emoji { background: #e3efe5; }
+  .ms-check-mid { color: #a37a2a; }
+  .ms-check-mid .ms-check-emoji { background: #f6ebce; }
+  .ms-check-no  { color: #a14d3a; }
+  .ms-check-no  .ms-check-emoji { background: #f2dfd7; }
+  .ms-check-label {
+    font-size: 0.84rem;
+    color: #3e3b34;
+    font-weight: 500;
+  }
+
+  /* ---------- calendar ---------- */
+  .ms-calendar { margin-bottom: 48px; }
+  .ms-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 10px;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.72rem;
+    color: #a29e91;
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+  .ms-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+  .ms-cal-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    background: #efeadd;
+    display: grid;
+    place-items: center;
+    font-size: 0.7rem;
+    color: transparent;
+    transition: transform 0.15s ease;
+  }
+  .ms-cal-cell.is-empty { background: transparent; }
+  .ms-cal-cell.is-ok    { background: var(--color-green); }
+  .ms-cal-cell.is-mid   { background: #d9b36a; }
+  .ms-cal-cell.is-no    { background: #d9a08e; }
+  .ms-cal-cell.is-today {
+    box-shadow: 0 0 0 1.5px var(--color-green-dark);
+  }
+  .ms-calendar-legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: #8a8678;
+  }
+  .ms-legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: baseline;
+  }
+  .ms-legend-dot.is-ok  { background: var(--color-green); }
+  .ms-legend-dot.is-mid { background: #d9b36a; }
+  .ms-legend-dot.is-no  { background: #d9a08e; }
+
+  /* ---------- footer ---------- */
+  .ms-foot {
+    text-align: center;
+    padding-top: 12px;
+    border-top: 1px solid #e4dfcf;
+    margin-top: 24px;
+  }
+  .ms-signout {
+    background: none;
+    border: 0;
+    cursor: pointer;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: #8a8678;
+    padding: 10px 16px;
+    transition: color 0.2s ease;
+  }
+  .ms-signout:hover { color: var(--color-green); }
+
+  /* ---------- micro-interactions ---------- */
+  .ms-fade-in { animation: msFade 0.45s ease both; }
+  @keyframes msFade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 380px) {
+    .ms-meal { grid-template-columns: 76px 1fr; gap: 10px; padding: 14px 16px; }
+    .ms-check-label { font-size: 0.78rem; }
+    .ms-streak { min-width: 74px; padding: 12px 10px 10px; }
+    .ms-streak-num { font-size: 1.55rem; }
+  }
+</style>
+
+<div class="ms-page">
+  <p class="ms-brand"><a href="/">Cris Lorente Nutrición</a></p>
+
+  
+  <section id="ms-login" class="ms-login">
+    <svg class="ms-sprig" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M40 72 Q40 44 40 12"/>
+      <path d="M40 55 Q27 51 19 36"/>
+      <path d="M40 46 Q53 43 61 27"/>
+      <path d="M40 35 Q29 32 24 18"/>
+      <path d="M40 27 Q52 25 58 13"/>
+      <circle cx="40" cy="10" r="1.8" fill="currentColor" stroke="none"/>
+    </svg>
+
+    <h1 class="ms-login-title">Tu <em>espacio</em><br>de seguimiento</h1>
+    <p class="ms-login-intro">
+      Aquí ves tu menú de hoy, marcas cómo te ha ido el día y observas cómo avanzas semana a semana. Sin contraseñas: te mando un enlace al correo y entras con un clic.
+    </p>
+
+    <form id="ms-login-form" class="ms-login-form" novalidate>
+      <label for="ms-email" class="ms-label">Tu correo</label>
+      <input
+        id="ms-email"
+        name="email"
+        type="email"
+        required
+        class="ms-input"
+        placeholder="tunombre@correo.com"
+        autocomplete="email"
+        inputmode="email"
+      >
+      <button type="submit" id="ms-login-submit" class="ms-submit">Enviar enlace</button>
+    </form>
+
+    <p id="ms-status" class="ms-status" hidden></p>
+
+    <p class="ms-login-foot">Solo pacientes de Cris Lorente Nutrición.</p>
+  </section>
+
+  
+  <section id="ms-authed" class="ms-authed" hidden>
+    <header class="ms-hero">
+      <div class="ms-hero-text">
+        <p class="ms-eyebrow" id="ms-date">Cargando…</p>
+        <h1 class="ms-greeting">Buenos días, <em id="ms-name">…</em></h1>
+      </div>
+      <div class="ms-streak" aria-label="Racha de días seguidos">
+        <svg class="ms-flame" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2c.4 3.2 3 4.5 3 8 0 1.6-.9 3-2.2 3.7.4-1.4-.2-2.7-1.3-3.4.2 2.3-2.5 3-2.5 5.7 0 2.4 2 4 5 4s5-1.9 5-4.5c0-4.9-4.2-6.7-7-13.5z" fill="currentColor"/>
+        </svg>
+        <span class="ms-streak-num" id="ms-streak-num">–</span>
+        <span class="ms-streak-label">días</span>
+      </div>
+    </header>
+
+    <section class="ms-today" aria-labelledby="ms-today-title">
+      <h2 id="ms-today-title" class="ms-section-title"><span>hoy</span></h2>
+      <ol class="ms-meals" id="ms-meals">
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Desayuno</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Almuerzo</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Comida</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Merienda</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Cena</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
+      </ol>
+    </section>
+
+    <section class="ms-check" aria-labelledby="ms-check-title">
+      <h2 id="ms-check-title" class="ms-section-title"><span>¿cómo ha ido hoy?</span></h2>
+      <div class="ms-check-btns" id="ms-check-btns" role="group" aria-label="Check-in del día">
+        <button type="button" class="ms-check-btn ms-check-ok"  data-estado="seguido">
+          <span class="ms-check-emoji" aria-hidden="true">✓</span>
+          <span class="ms-check-label">Lo he seguido</span>
+        </button>
+        <button type="button" class="ms-check-btn ms-check-mid" data-estado="parcial">
+          <span class="ms-check-emoji" aria-hidden="true">~</span>
+          <span class="ms-check-label">A medias</span>
+        </button>
+        <button type="button" class="ms-check-btn ms-check-no"  data-estado="no">
+          <span class="ms-check-emoji" aria-hidden="true">×</span>
+          <span class="ms-check-label">Hoy no</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="ms-calendar" aria-labelledby="ms-month-title">
+      <h2 id="ms-month-title" class="ms-section-title"><span id="ms-month">este mes</span></h2>
+      <div class="ms-calendar-weekdays" aria-hidden="true">
+        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+      <div class="ms-calendar-grid" id="ms-calendar-grid" aria-label="Calendario del mes">
+        
+      </div>
+      <p class="ms-calendar-legend">
+        <span><span class="ms-legend-dot is-ok"></span>lo seguí</span>
+        <span><span class="ms-legend-dot is-mid"></span>a medias</span>
+        <span><span class="ms-legend-dot is-no"></span>hoy no</span>
+      </p>
+    </section>
+
+    <footer class="ms-foot">
+      <button type="button" class="ms-signout" id="ms-signout">Cerrar sesión</button>
+    </footer>
+  </section>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://nvjoupgpncprgpemqydg.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_kcnv9Us0xUtLaYAvsxT_Qw_YOzv05RS';
+
+  const supa = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+  window.supa = supa;
+
+  const $  = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  const loginView  = $('#ms-login');
+  const authedView = $('#ms-authed');
+  const statusEl   = $('#ms-status');
+  const form       = $('#ms-login-form');
+  const emailInput = $('#ms-email');
+  const submitBtn  = $('#ms-login-submit');
+
+  const DIAS_JS = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+  const COMIDAS = [['desayuno','Desayuno'],['almuerzo','Almuerzo'],['comida','Comida'],['merienda','Merienda'],['cena','Cena']];
+
+  let paciente = null;
+
+  // -------- utils --------
+  const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+  const toISO = (d) => {
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${day}`;
+  };
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  function showStatus(msg, kind) {
+    statusEl.hidden = false;
+    statusEl.textContent = msg;
+    statusEl.classList.remove('is-ok', 'is-error');
+    if (kind) statusEl.classList.add('is-' + kind);
+  }
+
+  function renderDate() {
+    const d = new Date();
+    $('#ms-date').textContent  = capitalize(d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }));
+    $('#ms-month').textContent = d.toLocaleDateString('es-ES', { month: 'long' });
+  }
+
+  // -------- data loaders --------
+  async function loadPaciente() {
+    const { data, error } = await supa.from('pacientes').select('*').limit(1).maybeSingle();
+    if (error) { console.error('pacientes', error); return null; }
+    return data;
+  }
+
+  async function loadMenuVigente(todayISO) {
+    const { data, error } = await supa.from('menus')
+      .select('*')
+      .lte('vigente_desde', todayISO)
+      .order('vigente_desde', { ascending: false })
+      .limit(1);
+    if (error) { console.error('menus', error); return null; }
+    return (data && data[0]) || null;
+  }
+
+  async function loadCheckins(fromISO) {
+    const { data, error } = await supa.from('checkins')
+      .select('fecha, estado')
+      .gte('fecha', fromISO)
+      .order('fecha', { ascending: false });
+    if (error) { console.error('checkins', error); return []; }
+    return data || [];
+  }
+
+  async function upsertCheckin(estado) {
+    const today = toISO(new Date());
+    const { error } = await supa.from('checkins').upsert({
+      paciente_id: paciente.id,
+      fecha: today,
+      estado
+    }, { onConflict: 'paciente_id,fecha' });
+    return error;
+  }
+
+  // -------- renderers --------
+  function renderMeals(menu) {
+    const container = $('#ms-meals');
+    if (!menu || !menu.contenido) {
+      container.innerHTML = `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Aún no hay menú</span><p class="ms-meal-text">En cuanto Cristina lo suba aparecerá aquí.</p></li>`;
+      return;
+    }
+    const hoy = DIAS_JS[new Date().getDay()];
+    const dia = menu.contenido.dias && menu.contenido.dias[hoy];
+    if (!dia) {
+      container.innerHTML = `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Hoy</span><p class="ms-meal-text">Hoy no hay comidas planificadas en este menú.</p></li>`;
+      return;
+    }
+    container.innerHTML = COMIDAS.map(([k, label]) => {
+      const text = dia[k] || '—';
+      return `<li class="ms-meal"><span class="ms-meal-time">${label}</span><p class="ms-meal-text">${escapeHtml(text)}</p></li>`;
+    }).join('');
+  }
+
+  function renderStreak(checkinsMap) {
+    let n = 0;
+    const d = new Date(); d.setHours(0,0,0,0);
+    let first = true;
+    while (true) {
+      const iso = toISO(d);
+      const estado = checkinsMap.get(iso);
+      if (estado === 'seguido' || estado === 'parcial') {
+        n++;
+        d.setDate(d.getDate() - 1);
+      } else if (first) {
+        // today not marked yet — don't break streak, continue from yesterday
+        d.setDate(d.getDate() - 1);
+      } else {
+        break;
+      }
+      first = false;
+    }
+    $('#ms-streak-num').textContent = n;
+    $('.ms-streak-label').textContent = n === 1 ? 'día' : 'días';
+  }
+
+  function renderCalendar(checkinsMap) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay  = new Date(year, month+1, 0);
+    const offset = (firstDay.getDay() + 6) % 7; // Mon=0..Sun=6
+    const totalCells = offset + lastDay.getDate();
+    const trailing = (7 - (totalCells % 7)) % 7;
+    const grid = $('#ms-calendar-grid');
+    const todayISO = toISO(now);
+
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < offset; i++) {
+      const c = document.createElement('div');
+      c.className = 'ms-cal-cell is-empty';
+      frag.appendChild(c);
+    }
+    for (let day = 1; day <= lastDay.getDate(); day++) {
+      const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+      const c = document.createElement('div');
+      c.className = 'ms-cal-cell';
+      const estado = checkinsMap.get(iso);
+      if (estado === 'seguido') c.classList.add('is-ok');
+      else if (estado === 'parcial') c.classList.add('is-mid');
+      else if (estado === 'no') c.classList.add('is-no');
+      if (iso === todayISO) c.classList.add('is-today');
+      frag.appendChild(c);
+    }
+    for (let i = 0; i < trailing; i++) {
+      const c = document.createElement('div');
+      c.className = 'ms-cal-cell is-empty';
+      frag.appendChild(c);
+    }
+    grid.replaceChildren(frag);
+  }
+
+  function setActiveCheck(estado) {
+    $$('.ms-check-btn').forEach(b => b.classList.toggle('is-active', b.dataset.estado === estado));
+  }
+
+  function primerNombre(nombre) {
+    // NOMBRE COMPLETO EN MAYÚSCULAS → Primer nombre con mayúscula inicial
+    if (!nombre) return '';
+    const first = nombre.trim().split(/\s+/)[0];
+    return first.charAt(0) + first.slice(1).toLowerCase();
+  }
+
+  function showSinPaciente() {
+    $('#ms-name').textContent = 'hola';
+    $('#ms-meals').innerHTML = `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Espera</span><p class="ms-meal-text">Tu espacio aún no está preparado. Cristina lo activa en cuanto subamos tu primer menú.</p></li>`;
+    $$('.ms-check-btn').forEach(b => b.disabled = true);
+    $('#ms-streak-num').textContent = '0';
+  }
+
+  // -------- orchestration --------
+  async function hydrate() {
+    renderDate();
+    paciente = await loadPaciente();
+    if (!paciente) {
+      showSinPaciente();
+      return;
+    }
+    $('#ms-name').textContent = primerNombre(paciente.nombre);
+
+    const today = toISO(new Date());
+    const from = toISO(new Date(Date.now() - 60 * 864e5));
+
+    const [menu, checkins] = await Promise.all([
+      loadMenuVigente(today),
+      loadCheckins(from)
+    ]);
+
+    const map = new Map(checkins.map(c => [c.fecha, c.estado]));
+
+    renderMeals(menu);
+    renderStreak(map);
+    renderCalendar(map);
+
+    const estadoHoy = map.get(today);
+    if (estadoHoy) setActiveCheck(estadoHoy);
+  }
+
+  // -------- auth wiring --------
+  function render(session) {
+    if (session) {
+      loginView.hidden  = true;
+      authedView.hidden = false;
+      authedView.classList.add('ms-fade-in');
+      hydrate();
+    } else {
+      authedView.hidden = true;
+      loginView.hidden  = false;
+    }
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = emailInput.value.trim().toLowerCase();
+    if (!email) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando…';
+    statusEl.hidden = true;
+
+    const { error } = await supa.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + '/mi-seguimiento/' }
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Enviar enlace';
+
+    if (error) {
+      showStatus('No hemos podido enviar el enlace. Prueba de nuevo en un minuto.', 'error');
+      return;
+    }
+    showStatus('Te acabamos de mandar un enlace a ' + email + '. Ábrelo desde el móvil o el ordenador y entrarás sin más.', 'ok');
+  });
+
+  $$('.ms-check-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!paciente) return;
+      const estado = btn.dataset.estado;
+      setActiveCheck(estado);
+      const err = await upsertCheckin(estado);
+      if (err) { console.error(err); return; }
+      // refresh streak + calendar
+      const from = toISO(new Date(Date.now() - 60 * 864e5));
+      const checkins = await loadCheckins(from);
+      const map = new Map(checkins.map(c => [c.fecha, c.estado]));
+      renderStreak(map);
+      renderCalendar(map);
+    });
+  });
+
+  $('#ms-signout').addEventListener('click', async () => {
+    await supa.auth.signOut();
+  });
+
+  supa.auth.onAuthStateChange((_event, session) => render(session));
+  (async () => {
+    const { data } = await supa.auth.getSession();
+    render(data.session);
+  })();
+</script>
+
+  </main>
+</body>
+</html>
