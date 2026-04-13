@@ -136,6 +136,16 @@ eleventyExcludeFromCollections: true
   .ms-status.is-ok    { color: var(--color-green-dark); }
   .ms-status.is-error { color: #a14d3a; }
 
+  .ms-login-hint {
+    margin: 4px 6px 0;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #8a8678;
+    text-align: center;
+    line-height: 1.5;
+  }
+
   .ms-login-foot {
     margin-top: 44px;
     text-align: center;
@@ -356,6 +366,10 @@ eleventyExcludeFromCollections: true
   .ms-cal-cell.is-ok    { background: var(--color-green); }
   .ms-cal-cell.is-mid   { background: #d9b36a; }
   .ms-cal-cell.is-no    { background: #d9a08e; }
+  .ms-cal-cell.is-comodin {
+    background: #fdfbf4;
+    border: 1.5px dashed var(--color-green);
+  }
   .ms-cal-cell.is-today {
     box-shadow: 0 0 0 1.5px var(--color-green-dark);
   }
@@ -379,6 +393,11 @@ eleventyExcludeFromCollections: true
   .ms-legend-dot.is-ok  { background: var(--color-green); }
   .ms-legend-dot.is-mid { background: #d9b36a; }
   .ms-legend-dot.is-no  { background: #d9a08e; }
+  .ms-legend-dot.is-comodin {
+    background: #fdfbf4;
+    border: 1.5px dashed var(--color-green);
+    box-sizing: border-box;
+  }
 
   /* ---------- footer ---------- */
   .ms-foot {
@@ -399,6 +418,147 @@ eleventyExcludeFromCollections: true
     transition: color 0.2s ease;
   }
   .ms-signout:hover { color: var(--color-green); }
+
+  /* ---------- check hint + comodines counter ---------- */
+  .ms-check-hint {
+    margin: 14px 2px 0;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.86rem;
+    color: #8a8678;
+    text-align: center;
+    line-height: 1.55;
+  }
+  .ms-comodines {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: #8a8678;
+    text-align: center;
+    margin: 8px 0 0;
+  }
+  .ms-comodines strong {
+    font-style: normal;
+    font-weight: 600;
+    color: #6b6759;
+  }
+
+  /* ---------- PDF link in foot ---------- */
+  .ms-pdf-link {
+    display: inline-block;
+    margin-right: 18px;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--color-green);
+    padding: 10px 2px;
+    text-decoration: none;
+  }
+  .ms-pdf-link:hover { text-decoration: underline; }
+
+  /* ---------- onboarding modal ---------- */
+  .ms-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 42, 36, 0.55);
+    display: grid;
+    place-items: center;
+    padding: 22px;
+    z-index: 50;
+    animation: msFade 0.3s ease both;
+  }
+  .ms-modal-backdrop[hidden] { display: none; }
+  .ms-modal {
+    background: #fffdf6;
+    border-radius: 20px;
+    padding: 34px 28px 28px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 18px 48px rgba(45, 42, 36, 0.22);
+    text-align: center;
+  }
+  .ms-modal-title {
+    font-family: 'Lora', serif;
+    font-weight: 400;
+    font-size: 1.55rem;
+    line-height: 1.2;
+    color: #2d2a24;
+    margin: 0 0 10px;
+  }
+  .ms-modal-title em { font-style: italic; font-weight: 600; color: var(--color-green); }
+  .ms-modal-intro {
+    font-size: 0.96rem;
+    color: #55524a;
+    line-height: 1.6;
+    margin: 0 0 22px;
+  }
+  .ms-modal-list {
+    text-align: left;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 26px;
+    font-size: 0.94rem;
+    color: #3e3b34;
+    line-height: 1.55;
+  }
+  .ms-modal-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid #ece7d6;
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  .ms-modal-list li:last-child { border-bottom: 0; }
+  .ms-modal-list .ms-modal-ico {
+    font-family: 'Lora', serif;
+    font-weight: 600;
+    text-align: center;
+    padding-top: 1px;
+  }
+  .ms-modal-list .is-ok  { color: #4a7c59; }
+  .ms-modal-list .is-mid { color: #a37a2a; }
+  .ms-modal-list .is-no  { color: #a14d3a; }
+  .ms-modal-list .is-streak { color: #c86838; }
+  .ms-modal-list .is-joker { color: #8a8678; }
+  .ms-modal-ok {
+    width: 100%;
+    padding: 14px 22px;
+    background: var(--color-green);
+    color: #fff;
+    border: 0;
+    border-radius: 14px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.98rem;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+  .ms-modal-ok:hover { background: var(--color-green-dark); }
+
+  /* ---------- toast ---------- */
+  .ms-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    background: #2d2a24;
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    font-family: var(--font-family);
+    line-height: 1.45;
+    max-width: calc(100% - 32px);
+    text-align: center;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+    z-index: 60;
+    animation: msToastIn 0.3s ease both;
+  }
+  @keyframes msToastIn {
+    from { opacity: 0; transform: translate(-50%, 12px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+  }
 
   /* ---------- micro-interactions ---------- */
   .ms-fade-in { animation: msFade 0.45s ease both; }
@@ -431,7 +591,7 @@ eleventyExcludeFromCollections: true
 
     <h1 class="ms-login-title">Tu <em>espacio</em><br>de seguimiento</h1>
     <p class="ms-login-intro">
-      Aquí ves tu menú de hoy, marcas cómo te ha ido el día y observas cómo avanzas semana a semana. Sin contraseñas: te mando un enlace al correo y entras con un clic.
+      Aquí ves tu menú de hoy, marcas cómo te ha ido el día y observas cómo avanzas semana a semana. Sin contraseñas: escribes tu correo, te llega un enlace, haces clic y entras.
     </p>
 
     <form id="ms-login-form" class="ms-login-form" novalidate>
@@ -447,6 +607,7 @@ eleventyExcludeFromCollections: true
         inputmode="email"
       >
       <button type="submit" id="ms-login-submit" class="ms-submit">Enviar enlace</button>
+      <p class="ms-login-hint">Revisa tu bandeja de entrada (y spam, por si acaso).</p>
     </form>
 
     <p id="ms-status" class="ms-status" hidden></p>
@@ -497,6 +658,8 @@ eleventyExcludeFromCollections: true
           <span class="ms-check-label">Hoy no</span>
         </button>
       </div>
+      <p class="ms-check-hint">El amarillo también cuenta. Solo gris rompe la racha.</p>
+      <p class="ms-comodines" id="ms-comodines">Comodines este mes: <strong><span id="ms-comodines-usados">0</span>/2</strong></p>
     </section>
 
     <section class="ms-calendar" aria-labelledby="ms-month-title">
@@ -511,13 +674,34 @@ eleventyExcludeFromCollections: true
         <span><span class="ms-legend-dot is-ok"></span>lo seguí</span>
         <span><span class="ms-legend-dot is-mid"></span>a medias</span>
         <span><span class="ms-legend-dot is-no"></span>hoy no</span>
+        <span><span class="ms-legend-dot is-comodin"></span>comodín</span>
       </p>
     </section>
 
     <footer class="ms-foot">
+      <a href="#" id="ms-pdf-link" class="ms-pdf-link" target="_blank" rel="noopener" hidden>Descargar el menú en PDF</a>
       <button type="button" class="ms-signout" id="ms-signout">Cerrar sesión</button>
     </footer>
   </section>
+
+  {# ============================== ONBOARDING MODAL ============================== #}
+  <div id="ms-onboarding" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-modal-title" hidden>
+    <div class="ms-modal">
+      <h2 id="ms-modal-title" class="ms-modal-title">Bienvenida a <em>tu espacio</em></h2>
+      <p class="ms-modal-intro">
+        Un sitio pequeño y tuyo para ver cómo avanzas día a día. Así funciona:
+      </p>
+      <ul class="ms-modal-list">
+        <li><span class="ms-modal-ico is-ok">✓</span><span>Al final del día marca cómo te ha ido: <strong>lo seguí</strong>, <strong>a medias</strong> o <strong>hoy no</strong>.</span></li>
+        <li><span class="ms-modal-ico is-streak">🔥</span><span>Tu <strong>racha</strong> crece con cada día que marcas verde o amarillo. El amarillo también cuenta.</span></li>
+        <li><span class="ms-modal-ico is-joker">✦</span><span>Tienes <strong>2 comodines al mes</strong>: si un día se te pasa, se usan solos para no perder la racha.</span></li>
+      </ul>
+      <button type="button" class="ms-modal-ok" id="ms-modal-ok">Entendido, empezamos</button>
+    </div>
+  </div>
+
+  {# ============================== TOAST ============================== #}
+  <div id="ms-toast" class="ms-toast" role="status" aria-live="polite" hidden></div>
 </div>
 
 <script type="module">
@@ -622,6 +806,8 @@ eleventyExcludeFromCollections: true
     }).join('');
   }
 
+  const CUENTAN_PARA_RACHA = new Set(['seguido', 'parcial', 'comodin']);
+
   function renderStreak(checkinsMap) {
     let n = 0;
     const d = new Date(); d.setHours(0,0,0,0);
@@ -629,7 +815,7 @@ eleventyExcludeFromCollections: true
     while (true) {
       const iso = toISO(d);
       const estado = checkinsMap.get(iso);
-      if (estado === 'seguido' || estado === 'parcial') {
+      if (CUENTAN_PARA_RACHA.has(estado)) {
         n++;
         d.setDate(d.getDate() - 1);
       } else if (first) {
@@ -642,6 +828,74 @@ eleventyExcludeFromCollections: true
     }
     $('#ms-streak-num').textContent = n;
     $('.ms-streak-label').textContent = n === 1 ? 'día' : 'días';
+  }
+
+  // Cuenta comodines ya consumidos en el mes calendario de `hoy` (Date).
+  function calcularComodines(checkinsMap, hoy) {
+    const prefix = toISO(hoy).slice(0, 7); // YYYY-MM
+    let usados = 0;
+    for (const [iso, estado] of checkinsMap) {
+      if (estado === 'comodin' && iso.startsWith(prefix)) usados++;
+    }
+    return { usados, disponibles: Math.max(0, 2 - usados) };
+  }
+
+  function parseISO(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  // Detecta gap entre último checkin y ayer. Consume hasta 2 comodines/mes en el mes actual.
+  // Devuelve { consumidos: [iso], rota: bool, disponibles: N } para el toast.
+  async function autoFillComodines(checkinsMap) {
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    const todayISO = toISO(now);
+    const yesterdayISO = toISO(new Date(now.getTime() - 864e5));
+
+    let lastISO = null;
+    for (const [iso] of checkinsMap) {
+      if (iso < todayISO && (!lastISO || iso > lastISO)) lastISO = iso;
+    }
+    if (!lastISO || lastISO >= yesterdayISO) {
+      return { consumidos: [], rota: false, disponibles: calcularComodines(checkinsMap, now).disponibles };
+    }
+
+    const gapDays = [];
+    const cursor = parseISO(lastISO);
+    cursor.setDate(cursor.getDate() + 1);
+    while (toISO(cursor) <= yesterdayISO) {
+      const iso = toISO(cursor);
+      if (!checkinsMap.has(iso)) gapDays.push(iso);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    if (gapDays.length === 0) {
+      return { consumidos: [], rota: false, disponibles: calcularComodines(checkinsMap, now).disponibles };
+    }
+
+    const mesActual = todayISO.slice(0, 7);
+    const gapEnMes = gapDays.filter(iso => iso.startsWith(mesActual));
+    const { disponibles } = calcularComodines(checkinsMap, now);
+    const aConsumir = gapEnMes.slice(0, disponibles);
+
+    const consumidos = [];
+    for (const iso of aConsumir) {
+      const { error } = await supa.from('checkins').upsert({
+        paciente_id: paciente.id,
+        fecha: iso,
+        estado: 'comodin'
+      }, { onConflict: 'paciente_id,fecha' });
+      if (!error) {
+        checkinsMap.set(iso, 'comodin');
+        consumidos.push(iso);
+      } else {
+        console.error('comodin upsert', error);
+      }
+    }
+
+    // Hay racha rota si quedó algún día de gap sin cubrir por comodín.
+    const rota = gapDays.length > consumidos.length;
+    const { disponibles: quedan } = calcularComodines(checkinsMap, now);
+    return { consumidos, rota, disponibles: quedan };
   }
 
   function renderCalendar(checkinsMap) {
@@ -670,6 +924,7 @@ eleventyExcludeFromCollections: true
       if (estado === 'seguido') c.classList.add('is-ok');
       else if (estado === 'parcial') c.classList.add('is-mid');
       else if (estado === 'no') c.classList.add('is-no');
+      else if (estado === 'comodin') c.classList.add('is-comodin');
       if (iso === todayISO) c.classList.add('is-today');
       frag.appendChild(c);
     }
@@ -683,6 +938,44 @@ eleventyExcludeFromCollections: true
 
   function setActiveCheck(estado) {
     $$('.ms-check-btn').forEach(b => b.classList.toggle('is-active', b.dataset.estado === estado));
+  }
+
+  function renderComodinesCounter(checkinsMap) {
+    const { usados } = calcularComodines(checkinsMap, new Date());
+    $('#ms-comodines-usados').textContent = usados;
+  }
+
+  function renderPdfLink(menu) {
+    const link = $('#ms-pdf-link');
+    if (menu && menu.pdf_url) {
+      link.href = menu.pdf_url;
+      link.hidden = false;
+    } else {
+      link.hidden = true;
+    }
+  }
+
+  let toastTimer = null;
+  function showToast(msg) {
+    const t = $('#ms-toast');
+    t.textContent = msg;
+    t.hidden = false;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 4200);
+  }
+
+  async function maybeShowOnboarding() {
+    if (!paciente || paciente.onboarding) return;
+    const modal = $('#ms-onboarding');
+    modal.hidden = false;
+    $('#ms-modal-ok').addEventListener('click', async () => {
+      modal.hidden = true;
+      const { error } = await supa.from('pacientes')
+        .update({ onboarding: true })
+        .eq('id', paciente.id);
+      if (error) console.error('onboarding update', error);
+      else paciente.onboarding = true;
+    }, { once: true });
   }
 
   function primerNombre(nombre) {
@@ -720,20 +1013,36 @@ eleventyExcludeFromCollections: true
     const map = new Map(checkins.map(c => [c.fecha, c.estado]));
 
     renderMeals(menu);
+    renderPdfLink(menu);
+
+    // Auto-consume comodines for gaps in the current month before rendering.
+    const comodinResult = await autoFillComodines(map);
+
     renderStreak(map);
     renderCalendar(map);
+    renderComodinesCounter(map);
 
     const estadoHoy = map.get(today);
     if (estadoHoy) setActiveCheck(estadoHoy);
+
+    return comodinResult;
   }
 
   // -------- auth wiring --------
-  function render(session) {
+  async function render(session) {
     if (session) {
       loginView.hidden  = true;
       authedView.hidden = false;
       authedView.classList.add('ms-fade-in');
-      hydrate();
+      const result = await hydrate();
+      if (result && result.consumidos && result.consumidos.length > 0) {
+        const n = result.consumidos.length;
+        const quedan = result.disponibles;
+        showToast(`Hemos usado ${n === 1 ? 'un comodín' : n + ' comodines'} por ti — te ${quedan === 1 ? 'queda' : 'quedan'} ${quedan}/2 este mes.`);
+      } else if (result && result.rota) {
+        showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
+      }
+      maybeShowOnboarding();
     } else {
       authedView.hidden = true;
       loginView.hidden  = false;
@@ -761,7 +1070,7 @@ eleventyExcludeFromCollections: true
       showStatus('No hemos podido enviar el enlace. Prueba de nuevo en un minuto.', 'error');
       return;
     }
-    showStatus('Te acabamos de mandar un enlace a ' + email + '. Ábrelo desde el móvil o el ordenador y entrarás sin más.', 'ok');
+    showStatus('📬 Enlace enviado a ' + email + '. Abre tu correo y haz clic en «Entrar». Puedes cerrar esta pestaña.', 'ok');
   });
 
   $$('.ms-check-btn').forEach(btn => {
@@ -777,6 +1086,7 @@ eleventyExcludeFromCollections: true
       const map = new Map(checkins.map(c => [c.fecha, c.estado]));
       renderStreak(map);
       renderCalendar(map);
+      renderComodinesCounter(map);
     });
   });
 
@@ -788,5 +1098,15 @@ eleventyExcludeFromCollections: true
   (async () => {
     const { data } = await supa.auth.getSession();
     render(data.session);
+  })();
+
+  // Prefill email from ?email= query param so coming from the menu email is ~1 click.
+  (() => {
+    const params = new URLSearchParams(window.location.search);
+    const qEmail = params.get('email');
+    if (!qEmail) return;
+    emailInput.value = qEmail.trim().toLowerCase();
+    // Focus the submit button so the flow is: open email → click → click "Enviar enlace".
+    requestAnimationFrame(() => submitBtn.focus());
   })();
 </script>
