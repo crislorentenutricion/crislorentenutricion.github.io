@@ -9,11 +9,20 @@ ogType: article
   "headline": "{{ title }}",
   "description": "{{ description }}",
   "url": "https://www.crislorentenutricion.com{{ page.url }}",
-  "image": "https://www.crislorentenutricion.com/img/blog/{{ postImage }}",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://www.crislorentenutricion.com/img/blog/{{ postImage }}",
+    "width": 1100,
+    "height": 380
+  },
   "datePublished": "{{ date | fechaISO }}",
   "dateModified": "{{ date | fechaISO }}",
   "inLanguage": "es-ES",
   "articleSection": "{{ categoryLabel }}",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": ["h1", ".article-content h2", ".article-content p:first-of-type"]
+  },
   "author": {
     "@type": "Person",
     "@id": "https://www.crislorentenutricion.com/sobre-mi/#person",
