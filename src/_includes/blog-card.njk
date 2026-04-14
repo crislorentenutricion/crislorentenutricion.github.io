@@ -2,7 +2,7 @@
   <article class="blog-card card">
     <div class="blog-card-img-wrap">
       {% if post.image %}
-        <img src="/img/blog/{{ post.image }}" alt="{{ post.imageAlt }}" class="blog-card-img" loading="lazy" width="400" height="200">
+        <img src="/img/blog/{{ post.image }}" alt="{{ post.imageAlt }}" class="blog-card-img" loading="lazy" decoding="async" width="400" height="200">
       {% else %}
         <div class="blog-img-placeholder"></div>
       {% endif %}

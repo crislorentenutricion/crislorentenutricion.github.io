@@ -64,7 +64,7 @@ ogType: article
     <p class="article-meta">{{ date | fechaEs }} · Cris Lorente</p>
     {% if postImage %}
     <div class="article-hero-img">
-      <img src="/img/blog/{{ postImage }}" alt="{{ title }}" width="1100" height="380" loading="eager">
+      <img src="/img/blog/{{ postImage }}" alt="{{ title }}" width="1100" height="380" loading="eager" fetchpriority="high" decoding="async">
     </div>
     {% endif %}
   </div>

@@ -54,7 +54,7 @@ eleventyExcludeFromCollections: true
   {%- endfor %}
   <url>
     <loc>{{ site.url }}/legal/privacidad/</loc>
-    <lastmod>2025-06-01</lastmod>
+    <lastmod>2026-03-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
@@ -69,5 +69,11 @@ eleventyExcludeFromCollections: true
     <lastmod>2025-06-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>{{ site.url }}/feed.xml</loc>
+    <lastmod>{{ buildDate }}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
   </url>
 </urlset>
