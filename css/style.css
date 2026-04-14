@@ -655,6 +655,13 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .testimonial-detail {
   font-size: 0.78rem; color: var(--color-gray-light);
 }
+.testimonial-stars { color: #f5a623; font-size: 1rem; margin-bottom: 8px; }
+.testimonial-source { color: var(--color-gray-light); text-decoration: underline; }
+.testimonial-source:hover { color: var(--color-green); }
+.testimonials-grid--col2 { grid-template-columns: repeat(2, 1fr); }
+.testimonials-note { text-align: center; margin-top: 32px; font-size: 0.85rem; color: #888; }
+.testimonials-note a { color: var(--color-green); }
+@media (max-width: 640px) { .testimonials-grid--col2 { grid-template-columns: 1fr; } }
 
 /* ========================
    BLOG
