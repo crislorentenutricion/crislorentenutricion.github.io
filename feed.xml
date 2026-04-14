@@ -6,6 +6,10 @@
   <link href="https://www.crislorentenutricion.com/"/>
   <updated>2026-03-11T00:00:00Z</updated>
   <id>https://www.crislorentenutricion.com/</id>
+  <rights>© Cristina Lorente Piquer — Cris Lorente Nutrición</rights>
+  <generator uri="https://www.11ty.dev/" version="3.1.2">Eleventy</generator>
+  <icon>https://www.crislorentenutricion.com/favicon-32x32.png</icon>
+  <logo>https://www.crislorentenutricion.com/apple-touch-icon.png</logo>
   <author>
     <name>Cristina Lorente Piquer</name>
     <email>crislorentenutricion@gmail.com</email>
