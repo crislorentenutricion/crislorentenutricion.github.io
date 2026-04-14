@@ -1,0 +1,21 @@
+/* TEAM */
+Titular: Cristina Lorente Piquer
+Rol: Dietista online y Técnica en Farmacia
+Contacto: crislorentenutricion [at] gmail.com
+Instagram: @crislorente_nutricion
+Ubicación: España
+
+/* SITE */
+Marca: Cris Lorente Nutrición (CLN)
+Servicio: Asesoría nutricional personalizada 100% online
+Idioma: Español
+Web: https://www.crislorentenutricion.com/
+
+/* THANKS */
+A cada paciente que confía en el acompañamiento nutricional sin dietas estrictas.
+
+/* TECH */
+Generador: Eleventy (11ty) v3
+Hosting: GitHub Pages
+Analítica: Amplitude
+Estándares: HTML5, CSS3, JSON-LD, Schema.org
