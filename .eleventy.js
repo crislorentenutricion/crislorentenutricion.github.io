@@ -34,6 +34,41 @@ module.exports = function(eleventyConfig) {
     return posts.slice().sort((a, b) => new Date(b.date) - new Date(a.date));
   });
 
+  // Transform: añade id automático a h2/h3 dentro de .article-content
+  // (deep linking, citabilidad por motores AI). Invisible al usuario.
+  eleventyConfig.addTransform("addHeadingIds", function(content, outputPath) {
+    if (!outputPath || !outputPath.endsWith(".html")) return content;
+    if (!outputPath.includes("/blog/")) return content;
+    // Localiza el bloque .article-content y procesa sus h2/h3
+    const slugify = (s) => s
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+    return content.replace(
+      /(<div class="article-content">)([\s\S]*?)(<\/div>\s*<\/div>\s*<\/section>)/,
+      (m, pre, body, post) => {
+        const used = new Set();
+        const newBody = body.replace(
+          /<(h2|h3)([^>]*)>([\s\S]*?)<\/\1>/g,
+          (mm, tag, attrs, inner) => {
+            if (/\sid\s*=/.test(attrs)) return mm;
+            const text = inner.replace(/<[^>]+>/g, "").trim();
+            let id = slugify(text);
+            if (!id) return mm;
+            let base = id, n = 2;
+            while (used.has(id)) { id = `${base}-${n++}`; }
+            used.add(id);
+            return `<${tag}${attrs} id="${id}">${inner}</${tag}>`;
+          }
+        );
+        return pre + newBody + post;
+      }
+    );
+  });
+
   return {
     dir: {
       input: "src",
