@@ -113,19 +113,19 @@ preloadImage: /img/cristina-hero.jpg
   <div class="container">
     <div class="trust-bar-inner">
       <div class="trust-item">
-        <span class="trust-icon">📋</span>
+        <span class="trust-icon">{% set iconName = "clipboard-list" %}{% include "icon.njk" %}</span>
         <span>Menú <strong>personalizado</strong> cada mes</span>
       </div>
       <div class="trust-item">
-        <span class="trust-icon">📹</span>
+        <span class="trust-icon">{% set iconName = "video" %}{% include "icon.njk" %}</span>
         <span>Seguimiento por <strong>videollamada</strong></span>
       </div>
       <div class="trust-item">
-        <span class="trust-icon">💬</span>
+        <span class="trust-icon">{% set iconName = "message-circle" %}{% include "icon.njk" %}</span>
         <span>Soporte por <strong>WhatsApp</strong></span>
       </div>
       <div class="trust-item">
-        <span class="trust-icon">🚫</span>
+        <span class="trust-icon">{% set iconName = "ban" %}{% include "icon.njk" %}</span>
         <span><strong>Sin permanencia</strong></span>
       </div>
     </div>
@@ -139,17 +139,17 @@ preloadImage: /img/cristina-hero.jpg
       <div class="problems reveal">
         <h2>¿Te suena esto?</h2>
         <ul class="pain-points">
-          <li><span class="pain-icon">😮‍💨</span><p>Llevas años probando dietas y siempre acabas en el mismo punto de partida</p></li>
-          <li><span class="pain-icon">⏰</span><p>No tienes tiempo de cocinar cosas complicadas ni de contar calorías todo el día</p></li>
-          <li><span class="pain-icon">🤯</span><p>El estrés te come por dentro y eso también se nota en cómo comes</p></li>
+          <li><span class="pain-icon">{% set iconName = "cloud-drizzle" %}{% include "icon.njk" %}</span><p>Llevas años probando dietas y siempre acabas en el mismo punto de partida</p></li>
+          <li><span class="pain-icon">{% set iconName = "clock" %}{% include "icon.njk" %}</span><p>No tienes tiempo de cocinar cosas complicadas ni de contar calorías todo el día</p></li>
+          <li><span class="pain-icon">{% set iconName = "brain" %}{% include "icon.njk" %}</span><p>El estrés te come por dentro y eso también se nota en cómo comes</p></li>
         </ul>
       </div>
       <div class="solutions reveal reveal-delay-2">
         <h2>Así te ayudo</h2>
         <ul class="benefit-points">
-          <li><span class="benefit-icon">✓</span><div><strong>Menú mensual adaptado a ti</strong><p>Recetas rápidas, lista de la compra incluida y sin alimentos que no te gustan</p></div></li>
-          <li><span class="benefit-icon">✓</span><div><strong>Acompañamiento real</strong><p>Seguimiento por videollamada y WhatsApp para ajustar lo que necesites</p></div></li>
-          <li><span class="benefit-icon">✓</span><div><strong>Sin dietas estrictas</strong><p>Aprende a comer bien sin obsesionarte. Resultados sostenibles a largo plazo</p></div></li>
+          <li><span class="benefit-icon">{% set iconName = "check" %}{% include "icon.njk" %}</span><div><strong>Menú mensual adaptado a ti</strong><p>Recetas rápidas, lista de la compra incluida y sin alimentos que no te gustan</p></div></li>
+          <li><span class="benefit-icon">{% set iconName = "check" %}{% include "icon.njk" %}</span><div><strong>Acompañamiento real</strong><p>Seguimiento por videollamada y WhatsApp para ajustar lo que necesites</p></div></li>
+          <li><span class="benefit-icon">{% set iconName = "check" %}{% include "icon.njk" %}</span><div><strong>Sin dietas estrictas</strong><p>Aprende a comer bien sin obsesionarte. Resultados sostenibles a largo plazo</p></div></li>
         </ul>
       </div>
     </div>
@@ -177,7 +177,7 @@ preloadImage: /img/cristina-hero.jpg
     <p class="section-subtitle reveal">Un único plan con todo lo que necesitas. Sin permanencia.</p>
     <div style="max-width: 440px; margin: 0 auto;">
       <div class="plan-card card plan-featured reveal">
-        <span class="plan-badge">🌿 Oferta de lanzamiento</span>
+        <span class="plan-badge">Oferta de lanzamiento</span>
         <h3>Plan completo</h3>
         <div class="plan-price"><span class="price">15 €</span><span class="period"> el primer mes</span></div>
         <p class="plan-subprice">Después: 40 €/mes</p>
