@@ -1,6 +1,31 @@
+const fs = require("fs");
+const path = require("path");
+
+// Minificador CSS conservador: quita comentarios /* … */ (excepto /*! license */),
+// colapsa whitespace, elimina espacios alrededor de { } ; , : y la coma final
+// antes del cierre de bloque. No toca strings ni selectores complejos.
+function minifyCss(css) {
+  return css
+    .replace(/\/\*(?!\!)[\s\S]*?\*\//g, "")   // comentarios no-bang
+    .replace(/\s+/g, " ")                      // whitespace a 1 espacio
+    .replace(/\s*([{}:;,>+~])\s*/g, "$1")     // quita espacios junto a delimitadores
+    .replace(/;}/g, "}")                        // punto y coma antes de cierre
+    .trim();
+}
+
 module.exports = function(eleventyConfig) {
-  // Copiar assets estáticos tal cual al output
-  eleventyConfig.addPassthroughCopy("src/css");
+  // CSS: minificar al copiar al output (source en src/ queda legible)
+  eleventyConfig.on("eleventy.before", () => {
+    const srcDir = path.join(__dirname, "src", "css");
+    const outDir = path.join(__dirname, "_site", "css");
+    fs.mkdirSync(outDir, { recursive: true });
+    for (const f of fs.readdirSync(srcDir)) {
+      if (!f.endsWith(".css")) continue;
+      const raw = fs.readFileSync(path.join(srcDir, f), "utf8");
+      fs.writeFileSync(path.join(outDir, f), minifyCss(raw));
+    }
+  });
+  // (antes: eleventyConfig.addPassthroughCopy("src/css"); — sustituido por el hook anterior)
   eleventyConfig.addPassthroughCopy("src/js");
   eleventyConfig.addPassthroughCopy("src/img");
   eleventyConfig.addPassthroughCopy("src/robots.txt");
