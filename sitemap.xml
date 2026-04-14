@@ -233,7 +233,7 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/legal/privacidad/</loc>
-    <lastmod>2025-06-01</lastmod>
+    <lastmod>2026-03-17</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
@@ -248,5 +248,11 @@
     <lastmod>2025-06-01</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://www.crislorentenutricion.com/feed.xml</loc>
+    <lastmod>2026-03-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.4</priority>
   </url>
 </urlset>
