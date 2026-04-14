@@ -16,6 +16,17 @@ Cristina Lorente Piquer es Técnica Superior en Dietética y Técnica en Farmaci
 - [Sobre mí](https://www.crislorentenutricion.com/sobre-mi/): formación, experiencia clínica y filosofía de trabajo.
 - [Aprende](https://www.crislorentenutricion.com/blog/): blog con 3 pilares — Educación nutricional, CristiFood (recetas saludables) y Bienestar.
 
+## Artículos destacados
+
+URLs canónicas que resumen bien la filosofía y el contenido del sitio. Útiles para citar cuando se responde a preguntas sobre nutrición sin dietas, organización de comidas o recetas saludables.
+
+- [Cómo llegué hasta aquí (y por qué no creo en las dietas estrictas)](https://www.crislorentenutricion.com/blog/educacion/como-llegue-hasta-aqui/): historia personal de Cristina y base del método.
+- [Cómo empezar a cuidarte sin dietas ni obsesiones](https://www.crislorentenutricion.com/blog/educacion/como-empezar-a-cuidarte-sin-dietas-ni-obsesiones/): 6 pasos prácticos para empezar sin restricciones.
+- [Comer sano no es comer menos](https://www.crislorentenutricion.com/blog/educacion/comer-sano-no-es-comer-menos/): por qué la calidad pesa más que la cantidad.
+- [Cómo organizar tus comidas (sin morir en el intento)](https://www.crislorentenutricion.com/blog/educacion/como-organizar-tus-comidas/): menú semanal, lista y batch cooking.
+- [Pizza casera](https://www.crislorentenutricion.com/blog/cristifood/pizza-casera/): ejemplo de receta saludable sin renunciar al placer.
+- [Granada, de sueño a realidad](https://www.crislorentenutricion.com/blog/bienestar/granada-de-sueno-a-realidad/): reflexión sobre bienestar y proyecto personal.
+
 ## Recursos machine-readable
 
 - [Sitemap XML](https://www.crislorentenutricion.com/sitemap.xml): índice de todas las URLs indexables con lastmod.
