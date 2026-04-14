@@ -23,7 +23,7 @@
   {% if date %}<meta property="og:updated_time" content="{{ date | fechaISO }}">{% endif %}
   {% if ogType == "article" %}
   <meta property="article:published_time" content="{{ date | fechaISO }}">
-  <meta property="article:modified_time" content="{{ date | fechaISO }}">
+  <meta property="article:modified_time" content="{% if dateModified %}{{ dateModified | fechaISO }}{% else %}{{ date | fechaISO }}{% endif %}">
   <meta property="article:author" content="Cristina Lorente Piquer">
   <meta property="article:section" content="{{ categoryLabel }}">
   <meta property="article:publisher" content="https://www.crislorentenutricion.com/">

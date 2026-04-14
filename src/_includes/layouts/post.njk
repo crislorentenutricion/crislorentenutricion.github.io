@@ -16,7 +16,7 @@ ogType: article
     "height": 380
   },
   "datePublished": "{{ date | fechaISO }}",
-  "dateModified": "{{ date | fechaISO }}",
+  "dateModified": "{% if dateModified %}{{ dateModified | fechaISO }}{% else %}{{ date | fechaISO }}{% endif %}",
   "inLanguage": "es-ES",
   "articleSection": "{{ categoryLabel }}",
   "isAccessibleForFree": true,
