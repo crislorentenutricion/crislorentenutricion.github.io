@@ -16,6 +16,13 @@ Cristina Lorente Piquer es Técnica Superior en Dietética y Técnica en Farmaci
 - [Sobre mí](https://www.crislorentenutricion.com/sobre-mi/): formación, experiencia clínica y filosofía de trabajo.
 - [Aprende](https://www.crislorentenutricion.com/blog/): blog con 3 pilares — Educación nutricional, CristiFood (recetas saludables) y Bienestar.
 
+## Recursos machine-readable
+
+- [Sitemap XML](https://www.crislorentenutricion.com/sitemap.xml): índice de todas las URLs indexables con lastmod.
+- [Feed Atom](https://www.crislorentenutricion.com/feed.xml): últimos posts del blog.
+- [humans.txt](https://www.crislorentenutricion.com/humans.txt): autoría humana y stack técnico.
+- [robots.txt](https://www.crislorentenutricion.com/robots.txt): reglas de crawling (bots IA permitidos).
+
 ## Contacto
 
 - Email: crislorentenutricion@gmail.com
