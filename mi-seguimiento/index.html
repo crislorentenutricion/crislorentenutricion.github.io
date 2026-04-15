@@ -451,16 +451,22 @@
     background: #efeadd;
     display: grid;
     place-items: center;
-    font-size: 0.7rem;
-    color: transparent;
+    font-family: 'Lora', serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #8a8678;
     transition: transform 0.15s ease;
   }
-  .ms-cal-cell.is-empty { background: transparent; }
+  .ms-cal-cell.is-empty { background: transparent; color: transparent; }
+  .ms-cal-cell.is-ok,
+  .ms-cal-cell.is-mid,
+  .ms-cal-cell.is-no { color: #fff; font-weight: 600; }
   .ms-cal-cell.is-ok    { background: var(--color-green); }
   .ms-cal-cell.is-mid   { background: #d9b36a; }
   .ms-cal-cell.is-no    { background: #d9a08e; }
   .ms-cal-cell.is-today {
     box-shadow: 0 0 0 1.5px var(--color-green-dark);
+    font-weight: 700;
   }
   .ms-calendar-legend {
     display: flex;
@@ -835,7 +841,12 @@
   const SUPABASE_KEY = 'sb_publishable_kcnv9Us0xUtLaYAvsxT_Qw_YOzv05RS';
 
   const supa = createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage
+    }
   });
   window.supa = supa;
 
@@ -853,6 +864,7 @@
   const COMIDAS = [['desayuno','Desayuno'],['almuerzo','Almuerzo'],['comida','Comida'],['merienda','Merienda'],['cena','Cena']];
 
   let paciente = null;
+  let checkinsMap = new Map();
 
   // -------- utils --------
   const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
@@ -1010,6 +1022,7 @@
       const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
       const c = document.createElement('div');
       c.className = 'ms-cal-cell';
+      c.textContent = String(day);
       const estado = checkinsMap.get(iso);
       if (estado === 'seguido') c.classList.add('is-ok');
       else if (estado === 'parcial') c.classList.add('is-mid');
@@ -1156,17 +1169,17 @@
       loadCheckins(from)
     ]);
 
-    const map = new Map(checkins.map(c => [c.fecha, c.estado]));
+    checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
 
     renderMeals(menu);
     renderTip();
 
-    const rota = detectarRachaRota(map);
+    const rota = detectarRachaRota(checkinsMap);
 
-    const racha = renderStreak(map);
-    renderCalendar(map);
+    const racha = renderStreak(checkinsMap);
+    renderCalendar(checkinsMap);
 
-    const estadoHoy = map.get(today);
+    const estadoHoy = checkinsMap.get(today);
     if (estadoHoy) setActiveCheck(estadoHoy);
 
     return { racha, rota };
@@ -1233,15 +1246,36 @@
       btn.classList.add('ms-pulsing');
       btn.addEventListener('animationend', () => btn.classList.remove('ms-pulsing'), { once: true });
       setActiveCheck(estado);
+
+      // Optimistic UI: pinta calendario y racha al instante con estado local.
+      // Así el feedback es inmediato aunque la red o la sesión estén lentas
+      // (p.ej. al volver de bloquear el móvil).
+      const todayISO = toISO(new Date());
+      const estadoPrevio = checkinsMap.get(todayISO);
+      checkinsMap.set(todayISO, estado);
+      renderStreak(checkinsMap);
+      renderCalendar(checkinsMap);
+
       const err = await upsertCheckin(estado);
-      if (err) { console.error(err); return; }
-      // refresh streak + calendar
-      const from = toISO(new Date(Date.now() - 60 * 864e5));
-      const checkins = await loadCheckins(from);
-      const map = new Map(checkins.map(c => [c.fecha, c.estado]));
-      const racha = renderStreak(map);
-      renderCalendar(map);
-      maybeCelebrarMilestone(racha);
+      if (err) {
+        console.error(err);
+        if (estadoPrevio === undefined) checkinsMap.delete(todayISO);
+        else checkinsMap.set(todayISO, estadoPrevio);
+        if (estadoPrevio) setActiveCheck(estadoPrevio);
+        renderStreak(checkinsMap);
+        renderCalendar(checkinsMap);
+        showToast('No hemos podido guardarlo. Prueba otra vez en un momento.');
+        return;
+      }
+      // Re-fetch para sincronizar con servidor (silencioso si falla).
+      try {
+        const from = toISO(new Date(Date.now() - 60 * 864e5));
+        const checkins = await loadCheckins(from);
+        checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
+        const racha = renderStreak(checkinsMap);
+        renderCalendar(checkinsMap);
+        maybeCelebrarMilestone(racha);
+      } catch (e) { console.error('resync', e); }
     });
   });
 
@@ -1254,6 +1288,27 @@
     const { data } = await supa.auth.getSession();
     render(data.session);
   })();
+
+  // Al volver del bloqueo del móvil o cambio de pestaña: re-valida la sesión
+  // y re-hidrata. Arregla el caso de Chromium en el que el token se queda
+  // stale mientras la pestaña está congelada.
+  let lastVisibilityRefresh = 0;
+  document.addEventListener('visibilitychange', async () => {
+    if (document.visibilityState !== 'visible') return;
+    const now = Date.now();
+    if (now - lastVisibilityRefresh < 2000) return;
+    lastVisibilityRefresh = now;
+    const { data } = await supa.auth.getSession();
+    if (!data.session) {
+      // sesión caducada mientras el móvil estaba bloqueado
+      authedView.hidden = true;
+      loginView.hidden = false;
+      return;
+    }
+    if (!authedView.hidden && paciente) {
+      try { await hydrate(); } catch (e) { console.error('rehydrate', e); }
+    }
+  });
 
   // Prefill email from ?email= query param so coming from the menu email is ~1 click.
   (() => {
