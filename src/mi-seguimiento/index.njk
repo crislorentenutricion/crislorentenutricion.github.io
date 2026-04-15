@@ -1695,26 +1695,16 @@ appleTitle: "Mi seguimiento"
     ocultarWelcomeBack();
   });
 
-  // Bootstrap: al abrir la PWA desde el icono, la sesión cacheada puede traer
-  // el access_token caducado (TTL 1h). Si lanzamos hydrate() inmediatamente,
-  // las queries salen con token viejo y se quedan colgadas esperando el
-  // auto-refresh interno del SDK → skeleton eterno. Forzamos refresh antes de
-  // renderizar para garantizar token fresco.
-  let bootstrapped = false;
-  async function bootstrap(session) {
-    if (bootstrapped) return;
-    bootstrapped = true;
-    if (session) {
+  supa.auth.onAuthStateChange(async (event, session) => {
+    // Al abrir la PWA desde el icono, el access_token cacheado puede estar
+    // caducado y hydrate() se queda colgado con JWT viejo. Refrescamos antes
+    // del primer render.
+    if (event === 'INITIAL_SESSION' && session) {
       try {
-        const { data, error } = await supa.auth.refreshSession();
-        if (!error && data.session) session = data.session;
+        const { data } = await supa.auth.refreshSession();
+        if (data.session) session = data.session;
       } catch (e) { console.warn('refresh on boot', e); }
     }
-    render(session);
-  }
-
-  supa.auth.onAuthStateChange((event, session) => {
-    if (event === 'INITIAL_SESSION') { bootstrap(session); return; }
     render(session);
   });
 
