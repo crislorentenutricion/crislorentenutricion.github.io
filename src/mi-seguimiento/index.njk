@@ -691,6 +691,65 @@ appleTitle: "Mi seguimiento"
     .ms-streak { min-width: 74px; padding: 12px 10px 10px; }
     .ms-streak-num { font-size: 1.55rem; }
   }
+
+  /* ---------- install tutorial + in-app modals (A3/A4) ---------- */
+  .ms-install-illu {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 18px;
+    padding: 14px 10px;
+    background: #f8f3e4;
+    border-radius: 14px;
+    color: var(--color-green-dark);
+  }
+  .ms-install-illu svg { display: block; }
+  .ms-install-illu-arrow {
+    color: #c8b98a;
+    font-size: 1.2rem;
+  }
+  .ms-install-steps {
+    text-align: left;
+    margin: 0 0 22px;
+    padding: 0;
+    list-style: none;
+    font-size: 0.95rem;
+    color: #3e3b34;
+    line-height: 1.55;
+  }
+  .ms-install-steps li {
+    padding: 8px 0;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .ms-install-steps li + li { border-top: 1px solid #ece7d6; }
+  .ms-install-step-n {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .ms-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ms-modal-secondary {
+    background: none;
+    border: 0;
+    padding: 10px 16px;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.92rem;
+    color: #8a8678;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ms-modal-secondary:hover { color: var(--color-green); }
 </style>
 
 <div class="ms-page">
@@ -836,6 +895,34 @@ appleTitle: "Mi seguimiento"
     </div>
   </div>
 
+  {# ============================== INSTALL TUTORIAL (A3) ============================== #}
+  <div id="ms-install" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-install-title" aria-live="polite" hidden>
+    <div class="ms-modal">
+      <h2 id="ms-install-title" class="ms-modal-title">Tenlo a <em>un toque</em></h2>
+      <p class="ms-modal-intro" id="ms-install-intro">
+        Añádelo a tu pantalla de inicio y entras directo, sin buscar nada.
+      </p>
+      <div id="ms-install-body"></div>
+      <div class="ms-modal-actions">
+        <button type="button" class="ms-modal-ok" id="ms-install-ok">Ya lo tengo</button>
+      </div>
+    </div>
+  </div>
+
+  {# ============================== IN-APP BROWSER WARN (A4) ============================== #}
+  <div id="ms-inapp" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-inapp-title" aria-live="polite" hidden>
+    <div class="ms-modal">
+      <h2 id="ms-inapp-title" class="ms-modal-title">Ábrelo en <em>tu navegador</em></h2>
+      <p class="ms-modal-intro" id="ms-inapp-intro">
+        Para guardar esta página como app en tu móvil, ábrela en Safari o Chrome.
+      </p>
+      <div class="ms-modal-actions">
+        <button type="button" class="ms-modal-ok" id="ms-inapp-action">Abrir en Chrome</button>
+        <button type="button" class="ms-modal-secondary" id="ms-inapp-dismiss">Ahora no</button>
+      </div>
+    </div>
+  </div>
+
   {# ============================== TOAST ============================== #}
   <div id="ms-toast" class="ms-toast" role="status" aria-live="polite" hidden></div>
 </div>
@@ -893,6 +980,71 @@ appleTitle: "Mi seguimiento"
     $('#ms-month').textContent = d.toLocaleDateString('es-ES', { month: 'long' });
   }
 
+  // -------- platform + in-app detection (A3/A4) --------
+  function detectPlatform() {
+    const ua = (navigator.userAgent || '').toLowerCase();
+    if (/iphone|ipad|ipod/.test(ua)) return 'ios';
+    // iPadOS 13+ se anuncia como Mac con touch
+    if (/macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
+    if (/android/.test(ua)) return 'android';
+    return 'other';
+  }
+  function isStandalone() {
+    try {
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+      if (window.navigator.standalone === true) return true; // iOS Safari legacy
+    } catch (e) { /* noop */ }
+    return false;
+  }
+  function detectInAppBrowser() {
+    const ua = navigator.userAgent || '';
+    // Instagram, Facebook (FBAN/FBAV), Line, TikTok (musical_ly/Bytedance), LinkedIn, Snapchat,
+    // y WebView genérico Android (;?\s?wv\))
+    if (/Instagram/i.test(ua)) return 'instagram';
+    if (/FBAN|FBAV|FB_IAB/i.test(ua)) return 'facebook';
+    if (/\bLine\//i.test(ua)) return 'line';
+    if (/musical_ly|Bytedance|TikTok/i.test(ua)) return 'tiktok';
+    if (/LinkedInApp/i.test(ua)) return 'linkedin';
+    if (/Snapchat/i.test(ua)) return 'snapchat';
+    // WebView Android genérica: "; wv)" dentro del UA
+    if (/Android.*;\s*wv\)/i.test(ua)) return 'webview';
+    return null;
+  }
+
+  // -------- retry con backoff (B5) --------
+  // Reintenta fn() una vez tras `delay` ms si el error parece transitorio
+  // (red caída, 5xx). No reintenta errores de auth (401/403) ni 4xx.
+  async function withRetry(fn, opts) {
+    const { retries = 1, delay = 700 } = opts || {};
+    let lastErr;
+    for (let i = 0; i <= retries; i++) {
+      try {
+        return await fn();
+      } catch (err) {
+        lastErr = err;
+        if (!esErrorTransitorio(err) || i === retries) throw err;
+        console.warn('ms-retry', i + 1, err);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+    throw lastErr;
+  }
+  function esErrorTransitorio(err) {
+    if (!err) return false;
+    // fetch sin respuesta: TypeError "Failed to fetch" / "Load failed"
+    if (err instanceof TypeError) return true;
+    // Supabase devuelve error con status numérico
+    const status = err.status || err.statusCode || (err.context && err.context.status);
+    if (typeof status === 'number') {
+      if (status >= 500 && status < 600) return true;
+      return false; // 4xx no se reintenta
+    }
+    // Error de red sin status conocido: mensaje típico
+    const msg = String(err.message || err).toLowerCase();
+    if (/network|fetch|timeout|failed to fetch|load failed/.test(msg)) return true;
+    return false;
+  }
+
   // -------- data loaders --------
   async function loadPaciente() {
     const { data, error } = await supa.from('pacientes').select('*').limit(1).maybeSingle();
@@ -911,22 +1063,36 @@ appleTitle: "Mi seguimiento"
   }
 
   async function loadCheckins(fromISO) {
-    const { data, error } = await supa.from('checkins')
-      .select('fecha, estado')
-      .gte('fecha', fromISO)
-      .order('fecha', { ascending: false });
-    if (error) { console.error('checkins', error); return []; }
-    return data || [];
+    return withRetry(async () => {
+      const { data, error } = await supa.from('checkins')
+        .select('fecha, estado')
+        .gte('fecha', fromISO)
+        .order('fecha', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    }, { retries: 1, delay: 700 });
   }
 
   async function upsertCheckin(estado) {
+    // B4: auto-refresh de sesión antes de escribir. Si el SDK no consigue
+    // revalidar el token, devolvemos un sentinel para que el caller vuelva al login.
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) return { sessionExpired: true };
+
     const today = toISO(new Date());
-    const { error } = await supa.from('checkins').upsert({
-      paciente_id: paciente.id,
-      fecha: today,
-      estado
-    }, { onConflict: 'paciente_id,fecha' });
-    return error;
+    try {
+      await withRetry(async () => {
+        const { error } = await supa.from('checkins').upsert({
+          paciente_id: paciente.id,
+          fecha: today,
+          estado
+        }, { onConflict: 'paciente_id,fecha' });
+        if (error) throw error;
+      }, { retries: 1, delay: 700 });
+      return { error: null };
+    } catch (err) {
+      return { error: err };
+    }
   }
 
   // -------- renderers --------
@@ -1322,6 +1488,146 @@ appleTitle: "Mi seguimiento"
     // pantalla de bienvenida aunque la pestaña se cierre antes de confirmar.
     recordarPaciente(email);
     showStatus('📬 Enlace enviado a ' + email + '. Abre tu correo y haz clic en «Entrar». Puedes cerrar esta pestaña.', 'ok');
+
+    // A3/A4: tras enviar el magic link, ofrece el mini-tutorial de instalación
+    // (o, si está dentro de Instagram/FB/etc., el banner para abrir en Chrome/Safari).
+    // Delay de ~2.6s para no solapar el toast verde del status.
+    setTimeout(() => {
+      try { maybeMostrarInstallFlow(); } catch (e) { console.warn('install flow', e); }
+    }, 2600);
+  });
+
+  // -------- install flow (A3/A4) --------
+  const TUTORIAL_SEEN_KEY = 'ms-tutorial-seen';
+  const installModal   = $('#ms-install');
+  const installBody    = $('#ms-install-body');
+  const installIntro   = $('#ms-install-intro');
+  const installOk      = $('#ms-install-ok');
+  const inappModal     = $('#ms-inapp');
+  const inappAction    = $('#ms-inapp-action');
+  const inappDismiss   = $('#ms-inapp-dismiss');
+  const inappIntro     = $('#ms-inapp-intro');
+
+  function maybeMostrarInstallFlow() {
+    if (isStandalone()) return; // ya instalada
+    try { if (localStorage.getItem(TUTORIAL_SEEN_KEY) === '1') return; } catch (e) { /* noop */ }
+
+    const inApp = detectInAppBrowser();
+    if (inApp) {
+      mostrarInAppModal(inApp);
+      return;
+    }
+    const plat = detectPlatform();
+    if (plat === 'ios' || plat === 'android') {
+      mostrarInstallModal(plat);
+    }
+    // escritorio u otros: no mostramos nada
+  }
+
+  function mostrarInstallModal(plat) {
+    if (plat === 'ios') {
+      installIntro.textContent = 'Ten este espacio siempre a mano en tu iPhone:';
+      installBody.innerHTML = `
+        <div class="ms-install-illu" aria-hidden="true">
+          <span>Busca</span>
+          <svg width="26" height="30" viewBox="0 0 26 30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 20V4"/>
+            <path d="M7 10l6-6 6 6"/>
+            <rect x="3" y="12" width="20" height="16" rx="2.5"/>
+          </svg>
+          <span>abajo</span>
+        </div>
+        <ol class="ms-install-steps">
+          <li><span class="ms-install-step-n">1</span><span>Pulsa el icono <strong>Compartir</strong> (⬆️) en la barra de abajo.</span></li>
+          <li><span class="ms-install-step-n">2</span><span>Desliza y elige <strong>Añadir a pantalla de inicio</strong>.</span></li>
+          <li><span class="ms-install-step-n">3</span><span>Toca <strong>Añadir</strong> y listo: aparecerá como una app.</span></li>
+        </ol>`;
+    } else {
+      installIntro.textContent = 'Ten este espacio siempre a mano en tu Android:';
+      installBody.innerHTML = `
+        <div class="ms-install-illu" aria-hidden="true">
+          <span>Busca</span>
+          <svg width="10" height="30" viewBox="0 0 10 30" fill="currentColor">
+            <circle cx="5" cy="6" r="2"/><circle cx="5" cy="15" r="2"/><circle cx="5" cy="24" r="2"/>
+          </svg>
+          <span>arriba a la derecha</span>
+        </div>
+        <ol class="ms-install-steps">
+          <li><span class="ms-install-step-n">1</span><span>Pulsa el menú <strong>⋮</strong> arriba a la derecha.</span></li>
+          <li><span class="ms-install-step-n">2</span><span>Elige <strong>Añadir a pantalla de inicio</strong> (o <strong>Instalar app</strong>).</span></li>
+          <li><span class="ms-install-step-n">3</span><span>Confirma y aparecerá como una app en tu móvil.</span></li>
+        </ol>`;
+    }
+    installModal.hidden = false;
+    requestAnimationFrame(() => installOk.focus());
+  }
+
+  installOk.addEventListener('click', () => {
+    installModal.hidden = true;
+    try { localStorage.setItem(TUTORIAL_SEEN_KEY, '1'); } catch (e) { /* noop */ }
+  });
+
+  function mostrarInAppModal(kind) {
+    const plat = detectPlatform();
+    if (plat === 'android') {
+      inappAction.textContent = 'Abrir en Chrome';
+      inappAction.dataset.mode = 'android';
+      inappIntro.textContent = 'Estás dentro de ' + nombreAppEmbebida(kind) + '. Para guardar esta página como app, ábrela en Chrome.';
+    } else if (plat === 'ios') {
+      inappAction.textContent = 'Copiar enlace';
+      inappAction.dataset.mode = 'ios';
+      inappIntro.textContent = 'Estás dentro de ' + nombreAppEmbebida(kind) + '. Copia el enlace y pégalo en Safari para guardar esta página como app.';
+    } else {
+      // escritorio dentro de webview es raro: damos copia de enlace.
+      inappAction.textContent = 'Copiar enlace';
+      inappAction.dataset.mode = 'ios';
+      inappIntro.textContent = 'Para guardar esta página como app en tu móvil, ábrela en Safari o Chrome.';
+    }
+    inappModal.hidden = false;
+    requestAnimationFrame(() => inappAction.focus());
+  }
+
+  function nombreAppEmbebida(kind) {
+    const nombres = {
+      instagram: 'Instagram', facebook: 'Facebook', line: 'Line',
+      tiktok: 'TikTok', linkedin: 'LinkedIn', snapchat: 'Snapchat',
+      webview: 'una app'
+    };
+    return nombres[kind] || 'una app';
+  }
+
+  inappAction.addEventListener('click', async () => {
+    const mode = inappAction.dataset.mode;
+    if (mode === 'android') {
+      // Intent fuerza a abrir en Chrome si está instalado.
+      const intent = 'intent://www.crislorentenutricion.com/mi-seguimiento/#Intent;scheme=https;package=com.android.chrome;end';
+      window.location.href = intent;
+      return;
+    }
+    // iOS o fallback: clipboard
+    const url = 'https://www.crislorentenutricion.com/mi-seguimiento/';
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('Enlace copiado. Ábrelo en Safari y pégalo allí.');
+    } catch (e) {
+      // fallback legacy
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.setAttribute('readonly', '');
+        ta.style.position = 'absolute'; ta.style.left = '-9999px';
+        document.body.appendChild(ta); ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('Enlace copiado. Ábrelo en Safari y pégalo allí.');
+      } catch (e2) {
+        showToast('No hemos podido copiar. Copia la URL manualmente desde la barra.');
+      }
+    }
+    inappModal.hidden = true;
+  });
+
+  inappDismiss.addEventListener('click', () => {
+    inappModal.hidden = true;
   });
 
   $$('.ms-check-btn').forEach(btn => {
@@ -1343,9 +1649,20 @@ appleTitle: "Mi seguimiento"
       renderStreak(checkinsMap);
       renderCalendar(checkinsMap);
 
-      const err = await upsertCheckin(estado);
-      if (err) {
-        console.error(err);
+      const res = await upsertCheckin(estado);
+      // B4: sesión caducada → vuelta amable al login (welcome-back hará su magia).
+      if (res && res.sessionExpired) {
+        if (estadoPrevio === undefined) checkinsMap.delete(todayISO);
+        else checkinsMap.set(todayISO, estadoPrevio);
+        if (estadoPrevio) setActiveCheck(estadoPrevio);
+        renderStreak(checkinsMap);
+        renderCalendar(checkinsMap);
+        showToast('Tu sesión ha caducado. Te llevamos a iniciar sesión.');
+        render(null);
+        return;
+      }
+      if (res && res.error) {
+        console.error(res.error);
         if (estadoPrevio === undefined) checkinsMap.delete(todayISO);
         else checkinsMap.set(todayISO, estadoPrevio);
         if (estadoPrevio) setActiveCheck(estadoPrevio);
