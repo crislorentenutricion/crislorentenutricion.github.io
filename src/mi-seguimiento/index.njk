@@ -750,10 +750,40 @@ appleTitle: "Mi seguimiento"
     text-underline-offset: 2px;
   }
   .ms-modal-secondary:hover { color: var(--color-green); }
+
+  .ms-install-hint {
+    display: none;
+    margin: 0 0 18px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #fff8e6;
+    border: 1px solid #e8d9a8;
+    color: #5a4a1a;
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+  .ms-install-hint.is-visible { display: block; }
+  .ms-install-hint strong { color: #3d2f0d; }
+  .ms-install-hint .ms-ih-close {
+    float: right;
+    background: none;
+    border: 0;
+    color: #8a7a4a;
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0 0 0 8px;
+    cursor: pointer;
+  }
 </style>
 
 <div class="ms-page">
   <p class="ms-brand"><a href="/">Cris Lorente Nutrición</a></p>
+
+  <aside id="ms-install-hint" class="ms-install-hint" role="note" aria-label="Instalar en pantalla de inicio">
+    <button type="button" class="ms-ih-close" aria-label="Cerrar" data-ms-ih-close>×</button>
+    <strong>Añade Mi seguimiento a tu pantalla de inicio.</strong><br>
+    Toca el botón <strong>Compartir</strong> abajo y luego <strong>“Añadir a pantalla de inicio”</strong>.
+  </aside>
 
   {# ============================== LOGIN VIEW ============================== #}
   <section id="ms-login" class="ms-login">
@@ -1747,5 +1777,24 @@ appleTitle: "Mi seguimiento"
     }
     // Focus the submit button so the flow is: open email → click → click "Enviar enlace".
     requestAnimationFrame(() => submitBtn.focus());
+  })();
+
+  // Banner iOS: "Añadir a pantalla de inicio".
+  // iOS Safari no expone beforeinstallprompt, así que mostramos instrucciones
+  // manuales solo en iPhone/iPad cuando no está ya en modo standalone.
+  (function () {
+    const hint = document.getElementById('ms-install-hint');
+    if (!hint) return;
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPhone|iPad|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const dismissed = localStorage.getItem('ms-install-hint-dismissed') === '1';
+    if (isIOS && !isStandalone && !dismissed) {
+      hint.classList.add('is-visible');
+    }
+    hint.querySelector('[data-ms-ih-close]').addEventListener('click', () => {
+      hint.classList.remove('is-visible');
+      localStorage.setItem('ms-install-hint-dismissed', '1');
+    });
   })();
 </script>
