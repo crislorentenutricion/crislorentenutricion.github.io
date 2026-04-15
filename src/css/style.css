@@ -540,6 +540,9 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 /* ========================
    PLANS
    ======================== */
+.plan-card-wrap { max-width: 460px; margin: 0 auto; }
+.blog-more-wrap { text-align: center; margin-top: 32px; }
+.blog-more-wrap[hidden] { display: none; }
 .plan-card {
   position: relative; display: flex; flex-direction: column;
   overflow: hidden; transition: all var(--transition-medium);
@@ -894,7 +897,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .credential-list li { display: flex; flex-direction: column; gap: 3px; font-size: 0.9rem; }
 .credential-list li strong { color: var(--color-black); font-weight: var(--font-weight-semibold); }
 .credential-list li span { color: var(--color-gray); }
-.credential-year { font-size: 0.78rem !important; color: var(--color-green) !important; font-weight: var(--font-weight-semibold); }
+.credential-list li span.credential-year { font-size: 0.78rem; color: var(--color-green); font-weight: var(--font-weight-semibold); }
 .credential-list.plain li { color: var(--color-gray); padding-left: 20px; position: relative; line-height: 1.6; }
 .credential-list.plain li::before {
   content: ''; position: absolute; left: 0; top: 8px;
@@ -1333,5 +1336,15 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   .site-header, .site-footer, .whatsapp-btn, .section-green, .trust-bar { display: none; }
   .section { padding: 24px 0; }
   body { font-size: 12pt; color: #000; }
+  .reveal { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
   .reveal { opacity: 1; transform: none; }
 }

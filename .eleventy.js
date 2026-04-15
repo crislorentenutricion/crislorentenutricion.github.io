@@ -25,7 +25,6 @@ module.exports = function(eleventyConfig) {
       fs.writeFileSync(path.join(outDir, f), minifyCss(raw));
     }
   });
-  // (antes: eleventyConfig.addPassthroughCopy("src/css"); — sustituido por el hook anterior)
   eleventyConfig.addPassthroughCopy("src/js");
   eleventyConfig.addPassthroughCopy("src/img");
   eleventyConfig.addPassthroughCopy("src/robots.txt");
@@ -74,7 +73,7 @@ module.exports = function(eleventyConfig) {
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-");
     return content.replace(
-      /(<div class="article-content">)([\s\S]*?)(<\/div>\s*<\/div>\s*<\/section>)/,
+      /(<div class="article-content">)([\s\S]*?)(<!--\/article-content-->)/,
       (m, pre, body, post) => {
         const used = new Set();
         const newBody = body.replace(

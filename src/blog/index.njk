@@ -83,7 +83,7 @@ navActive: blog
         {% include "blog-card.njk" %}
       {% endfor %}
     </div>
-    <div class="blog-more-wrap" id="blog-more-wrap" style="display:none; text-align:center; margin-top:32px;">
+    <div class="blog-more-wrap" id="blog-more-wrap" hidden>
       <button class="btn btn-secondary" id="btn-ver-mas">Ver más artículos</button>
     </div>
   </div>
@@ -116,13 +116,13 @@ navActive: blog
     if (matching.length > ROW_SIZE) {
       const hidden = matching.length - ROW_SIZE;
       btnVerMas.textContent = `Ver ${hidden} artículo${hidden > 1 ? 's' : ''} más`;
-      moreWrap.style.display = '';
+      moreWrap.hidden = false;
       btnVerMas.onclick = () => {
         matching.forEach(a => a.style.display = '');
-        moreWrap.style.display = 'none';
+        moreWrap.hidden = true;
       };
     } else {
-      moreWrap.style.display = 'none';
+      moreWrap.hidden = true;
     }
   }
 
