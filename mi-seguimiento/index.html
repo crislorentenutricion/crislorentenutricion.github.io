@@ -52,6 +52,19 @@
   
 
   <meta name="robots" content="noindex, nofollow">
+  
+  <link rel="manifest" href="/mi-seguimiento/manifest.webmanifest">
+  
+  
+  <link rel="apple-touch-icon" sizes="180x180" href="/img/mi-seguimiento/apple-touch-180.png">
+  
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Mi seguimiento">
+  <meta name="application-name" content="Mi seguimiento">
+  
 </head>
 <body class="ms-body">
   <main>
@@ -228,6 +241,53 @@
     font-size: 0.82rem;
     color: #a29e91;
   }
+
+  /* ---------- welcome-back (sesión expirada, paciente conocido) ---------- */
+  .ms-welcome-back {
+    max-width: 420px;
+    margin: 0 auto 28px;
+    padding: 16px 20px;
+    background: #fdfbf4;
+    border: 1px solid #ece7d6;
+    border-radius: 16px;
+    text-align: center;
+    animation: msFade 0.45s ease both;
+  }
+  .ms-welcome-back-title {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1.08rem;
+    color: #2d2a24;
+    margin: 0 0 4px;
+    line-height: 1.35;
+  }
+  .ms-welcome-back-title em {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--color-green);
+  }
+  .ms-welcome-back-msg {
+    font-family: 'Lora', serif;
+    font-size: 0.9rem;
+    color: #6b6759;
+    line-height: 1.55;
+    margin: 0;
+  }
+  .ms-welcome-back-forget {
+    display: inline-block;
+    margin-top: 10px;
+    background: none;
+    border: 0;
+    padding: 4px 8px;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: #8a8678;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .ms-welcome-back-forget:hover { color: var(--color-green); }
 
   /* ============================================================
      AUTHED VIEW
@@ -707,10 +767,16 @@
       <circle cx="40" cy="10" r="1.8" fill="currentColor" stroke="none"/>
     </svg>
 
-    <h1 class="ms-login-title">Tu <em>espacio</em><br>de seguimiento</h1>
-    <p class="ms-login-intro">
+    <h1 id="ms-login-title" class="ms-login-title">Tu <em>espacio</em><br>de seguimiento</h1>
+    <p id="ms-login-intro" class="ms-login-intro">
       Aquí ves tu menú de hoy, marcas cómo te ha ido el día y observas cómo avanzas semana a semana. Sin contraseñas: escribes tu correo, te llega un enlace, haces clic y entras.
     </p>
+
+    <aside id="ms-welcome-back" class="ms-welcome-back" hidden aria-live="polite">
+      <p class="ms-welcome-back-title">Bienvenida de nuevo, <em id="ms-welcome-back-name">…</em></p>
+      <p class="ms-welcome-back-msg">Por seguridad te pedimos entrar otra vez. Te mandamos un enlace a tu correo y sigues donde lo dejaste.</p>
+      <button type="button" id="ms-welcome-back-forget" class="ms-welcome-back-forget">No soy yo, usar otro correo</button>
+    </aside>
 
     <form id="ms-login-form" class="ms-login-form" novalidate>
       <label for="ms-email" class="ms-label">Tu correo</label>
@@ -1185,12 +1251,85 @@
     return { racha, rota };
   }
 
+  // -------- known-patient (B2) --------
+  // Marca local de "paciente conocido". No es autenticación (la auth real
+  // vive en el refresh token de Supabase). Solo sirve para mostrar una
+  // pantalla amable cuando la sesión expira pero el navegador es el mismo.
+  const LAST_EMAIL_KEY = 'ms-last-email';
+  const LAST_SEEN_KEY  = 'ms-last-seen';
+
+  function recordarPaciente(email) {
+    try {
+      if (!email) return;
+      localStorage.setItem(LAST_EMAIL_KEY, email.trim().toLowerCase());
+      localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
+    } catch (e) { /* modo privado, ignoramos */ }
+  }
+  function olvidarPaciente() {
+    try {
+      localStorage.removeItem(LAST_EMAIL_KEY);
+      localStorage.removeItem(LAST_SEEN_KEY);
+    } catch (e) { /* noop */ }
+  }
+  function pacienteConocido() {
+    try { return localStorage.getItem(LAST_EMAIL_KEY) || null; }
+    catch (e) { return null; }
+  }
+
+  // -------- welcome-back view (B3) --------
+  const welcomeBack = $('#ms-welcome-back');
+  const loginTitle  = $('#ms-login-title');
+  const loginIntro  = $('#ms-login-intro');
+  const welcomeName = $('#ms-welcome-back-name');
+  const forgetBtn   = $('#ms-welcome-back-forget');
+
+  function mostrarWelcomeBack(email) {
+    // Variante del login: email prefilled, mensaje cálido, título/intro ocultos.
+    welcomeName.textContent = primerNombreDesdeEmail(email);
+    welcomeBack.hidden = false;
+    loginTitle.hidden  = true;
+    loginIntro.hidden  = true;
+    emailInput.value = email;
+    // Por UX: el consent ya fue aceptado en el registro previo. Lo marcamos
+    // pre-check pero lo dejamos visible para que pueda desmarcarlo si quiere.
+    const cb = $('#ms-consent');
+    if (cb) cb.checked = true;
+    // Foco directo en el botón de enviar enlace: un solo clic para entrar.
+    requestAnimationFrame(() => submitBtn.focus());
+  }
+  function ocultarWelcomeBack() {
+    welcomeBack.hidden = true;
+    loginTitle.hidden  = false;
+    loginIntro.hidden  = false;
+    emailInput.value = '';
+    const cb = $('#ms-consent');
+    if (cb) cb.checked = false;
+    requestAnimationFrame(() => emailInput.focus());
+  }
+
+  function primerNombreDesdeEmail(email) {
+    // Fallback amable si no tenemos el nombre real: deriva del prefijo del
+    // correo. "maria.garcia@..." → "Maria". Si falla, "de nuevo".
+    if (!email) return 'de nuevo';
+    const raw = String(email).split('@')[0] || '';
+    const first = raw.split(/[._\-+]/)[0];
+    if (!first) return 'de nuevo';
+    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  }
+
   // -------- auth wiring --------
   async function render(session) {
     if (session) {
       loginView.hidden  = true;
       authedView.hidden = false;
       authedView.classList.add('ms-fade-in');
+      // B2: recuerda al paciente en este navegador.
+      const sessionEmail = session.user && session.user.email;
+      if (sessionEmail) recordarPaciente(sessionEmail);
+      // Si estábamos en la variante "welcome back", la reseteamos para la próxima.
+      welcomeBack.hidden = true;
+      loginTitle.hidden  = false;
+      loginIntro.hidden  = false;
       const result = await hydrate();
       if (result && result.rota) {
         showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
@@ -1203,6 +1342,10 @@
     } else {
       authedView.hidden = true;
       loginView.hidden  = false;
+      // B3: sesión null + paciente conocido → pantalla de bienvenida cálida.
+      const known = pacienteConocido();
+      if (known) mostrarWelcomeBack(known);
+      else ocultarWelcomeBack();
     }
   }
 
@@ -1234,6 +1377,10 @@
       showStatus('No hemos podido enviar el enlace. Prueba de nuevo en un minuto.', 'error');
       return;
     }
+    // Recordamos el email ya aquí: aunque la sesión real se crea al pulsar
+    // el magic link, dejar rastro permite que la próxima visita ofrezca la
+    // pantalla de bienvenida aunque la pestaña se cierre antes de confirmar.
+    recordarPaciente(email);
     showStatus('📬 Enlace enviado a ' + email + '. Abre tu correo y haz clic en «Entrar». Puedes cerrar esta pestaña.', 'ok');
   });
 
@@ -1280,7 +1427,15 @@
   });
 
   $('#ms-signout').addEventListener('click', async () => {
+    // Cierre explícito: también olvidamos el "paciente conocido" local.
+    olvidarPaciente();
     await supa.auth.signOut();
+  });
+
+  forgetBtn.addEventListener('click', () => {
+    // "No soy yo": limpia la marca local y vuelve al login normal.
+    olvidarPaciente();
+    ocultarWelcomeBack();
   });
 
   supa.auth.onAuthStateChange((_event, session) => render(session));
@@ -1311,11 +1466,21 @@
   });
 
   // Prefill email from ?email= query param so coming from the menu email is ~1 click.
+  // Este param manda sobre la variante "welcome back": si Cristina envía un
+  // enlace con un email específico, confiamos en él.
   (() => {
     const params = new URLSearchParams(window.location.search);
     const qEmail = params.get('email');
     if (!qEmail) return;
-    emailInput.value = qEmail.trim().toLowerCase();
+    const normalizado = qEmail.trim().toLowerCase();
+    emailInput.value = normalizado;
+    // Si el param coincide con el paciente conocido, mantenemos welcome-back.
+    // Si difiere, ocultamos welcome-back: es otro correo.
+    const known = pacienteConocido();
+    if (known && known !== normalizado) {
+      ocultarWelcomeBack();
+      emailInput.value = normalizado;
+    }
     // Focus the submit button so the flow is: open email → click → click "Enviar enlace".
     requestAnimationFrame(() => submitBtn.focus());
   })();
