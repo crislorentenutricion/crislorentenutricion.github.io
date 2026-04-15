@@ -3,6 +3,19 @@
 <head>
   {% include "head-meta.njk" %}
   <meta name="robots" content="noindex, nofollow">
+  {% if manifest %}
+  <link rel="manifest" href="{{ manifest }}">
+  {% endif %}
+  {% if appleTouchIcon %}
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ appleTouchIcon }}">
+  {% endif %}
+  {% if appleTitle %}
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="{{ appleTitle }}">
+  <meta name="application-name" content="{{ appleTitle }}">
+  {% endif %}
 </head>
 <body class="ms-body">
   <main>

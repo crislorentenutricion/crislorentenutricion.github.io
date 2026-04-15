@@ -1,0 +1,28 @@
+{
+  "name": "Mi seguimiento — Cris Lorente Nutrición",
+  "short_name": "Mi seguimiento",
+  "description": "Tu espacio privado de seguimiento nutricional.",
+  "start_url": "/mi-seguimiento/",
+  "scope": "/mi-seguimiento/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8f6f0",
+  "theme_color": "#4a7c59",
+  "lang": "es-ES",
+  "dir": "ltr",
+  "categories": ["health", "lifestyle"],
+  "icons": [
+    {
+      "src": "/img/mi-seguimiento/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/img/mi-seguimiento/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
