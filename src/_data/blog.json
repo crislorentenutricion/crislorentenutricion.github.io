@@ -1,5 +1,16 @@
 [
   {
+    "slug": "bol-atun-huevo-cebolla-pochada",
+    "title": "Bol de atún, huevo y cebolla pochada",
+    "description": "Receta de bol completo con arroz, atún, huevo cocido, cebolla pochada, zanahoria y surimi. Comida equilibrada en 25 minutos, alta en proteína.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2026-04-16",
+    "image": "bol-atun-huevo-cebolla-pochada.jpg",
+    "imageAlt": "Bol de cerámica con atún desmigado, huevo cocido picado, cebolla pochada, zanahoria rallada y palitos de surimi",
+    "featured": false
+  },
+  {
     "slug": "comer-sano-no-es-comer-menos",
     "title": "Comer sano no es comer menos",
     "description": "Comer sano no es comer menos: es comer mejor. Una dietista online te explica qué significa realmente una alimentación saludable y cómo aplicarlo sin obsesionarte.",
