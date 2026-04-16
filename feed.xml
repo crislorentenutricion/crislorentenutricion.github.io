@@ -4,7 +4,7 @@
   <subtitle>Asesoría nutricional personalizada para mujeres. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
   <link href="https://www.crislorentenutricion.com/feed.xml" rel="self"/>
   <link href="https://www.crislorentenutricion.com/"/>
-  <updated>2026-03-11T00:00:00Z</updated>
+  <updated>2026-04-16T00:00:00Z</updated>
   <id>https://www.crislorentenutricion.com/</id>
   <rights>© Cristina Lorente Piquer — Cris Lorente Nutrición</rights>
   <generator uri="https://www.11ty.dev/" version="3.1.2">Eleventy</generator>
@@ -15,6 +15,15 @@
     <email>crislorentenutricion@gmail.com</email>
     <uri>https://www.crislorentenutricion.com/sobre-mi/</uri>
   </author>
+  <entry>
+    <title>Bol de atún, huevo y cebolla pochada</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/bol-atun-huevo-cebolla-pochada/"/>
+    <updated>2026-04-16T00:00:00Z</updated>
+    <published>2026-04-16T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/bol-atun-huevo-cebolla-pochada/</id>
+    <category term="cristifood" label="CristiFood"/>
+    <summary>Receta de bol completo con arroz, atún, huevo cocido, cebolla pochada, zanahoria y surimi. Comida equilibrada en 25 minutos, alta en proteína.</summary>
+  </entry>
   <entry>
     <title>Granada, de sueño a realidad — Día 1</title>
     <link href="https://www.crislorentenutricion.com/blog/bienestar/granada-de-sueno-a-realidad/"/>

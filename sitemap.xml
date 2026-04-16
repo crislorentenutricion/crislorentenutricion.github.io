@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemaps/image/1.1">
   <url>
     <loc>https://www.crislorentenutricion.com/</loc>
-    <lastmod>2026-03-11</lastmod>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -13,31 +13,31 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/servicios/</loc>
-    <lastmod>2026-03-11</lastmod>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/menu-mensual-personalizado/</loc>
-    <lastmod>2026-03-11</lastmod>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/metodo/</loc>
-    <lastmod>2026-03-11</lastmod>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/testimonios/</loc>
-    <lastmod>2026-03-11</lastmod>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/sobre-mi/</loc>
-    <lastmod>2026-03-11</lastmod>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <image:image>
@@ -47,9 +47,20 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/blog/</loc>
-    <lastmod>2026-03-11</lastmod>
+    <lastmod>2026-04-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.crislorentenutricion.com/blog/cristifood/bol-atun-huevo-cebolla-pochada/</loc>
+    <lastmod>2026-04-16</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+    <image:image>
+      <image:loc>https://www.crislorentenutricion.com/img/blog/bol-atun-huevo-cebolla-pochada.jpg</image:loc>
+      <image:title>Bol de atún, huevo y cebolla pochada</image:title>
+      <image:caption>Bol de cerámica con atún desmigado, huevo cocido picado, cebolla pochada, zanahoria rallada y palitos de surimi</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/blog/bienestar/granada-de-sueno-a-realidad/</loc>
