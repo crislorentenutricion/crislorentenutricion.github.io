@@ -1,0 +1,285 @@
+---
+layout: layouts/base.njk
+title: "App de seguimiento nutricional — tu racha diaria"
+description: "Espacio privado para pacientes de Cris Lorente: marca cada día como «lo seguí», «a medias» o «hoy no», mantén tu racha y consulta el menú vigente desde el móvil. Sin apps que descargar."
+navActive: seguimiento
+permalink: /seguimiento/
+ogImage: /img/seguimiento/calendario.jpg
+preloadImage: /img/seguimiento/calendario.webp
+preloadImageType: image/webp
+---
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "@id": "https://www.crislorentenutricion.com/seguimiento/#webpage",
+  "url": "https://www.crislorentenutricion.com/seguimiento/",
+  "name": "App de seguimiento nutricional — tu racha diaria",
+  "description": "Espacio privado para pacientes de Cris Lorente: marca cada día, mantén tu racha y consulta el menú vigente desde el móvil.",
+  "inLanguage": "es-ES",
+  "isPartOf": { "@id": "https://www.crislorentenutricion.com/#website" },
+  "about": { "@id": "https://www.crislorentenutricion.com/#organization" },
+  "primaryImageOfPage": {
+    "@type": "ImageObject",
+    "url": "https://www.crislorentenutricion.com/img/seguimiento/calendario.jpg",
+    "width": 1344,
+    "height": 1246
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".faq-item summary", ".faq-item p"]
+  },
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Tengo que descargar algo o pagar una app aparte?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. La zona de seguimiento es una web que funciona desde el móvil como una app, sin pasar por App Store ni Google Play y sin coste extra. Si quieres, puedes añadirla a la pantalla de inicio de tu móvil en dos toques y abrirla como cualquier otra app."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Funciona en iPhone y Android?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí, en cualquier móvil con navegador moderno. En Android (Chrome) verás un aviso para instalarla. En iPhone (Safari), desde «Compartir → Añadir a pantalla de inicio»."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué pasa si se me olvida marcar un día?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "La racha se rompe, pero no pasa nada: se empieza una nueva al siguiente «lo seguí». No hay castigos ni alertas culpables — esto es una herramienta para verte, no para presionarte."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Puedo ver mi menú desde aquí?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Tu menú mensual vigente aparece siempre en la pantalla principal, con desayuno, almuerzo, comida, merienda y cena. Sin buscar el PDF en el correo ni guardar capturas."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Inicio", "item": "https://www.crislorentenutricion.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Seguimiento" }
+  ]
+}
+</script>
+
+{# ── HERO ── #}
+<section class="hero section-cream sg-hero">
+  <div class="container sg-hero-inner">
+    <div class="sg-hero-text">
+      <span class="hero-label hero-animate hero-animate-1">Para pacientes de Cris Lorente</span>
+      <h1 class="hero-animate hero-animate-2">Tu seguimiento, <span class="gradient-text">visible cada día</span></h1>
+      <p class="hero-subtitle hero-animate hero-animate-3">Entras con tu correo, marcas cómo te ha ido el día en tres segundos y ves tu mes entero de un vistazo. Tu menú vigente, siempre a mano.</p>
+      <div class="hero-animate hero-animate-4">
+        <a href="/#formulario-contacto" class="btn btn-primary btn-lg">Reserva tu valoración gratuita →</a>
+        <p class="hero-price-hint">Solo para pacientes — incluido en los <strong>40 €/mes</strong> sin coste extra</p>
+      </div>
+    </div>
+    <div class="sg-hero-pic hero-animate hero-animate-4">
+      <picture>
+        <source srcset="/img/seguimiento/calendario.webp" type="image/webp">
+        <img src="/img/seguimiento/calendario.jpg"
+             alt="Calendario mensual con los días marcados en verde «lo seguí», dorado «a medias» y coral «hoy no»"
+             width="1344" height="1246"
+             fetchpriority="high" decoding="async">
+      </picture>
+    </div>
+  </div>
+</section>
+
+{# ── BLOQUE 1: LOGIN OTP ── #}
+<section class="section section-white sg-feature">
+  <div class="container sg-feature-row">
+    <div class="sg-feature-text reveal">
+      <span class="sg-step">01</span>
+      <h2>Un espacio que es solo tuyo</h2>
+      <p>Sin contraseñas que recordar. Escribes tu correo, te llega un código de 6 dígitos, lo tecleas y entras. La próxima vez, tu móvil te reconoce.</p>
+      <p class="sg-feature-detail">Pensado para que lo abras en mitad del desayuno, no para que sea otra app más a gestionar.</p>
+    </div>
+    <div class="sg-feature-pic sg-feature-pic--phone reveal reveal-delay-2">
+      <picture>
+        <source srcset="/img/seguimiento/login-otp.webp" type="image/webp">
+        <img src="/img/seguimiento/login-otp.jpg"
+             alt="Pantalla de acceso con campo de correo y código OTP de 6 dígitos"
+             width="672" height="1349"
+             loading="lazy" decoding="async">
+      </picture>
+    </div>
+  </div>
+</section>
+
+{# ── BLOQUE 2: CHECK-IN DIARIO ── #}
+<section class="section section-cream sg-feature">
+  <div class="container sg-feature-row sg-feature-row--reverse">
+    <div class="sg-feature-text reveal">
+      <span class="sg-step">02</span>
+      <h2>Marca tu día en 3 segundos</h2>
+      <p>Tres botones. Ni más, ni menos.</p>
+      <ul class="sg-pill-list">
+        <li><span class="sg-pill sg-pill--ok">Lo he seguido</span> <span class="sg-pill-desc">suma un día a tu racha</span></li>
+        <li><span class="sg-pill sg-pill--mid">A medias</span> <span class="sg-pill-desc">la mantiene, porque la vida pasa</span></li>
+        <li><span class="sg-pill sg-pill--no">Hoy no</span> <span class="sg-pill-desc">la reinicia — y no pasa nada</span></li>
+      </ul>
+      <p class="sg-feature-detail">Nada de macros, nada de calorías, nada de formularios largos. Una decisión al día.</p>
+    </div>
+    <div class="sg-feature-pic reveal reveal-delay-2">
+      <picture>
+        <source srcset="/img/seguimiento/checkin-botones.webp" type="image/webp">
+        <img src="/img/seguimiento/checkin-botones.jpg"
+             alt="Tres botones de check-in: «Lo he seguido», «A medias», «Hoy no»"
+             width="1344" height="586"
+             loading="lazy" decoding="async">
+      </picture>
+    </div>
+  </div>
+</section>
+
+{# ── BLOQUE 3: CALENDARIO ── #}
+<section class="section section-white sg-feature">
+  <div class="container sg-feature-row">
+    <div class="sg-feature-text reveal">
+      <span class="sg-step">03</span>
+      <h2>Tu mes, <em>de un vistazo</em></h2>
+      <p>Cada día del mes se pinta según cómo te ha ido. No hay nada que interpretar: ves tu constancia dibujada.</p>
+      <p class="sg-feature-detail">Cuando llevas dos semanas seguidas, no hace falta que nadie te lo diga. Ya lo estás viendo.</p>
+    </div>
+    <div class="sg-feature-pic reveal reveal-delay-2">
+      <picture>
+        <source srcset="/img/seguimiento/calendario.webp" type="image/webp">
+        <img src="/img/seguimiento/calendario.jpg"
+             alt="Calendario mensual con la mayoría de días en verde, dos dorados y uno coral al principio del mes"
+             width="1344" height="1246"
+             loading="lazy" decoding="async">
+      </picture>
+    </div>
+  </div>
+</section>
+
+{# ── BLOQUE 4: MODAL RACHA ── #}
+<section class="section section-cream sg-feature">
+  <div class="container sg-feature-row sg-feature-row--reverse">
+    <div class="sg-feature-text reveal">
+      <span class="sg-step">04</span>
+      <h2>Pequeños momentos que <em>celebras</em></h2>
+      <p>A los 7, 15, 30 días seguidos aparece un aviso pequeño. No para presumir en ninguna red, solo para ti.</p>
+      <p class="sg-feature-detail">Cuidarte no debería ser una obligación silenciosa. A veces toca recordarte lo bien que lo estás haciendo.</p>
+    </div>
+    <div class="sg-feature-pic sg-feature-pic--phone reveal reveal-delay-2">
+      <picture>
+        <source srcset="/img/seguimiento/modal-racha.webp" type="image/webp">
+        <img src="/img/seguimiento/modal-racha.jpg"
+             alt="Aviso emergente «Una semana seguida — siete días cuidándote, esto ya no es casualidad»"
+             width="672" height="1359"
+             loading="lazy" decoding="async">
+      </picture>
+    </div>
+  </div>
+</section>
+
+{# ── BLOQUE 5: MENÚ VIGENTE ── #}
+<section class="section section-white sg-feature">
+  <div class="container sg-feature-row">
+    <div class="sg-feature-text reveal">
+      <span class="sg-step">05</span>
+      <h2>Tu menú, siempre a mano</h2>
+      <p>Desayuno, almuerzo, comida, merienda y cena del día. Con gramajes, sin PDFs perdidos en el correo.</p>
+      <p class="sg-feature-detail">Cada mes, tu menú se actualiza solo. Sin reenvíos, sin buscar cuál era el último.</p>
+    </div>
+    <div class="sg-feature-pic sg-feature-pic--phone reveal reveal-delay-2">
+      <picture>
+        <source srcset="/img/seguimiento/menu.webp" type="image/webp">
+        <img src="/img/seguimiento/menu.jpg"
+             alt="Menú diario con racha de 11 días visible arriba y las 5 comidas con gramajes"
+             width="672" height="1293"
+             loading="lazy" decoding="async">
+      </picture>
+    </div>
+  </div>
+</section>
+
+{# ── BLOQUE 6: PWA ── #}
+<section class="section section-cream">
+  <div class="container sg-pwa">
+    <div class="reveal">
+      <span class="sg-step">06</span>
+      <h2>Funciona en tu móvil <em>como una app</em></h2>
+      <p class="section-subtitle">En iPhone y en Android. Se añade a la pantalla de inicio en dos toques y se abre como cualquier otra app, sin App Store de por medio.</p>
+      <div class="sg-pwa-grid">
+        <div class="sg-pwa-card">
+          <span class="sg-pwa-icon" aria-hidden="true">⬇</span>
+          <h3>Sin descargas</h3>
+          <p>No pasa por App Store ni Google Play. Entras por el navegador y, si quieres, la añades a tu pantalla de inicio.</p>
+        </div>
+        <div class="sg-pwa-card">
+          <span class="sg-pwa-icon" aria-hidden="true">✕</span>
+          <h3>Sin cuentas ni contraseñas</h3>
+          <p>Accedes con un código de 6 dígitos que te llega a tu correo. Solo tu email, nada más.</p>
+        </div>
+        <div class="sg-pwa-card">
+          <span class="sg-pwa-icon" aria-hidden="true">♡</span>
+          <h3>Sin anuncios, sin datos a terceros</h3>
+          <p>Nada de publicidad, ni cookies de tracking. Solo lo que necesitas para tu seguimiento.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ── FAQ ── #}
+<section class="section section-white">
+  <div class="container">
+    <h2 class="section-title reveal">Preguntas frecuentes</h2>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>¿Tengo que descargar algo o pagar una app aparte?</summary>
+        <p>No. La zona de seguimiento es una web que funciona desde el móvil como una app, sin pasar por App Store ni Google Play y sin coste extra. Si quieres, puedes añadirla a la pantalla de inicio de tu móvil en dos toques y abrirla como cualquier otra app.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Funciona en iPhone y Android?</summary>
+        <p>Sí, en cualquier móvil con navegador moderno. En Android (Chrome) verás un aviso para instalarla. En iPhone (Safari), desde «Compartir → Añadir a pantalla de inicio».</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Qué pasa si se me olvida marcar un día?</summary>
+        <p>La racha se rompe, pero no pasa nada: se empieza una nueva al siguiente «lo seguí». No hay castigos ni alertas culpables — esto es una herramienta para verte, no para presionarte.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Puedo ver mi menú desde aquí?</summary>
+        <p>Sí. Tu menú mensual vigente aparece siempre en la pantalla principal, con desayuno, almuerzo, comida, merienda y cena. Sin buscar el PDF en el correo ni guardar capturas.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+{# ── CTA FINAL ── #}
+<section class="section section-green">
+  <div class="deco-float deco-float-1"></div>
+  <div class="deco-float deco-float-2"></div>
+  <div class="container text-center">
+    <h2>Todo esto <em>viene incluido</em></h2>
+    <p>El seguimiento forma parte del plan de asesoría de 40 €/mes. Si aún no eres paciente, empieza por la valoración gratuita.</p>
+    <div class="cta-spacer"></div>
+    <a href="/#formulario-contacto" class="btn btn-white btn-lg">Reserva tu valoración gratuita →</a>
+  </div>
+</section>

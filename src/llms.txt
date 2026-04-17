@@ -11,8 +11,10 @@ Cristina Lorente Piquer es Técnica Superior en Dietética y Técnica en Farmaci
 
 ## Páginas clave
 
-- [Inicio](https://www.crislorentenutricion.com/): propuesta de valor y resumen del método.
-- [Servicios](https://www.crislorentenutricion.com/servicios/): detalle del plan, preguntas frecuentes y formulario de valoración gratuita.
+- [Inicio](https://www.crislorentenutricion.com/): propuesta de valor, plan único, FAQ y formulario de valoración gratuita.
+- [Seguimiento](https://www.crislorentenutricion.com/seguimiento/): app de seguimiento para pacientes — racha diaria, calendario del mes y menú vigente desde el móvil.
+- [Método](https://www.crislorentenutricion.com/metodo/): cómo funciona la asesoría paso a paso, desde el primer contacto hasta los seguimientos mensuales.
+- [Menú mensual personalizado](https://www.crislorentenutricion.com/menu-mensual-personalizado/): qué incluye el menú con gramajes, lista de la compra y seguimiento.
 - [Sobre mí](https://www.crislorentenutricion.com/sobre-mi/): formación, experiencia clínica y filosofía de trabajo.
 - [Aprende](https://www.crislorentenutricion.com/blog/): blog con 3 pilares — Educación nutricional, CristiFood (recetas saludables) y Bienestar.
 
