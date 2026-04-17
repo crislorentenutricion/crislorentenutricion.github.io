@@ -113,6 +113,21 @@
   }
 
   /* ============================================================
+     LOADING VIEW (boot)
+     ============================================================ */
+  .ms-loading {
+    padding-top: 18vh;
+    text-align: center;
+  }
+  .ms-loading p {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: #8a8678;
+    margin: 0;
+  }
+
+  /* ============================================================
      LOGIN VIEW
      ============================================================ */
   .ms-login { padding-top: 4vh; }
@@ -146,6 +161,7 @@
     flex-direction: column;
     gap: 10px;
   }
+  .ms-login-form[hidden] { display: none; }
   .ms-label {
     font-family: 'Lora', serif;
     font-style: italic;
@@ -846,7 +862,12 @@
   </aside>
 
   
-  <section id="ms-login" class="ms-login">
+  <section id="ms-loading" class="ms-loading" aria-live="polite">
+    <p>Cargando tu seguimiento…</p>
+  </section>
+
+  
+  <section id="ms-login" class="ms-login" hidden>
     <svg class="ms-sprig" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M40 72 Q40 44 40 12"/>
       <path d="M40 55 Q27 51 19 36"/>
@@ -858,12 +879,12 @@
 
     <h1 id="ms-login-title" class="ms-login-title">Tu <em>espacio</em><br>de seguimiento</h1>
     <p id="ms-login-intro" class="ms-login-intro">
-      Aquí ves tu menú de hoy, marcas cómo te ha ido el día y observas cómo avanzas semana a semana. Sin contraseñas: escribes tu correo, te llega un enlace, haces clic y entras.
+      Aquí ves tu menú de hoy, marcas cómo te ha ido el día y observas cómo avanzas semana a semana. Sin contraseñas: escribes tu correo, te llega un código de 6 dígitos, lo escribes y entras.
     </p>
 
     <aside id="ms-welcome-back" class="ms-welcome-back" hidden aria-live="polite">
       <p class="ms-welcome-back-title">Bienvenida de nuevo, <em id="ms-welcome-back-name">…</em></p>
-      <p class="ms-welcome-back-msg">Por seguridad te pedimos entrar otra vez. Te mandamos un enlace a tu correo y sigues donde lo dejaste.</p>
+      <p class="ms-welcome-back-msg">Por seguridad te pedimos entrar otra vez. Te mandamos un código a tu correo y sigues donde lo dejaste.</p>
       <button type="button" id="ms-welcome-back-forget" class="ms-welcome-back-forget">No soy yo, usar otro correo</button>
     </aside>
 
@@ -883,11 +904,29 @@
         <input id="ms-consent" type="checkbox" class="ms-consent-box" required>
         <span>Acepto el tratamiento de mis datos según la <a href="/privacidad-seguimiento/" target="_blank" rel="noopener">política de privacidad de la zona de seguimiento</a>.</span>
       </label>
-      <button type="submit" id="ms-login-submit" class="ms-submit">Enviar enlace</button>
+      <button type="submit" id="ms-login-submit" class="ms-submit">Enviar código</button>
       <p class="ms-login-hint">Revisa tu bandeja de entrada (y spam, por si acaso).</p>
     </form>
 
     <p id="ms-status" class="ms-status" hidden></p>
+
+    <form id="ms-otp-form" class="ms-login-form" novalidate hidden>
+      <label for="ms-otp-code" class="ms-label">Código de 6 dígitos</label>
+      <input
+        id="ms-otp-code"
+        name="code"
+        type="text"
+        class="ms-input"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        maxlength="6"
+        pattern="\d{6}"
+        placeholder="123456"
+        aria-describedby="ms-otp-hint"
+      >
+      <button type="submit" id="ms-otp-submit" class="ms-submit">Entrar</button>
+      <p id="ms-otp-hint" class="ms-login-hint">Lo encontrarás en el correo que acabamos de enviarte.</p>
+    </form>
 
     <p class="ms-login-foot">Solo pacientes de Cris Lorente Nutrición.</p>
   </section>
@@ -1023,6 +1062,47 @@
   const SUPABASE_URL = 'https://nvjoupgpncprgpemqydg.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_kcnv9Us0xUtLaYAvsxT_Qw_YOzv05RS';
 
+  const $  = (sel) => document.querySelector(sel);
+  const $$ = (sel) => document.querySelectorAll(sel);
+
+  const loadingView = $('#ms-loading');
+  const loginView   = $('#ms-login');
+  const authedView  = $('#ms-authed');
+  const statusEl    = $('#ms-status');
+  const form        = $('#ms-login-form');
+  const emailInput  = $('#ms-email');
+  const submitBtn   = $('#ms-login-submit');
+  const otpForm     = $('#ms-otp-form');
+  const otpInput    = $('#ms-otp-code');
+  const otpSubmit   = $('#ms-otp-submit');
+  let pendingOtpEmail = '';
+  let firstRenderDone = false;
+  let handlersReady   = false;
+
+  function resetOtpUi() {
+    pendingOtpEmail = '';
+    otpForm.hidden = true;
+    otpInput.value = '';
+  }
+
+  // Safety net + guard se registran ANTES de createClient para sobrevivir
+  // a un throw síncrono (env vars vacías en dev local rompen la URL del
+  // cliente y truncarían el resto del script).
+  setTimeout(() => {
+    if (firstRenderDone) return;
+    loadingView.hidden = true;
+    loginView.hidden = false;
+  }, 4000);
+
+  document.addEventListener('submit', (e) => {
+    const t = e.target;
+    if (t && (t.id === 'ms-login-form' || t.id === 'ms-otp-form') && !handlersReady) {
+      e.preventDefault();
+      showStatus('No hemos podido conectar con el servidor. Refresca la página y vuelve a intentarlo.', 'error');
+    }
+  }, true);
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Supabase env vars vacías');
   const supa = createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
       persistSession: true,
@@ -1032,16 +1112,6 @@
     }
   });
   window.supa = supa;
-
-  const $  = (sel) => document.querySelector(sel);
-  const $$ = (sel) => document.querySelectorAll(sel);
-
-  const loginView  = $('#ms-login');
-  const authedView = $('#ms-authed');
-  const statusEl   = $('#ms-status');
-  const form       = $('#ms-login-form');
-  const emailInput = $('#ms-email');
-  const submitBtn  = $('#ms-login-submit');
 
   const DIAS_JS = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
   const COMIDAS = [['desayuno','Desayuno'],['almuerzo','Almuerzo'],['comida','Comida'],['merienda','Merienda'],['cena','Cena']];
@@ -1515,9 +1585,13 @@
 
   // -------- auth wiring --------
   async function render(session) {
+    firstRenderDone = true;
+    loadingView.hidden = true;
     if (session) {
       loginView.hidden  = true;
       authedView.hidden = false;
+      resetOtpUi();
+      statusEl.hidden = true;
       authedView.classList.add('ms-fade-in');
       // B2: recuerda al paciente en este navegador.
       const sessionEmail = session.user && session.user.email;
@@ -1561,23 +1635,23 @@
     submitBtn.textContent = 'Enviando…';
     statusEl.hidden = true;
 
-    const { error } = await supa.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: window.location.origin + '/mi-seguimiento/' }
-    });
+    const { error } = await supa.auth.signInWithOtp({ email });
 
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Enviar enlace';
+    submitBtn.textContent = 'Enviar código';
 
     if (error) {
-      showStatus('No hemos podido enviar el enlace. Prueba de nuevo en un minuto.', 'error');
+      showStatus('No hemos podido enviar el código. Prueba de nuevo en un minuto.', 'error');
       return;
     }
-    // Recordamos el email ya aquí: aunque la sesión real se crea al pulsar
-    // el magic link, dejar rastro permite que la próxima visita ofrezca la
+    // Recordamos el email ya aquí: aunque la sesión real se crea al verificar
+    // el código, dejar rastro permite que la próxima visita ofrezca la
     // pantalla de bienvenida aunque la pestaña se cierre antes de confirmar.
     recordarPaciente(email);
-    showStatus('📬 Enlace enviado a ' + email + '. Abre tu correo y haz clic en «Entrar». Puedes cerrar esta pestaña.', 'ok');
+    pendingOtpEmail = email;
+    showStatus('📬 Te hemos enviado un código a ' + email + '. Escríbelo abajo.', 'ok');
+    otpForm.hidden = false;
+    requestAnimationFrame(() => otpInput.focus());
 
     // A3/A4: tras enviar el magic link, ofrece el mini-tutorial de instalación
     // (o, si está dentro de Instagram/FB/etc., el banner para abrir en Chrome/Safari).
@@ -1586,6 +1660,39 @@
       try { maybeMostrarInstallFlow(); } catch (e) { console.warn('install flow', e); }
     }, 2600);
   });
+
+  // -------- OTP submit (verifica el código de 6 dígitos) --------
+  otpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const code = otpInput.value.replace(/\D/g, '');
+    if (code.length !== 6 || !pendingOtpEmail) {
+      showStatus('Escribe el código de 6 dígitos que te hemos enviado.', 'error');
+      otpInput.focus();
+      return;
+    }
+    otpSubmit.disabled = true;
+    otpSubmit.textContent = 'Entrando…';
+    statusEl.hidden = true;
+
+    const { error } = await supa.auth.verifyOtp({
+      email: pendingOtpEmail,
+      token: code,
+      type: 'email'
+    });
+
+    otpSubmit.disabled = false;
+    otpSubmit.textContent = 'Entrar';
+
+    if (error) {
+      showStatus('Código incorrecto o caducado. Pide otro pulsando «Enviar código».', 'error');
+      otpInput.select();
+      return;
+    }
+    // Éxito → onAuthStateChange dispara render(session) automáticamente.
+    resetOtpUi();
+  });
+
+  handlersReady = true;
 
   // -------- install flow (A3/A4) --------
   const TUTORIAL_SEEN_KEY = 'ms-tutorial-seen';
@@ -1783,6 +1890,7 @@
     // "No soy yo": limpia la marca local y vuelve al login normal.
     olvidarPaciente();
     ocultarWelcomeBack();
+    resetOtpUi();
   });
 
   supa.auth.onAuthStateChange(async (event, session) => {
