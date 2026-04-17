@@ -1,10 +1,45 @@
 // Capa DOM del picker de valoración gratuita.
-// Consume funciones puras expuestas por booking-logic.js (cargado antes en la página).
-// Fase 2.2: datos mock. Fase 2.3 cambiará `busyEvents` y `dayHasAvailability`
-// por datos del backend real.
+// Consume funciones puras expuestas por booking-logic.js.
+//
+// Fase 2.3: conectado al backend real vía fetch. Con `USE_REAL_BACKEND=false`
+// cae a los datos mock de Fase 2.2 (útil para trabajar offline).
 
 (function () {
   if (typeof document === 'undefined' || typeof window === 'undefined') return;
+
+  const CONFIG = {
+    USE_REAL_BACKEND: true,
+    DEV_API_URL: 'https://script.google.com/macros/s/AKfycbyRxyJLvzxjdn1NGjVH4Iewk2twA7Ch4KSgCRwOfHtEytutGo_ARFkVfsMu23BZn7vIFQ/exec',
+    PROD_API_URL: null, // se definirá en Fase 3.1
+    TIMEOUT_MS: 10000
+  };
+
+  function currentApiUrl() {
+    return apiUrlFor(window.location.hostname, CONFIG.DEV_API_URL, CONFIG.PROD_API_URL);
+  }
+
+  async function fetchMonth(year, month, signal) {
+    const { from, to } = buildSlotsRange(year, month);
+    const url = currentApiUrl() + '?action=slots&from=' + from + '&to=' + to;
+    const response = await fetch(url, { method: 'GET', signal: signal });
+    if (!response.ok) {
+      throw new Error('HTTP_' + response.status);
+    }
+    const json = await response.json();
+    const parsed = parseApiResponse(json);
+    if (!parsed.ok) throw new Error('API_' + parsed.error);
+    return parsed.availability;
+  }
+
+  async function fetchMonthWithTimeout(year, month) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(function () { ctrl.abort(); }, CONFIG.TIMEOUT_MS);
+    try {
+      return await fetchMonth(year, month, ctrl.signal);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
 
   document.addEventListener('DOMContentLoaded', function () {
     const root = document.querySelector('[data-booking-mock]');
@@ -18,14 +53,18 @@
 
     const today = new Date();
     const todayIso = toIsoDate(today.getFullYear(), today.getMonth(), today.getDate());
-    const busyEvents = buildMockBusyEvents(today);
+
+    // Cache de disponibilidad por mes. Clave "YYYY-MM" → Map<isoDate, slot[]>.
+    const monthCache = new Map();
+    // Estado de carga / error por mes.
+    const monthStatus = new Map(); // "YYYY-MM" → 'loading' | 'ok' | 'error'
 
     const state = {
       viewYear: today.getFullYear(),
       viewMonth: today.getMonth(),
       selectedIso: null,
       selectedSlot: null,
-      step: 'picker' // 'picker' | 'form' | 'confirmed'
+      step: 'picker'
     };
 
     const els = {
@@ -45,6 +84,39 @@
       confirmRestart: root.querySelector('[data-confirm-restart]')
     };
 
+    function monthKey(year, month) {
+      return year + '-' + String(month + 1).padStart(2, '0');
+    }
+
+    async function ensureMonthLoaded(year, month) {
+      const key = monthKey(year, month);
+      if (monthCache.has(key)) return;
+      if (monthStatus.get(key) === 'loading') return;
+      monthStatus.set(key, 'loading');
+      render();
+      try {
+        let availability;
+        if (CONFIG.USE_REAL_BACKEND) {
+          availability = await fetchMonthWithTimeout(year, month);
+        } else {
+          availability = buildMockAvailabilityForMonth(year, month);
+        }
+        monthCache.set(key, indexAvailability(availability));
+        monthStatus.set(key, 'ok');
+      } catch (err) {
+        monthStatus.set(key, 'error');
+      }
+      render();
+    }
+
+    function currentMonthSlots() {
+      return monthCache.get(monthKey(state.viewYear, state.viewMonth));
+    }
+
+    function currentMonthStatus() {
+      return monthStatus.get(monthKey(state.viewYear, state.viewMonth));
+    }
+
     function render() {
       renderHeader();
       renderGrid();
@@ -61,12 +133,41 @@
 
     function renderGrid() {
       els.grid.innerHTML = '';
+
+      const status = currentMonthStatus();
+      if (status === 'loading') {
+        const skel = document.createElement('div');
+        skel.className = 'booking-cal-loading';
+        skel.setAttribute('role', 'status');
+        skel.setAttribute('aria-live', 'polite');
+        skel.textContent = 'Cargando disponibilidad…';
+        els.grid.appendChild(skel);
+        return;
+      }
+      if (status === 'error') {
+        const err = document.createElement('div');
+        err.className = 'booking-cal-error';
+        err.setAttribute('role', 'alert');
+        err.innerHTML =
+          '<p>No he podido cargar la disponibilidad.</p>' +
+          '<button type="button" class="booking-retry-btn">Reintentar</button>';
+        err.querySelector('button').addEventListener('click', function () {
+          const key = monthKey(state.viewYear, state.viewMonth);
+          monthStatus.delete(key);
+          monthCache.delete(key);
+          ensureMonthLoaded(state.viewYear, state.viewMonth);
+        });
+        els.grid.appendChild(err);
+        return;
+      }
+
       DAY_HEADERS.forEach(function (h) {
         const th = document.createElement('div');
         th.className = 'booking-cal-header';
         th.textContent = h;
         els.grid.appendChild(th);
       });
+      const availByDate = currentMonthSlots() || new Map();
       const weeks = buildMonthGrid(state.viewYear, state.viewMonth);
       weeks.forEach(function (week) {
         week.forEach(function (cell) {
@@ -79,7 +180,9 @@
             el.setAttribute('aria-hidden', 'true');
           } else {
             el.textContent = String(cell.day);
-            const available = dayHasAvailability(cell.iso, busyEvents, SLOT_DURATION_MINUTES, todayIso);
+            const hasSlots = availByDate.has(cell.iso);
+            const isPast = cell.iso < todayIso;
+            const available = hasSlots && !isPast;
             if (!available) {
               el.className += ' is-unavailable';
               el.disabled = true;
@@ -112,10 +215,12 @@
         els.slotsHint.hidden = false;
         return;
       }
-      const slots = computeAvailableSlots(state.selectedIso, busyEvents, SLOT_DURATION_MINUTES);
+      const availByDate = currentMonthSlots() || new Map();
+      const slots = availByDate.get(state.selectedIso) || [];
       const prettyDate = new Date(state.selectedIso + 'T00:00:00')
         .toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
-      els.slotsHint.textContent = prettyDate.charAt(0).toUpperCase() + prettyDate.slice(1);
+      els.slotsHint.textContent = prettyDate.charAt(0).toUpperCase() + prettyDate.slice(1) +
+        ' · hora peninsular (Madrid)';
       els.slotsHint.hidden = false;
       slots.forEach(function (slot) {
         const btn = document.createElement('button');
@@ -163,6 +268,23 @@
         .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    // Fallback mock (si USE_REAL_BACKEND === false): genera availability[]
+    // para el mes pedido basándose en WORKING_HOURS + buildMockBusyEvents.
+    function buildMockAvailabilityForMonth(year, month) {
+      const busy = buildMockBusyEvents(today);
+      const { from, to } = buildSlotsRange(year, month);
+      const out = [];
+      const cursor = new Date(from + 'T00:00:00');
+      const end = new Date(to + 'T00:00:00');
+      while (cursor.getTime() <= end.getTime()) {
+        const iso = toIsoDate(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+        const slots = computeAvailableSlots(iso, busy, SLOT_DURATION_MINUTES);
+        if (slots.length > 0) out.push({ date: iso, slots: slots });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      return out;
+    }
+
     if (els.formBack) {
       els.formBack.addEventListener('click', function () {
         state.step = 'picker';
@@ -182,7 +304,7 @@
           escapeHtml(formatPrettyDateTime(state.selectedIso, state.selectedSlot)) + '</p>' +
           '<p>Te hemos enviado un email con el enlace de Google Meet a ' +
           '<strong>' + escapeHtml(data.get('email') || '') + '</strong>.</p>' +
-          '<p class="booking-confirm-disclaimer">⚠️ Esta es una demo. No se ha reservado nada de verdad ni se ha enviado ningún email.</p>';
+          '<p class="booking-confirm-disclaimer">⚠️ Esta es una demo. En Fase 2.4 este botón enviará la reserva al backend real.</p>';
         state.step = 'confirmed';
         render();
       });
@@ -202,15 +324,18 @@
       if (state.viewYear === today.getFullYear() && state.viewMonth === today.getMonth()) return;
       state.viewMonth -= 1;
       if (state.viewMonth < 0) { state.viewMonth = 11; state.viewYear -= 1; }
+      ensureMonthLoaded(state.viewYear, state.viewMonth);
       render();
     });
 
     els.nextBtn.addEventListener('click', function () {
       state.viewMonth += 1;
       if (state.viewMonth > 11) { state.viewMonth = 0; state.viewYear += 1; }
+      ensureMonthLoaded(state.viewYear, state.viewMonth);
       render();
     });
 
+    ensureMonthLoaded(state.viewYear, state.viewMonth);
     render();
   });
 })();
