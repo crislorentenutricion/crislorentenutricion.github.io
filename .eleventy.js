@@ -37,6 +37,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/favicon-16x16.png");
   eleventyConfig.addPassthroughCopy("src/apple-touch-icon.png");
   eleventyConfig.addPassthroughCopy("src/mi-seguimiento/manifest.webmanifest");
+  eleventyConfig.addPassthroughCopy("src/mi-seguimiento/logic.js");
 
   // Filtro para formatear fechas en español
   eleventyConfig.addFilter("fechaEs", function(dateVal) {

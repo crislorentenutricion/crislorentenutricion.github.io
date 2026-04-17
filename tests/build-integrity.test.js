@@ -44,22 +44,40 @@ test("sitemap.xml incluye páginas core publicadas", () => {
   }
 });
 
+test("sitemap.xml tiene declaración XML y urlset bien formados", () => {
+  // Un fallo estructural (p.ej. whitespace al inicio) rompe ingesta en Google SC.
+  const xml = fs.readFileSync(path.join(SITE, "sitemap.xml"), "utf8");
+  assert.ok(xml.startsWith("<?xml"), "sitemap.xml no empieza por <?xml");
+  assert.match(xml, /<urlset\s+xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9"/);
+  assert.match(xml, /<\/urlset>\s*$/);
+  // Cada <url> debe tener <loc>
+  const urls = [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)];
+  assert.ok(urls.length > 0, "sitemap sin entradas <url>");
+  for (const [, body] of urls) {
+    assert.match(body, /<loc>https:\/\/www\.crislorentenutricion\.com\//, "una entrada sin <loc> https válida");
+  }
+});
+
 test("CSS fue minificado (sin múltiples espacios consecutivos)", () => {
   const css = fs.readFileSync(path.join(SITE, "css", "style.css"), "utf8");
   assert.ok(!/  +/.test(css), "CSS no parece minificado: contiene múltiples espacios");
 });
 
-test("posts de blog tienen ids automáticos en h2/h3 dentro de .article-content", () => {
-  // Tomamos un post al azar y validamos que al menos un h2/h3 tiene id
-  const p = posts.find(x => x.category !== "bienestar") || posts[0];
-  const html = fs.readFileSync(path.join(SITE, "blog", p.category, p.slug, "index.html"), "utf8");
-  const articleMatch = html.match(/<div class="article-content">([\s\S]*?)<!--\/article-content-->/);
-  if (!articleMatch) return; // algunos posts pueden no tener el wrapper; skip suave
-  const body = articleMatch[1];
-  const headings = body.match(/<h[23][^>]*>/g) || [];
-  if (headings.length === 0) return;
-  const conId = headings.filter(h => /\sid="/.test(h));
-  assert.ok(conId.length > 0, "ningún h2/h3 del post tiene id automático");
+test("posts con .article-content tienen ids automáticos en todos sus h2/h3", () => {
+  // Recorre todos los posts; falla si algún h2/h3 dentro del wrapper queda sin id.
+  // Exige que al menos un post tenga headings para que el test aporte señal real.
+  let postsConHeadings = 0;
+  for (const p of posts) {
+    const html = fs.readFileSync(path.join(SITE, "blog", p.category, p.slug, "index.html"), "utf8");
+    const articleMatch = html.match(/<div class="article-content">([\s\S]*?)<!--\/article-content-->/);
+    if (!articleMatch) continue;
+    const headings = articleMatch[1].match(/<h[23][^>]*>/g) || [];
+    if (headings.length === 0) continue;
+    postsConHeadings++;
+    const sinId = headings.filter(h => !/\sid="/.test(h));
+    assert.equal(sinId.length, 0, `${p.slug}: h2/h3 sin id auto → ${sinId.join(" | ")}`);
+  }
+  assert.ok(postsConHeadings > 0, "ningún post tiene h2/h3 dentro de .article-content: test sin valor");
 });
 
 test("stub de redirect /servicios/ mantiene canonical + meta refresh", () => {
@@ -74,18 +92,23 @@ test("stub de redirect /servicios/ mantiene canonical + meta refresh", () => {
   assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
 });
 
-test("páginas HTML no contienen la palabra 'alimentaria' (marca es 'nutricional')", () => {
-  // Regla de marca de CLAUDE.md. Scan ligero de páginas core.
-  const archivos = [
-    "index.html",
-    "servicios/index.html",
-    "sobre-mi/index.html",
-  ];
-  for (const f of archivos) {
-    const html = fs.readFileSync(path.join(SITE, f), "utf8").toLowerCase();
-    assert.ok(!html.includes("asesoría alimentaria"), `"asesoría alimentaria" encontrado en ${f}`);
-    assert.ok(!html.includes("asesoria alimentaria"), `"asesoria alimentaria" encontrado en ${f}`);
-  }
+test("ninguna página HTML del site contiene 'asesoría alimentaria' (marca es 'nutricional')", () => {
+  // Regla de marca de CLAUDE.md. Scan completo del _site/ — no basta con páginas core,
+  // el fallo de marca también puede aparecer en posts de blog o landings.
+  const ofensores = [];
+  (function scan(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) scan(full);
+      else if (entry.name.endsWith(".html")) {
+        const html = fs.readFileSync(full, "utf8").toLowerCase();
+        if (html.includes("asesoría alimentaria") || html.includes("asesoria alimentaria")) {
+          ofensores.push(path.relative(SITE, full));
+        }
+      }
+    }
+  })(SITE);
+  assert.deepEqual(ofensores, [], `"asesoría alimentaria" encontrado en: ${ofensores.join(", ")}`);
 });
 
 test("enlaces internos en páginas core apuntan a páginas existentes", () => {

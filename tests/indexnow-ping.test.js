@@ -63,3 +63,17 @@ test("resolveUrls deduplica URLs", () => {
   const urls = resolveUrls(["src/index.njk", "src/index.njk"]);
   assert.equal(urls.length, 1);
 });
+
+test("resolveUrls combina post específico + cambio global sin duplicar", () => {
+  // Escenario real: un commit que toca un post Y un include global.
+  // El post debe aparecer una sola vez incluso si también está en CORE_PAGES.
+  const urls = resolveUrls(["src/_includes/header.njk", "src/index.njk"]);
+  const count = urls.filter(u => u === "/").length;
+  assert.equal(count, 1, "'/' aparece duplicado");
+  for (const core of CORE_PAGES) assert.ok(urls.includes(core));
+});
+
+test("resolveUrls ignora ficheros de blog/posts con slug inexistente pero no rompe el resto", () => {
+  const urls = resolveUrls(["src/blog/posts/no-existe.njk", "src/index.njk"]);
+  assert.deepEqual(urls, ["/"]);
+});

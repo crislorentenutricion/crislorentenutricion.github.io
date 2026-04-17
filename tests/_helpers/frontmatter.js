@@ -1,5 +1,6 @@
 // Parser minimalista de frontmatter YAML para njk. Solo soporta pares clave: valor
-// de una línea (string | bool | number | ISO-date). Suficiente para validar posts.
+// de una línea; devuelve strings salvo `true`/`false` que se convierten a bool.
+// Números y fechas quedan como string (suficiente para validar posts).
 
 const fs = require("fs");
 

@@ -33,11 +33,12 @@ test("addHeadingIds respeta id existente", () => {
   assert.ok(!out.includes(`id="pollo"`));
 });
 
-test("addHeadingIds deduplica ids repetidos", () => {
-  const html = wrap(`<h2>Ingredientes</h2><h2>Ingredientes</h2>`);
+test("addHeadingIds deduplica ids repetidos con sufijo incremental", () => {
+  const html = wrap(`<h2>Ingredientes</h2><h2>Ingredientes</h2><h3>Ingredientes</h3>`);
   const out = addHeadingIds(html, "_site/blog/x/index.html");
   assert.match(out, /<h2 id="ingredientes">/);
   assert.match(out, /<h2 id="ingredientes-2">/);
+  assert.match(out, /<h3 id="ingredientes-3">/);
 });
 
 test("addHeadingIds no altera contenido fuera de .article-content", () => {

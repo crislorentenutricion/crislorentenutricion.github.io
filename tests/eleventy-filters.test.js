@@ -9,10 +9,10 @@ test("fechaEs formatea fecha ISO en castellano humano", () => {
   assert.equal(out, "17 de abril de 2026");
 });
 
-test("fechaEs acepta objeto Date", () => {
-  const out = cfg.filters.fechaEs(new Date("2025-01-05T00:00:00Z"));
-  // Depende de la TZ del runner pero el mes y año son estables
-  assert.match(out, /enero de 2025/);
+test("fechaEs acepta objeto Date (mediodía UTC → estable en cualquier TZ)", () => {
+  // Mediodía UTC garantiza mismo día civil en cualquier TZ del runner (UTC-11..+12)
+  const out = cfg.filters.fechaEs(new Date("2025-01-05T12:00:00Z"));
+  assert.equal(out, "5 de enero de 2025");
 });
 
 test("fechaISO devuelve string tal cual si ya es string", () => {
@@ -55,4 +55,16 @@ test("minifyCss quita punto y coma final antes de cierre", () => {
 test("minifyCss no destroza selectores combinados", () => {
   const out = cfg.minifyCss(".a > .b + .c ~ .d { color: red; }");
   assert.equal(out, ".a>.b+.c~.d{color:red}");
+});
+
+test("minifyCss preserva media queries funcionales", () => {
+  const out = cfg.minifyCss("@media (min-width: 768px) { .a { color: red; } }");
+  assert.equal(out, "@media (min-width:768px){.a{color:red}}");
+});
+
+test("minifyCss es idempotente (minificar dos veces = minificar una)", () => {
+  const src = ".a { color: red; } /* x */ .b{}";
+  const once = cfg.minifyCss(src);
+  const twice = cfg.minifyCss(once);
+  assert.equal(twice, once);
 });
