@@ -638,18 +638,23 @@ appleTitle: "Mi seguimiento"
 
   /* ---------- day view (reutiliza la UI de hoy) ---------- */
   .ms-back-today {
-    display: block;
-    margin: 0 0 10px;
-    background: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 16px;
+    background: var(--color-green);
+    color: #fff;
     border: 0;
-    padding: 4px 0;
-    font-family: 'Lora', serif;
-    font-style: italic;
-    font-size: 0.86rem;
-    color: var(--color-green);
+    border-radius: 999px;
+    padding: 9px 18px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.88rem;
     cursor: pointer;
+    box-shadow: 0 2px 8px rgba(74, 124, 89, 0.22);
+    transition: background 0.2s ease, transform 0.15s ease;
   }
-  .ms-back-today:hover { color: var(--color-green-dark); text-decoration: underline; }
+  .ms-back-today:hover { background: var(--color-green-dark); transform: translateY(-1px); }
   .ms-check-status {
     text-align: center;
     padding: 6px 4px 0;
