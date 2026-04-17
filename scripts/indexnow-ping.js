@@ -12,7 +12,7 @@ const KEY = 'a2ed8653990925208a58dc703ed7ed39';
 const KEY_LOCATION = `https://${HOST}/${KEY}.txt`;
 const ENDPOINT = 'https://api.indexnow.org/indexnow';
 
-const CORE_PAGES = ['/', '/servicios/', '/sobre-mi/', '/blog/'];
+const CORE_PAGES = ['/', '/sobre-mi/', '/blog/'];
 
 function changedFiles() {
   try {
@@ -39,7 +39,6 @@ function resolveUrls(files) {
 
   for (const f of files) {
     if (f === 'src/index.njk') urls.add('/');
-    else if (f === 'src/servicios.njk') urls.add('/servicios/');
     else if (f === 'src/sobre-mi.njk') urls.add('/sobre-mi/');
     else if (f === 'src/blog/index.njk') urls.add('/blog/');
     else if (f === 'src/_data/blog.json') urls.add('/blog/');
@@ -85,21 +84,25 @@ function submit(urls) {
   });
 }
 
-(async () => {
-  const files = changedFiles();
-  if (!files.length) {
-    console.log('IndexNow: sin cambios detectados, nada que enviar.');
-    return;
-  }
-  const urls = resolveUrls(files);
-  if (!urls.length) {
-    console.log('IndexNow: ningún fichero cambiado mapea a una URL pública.');
-    return;
-  }
-  console.log(`IndexNow: enviando ${urls.length} URL(s):`);
-  urls.forEach(u => console.log('  ', u));
+module.exports = { postUrlFromFile, resolveUrls, changedFiles, submit, CORE_PAGES };
 
-  const res = await submit(urls);
-  console.log(`IndexNow: HTTP ${res.status}${res.body ? ' — ' + res.body : ''}`);
-  if (res.status >= 400) process.exit(1);
-})();
+if (require.main === module) {
+  (async () => {
+    const files = changedFiles();
+    if (!files.length) {
+      console.log('IndexNow: sin cambios detectados, nada que enviar.');
+      return;
+    }
+    const urls = resolveUrls(files);
+    if (!urls.length) {
+      console.log('IndexNow: ningún fichero cambiado mapea a una URL pública.');
+      return;
+    }
+    console.log(`IndexNow: enviando ${urls.length} URL(s):`);
+    urls.forEach(u => console.log('  ', u));
+
+    const res = await submit(urls);
+    console.log(`IndexNow: HTTP ${res.status}${res.body ? ' — ' + res.body : ''}`);
+    if (res.status >= 400) process.exit(1);
+  })();
+}
