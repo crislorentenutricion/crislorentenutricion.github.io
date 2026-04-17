@@ -1398,6 +1398,20 @@
   </div>
 
   
+  <div id="ms-compra-reset-modal" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-compra-reset-title" hidden>
+    <div class="ms-modal">
+      <h2 id="ms-compra-reset-title" class="ms-modal-title">¿Empezar <em>de cero</em>?</h2>
+      <p class="ms-modal-intro" id="ms-compra-reset-intro">
+        Se desmarcarán todos los productos de esta lista.
+      </p>
+      <div class="ms-modal-actions">
+        <button type="button" class="ms-modal-ok" id="ms-compra-reset-ok">Sí, reiniciar</button>
+        <button type="button" class="ms-modal-secondary" id="ms-compra-reset-cancel">Dejarla como está</button>
+      </div>
+    </div>
+  </div>
+
+  
   <div id="ms-toast" class="ms-toast" role="status" aria-live="polite" hidden></div>
 </div>
 
@@ -1934,15 +1948,45 @@
 
   function reiniciarCompra() {
     if (compraState.size === 0) return;
+    const modal  = $('#ms-compra-reset-modal');
+    const intro  = $('#ms-compra-reset-intro');
+    const okBtn  = $('#ms-compra-reset-ok');
+    const cxlBtn = $('#ms-compra-reset-cancel');
+    if (!modal || !okBtn || !cxlBtn) return;
+
     const n = compraState.size;
-    const ok = window.confirm(
-      '¿Empezar la lista de la compra de cero? Se desmarcará ' +
-      (n === 1 ? '1 producto.' : n + ' productos.')
-    );
-    if (!ok) return;
-    compraState.clear();
-    saveCompraState(menuVigente, compraState);
-    renderCompra(menuVigente);
+    if (intro) intro.textContent = n === 1
+      ? 'Se desmarcará 1 producto. Podrás volver a marcarlo cuando quieras.'
+      : 'Se desmarcarán ' + n + ' productos. Podrás volver a marcarlos cuando quieras.';
+
+    // Guardamos qué elemento tenía el foco para devolverlo al cerrar
+    const focoPrevio = document.activeElement;
+
+    const cerrar = () => {
+      modal.hidden = true;
+      okBtn.removeEventListener('click', onOk);
+      cxlBtn.removeEventListener('click', onCancel);
+      modal.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKey);
+      if (focoPrevio && focoPrevio.focus) focoPrevio.focus();
+    };
+    const onOk = () => {
+      compraState.clear();
+      saveCompraState(menuVigente, compraState);
+      renderCompra(menuVigente);
+      cerrar();
+    };
+    const onCancel = () => cerrar();
+    const onBackdrop = (e) => { if (e.target === modal) cerrar(); };
+    const onKey = (e) => { if (e.key === 'Escape') cerrar(); };
+
+    okBtn.addEventListener('click', onOk);
+    cxlBtn.addEventListener('click', onCancel);
+    modal.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKey);
+
+    modal.hidden = false;
+    requestAnimationFrame(() => okBtn.focus());
   }
 
   // pdf_url guarda la ruta dentro del bucket privado (ej. "{uuid}/menu-1.pdf").
