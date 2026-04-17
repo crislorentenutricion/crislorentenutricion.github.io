@@ -1415,8 +1415,11 @@
   <div id="ms-toast" class="ms-toast" role="status" aria-live="polite" hidden></div>
 </div>
 
+<script src="/mi-seguimiento/logic.js"></script>
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+  // Lógica pura (ver src/mi-seguimiento/logic.js y tests/mi-seguimiento.test.js).
+  const { toISO, detectarMilestone, countStreak, detectarRachaRota, tipDelDia } = window.MsLogic;
 
   const SUPABASE_URL = 'https://nvjoupgpncprgpemqydg.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_kcnv9Us0xUtLaYAvsxT_Qw_YOzv05RS';
@@ -1480,10 +1483,6 @@
 
   // -------- utils --------
   const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-  const toISO = (d) => {
-    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
-    return `${y}-${m}-${day}`;
-  };
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   function showStatus(msg, kind) {
@@ -1633,19 +1632,6 @@
     }).join('');
   }
 
-  // Milestones de racha (días). 28 = MENÚ 1 completo (4 semanas).
-  const MILESTONES = [7, 14, 28, 30];
-
-  // Devuelve el mayor milestone alcanzado aún no celebrado, o null.
-  function detectarMilestone(racha, vistos) {
-    const set = new Set(vistos || []);
-    let alcanzado = null;
-    for (const m of MILESTONES) {
-      if (racha >= m && !set.has(m)) alcanzado = m;
-    }
-    return alcanzado;
-  }
-
   async function marcarMilestoneVisto(pacienteId, nuevo, actual) {
     const actualizado = [...(actual || []), nuevo];
     const { error } = await supa.from('pacientes')
@@ -1655,40 +1641,12 @@
     return actualizado;
   }
 
-  // Racha: cuenta días completados (desde ayer hacia atrás).
-  // «lo he seguido» suma 1 · «a medias» mantiene · «hoy no» o sin marcar rompe.
+  // Render de la racha: delega el cálculo a countStreak (puro) y pinta el DOM.
   function renderStreak(checkinsMap) {
-    let n = 0;
-    const d = new Date(); d.setHours(0,0,0,0);
-    d.setDate(d.getDate() - 1); // el día de hoy no cuenta hasta mañana
-    while (true) {
-      const iso = toISO(d);
-      const estado = checkinsMap.get(iso);
-      if (estado === 'seguido') {
-        n++;
-      } else if (estado === 'parcial') {
-        // mantiene la racha, no suma
-      } else {
-        break; // 'no' («hoy no») o día sin marcar rompe la racha
-      }
-      d.setDate(d.getDate() - 1);
-    }
+    const n = countStreak(checkinsMap);
     $('#ms-streak-num').textContent = n;
     $('.ms-streak-label').textContent = n === 1 ? 'día' : 'días';
     return n;
-  }
-
-  // Detecta si hay gap entre el último checkin y ayer → racha rota.
-  function detectarRachaRota(checkinsMap) {
-    const now = new Date(); now.setHours(0, 0, 0, 0);
-    const todayISO = toISO(now);
-    const yesterdayISO = toISO(new Date(now.getTime() - 864e5));
-
-    let lastISO = null;
-    for (const [iso] of checkinsMap) {
-      if (iso < todayISO && (!lastISO || iso > lastISO)) lastISO = iso;
-    }
-    return !!lastISO && lastISO < yesterdayISO;
   }
 
   function renderCalendar(checkinsMap) {
@@ -2007,39 +1965,6 @@
     if (error || !data) { console.error('signed url', error); return; }
     window.open(data.signedUrl, '_blank', 'noopener');
   });
-
-  const TIPS = [
-    'Hidrátate antes de comer: medio vaso de agua 15 minutos antes ayuda a comer con más calma.',
-    'Mastica sin prisa. La saciedad tarda unos 20 minutos en llegar al cerebro.',
-    '«A medias» también cuenta. Progreso no es perfección.',
-    'Come siempre sentada, sin pantalla delante. El cuerpo se entera mejor de lo que comes.',
-    'Si tienes hambre entre horas, bebe agua primero. A veces es sed disfrazada.',
-    'Verdura en comida y cena. Media ración como mínimo, cruda o cocinada.',
-    'No te saltes el desayuno si tu cuerpo lo pide. Escúchalo, no lo fuerces.',
-    'Compra con lista. Si no entra en casa, no se come.',
-    'Un plato colorido suele ser un plato completo.',
-    'El azúcar que no ves (salsas, panes, yogures) suma más que el que sí ves.',
-    'Descansar bien es parte del plan. Dormir poco dispara el hambre del día siguiente.',
-    'Si un día te desmadras, el siguiente no lo compenses: retoma con normalidad.',
-    'Proteína en cada comida principal: huevo, pescado, legumbre, carne magra, tofu.',
-    'La fruta entera sacia más que el zumo. Muerde antes de exprimir.',
-    'Cocina de más: tener comida lista evita decisiones malas con hambre.',
-    'Andar 20 minutos después de comer ayuda a la digestión y al ánimo.',
-    'Grasas buenas sí: aguacate, frutos secos, aceite de oliva. No todas engordan igual.',
-    'Pesarse cada día es ruido. Una vez por semana, mismo día, en ayunas, basta.',
-    'La paciencia es parte del método. Los cambios reales son lentos y aburridos.',
-    'Celebra lo que marcas, no sólo lo que pesas. La constancia también es resultado.'
-  ];
-
-  function dayOfYear(d) {
-    const start = new Date(d.getFullYear(), 0, 0);
-    const diff = d - start + ((start.getTimezoneOffset() - d.getTimezoneOffset()) * 60 * 1000);
-    return Math.floor(diff / 864e5);
-  }
-
-  function tipDelDia(hoy) {
-    return TIPS[dayOfYear(hoy) % TIPS.length];
-  }
 
   function renderTip() {
     const el = $('#ms-tip');
