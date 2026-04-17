@@ -84,7 +84,30 @@
     return TIPS[dayOfYear(hoy) % TIPS.length];
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia };
+  // Calendario mensual: devuelve celdas lineales (offset + días + trailing) para
+  // rellenar una grid de 7 columnas que empieza en lunes. El DOM rendering vive
+  // en el njk; aquí solo forma/datos. Cada celda:
+  //   { type: 'empty' }
+  //   { type: 'day', day, iso, estado: 'seguido'|'parcial'|'no'|null, isToday }
+  function buildCalendarCells(year, month, checkinsMap, todayISO) {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    // Mon=0..Sun=6. JS getDay() devuelve Sun=0..Sat=6, por eso el +6 mod 7.
+    const offset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = lastDay.getDate();
+    const trailing = (7 - ((offset + daysInMonth) % 7)) % 7;
+    const cells = [];
+    for (let i = 0; i < offset; i++) cells.push({ type: 'empty' });
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      const estado = checkinsMap.get(iso) || null;
+      cells.push({ type: 'day', day, iso, estado, isToday: iso === todayISO });
+    }
+    for (let i = 0; i < trailing; i++) cells.push({ type: 'empty' });
+    return cells;
+  }
+
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();
