@@ -756,6 +756,197 @@
   #ms-authed[data-view="day"] .ms-check-btns,
   #ms-authed[data-view="day"] .ms-check-hint { display: none; }
 
+  /* ============================================================
+     LISTA DE LA COMPRA — entry card + vista propia (data-view="compra")
+     Estado local: localStorage 'ms-compra-<menu_id>', sin servidor.
+     ============================================================ */
+
+  /* Entry card — tras el calendario, siempre visible en vista today/day */
+  .ms-compra-entry { margin-bottom: 44px; }
+  .ms-compra-cta {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    width: 100%;
+    padding: 16px 18px;
+    background: linear-gradient(180deg, #fdfbf4 0%, #f4ecd8 100%);
+    border: 1px solid #ece7d6;
+    border-radius: 18px;
+    cursor: pointer;
+    font-family: var(--font-family);
+    text-align: left;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .ms-compra-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(74, 124, 89, 0.10);
+    border-color: #d9d3c3;
+  }
+  .ms-compra-cta:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.18);
+  }
+  .ms-compra-cta-icon {
+    display: grid; place-items: center;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: #e3efe5;
+    color: var(--color-green-dark);
+  }
+  .ms-compra-cta-icon svg { width: 24px; height: 24px; }
+  .ms-compra-cta-text { min-width: 0; }
+  .ms-compra-cta-title {
+    display: block;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #2d2a24;
+    line-height: 1.25;
+  }
+  .ms-compra-cta-meta {
+    display: block;
+    font-size: 0.82rem;
+    color: #8a8678;
+    margin-top: 2px;
+    letter-spacing: 0.01em;
+  }
+  .ms-compra-cta-arrow {
+    font-family: 'Lora', serif;
+    font-size: 1.3rem;
+    color: var(--color-green);
+    transition: transform 0.2s ease;
+    padding-right: 4px;
+  }
+  .ms-compra-cta:hover .ms-compra-cta-arrow { transform: translateX(4px); }
+
+  /* Vista: lista de la compra */
+  .ms-compra { margin-bottom: 48px; }
+  .ms-compra-progress {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #8a8678;
+    text-align: center;
+    margin: -4px 0 22px;
+    line-height: 1.5;
+  }
+  .ms-compra-progress.is-done { color: var(--color-green-dark); }
+  .ms-compra-cats {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .ms-compra-cat {
+    background: #fdfbf4;
+    border: 1px solid rgba(224, 221, 212, 0.65);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .ms-compra-cat-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    cursor: pointer;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: #6b6759;
+    letter-spacing: 0.02em;
+    list-style: none;
+    user-select: none;
+  }
+  .ms-compra-cat-head::-webkit-details-marker { display: none; }
+  .ms-compra-cat-head:focus-visible {
+    outline: 2px solid var(--color-green-dark);
+    outline-offset: -2px;
+    border-radius: 16px;
+  }
+  .ms-compra-cat-name { flex: 1; text-transform: lowercase; }
+  .ms-compra-cat-count {
+    font-family: var(--font-family);
+    font-style: normal;
+    font-size: 0.76rem;
+    color: #6b6759;
+    background: #f2eedf;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: 0;
+  }
+  .ms-compra-cat-count.is-done {
+    background: #e3efe5;
+    color: var(--color-green-dark);
+  }
+  .ms-compra-cat-chevron {
+    display: inline-block;
+    transition: transform 0.2s ease;
+    color: #a8a394;
+    font-size: 0.72rem;
+  }
+  .ms-compra-cat[open] .ms-compra-cat-chevron { transform: rotate(180deg); }
+  .ms-compra-items {
+    list-style: none;
+    padding: 0 6px 8px;
+    margin: 0;
+  }
+  .ms-compra-item {
+    border-top: 1px solid #f0ebd9;
+    transition: background 0.15s ease;
+  }
+  .ms-compra-item:hover { background: #faf4e2; }
+  .ms-compra-item label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 48px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 0.96rem;
+    color: #3e3b34;
+    line-height: 1.45;
+  }
+  .ms-compra-item input[type="checkbox"] {
+    flex: 0 0 auto;
+    width: 22px; height: 22px;
+    margin: 0;
+    accent-color: var(--color-green);
+    cursor: pointer;
+  }
+  .ms-compra-item-text {
+    flex: 1;
+    transition: color 0.2s ease;
+  }
+  .ms-compra-item.is-done .ms-compra-item-text {
+    color: #a8a394;
+    text-decoration: line-through;
+    text-decoration-color: #c8b98a;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 2px;
+  }
+  .ms-compra-empty {
+    padding: 28px 20px;
+    text-align: center;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #8a8678;
+    font-size: 0.95rem;
+    background: #fdfbf4;
+    border: 1px solid rgba(224, 221, 212, 0.65);
+    border-radius: 16px;
+  }
+  .ms-compra-back { margin-bottom: 14px; }
+
+  /* Switch de vista: mostrar compra sólo cuando data-view="compra" */
+  .ms-compra { display: none; }
+  #ms-authed[data-view="compra"] .ms-compra { display: block; }
+  #ms-authed[data-view="compra"] .ms-today,
+  #ms-authed[data-view="compra"] .ms-tip,
+  #ms-authed[data-view="compra"] .ms-check,
+  #ms-authed[data-view="compra"] .ms-calendar,
+  #ms-authed[data-view="compra"] .ms-compra-entry { display: none; }
+
   /* ---------- scroll lock mientras hay modal abierto ---------- */
   body:has(.ms-modal-backdrop:not([hidden])) { overflow: hidden; }
 
@@ -1078,6 +1269,31 @@
         <span><span class="ms-legend-dot is-mid"></span>a medias</span>
         <span><span class="ms-legend-dot is-no"></span>hoy no</span>
       </p>
+    </section>
+
+    
+    <section class="ms-compra-entry" aria-label="Abrir lista de la compra">
+      <button type="button" class="ms-compra-cta" id="ms-compra-open" aria-label="Abrir lista de la compra">
+        <span class="ms-compra-cta-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 4h2l2.6 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.5L21 7H6"/>
+            <circle cx="9.5" cy="20" r="1.3"/>
+            <circle cx="17.5" cy="20" r="1.3"/>
+          </svg>
+        </span>
+        <span class="ms-compra-cta-text">
+          <span class="ms-compra-cta-title">Lista de la compra</span>
+          <span class="ms-compra-cta-meta" id="ms-compra-meta">Cargando…</span>
+        </span>
+        <span class="ms-compra-cta-arrow" aria-hidden="true">→</span>
+      </button>
+    </section>
+
+    <section class="ms-compra" id="ms-compra" aria-labelledby="ms-compra-title">
+      <button type="button" class="ms-back-today ms-compra-back" id="ms-compra-back">← volver a hoy</button>
+      <h2 id="ms-compra-title" class="ms-section-title"><span>lista de la compra</span></h2>
+      <p class="ms-compra-progress" id="ms-compra-progress">—</p>
+      <div class="ms-compra-cats" id="ms-compra-cats"></div>
     </section>
 
     <footer class="ms-foot">
@@ -1520,6 +1736,157 @@
     setActiveCheck(estado || null);
   }
 
+  // -------- lista de la compra (localStorage por menú) --------
+  // Estado local, sin servidor. Clave `ms-compra-<menu_id>` → al llegar un
+  // nuevo menú la clave cambia y la lista vuelve a empezar vacía.
+  const CATEGORIAS_COMPRA = [
+    'CARNES Y PESCADOS',
+    'VERDURAS Y HORTALIZAS',
+    'FRUTAS',
+    'LÁCTEOS Y HUEVOS',
+    'LEGUMBRES Y CEREALES',
+    'FRUTOS SECOS Y VARIOS'
+  ];
+
+  // Key estable por categoría+texto. Si Cristina reedita el texto de un item,
+  // el check se pierde — aceptable, no hay sync ni historial.
+  function slugifyItem(categoria, texto) {
+    return (categoria + '::' + texto)
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  function compraStorageKey(menu) {
+    return (menu && menu.id) ? ('ms-compra-' + menu.id) : null;
+  }
+
+  function loadCompraState(menu) {
+    const key = compraStorageKey(menu);
+    if (!key) return new Set();
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw);
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) { return new Set(); }
+  }
+
+  function saveCompraState(menu, set) {
+    const key = compraStorageKey(menu);
+    if (!key) return;
+    try { localStorage.setItem(key, JSON.stringify([...set])); }
+    catch (e) { /* modo privado o cuota llena: la UI ya está pintada */ }
+  }
+
+  let compraState = new Set();
+  let compraTotal = 0;
+
+  function getListaCompra(menu) {
+    return (menu && menu.contenido && menu.contenido.lista_compra) || {};
+  }
+
+  function totalItemsCompra(lista) {
+    let n = 0;
+    for (const cat of CATEGORIAS_COMPRA) {
+      if (Array.isArray(lista[cat])) n += lista[cat].length;
+    }
+    return n;
+  }
+
+  function updateCompraMeta() {
+    const meta = $('#ms-compra-meta');
+    const prog = $('#ms-compra-progress');
+    if (!meta || !prog) return;
+    if (compraTotal === 0) {
+      meta.textContent = 'Disponible con tu próximo menú';
+      prog.textContent = 'Aún no hay lista para este menú.';
+      prog.classList.remove('is-done');
+      return;
+    }
+    const hechos = compraState.size;
+    meta.textContent = hechos === 0
+      ? compraTotal + ' productos'
+      : hechos + ' de ' + compraTotal + ' comprados';
+    if (hechos === compraTotal) {
+      prog.textContent = '¡Todo comprado! Buen trabajo.';
+      prog.classList.add('is-done');
+    } else {
+      prog.textContent = hechos + ' de ' + compraTotal + ' comprados';
+      prog.classList.remove('is-done');
+    }
+  }
+
+  function renderCompra(menu) {
+    const container = $('#ms-compra-cats');
+    if (!container) return;
+    const lista = getListaCompra(menu);
+    compraState = loadCompraState(menu);
+    compraTotal = totalItemsCompra(lista);
+
+    if (compraTotal === 0) {
+      container.innerHTML = '<p class="ms-compra-empty">Aún no hay lista de la compra para este menú.<br>Aparecerá aquí en cuanto Cristina la prepare.</p>';
+      updateCompraMeta();
+      return;
+    }
+
+    const bloques = CATEGORIAS_COMPRA
+      .filter(cat => Array.isArray(lista[cat]) && lista[cat].length)
+      .map(cat => {
+        const items = lista[cat];
+        const comprados = items.reduce((n, it) =>
+          n + (compraState.has(slugifyItem(cat, it)) ? 1 : 0), 0);
+        const total = items.length;
+        const countCls = comprados === total ? 'ms-compra-cat-count is-done' : 'ms-compra-cat-count';
+        const itemsHtml = items.map(it => {
+          const key = slugifyItem(cat, it);
+          const done = compraState.has(key);
+          return '<li class="ms-compra-item' + (done ? ' is-done' : '') + '" data-key="' + escapeHtml(key) + '">'
+            + '<label>'
+            + '<input type="checkbox"' + (done ? ' checked' : '') + '>'
+            + '<span class="ms-compra-item-text">' + escapeHtml(it) + '</span>'
+            + '</label>'
+            + '</li>';
+        }).join('');
+        return '<details class="ms-compra-cat" open>'
+          + '<summary class="ms-compra-cat-head">'
+          + '<span class="ms-compra-cat-name">' + escapeHtml(cat.toLowerCase()) + '</span>'
+          + '<span class="' + countCls + '" data-cat-count>' + comprados + '/' + total + '</span>'
+          + '<span class="ms-compra-cat-chevron" aria-hidden="true">▾</span>'
+          + '</summary>'
+          + '<ul class="ms-compra-items">' + itemsHtml + '</ul>'
+          + '</details>';
+      }).join('');
+    container.innerHTML = bloques;
+    updateCompraMeta();
+  }
+
+  function setCompraItem(li, done) {
+    const key = li.dataset.key;
+    if (!key) return;
+    if (done) compraState.add(key); else compraState.delete(key);
+    li.classList.toggle('is-done', done);
+    saveCompraState(menuVigente, compraState);
+
+    const cat = li.closest('.ms-compra-cat');
+    if (cat) {
+      const count = cat.querySelector('[data-cat-count]');
+      const items = cat.querySelectorAll('.ms-compra-item');
+      const doneN = cat.querySelectorAll('.ms-compra-item.is-done').length;
+      if (count) {
+        count.textContent = doneN + '/' + items.length;
+        count.classList.toggle('is-done', doneN === items.length);
+      }
+    }
+    updateCompraMeta();
+  }
+
+  function mostrarCompra() {
+    $('#ms-authed').dataset.view = 'compra';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   // pdf_url guarda la ruta dentro del bucket privado (ej. "{uuid}/menu-1.pdf").
   // Firmamos la URL al clic: URL fresca, sin enlaces caducables en el DOM.
   let pdfPathActual = null;
@@ -1669,6 +2036,7 @@
     menuVigente = menu;
     mostrarHoy();
     renderPdfLink(menu);
+    renderCompra(menu);
     renderTip();
 
     const rota = detectarRachaRota(checkinsMap);
@@ -2051,6 +2419,15 @@
     if (iso) mostrarDia(iso);
   });
   $('#ms-back-today').addEventListener('click', mostrarHoy);
+  $('#ms-compra-open').addEventListener('click', mostrarCompra);
+  $('#ms-compra-back').addEventListener('click', mostrarHoy);
+  // El <label> nativo envuelve checkbox + texto, así que cualquier clic
+  // (ratón o teclado) togglea el checkbox y dispara 'change'. Un único handler.
+  $('#ms-compra-cats').addEventListener('change', (e) => {
+    if (!e.target.matches('input[type="checkbox"]')) return;
+    const li = e.target.closest('.ms-compra-item');
+    if (li) setCompraItem(li, e.target.checked);
+  });
 
   $('#ms-signout').addEventListener('click', async () => {
     // Cierre explícito: también olvidamos el "paciente conocido" local.
