@@ -525,6 +525,19 @@ appleTitle: "Mi seguimiento"
   }
   .ms-signout:hover { color: var(--color-green); }
 
+  /* ---------- PDF link in foot ---------- */
+  .ms-pdf-link {
+    display: inline-block;
+    margin-right: 18px;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.88rem;
+    color: var(--color-green);
+    padding: 10px 2px;
+    text-decoration: none;
+  }
+  .ms-pdf-link:hover { text-decoration: underline; }
+
   /* ---------- check hint ---------- */
   .ms-check-hint {
     margin: 14px 2px 0;
@@ -935,6 +948,7 @@ appleTitle: "Mi seguimiento"
     </section>
 
     <footer class="ms-foot">
+      <a href="#" id="ms-pdf-link" class="ms-pdf-link" target="_blank" rel="noopener" hidden>Descargar el menú en PDF</a>
       <button type="button" class="ms-signout" id="ms-signout">Cerrar sesión</button>
     </footer>
   </section>
@@ -1313,6 +1327,24 @@ appleTitle: "Mi seguimiento"
     $$('.ms-check-btn').forEach(b => b.classList.toggle('is-active', b.dataset.estado === estado));
   }
 
+  // pdf_url guarda la ruta dentro del bucket privado (ej. "{uuid}/menu-1.pdf").
+  // Firmamos la URL al clic: URL fresca, sin enlaces caducables en el DOM.
+  let pdfPathActual = null;
+  function renderPdfLink(menu) {
+    const link = $('#ms-pdf-link');
+    pdfPathActual = (menu && menu.pdf_url) || null;
+    link.hidden = !pdfPathActual;
+  }
+  $('#ms-pdf-link').addEventListener('click', async (e) => {
+    if (!pdfPathActual) return;
+    if (/^https?:\/\//i.test(pdfPathActual)) return; // ya es URL absoluta
+    e.preventDefault();
+    const { data, error } = await supa.storage
+      .from('menus-pdf')
+      .createSignedUrl(pdfPathActual, 60);
+    if (error || !data) { console.error('signed url', error); return; }
+    window.open(data.signedUrl, '_blank', 'noopener');
+  });
 
   const TIPS = [
     'Hidrátate antes de comer: medio vaso de agua 15 minutos antes ayuda a comer con más calma.',
@@ -1443,6 +1475,7 @@ appleTitle: "Mi seguimiento"
     checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
 
     renderMeals(menu);
+    renderPdfLink(menu);
     renderTip();
 
     const rota = detectarRachaRota(checkinsMap);

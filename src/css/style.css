@@ -1105,7 +1105,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .site-footer { background-color: var(--color-black); color: #aaa; }
 .footer-inner {
   display: grid; grid-template-columns: 1.2fr 1fr 0.8fr;
-  gap: 48px; padding: 56px 0 48px;
+  gap: 48px; padding-top: 56px; padding-bottom: 48px;
 }
 .footer-logo { font-size: 1.15rem; font-weight: var(--font-weight-bold); color: var(--color-white); margin-bottom: 12px; }
 .footer-brand p { font-size: 0.9rem; line-height: 1.8; color: #999; }
@@ -1124,6 +1124,9 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .footer-legal { border-top: 1px solid rgba(255,255,255,0.08); padding: 24px 0; }
 .footer-legal p { font-size: 0.82rem; color: #666; }
 .footer-disclaimer { margin-top: 8px; max-width: 640px; }
+@media (max-width: 900px) {
+  .site-footer { --container-padding: 28px; }
+}
 
 /* ========================
    MÉTODO — pasos
