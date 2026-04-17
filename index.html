@@ -113,12 +113,12 @@
       <nav class="main-nav" id="main-nav" aria-label="Principal">
         <ul>
           <li><a href="/" class="active" aria-current="page">Inicio</a></li>
-          <li><a href="/servicios/" >Servicios</a></li>
+          <li><a href="/seguimiento/" >Seguimiento</a></li>
           <li><a href="/sobre-mi/" >Sobre mí</a></li>
           <li><a href="/metodo/" >Método</a></li>
           <li><a href="/testimonios/" >Testimonios</a></li>
           <li><a href="/blog/" >Aprende</a></li>
-          <li><a href="/servicios/#formulario-contacto" class="btn btn-primary btn-sm">Reserva gratuita</a></li>
+          <li><a href="/#formulario-contacto" class="btn btn-primary btn-sm">Reserva gratuita</a></li>
         </ul>
       </nav>
     </div>
@@ -195,13 +195,118 @@
     "itemListElement": [
       {
         "@type": "Offer",
-        "name": "Asesoría nutricional personalizada",
+        "name": "Primer mes (prueba)",
+        "price": "15",
+        "priceCurrency": "EUR",
+        "url": "https://www.crislorentenutricion.com/#formulario-contacto",
+        "availability": "https://schema.org/InStock",
+        "category": "Prueba",
+        "eligibleCustomerType": "https://schema.org/NewCustomer",
+        "description": "Primer mes completo a 15 €: menú personalizado, seguimientos, WhatsApp. Sin permanencia."
+      },
+      {
+        "@type": "Offer",
+        "name": "Asesoría nutricional mensual",
         "price": "40",
         "priceCurrency": "EUR",
-        "description": "Menú mensual personalizado con gramajes, lista de la compra, 2 seguimientos/mes, WhatsApp 24h. Primer mes a 15 €."
+        "url": "https://www.crislorentenutricion.com/#formulario-contacto",
+        "availability": "https://schema.org/InStock",
+        "description": "Menú mensual personalizado con gramajes, lista de la compra, 2 seguimientos/mes, WhatsApp 24h.",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "40",
+          "priceCurrency": "EUR",
+          "unitText": "MON",
+          "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": "MON" }
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "Valoración gratuita",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "url": "https://www.crislorentenutricion.com/#formulario-contacto",
+        "availability": "https://schema.org/InStock",
+        "description": "Videollamada de 30 minutos sin compromiso para conocernos y ver si encajamos."
       }
     ]
+  },
+  "termsOfService": "https://www.crislorentenutricion.com/legal/condiciones/",
+  "potentialAction": {
+    "@type": "ReserveAction",
+    "name": "Reservar valoración gratuita",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.crislorentenutricion.com/#formulario-contacto",
+      "inLanguage": "es-ES",
+      "actionPlatform": ["https://schema.org/DesktopWebPlatform", "https://schema.org/MobileWebPlatform"]
+    },
+    "result": {
+      "@type": "Reservation",
+      "name": "Valoración gratuita de 30 minutos"
+    }
   }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".faq-item summary", ".faq-item p"]
+  },
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Qué incluye la valoración gratuita?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Una videollamada de 30 minutos para conocernos, hablar de tu objetivo, hábitos y estilo de vida. Sin compromiso. Si después decides empezar, genial. Si no, también."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuánto cuesta y hay permanencia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "40 €/mes. El primer mes es de prueba a 15 € para que compruebes si encaja contigo. Sin permanencia: si decides no continuar, avisas con 7 días de antelación al siguiente ciclo y listo. Sin letras pequeñas."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Eres nutricionista o dietista?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Soy Técnica Superior en Dietética — la titulación oficial de FP del sistema educativo español — y Técnica en Farmacia. En España, «nutricionista» se usa coloquialmente tanto para el graduado universitario en Nutrición como para el técnico superior en dietética. Mi formación me habilita para planificar menús y hacer seguimiento nutricional en población sana. Si tu caso necesita atención médica por patología diagnosticada, te derivo al profesional adecuado."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿En qué se diferencia de una app como MyFitnessPal o una dieta de internet?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Una app te hace contar calorías tú sola. Una dieta de internet es genérica. Aquí recibes un menú diseñado desde cero para ti, con gramajes calculados según tu peso y tu objetivo, y hay una persona real al otro lado respondiendo tus dudas por WhatsApp. El seguimiento diario solo te pide tres segundos: marcas «lo seguí», «a medias» o «hoy no». Cero fricción, cero cuenta-calorías."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Es solo para perder peso?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No necesariamente. Trabajo cualquier objetivo: perder grasa, ganar masa muscular, mejorar energía, regular el ciclo hormonal o simplemente aprender a comer mejor."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Necesito saber cocinar o tener mucho tiempo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Los menús están pensados para semanas reales: recetas rápidas, ingredientes accesibles y sin necesidad de ser chef."
+      }
+    }
+  ]
 }
 </script>
 
@@ -213,7 +318,7 @@
       <h1 class="hero-animate hero-animate-2">Pierde grasa <span class="gradient-text">sin dietas estrictas</span> ni obsesión</h1>
       <p class="hero-subtitle hero-animate hero-animate-3">En 30 días tendrás un menú hecho para tu vida real, no otra dieta que abandonarás en dos semanas.</p>
       <div class="hero-animate hero-animate-4">
-        <a href="/servicios/#formulario-contacto" class="btn btn-primary btn-lg btn-pulse">Reserva tu valoración gratuita →</a>
+        <a href="/#formulario-contacto" class="btn btn-primary btn-lg btn-pulse">Reserva tu valoración gratuita →</a>
         <p class="hero-price-hint">Primer mes: <strong>15 €</strong> · Después 40 €/mes · Sin permanencia</p>
         <a href="/testimonios/" class="hero-social-proof">
           <span class="hero-social-stars" aria-label="5 de 5 estrellas">★★★★★</span>
@@ -341,11 +446,35 @@
         <div class="plan-price"><span class="price">15 €</span><span class="period"> el primer mes</span></div>
         <p class="plan-subprice">Después: 40 €/mes</p>
         <ul class="plan-features"><li>Menú mensual personalizado con gramajes</li><li>Lista de la compra</li><li>2 seguimientos/mes (30 min, videollamada)</li><li>WhatsApp (respuesta 24h)</li><li>Ajustes del menú durante el mes</li></ul>
-        <a href="/servicios/#formulario-contacto" class="btn btn-primary btn-full">Empezar por 15 € →</a>
+        <a href="#formulario-contacto" class="btn btn-primary btn-full plan-btn" data-plan="Asesoría nutricional personalizada">Empezar por 15 € →</a>
       </div>
     </div>
   </div>
 </section>
+
+
+  <section class="section section-cream">
+    <div class="container reveal">
+      <div class="sg-cta-inline">
+        <div class="sg-cta-inline-pic">
+          <picture>
+            <source srcset="/img/seguimiento/calendario.webp" type="image/webp">
+            <img src="/img/seguimiento/calendario.jpg"
+                 alt="Calendario mensual de seguimiento con racha visible"
+                 width="1344" height="1246"
+                 loading="lazy" decoding="async">
+          </picture>
+        </div>
+        <div class="sg-cta-inline-text">
+          <span class="hero-label">Incluido en tu plan</span>
+          <h2>Tu seguimiento, <em>visible cada día</em></h2>
+          <p>Marca tu día en tres segundos, ve tu racha dibujada y consulta el menú vigente desde el móvil. Todo dentro de la asesoría.</p>
+          <a href="/seguimiento/" class="btn btn-secondary">Ver cómo funciona →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
 
 
 <section class="section section-white">
@@ -517,8 +646,16 @@
         <p>Una videollamada de 30 minutos para conocernos, hablar de tu objetivo, hábitos y estilo de vida. Sin compromiso. Si después decides empezar, genial. Si no, también.</p>
       </details>
       <details class="faq-item reveal">
-        <summary>¿Puedo cancelar cuando quiera?</summary>
-        <p>Sí, sin permanencia. Si decides no continuar, avisas con 7 días de antelación al siguiente ciclo y listo. Sin letras pequeñas.</p>
+        <summary>¿Cuánto cuesta y hay permanencia?</summary>
+        <p>40 €/mes. El primer mes es de prueba a 15 € para que compruebes si encaja contigo. Sin permanencia: si decides no continuar, avisas con 7 días de antelación al siguiente ciclo y listo. Sin letras pequeñas.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Eres nutricionista o dietista?</summary>
+        <p>Soy Técnica Superior en Dietética — la titulación oficial de FP del sistema educativo español — y Técnica en Farmacia. En España, «nutricionista» se usa coloquialmente tanto para el graduado universitario en Nutrición como para el técnico superior en dietética. Mi formación me habilita para planificar menús y hacer seguimiento nutricional en población sana. Si tu caso necesita atención médica por patología diagnosticada, te derivo al profesional adecuado.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿En qué se diferencia de una app como MyFitnessPal o una dieta de internet?</summary>
+        <p>Una app te hace contar calorías tú sola. Una dieta de internet es genérica. Aquí recibes un menú diseñado desde cero para ti, con gramajes calculados según tu peso y tu objetivo, y hay una persona real al otro lado respondiendo tus dudas por WhatsApp. Además, el <a href="/seguimiento/">seguimiento diario</a> solo te pide tres segundos: marcas «lo seguí», «a medias» o «hoy no». Cero fricción, cero cuenta-calorías.</p>
       </details>
       <details class="faq-item reveal">
         <summary>¿Es solo para perder peso?</summary>
@@ -529,21 +666,75 @@
         <p>No. Los menús están pensados para semanas reales: recetas rápidas, ingredientes accesibles y sin necesidad de ser chef.</p>
       </details>
     </div>
-    <div class="section-cta reveal">
-      <a href="/servicios/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita →</a>
-    </div>
   </div>
 </section>
 
 
-<section class="section section-green">
-  <div class="deco-float deco-float-1"></div>
-  <div class="deco-float deco-float-2"></div>
-  <div class="container text-center">
-    <h2>¿Lista para empezar?</h2>
-    <p>La valoración inicial es gratuita, dura 30 minutos y no tiene ningún compromiso.</p>
-    <div class="cta-spacer"></div>
-    <a href="/servicios/#formulario-contacto" class="btn btn-white btn-lg">Reserva tu valoración gratuita →</a>
+<section class="section section-white" id="formulario-contacto">
+  <div class="container form-container reveal">
+    <h2>Reserva tu valoración gratuita</h2>
+    <p class="form-subtitle">30 minutos por videollamada, sin compromiso. Cuéntame un poco sobre ti y me pongo en contacto contigo en menos de 24h.</p>
+
+    <div class="form-promise">
+      <div class="form-promise-item">
+        <span class="form-promise-icon">
+
+
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+</span>
+        <span>Te contesto en <strong>menos de 24h</strong></span>
+      </div>
+      <div class="form-promise-item">
+        <span class="form-promise-icon">
+
+
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2" ry="2"/></svg>
+</span>
+        <span>Videollamada de <strong>30 minutos</strong></span>
+      </div>
+      <div class="form-promise-item">
+        <span class="form-promise-icon">
+
+
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
+</span>
+        <span><strong>Sin compromiso</strong> ninguno</span>
+      </div>
+    </div>
+
+    <form class="contact-form" action="https://formspree.io/f/xeerpnrq" method="POST">
+      <div class="form-group">
+        <label for="nombre">Nombre *</label>
+        <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+      </div>
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input type="email" id="email" name="email" required placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label for="telefono">Teléfono (opcional)</label>
+        <input type="tel" id="telefono" name="telefono" placeholder="612 345 678">
+      </div>
+      <input type="hidden" id="plan-elegido" name="plan" value="">
+      <div class="form-group">
+        <label for="objetivo">¿Qué te gustaría mejorar? *</label>
+        <textarea id="objetivo" name="objetivo" rows="4" required placeholder="Ej: quiero organizarme mejor con las comidas y perder algo de grasa"></textarea>
+      </div>
+      <div class="form-group form-group--checkbox">
+        <label class="checkbox-label">
+          <input type="checkbox" name="privacidad" required>
+          <span>He leído y acepto la <a href="/legal/privacidad/" target="_blank">política de privacidad</a></span>
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Reservar mi valoración gratuita →</button>
+    </form>
+
+    <div class="form-mini-testimonial">
+      <p>"He perdido 5 kg sin pasar hambre. Lo mejor es el acompañamiento."</p>
+      <span>— Marina R., 5 meses con Cristina</span>
+    </div>
+
+    <p class="form-reassurance">Sin compromiso · Sin permanencia · Valoración 100% gratuita</p>
   </div>
 </section>
 
@@ -558,7 +749,8 @@
       </div>
       <nav class="footer-nav" aria-label="Footer">
         <ul>
-          <li><a href="/servicios/">Servicios</a></li>
+          <li><a href="/seguimiento/">Seguimiento</a></li>
+          <li><a href="/metodo/">Método</a></li>
           <li><a href="/sobre-mi/">Sobre mí</a></li>
           <li><a href="/blog/">Aprende</a></li>
         </ul>
@@ -590,7 +782,7 @@
   <a href="https://wa.me/34622279695" target="_blank" rel="noopener" class="whatsapp-btn" aria-label="Escríbeme por WhatsApp">
     <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
   </a>
-  <script src="/js/main.js" defer>
+  <script src="/js/main.js" defer></script>
   
   <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" defer></script>
   <script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.2-min.js.gz" defer></script>
