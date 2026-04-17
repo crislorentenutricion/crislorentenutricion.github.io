@@ -54,8 +54,9 @@
   </script>
 </head>
 <body>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
   {% include "header.njk" %}
-  <main>
+  <main id="main">
     {{ content | safe }}
   </main>
   {% include "footer.njk" %}
