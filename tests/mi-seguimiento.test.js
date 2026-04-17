@@ -9,6 +9,7 @@ const {
   detectarRachaRota,
   TIPS,
   tipDelDia,
+  buildCalendarCells,
 } = require("../src/mi-seguimiento/logic.js");
 
 // ------------------------------- toISO -------------------------------
@@ -203,4 +204,85 @@ test("tipDelDia rota: dos días consecutivos devuelven tips distintos (si len > 
   // Con TIPS.length > 1, dayOfYear(a) y dayOfYear(b) difieren en 1 y producen
   // índices distintos módulo TIPS.length (siempre que el salto no sea múltiplo).
   assert.notEqual(tipDelDia(a), tipDelDia(b));
+});
+
+// ---------------------------- buildCalendarCells ---------------------
+
+test("buildCalendarCells: abril 2026 (empieza miércoles, 30 días) → 2 empty + 30 day + 3 empty = 35", () => {
+  const cells = buildCalendarCells(2026, 3, new Map(), "2026-04-17");
+  assert.equal(cells.length, 35);
+  assert.equal(cells.length % 7, 0, "total múltiplo de 7");
+  const empties = cells.filter(c => c.type === "empty");
+  const days = cells.filter(c => c.type === "day");
+  assert.equal(days.length, 30);
+  assert.equal(empties.length, 5);
+  // Primeras 2 y últimas 3 son empty
+  assert.deepEqual(cells.slice(0, 2).map(c => c.type), ["empty", "empty"]);
+  assert.deepEqual(cells.slice(-3).map(c => c.type), ["empty", "empty", "empty"]);
+});
+
+test("buildCalendarCells: febrero 2026 (empieza domingo, 28 días) → 6 empty + 28 + 1 empty", () => {
+  const cells = buildCalendarCells(2026, 1, new Map(), "2026-02-15");
+  assert.equal(cells.length, 35);
+  assert.equal(cells.slice(0, 6).every(c => c.type === "empty"), true);
+  assert.equal(cells[6].type, "day");
+  assert.equal(cells[6].day, 1);
+  assert.equal(cells.at(-1).type, "empty");
+});
+
+test("buildCalendarCells: junio 2026 (empieza lunes) → offset=0 (sin empties delante)", () => {
+  const cells = buildCalendarCells(2026, 5, new Map(), "2026-06-01");
+  assert.equal(cells[0].type, "day");
+  assert.equal(cells[0].day, 1);
+});
+
+test("buildCalendarCells: iso está bien formateado con ceros y cada día secuencial", () => {
+  const cells = buildCalendarCells(2026, 3, new Map(), "2026-04-17");
+  const days = cells.filter(c => c.type === "day");
+  assert.equal(days[0].iso, "2026-04-01");
+  assert.equal(days[8].iso, "2026-04-09");
+  assert.equal(days.at(-1).iso, "2026-04-30");
+});
+
+test("buildCalendarCells: mapea estado de checkinsMap a cada celda", () => {
+  const map = new Map([
+    ["2026-04-16", "seguido"],
+    ["2026-04-15", "parcial"],
+    ["2026-04-14", "no"],
+  ]);
+  const cells = buildCalendarCells(2026, 3, map, "2026-04-17");
+  const byIso = Object.fromEntries(cells.filter(c => c.type === "day").map(c => [c.iso, c]));
+  assert.equal(byIso["2026-04-16"].estado, "seguido");
+  assert.equal(byIso["2026-04-15"].estado, "parcial");
+  assert.equal(byIso["2026-04-14"].estado, "no");
+  assert.equal(byIso["2026-04-10"].estado, null, "días sin checkin → estado null");
+});
+
+test("buildCalendarCells: marca isToday solo en el día que coincide con todayISO", () => {
+  const cells = buildCalendarCells(2026, 3, new Map(), "2026-04-17");
+  const todos = cells.filter(c => c.type === "day" && c.isToday);
+  assert.equal(todos.length, 1);
+  assert.equal(todos[0].iso, "2026-04-17");
+});
+
+test("buildCalendarCells: si todayISO no pertenece al mes, ninguna celda tiene isToday", () => {
+  const cells = buildCalendarCells(2026, 3, new Map(), "2026-05-02");
+  const todos = cells.filter(c => c.type === "day" && c.isToday);
+  assert.equal(todos.length, 0);
+});
+
+test("buildCalendarCells: mes que encaja exacto en semanas no añade trailing (enero 2026)", () => {
+  // Ene 2026 empieza jueves (getDay=4 → offset=3); 31 días; 3+31=34; (7-34%7)%7 = 1.
+  // Caso donde encaja justo es raro; probamos que el invariante (total % 7 === 0) siempre se cumple.
+  for (let m = 0; m < 12; m++) {
+    const cells = buildCalendarCells(2026, m, new Map(), "2026-01-01");
+    assert.equal(cells.length % 7, 0, `mes ${m + 1} no múltiplo de 7: ${cells.length}`);
+  }
+});
+
+test("buildCalendarCells: año bisiesto — febrero 2024 tiene 29 días", () => {
+  const cells = buildCalendarCells(2024, 1, new Map(), "2024-02-15");
+  const days = cells.filter(c => c.type === "day");
+  assert.equal(days.length, 29);
+  assert.equal(days.at(-1).iso, "2024-02-29");
 });

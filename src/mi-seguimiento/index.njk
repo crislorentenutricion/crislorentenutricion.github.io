@@ -1359,7 +1359,7 @@ appleTitle: "Mi seguimiento"
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
   // Lógica pura (ver src/mi-seguimiento/logic.js y tests/mi-seguimiento.test.js).
-  const { toISO, detectarMilestone, countStreak, detectarRachaRota, tipDelDia } = window.MsLogic;
+  const { toISO, detectarMilestone, countStreak, detectarRachaRota, tipDelDia, buildCalendarCells } = window.MsLogic;
 
   const SUPABASE_URL = '{{ env.supabaseUrl }}';
   const SUPABASE_KEY = '{{ env.supabasePublishableKey }}';
@@ -1589,45 +1589,31 @@ appleTitle: "Mi seguimiento"
     return n;
   }
 
+  // Mapa estado → clase CSS (presentacional, queda fuera de logic.js).
+  const ESTADO_CLASS = { seguido: 'is-ok', parcial: 'is-mid', no: 'is-no' };
+
   function renderCalendar(checkinsMap) {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay  = new Date(year, month+1, 0);
-    const offset = (firstDay.getDay() + 6) % 7; // Mon=0..Sun=6
-    const totalCells = offset + lastDay.getDate();
-    const trailing = (7 - (totalCells % 7)) % 7;
-    const grid = $('#ms-calendar-grid');
-    const todayISO = toISO(now);
-
+    const cells = buildCalendarCells(now.getFullYear(), now.getMonth(), checkinsMap, toISO(now));
     const frag = document.createDocumentFragment();
-    for (let i = 0; i < offset; i++) {
-      const c = document.createElement('div');
-      c.className = 'ms-cal-cell is-empty';
-      frag.appendChild(c);
-    }
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-      const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    for (const cell of cells) {
+      if (cell.type === 'empty') {
+        const c = document.createElement('div');
+        c.className = 'ms-cal-cell is-empty';
+        frag.appendChild(c);
+        continue;
+      }
       const c = document.createElement('button');
       c.type = 'button';
       c.className = 'ms-cal-cell';
-      c.dataset.iso = iso;
-      c.setAttribute('aria-label', `Ver el menú del día ${day}`);
-      c.textContent = String(day);
-      const estado = checkinsMap.get(iso);
-      if (estado === 'seguido') c.classList.add('is-ok');
-      else if (estado === 'parcial') c.classList.add('is-mid');
-      else if (estado === 'no') c.classList.add('is-no');
-      if (iso === todayISO) c.classList.add('is-today');
+      c.dataset.iso = cell.iso;
+      c.setAttribute('aria-label', `Ver el menú del día ${cell.day}`);
+      c.textContent = String(cell.day);
+      if (ESTADO_CLASS[cell.estado]) c.classList.add(ESTADO_CLASS[cell.estado]);
+      if (cell.isToday) c.classList.add('is-today');
       frag.appendChild(c);
     }
-    for (let i = 0; i < trailing; i++) {
-      const c = document.createElement('div');
-      c.className = 'ms-cal-cell is-empty';
-      frag.appendChild(c);
-    }
-    grid.replaceChildren(frag);
+    $('#ms-calendar-grid').replaceChildren(frag);
   }
 
   function setActiveCheck(estado) {
