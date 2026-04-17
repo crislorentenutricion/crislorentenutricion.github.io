@@ -121,3 +121,97 @@ test('buildMockBusyEvents genera fechas futuras consistentes', () => {
     assert.match(e.end, /^\d{2}:\d{2}$/);
   }
 });
+
+/* ============================================================
+ * Integración con backend real (Fase 2.3)
+ * ============================================================ */
+
+test('buildSlotsRange: abril 2026 devuelve 1 → 30', () => {
+  assert.deepEqual(booking.buildSlotsRange(2026, 3), { from: '2026-04-01', to: '2026-04-30' });
+});
+
+test('buildSlotsRange: febrero 2026 (no bisiesto) termina en 28', () => {
+  assert.deepEqual(booking.buildSlotsRange(2026, 1), { from: '2026-02-01', to: '2026-02-28' });
+});
+
+test('buildSlotsRange: febrero 2028 (bisiesto) termina en 29', () => {
+  assert.deepEqual(booking.buildSlotsRange(2028, 1), { from: '2028-02-01', to: '2028-02-29' });
+});
+
+test('indexAvailability: construye Map<date, slot[]>', () => {
+  const avail = [
+    { date: '2026-04-20', slots: [{ start: '09:00', end: '09:30' }] },
+    { date: '2026-04-21', slots: [] }
+  ];
+  const map = booking.indexAvailability(avail);
+  assert.equal(map.size, 2);
+  assert.equal(map.get('2026-04-20').length, 1);
+  assert.deepEqual(map.get('2026-04-21'), []);
+});
+
+test('indexAvailability: input inválido → Map vacío', () => {
+  assert.equal(booking.indexAvailability(null).size, 0);
+  assert.equal(booking.indexAvailability(undefined).size, 0);
+  assert.equal(booking.indexAvailability('no array').size, 0);
+});
+
+test('indexAvailability: ignora entradas sin date o slots', () => {
+  const avail = [
+    { date: '2026-04-20', slots: [{ start: '09:00', end: '09:30' }] },
+    { date: null, slots: [] },
+    { slots: [] },
+    { date: '2026-04-22' } // sin slots
+  ];
+  const map = booking.indexAvailability(avail);
+  assert.equal(map.size, 1);
+  assert.ok(map.has('2026-04-20'));
+});
+
+test('parseApiResponse: respuesta válida', () => {
+  const res = booking.parseApiResponse({
+    ok: true,
+    data: { busy: [{ date: '2026-04-20', start: '10:00', end: '10:30' }], availability: [{ date: '2026-04-20', slots: [] }] }
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.availability.length, 1);
+  assert.equal(res.busy.length, 1);
+});
+
+test('parseApiResponse: ok=false → error del backend', () => {
+  const res = booking.parseApiResponse({ ok: false, error: 'missing from/to' });
+  assert.equal(res.ok, false);
+  assert.equal(res.error, 'missing from/to');
+});
+
+test('parseApiResponse: objeto vacío / null / no-objeto', () => {
+  assert.equal(booking.parseApiResponse(null).ok, false);
+  assert.equal(booking.parseApiResponse('string').ok, false);
+  assert.equal(booking.parseApiResponse({}).ok, false);
+});
+
+test('parseApiResponse: data sin arrays → arrays vacíos', () => {
+  const res = booking.parseApiResponse({ ok: true, data: {} });
+  assert.equal(res.ok, true);
+  assert.deepEqual(res.availability, []);
+  assert.deepEqual(res.busy, []);
+});
+
+test('apiUrlFor: sin prodUrl → siempre devUrl', () => {
+  assert.equal(booking.apiUrlFor('www.crislorentenutricion.com', '/dev', null), '/dev');
+  assert.equal(booking.apiUrlFor('localhost', '/dev', null), '/dev');
+});
+
+test('apiUrlFor: localhost y 127.* usan dev', () => {
+  assert.equal(booking.apiUrlFor('localhost', '/dev', '/prod'), '/dev');
+  assert.equal(booking.apiUrlFor('127.0.0.1', '/dev', '/prod'), '/dev');
+});
+
+test('apiUrlFor: dominio público usa prod', () => {
+  assert.equal(booking.apiUrlFor('www.crislorentenutricion.com', '/dev', '/prod'), '/prod');
+  assert.equal(booking.apiUrlFor('crislorentenutricion.com', '/dev', '/prod'), '/prod');
+});
+
+test('apiUrlFor: hostname vacío → dev (conservador)', () => {
+  assert.equal(booking.apiUrlFor('', '/dev', '/prod'), '/dev');
+  assert.equal(booking.apiUrlFor(undefined, '/dev', '/prod'), '/dev');
+});

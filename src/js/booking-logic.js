@@ -123,6 +123,52 @@ function dayHasAvailability(isoDate, busyEvents, duration, todayIso) {
  * CommonJS export para tests Node. En el navegador no aplica.
  * ============================================================ */
 
+/* ============================================================
+ * Integración con backend real (Fase 2.3)
+ * ============================================================ */
+
+// Rango [from, to] en ISO para consultar slots del mes dado (mes 0-index).
+function buildSlotsRange(year, month) {
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  return { from: toIsoDate(year, month, 1), to: toIsoDate(year, month, lastDay) };
+}
+
+// Convierte la respuesta del backend en un Map<isoDate, slot[]>.
+// `availability` del backend ya son slots libres — sin recomputar en cliente.
+function indexAvailability(availability) {
+  const map = new Map();
+  if (!Array.isArray(availability)) return map;
+  for (const day of availability) {
+    if (day && typeof day.date === 'string' && Array.isArray(day.slots)) {
+      map.set(day.date, day.slots);
+    }
+  }
+  return map;
+}
+
+// Normaliza la respuesta del endpoint GET ?action=slots.
+// Devuelve { ok, availability, busy, error } con una forma estable.
+function parseApiResponse(obj) {
+  if (!obj || typeof obj !== 'object') return { ok: false, error: 'invalid_shape' };
+  if (obj.ok !== true) return { ok: false, error: obj.error || obj.reason || 'backend_error' };
+  const data = obj.data || {};
+  return {
+    ok: true,
+    availability: Array.isArray(data.availability) ? data.availability : [],
+    busy: Array.isArray(data.busy) ? data.busy : []
+  };
+}
+
+// URL del backend según entorno. Si no hay prodUrl, siempre devUrl.
+function apiUrlFor(hostname, devUrl, prodUrl) {
+  if (!prodUrl) return devUrl;
+  if (!hostname) return devUrl;
+  if (hostname === 'localhost' || hostname.startsWith('127.') || hostname.endsWith('.local')) {
+    return devUrl;
+  }
+  return prodUrl;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     parseTime,
@@ -135,6 +181,10 @@ if (typeof module !== 'undefined' && module.exports) {
     dayHasAvailability,
     WORKING_HOURS,
     SLOT_DURATION_MINUTES,
-    buildMockBusyEvents
+    buildMockBusyEvents,
+    buildSlotsRange,
+    indexAvailability,
+    parseApiResponse,
+    apiUrlFor
   };
 }
