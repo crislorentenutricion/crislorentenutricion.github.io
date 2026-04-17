@@ -77,6 +77,43 @@ permalink: /metodo/
 }
 </script>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".faq-item summary", ".faq-item p"]
+  },
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Cuánto tardo en recibir mi primer menú desde que contrato?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Menos de 48 horas desde que realizas el pago. Te confirmo la recepción por WhatsApp al momento, te envío un correo de bienvenida y en las siguientes 48 horas recibes el menú mensual personalizado con gramajes y lista de la compra."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué me vas a preguntar en la primera sesión?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Lo básico para diseñar algo que tenga sentido para ti: tu objetivo real, tus hábitos actuales (cómo y cuándo comes), tu historial de peso y de dietas, tu nivel de actividad, patologías o medicación si las hay, alimentos que no te gustan o no puedes comprar, y cómo es tu semana tipo. No hace falta que te prepares — hablamos con calma."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Hay situaciones en las que no puedas trabajar conmigo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí, y prefiero decírtelo de frente: no trabajo casos de trastorno de conducta alimentaria activo (anorexia, bulimia, trastorno por atracón en fase aguda), embarazos de alto riesgo, ni patologías que requieran seguimiento médico especializado (enfermedad renal crónica avanzada, diabetes tipo 1, cáncer en tratamiento…). En esos casos te lo digo en la valoración gratuita y te derivo al profesional adecuado — es honesto y más seguro para ti."
+      }
+    }
+  ]
+}
+</script>
+
 {# ── HERO ── #}
 <section class="hero section-cream">
   <div class="container hero-inner hero-centered">
@@ -84,7 +121,7 @@ permalink: /metodo/
       <h1 class="hero-animate hero-animate-1">Así es como trabajamos juntas</h1>
       <p class="hero-subtitle hero-animate hero-animate-2">Sin sorpresas ni letra pequeña. Te cuento exactamente qué ocurre desde que me escribes hasta que empiezas a ver resultados.</p>
       <div class="hero-animate hero-animate-3">
-        <a href="/servicios/#formulario-contacto" class="btn btn-primary">Empieza por la valoración gratuita →</a>
+        <a href="/#formulario-contacto" class="btn btn-primary">Empieza por la valoración gratuita →</a>
       </div>
     </div>
   </div>
@@ -159,6 +196,30 @@ permalink: /metodo/
         <h3>WhatsApp con respuesta en 24h</h3>
         <p>Para dudas, cambios o días complicados. No estás sola entre una videollamada y la siguiente.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+{# ── CTA SEGUIMIENTO ── #}
+{% include "cta-seguimiento.njk" %}
+
+{# ── PREGUNTAS FRECUENTES ── #}
+<section class="section section-white">
+  <div class="container">
+    <h2 class="section-title reveal">Preguntas frecuentes</h2>
+    <div class="faq-list">
+      <details class="faq-item reveal">
+        <summary>¿Cuánto tardo en recibir mi primer menú desde que contrato?</summary>
+        <p>Menos de 48 horas desde que realizas el pago. Te confirmo la recepción por WhatsApp al momento, te envío un correo de bienvenida y en las siguientes 48 horas recibes el menú mensual personalizado con gramajes y lista de la compra.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Qué me vas a preguntar en la primera sesión?</summary>
+        <p>Lo básico para diseñar algo que tenga sentido para ti: tu objetivo real, tus hábitos actuales (cómo y cuándo comes), tu historial de peso y de dietas, tu nivel de actividad, patologías o medicación si las hay, alimentos que no te gustan o no puedes comprar, y cómo es tu semana tipo. No hace falta que te prepares — hablamos con calma.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Hay situaciones en las que no puedas trabajar conmigo?</summary>
+        <p>Sí, y prefiero decírtelo de frente: no trabajo casos de trastorno de conducta alimentaria activo (anorexia, bulimia, trastorno por atracón en fase aguda), embarazos de alto riesgo, ni patologías que requieran seguimiento médico especializado (enfermedad renal crónica avanzada, diabetes tipo 1, cáncer en tratamiento…). En esos casos te lo digo en la valoración gratuita y te derivo al profesional adecuado — es honesto y más seguro para ti.</p>
+      </details>
     </div>
   </div>
 </section>

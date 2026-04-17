@@ -2,7 +2,6 @@
 layout: layouts/base.njk
 title: "Menú mensual personalizado — con gramajes, lista de la compra y seguimiento"
 description: "Menú mensual personalizado con gramajes exactos, lista de la compra, seguimiento quincenal y WhatsApp directo con Cristina. Adaptado a tus gustos y a tu vida. Primer mes 15 €."
-navActive: servicios
 permalink: /menu-mensual-personalizado/
 ---
 
@@ -36,7 +35,7 @@ permalink: /menu-mensual-personalizado/
     "name": "Primer mes",
     "price": "15",
     "priceCurrency": "EUR",
-    "url": "https://www.crislorentenutricion.com/servicios/#formulario-contacto",
+    "url": "https://www.crislorentenutricion.com/#formulario-contacto",
     "availability": "https://schema.org/InStock"
   }
 }
@@ -86,6 +85,22 @@ permalink: /menu-mensual-personalizado/
         "@type": "Answer",
         "text": "No es obligatorio, pero ayuda. El menú funciona por sí mismo, y si haces algo de actividad (aunque sea caminar), los resultados llegan antes y se mantienen mejor."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Qué pasa con mis datos? ¿Son privados?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Todo lo que me cuentas (peso, medidas, historial) queda entre tú y yo. Cumplo con el RGPD: tus datos se guardan en servidores dentro de la UE, no se comparten con terceros, y puedes pedir que los elimine cuando quieras. Tienes todos los detalles en la política de privacidad."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Se adapta a vegetariano, sin gluten, sin lactosa, SOP u otras situaciones?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Sí. Vegetariano, vegano, sin gluten, sin lactosa, bajo en FODMAP, SOP, perimenopausia, intolerancias concretas… el menú se diseña desde cero para ti. Si tienes una patología diagnosticada que requiera seguimiento médico especializado, te lo digo en la valoración y te derivo al profesional adecuado."
+      }
     }
   ]
 }
@@ -109,7 +124,7 @@ permalink: /menu-mensual-personalizado/
       <h1 class="hero-animate hero-animate-1">Menú mensual personalizado que se adapta a ti, no al revés</h1>
       <p class="hero-subtitle hero-animate hero-animate-2">Si llevas tiempo probando menús con los que no consigues bajar de peso, el problema no eres tú. Es que ninguno estaba diseñado para tu vida, tus gustos y tu cuerpo. Yo sí hago eso.</p>
       <div class="hero-animate hero-animate-3">
-        <a href="/servicios/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita →</a>
+        <a href="/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita →</a>
       </div>
     </div>
   </div>
@@ -221,6 +236,9 @@ permalink: /menu-mensual-personalizado/
   </div>
 </section>
 
+{# ── CTA SEGUIMIENTO ── #}
+{% include "cta-seguimiento.njk" %}
+
 {# ── CÓMO FUNCIONA ── #}
 <section class="section section-cream">
   <div class="container text-center">
@@ -256,6 +274,14 @@ permalink: /menu-mensual-personalizado/
       <details class="faq-item reveal">
         <summary>¿Tengo que hacer deporte para que funcione?</summary>
         <p>No es obligatorio, pero ayuda. El menú funciona por sí mismo, y si haces algo de actividad (aunque sea caminar), los resultados llegan antes y se mantienen mejor.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Qué pasa con mis datos? ¿Son privados?</summary>
+        <p>Todo lo que me cuentas (peso, medidas, historial) queda entre tú y yo. Cumplo con el RGPD: tus datos se guardan en servidores dentro de la UE, no se comparten con terceros, y puedes pedir que los elimine cuando quieras. Tienes todos los detalles en la <a href="/legal/privacidad/">política de privacidad</a>.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Se adapta a vegetariano, sin gluten, sin lactosa, SOP u otras situaciones?</summary>
+        <p>Sí. Vegetariano, vegano, sin gluten, sin lactosa, bajo en FODMAP, SOP, perimenopausia, intolerancias concretas… el menú se diseña desde cero para ti. Si tienes una patología diagnosticada que requiera seguimiento médico especializado, te lo digo en la valoración y te derivo al profesional adecuado.</p>
       </details>
     </div>
   </div>
