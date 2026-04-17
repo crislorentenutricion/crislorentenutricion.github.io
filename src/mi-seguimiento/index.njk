@@ -636,45 +636,31 @@ appleTitle: "Mi seguimiento"
   }
   .ms-modal-ok:hover { background: var(--color-green-dark); }
 
-  /* ---------- day detail modal ---------- */
-  .ms-day-modal {
-    text-align: left;
-    position: relative;
-    padding-top: 46px;
-    max-height: 86vh;
-    overflow-y: auto;
-    max-width: 440px;
-  }
-  .ms-day-close {
-    position: absolute;
-    top: 8px; right: 10px;
+  /* ---------- day view (reutiliza la UI de hoy) ---------- */
+  .ms-back-today {
+    display: block;
+    margin: 0 0 10px;
     background: none;
     border: 0;
-    padding: 8px 14px;
-    font-size: 1.6rem;
-    line-height: 1;
-    color: #8a8678;
+    padding: 4px 0;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.86rem;
+    color: var(--color-green);
     cursor: pointer;
   }
-  .ms-day-close:hover { color: var(--color-green); }
-  .ms-day-title {
+  .ms-back-today:hover { color: var(--color-green-dark); text-decoration: underline; }
+  .ms-check-status {
     text-align: center;
-    font-size: 1.3rem;
-    margin-bottom: 20px;
-  }
-  .ms-day-meals { margin: 0 0 22px; padding: 0; list-style: none; }
-  .ms-day-status {
-    text-align: center;
-    padding: 18px 4px 4px;
-    border-top: 1px dashed #e4dfcf;
+    padding: 6px 4px 0;
   }
   .ms-day-badge {
     display: inline-block;
-    padding: 7px 18px;
+    padding: 8px 20px;
     border-radius: 999px;
     font-family: var(--font-family);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     color: #fff;
     margin-bottom: 12px;
   }
@@ -690,6 +676,15 @@ appleTitle: "Mi seguimiento"
     line-height: 1.55;
   }
   .ms-day-msg.is-soft { color: #8a8678; }
+
+  #ms-authed[data-view="today"] .ms-back-today,
+  #ms-authed[data-view="today"] .ms-check-status { display: none; }
+  #ms-authed[data-view="day"] .ms-tip,
+  #ms-authed[data-view="day"] .ms-check-btns,
+  #ms-authed[data-view="day"] .ms-check-hint { display: none; }
+
+  /* ---------- scroll lock mientras hay modal abierto ---------- */
+  body:has(.ms-modal-backdrop:not([hidden])) { overflow: hidden; }
 
   /* ---------- milestone celebration ---------- */
   .ms-milestone { z-index: 55; }
@@ -948,7 +943,7 @@ appleTitle: "Mi seguimiento"
   </section>
 
   {# ============================== AUTHED VIEW ============================== #}
-  <section id="ms-authed" class="ms-authed" hidden>
+  <section id="ms-authed" class="ms-authed" data-view="today" hidden>
     <header class="ms-hero">
       <div class="ms-hero-text">
         <p class="ms-eyebrow" id="ms-date">Cargando…</p>
@@ -964,7 +959,8 @@ appleTitle: "Mi seguimiento"
     </header>
 
     <section class="ms-today" aria-labelledby="ms-today-title">
-      <h2 id="ms-today-title" class="ms-section-title"><span>hoy</span></h2>
+      <button type="button" class="ms-back-today" id="ms-back-today">← volver a hoy</button>
+      <h2 id="ms-today-title" class="ms-section-title"><span id="ms-today-label">hoy</span></h2>
       <ol class="ms-meals" id="ms-meals">
         <li class="ms-meal is-skeleton"><span class="ms-meal-time">Desayuno</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
         <li class="ms-meal is-skeleton"><span class="ms-meal-time">Almuerzo</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
@@ -977,7 +973,8 @@ appleTitle: "Mi seguimiento"
     <p class="ms-tip" id="ms-tip" hidden></p>
 
     <section class="ms-check" aria-labelledby="ms-check-title">
-      <h2 id="ms-check-title" class="ms-section-title"><span>¿cómo ha ido hoy?</span></h2>
+      <h2 id="ms-check-title" class="ms-section-title"><span id="ms-check-label">¿cómo ha ido hoy?</span></h2>
+      <div class="ms-check-status" id="ms-check-status"></div>
       <div class="ms-check-btns" id="ms-check-btns" role="group" aria-label="Check-in del día">
         <button type="button" class="ms-check-btn ms-check-ok"  data-estado="seguido">
           <span class="ms-check-emoji" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
@@ -1038,16 +1035,6 @@ appleTitle: "Mi seguimiento"
       <h2 id="ms-milestone-title" class="ms-milestone-title">Una <em>semana</em> seguida</h2>
       <p id="ms-milestone-msg" class="ms-milestone-msg">Siete días cuidándote. Esto ya no es casualidad.</p>
       <button type="button" class="ms-modal-ok" id="ms-milestone-ok">Seguimos</button>
-    </div>
-  </div>
-
-  {# ============================== DAY DETAIL MODAL ============================== #}
-  <div id="ms-day" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-day-title" hidden>
-    <div class="ms-modal ms-day-modal">
-      <button type="button" class="ms-day-close" id="ms-day-close" aria-label="Cerrar">×</button>
-      <h2 id="ms-day-title" class="ms-modal-title ms-day-title"></h2>
-      <ol class="ms-meals ms-day-meals" id="ms-day-meals"></ol>
-      <div class="ms-day-status" id="ms-day-status"></div>
     </div>
   </div>
 
@@ -1436,17 +1423,28 @@ appleTitle: "Mi seguimiento"
     return `<p class="ms-day-msg is-soft">${msg}</p>`;
   }
 
-  function abrirDetalleDia(iso) {
+  function mostrarDia(iso) {
+    if (iso === toISO(new Date())) { mostrarHoy(); return; }
     const [y, m, d] = iso.split('-').map(Number);
     const fecha = new Date(y, m - 1, d);
     const weekday = DIAS_JS[fecha.getDay()];
-    $('#ms-day-title').textContent = capitalize(
+    $('#ms-today-label').textContent = capitalize(
       fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
     );
-    $('#ms-day-meals').innerHTML  = renderDayMeals(weekday);
-    $('#ms-day-status').innerHTML = renderDayStatus(iso);
-    $('#ms-day').hidden = false;
-    $('#ms-day-close').focus();
+    $('#ms-check-label').textContent = 'ese día';
+    $('#ms-meals').innerHTML = renderDayMeals(weekday);
+    $('#ms-check-status').innerHTML = renderDayStatus(iso);
+    $('#ms-authed').dataset.view = 'day';
+    $('#ms-authed').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function mostrarHoy() {
+    $('#ms-today-label').textContent = 'hoy';
+    $('#ms-check-label').textContent = '¿cómo ha ido hoy?';
+    renderMeals(menuVigente);
+    $('#ms-authed').dataset.view = 'today';
+    const estado = checkinsMap.get(toISO(new Date()));
+    setActiveCheck(estado || null);
   }
 
   // pdf_url guarda la ruta dentro del bucket privado (ej. "{uuid}/menu-1.pdf").
@@ -1596,8 +1594,7 @@ appleTitle: "Mi seguimiento"
 
     checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
     menuVigente = menu;
-
-    renderMeals(menu);
+    mostrarHoy();
     renderPdfLink(menu);
     renderTip();
 
@@ -1605,9 +1602,6 @@ appleTitle: "Mi seguimiento"
 
     const racha = renderStreak(checkinsMap);
     renderCalendar(checkinsMap);
-
-    const estadoHoy = checkinsMap.get(today);
-    if (estadoHoy) setActiveCheck(estadoHoy);
 
     return { racha, rota };
   }
@@ -1981,12 +1975,9 @@ appleTitle: "Mi seguimiento"
 
   $('#ms-calendar-grid').addEventListener('click', (e) => {
     const iso = e.target.closest('.ms-cal-cell')?.dataset.iso;
-    if (iso) abrirDetalleDia(iso);
+    if (iso) mostrarDia(iso);
   });
-  const dayModal = $('#ms-day');
-  $('#ms-day-close').addEventListener('click', () => { dayModal.hidden = true; });
-  dayModal.addEventListener('click', (e) => { if (e.target === dayModal) dayModal.hidden = true; });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !dayModal.hidden) dayModal.hidden = true; });
+  $('#ms-back-today').addEventListener('click', mostrarHoy);
 
   $('#ms-signout').addEventListener('click', async () => {
     // Cierre explícito: también olvidamos el "paciente conocido" local.
