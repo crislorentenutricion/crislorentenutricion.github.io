@@ -11,7 +11,10 @@
     USE_REAL_BACKEND: true,
     DEV_API_URL: 'https://script.google.com/macros/s/AKfycbyRxyJLvzxjdn1NGjVH4Iewk2twA7Ch4KSgCRwOfHtEytutGo_ARFkVfsMu23BZn7vIFQ/exec',
     PROD_API_URL: null, // se definirá en Fase 3.1
-    TIMEOUT_MS: 10000
+    TIMEOUT_MS: 10000,
+    // hCaptcha: null hasta que Cristina cree la cuenta (Fase 3.x). Sin site key,
+    // el frontend envía captchaToken vacío y el backend lo deja pasar.
+    HCAPTCHA_SITE_KEY: null
   };
 
   function currentApiUrl() {
@@ -41,6 +44,42 @@
     }
   }
 
+  async function postBooking(payload) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(function () { ctrl.abort(); }, CONFIG.TIMEOUT_MS);
+    try {
+      const response = await fetch(currentApiUrl(), {
+        method: 'POST',
+        // Apps Script /exec solo acepta postData.contents como texto plano:
+        // mandar text/plain evita el preflight CORS.
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal
+      });
+      if (!response.ok) throw new Error('HTTP_' + response.status);
+      const json = await response.json();
+      return parseBookingResponse(json);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // Resuelve un token de hCaptcha invisible. Si no hay site key configurada,
+  // devuelve cadena vacía (el backend entonces no verifica).
+  function getCaptchaToken() {
+    if (!CONFIG.HCAPTCHA_SITE_KEY) return Promise.resolve('');
+    if (typeof window.hcaptcha === 'undefined' || !window.hcaptcha.execute) {
+      return Promise.resolve('');
+    }
+    try {
+      return Promise.resolve(window.hcaptcha.execute(CONFIG.HCAPTCHA_SITE_KEY, { async: true }))
+        .then(function (res) { return (res && res.response) || ''; })
+        .catch(function () { return ''; });
+    } catch (err) {
+      return Promise.resolve('');
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     const root = document.querySelector('[data-booking-mock]');
     if (!root) return;
@@ -64,8 +103,19 @@
       viewMonth: today.getMonth(),
       selectedIso: null,
       selectedSlot: null,
-      step: 'picker'
+      step: 'picker',
+      submitting: false
     };
+
+    // Carga el script de hCaptcha sólo si hay site key configurada.
+    if (CONFIG.HCAPTCHA_SITE_KEY && !document.querySelector('script[data-hcaptcha]')) {
+      const s = document.createElement('script');
+      s.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+      s.async = true;
+      s.defer = true;
+      s.setAttribute('data-hcaptcha', '');
+      document.head.appendChild(s);
+    }
 
     const els = {
       monthLabel: root.querySelector('[data-month-label]'),
@@ -294,20 +344,80 @@
     }
 
     if (els.form) {
-      els.form.addEventListener('submit', function (e) {
+      els.form.addEventListener('submit', async function (e) {
         e.preventDefault();
-        const data = new FormData(els.form);
-        els.confirmSummary.innerHTML =
-          '<p><strong>' + escapeHtml(data.get('nombre') || '') + '</strong>, ' +
-          'tu valoración gratuita ha quedado reservada para:</p>' +
-          '<p class="booking-confirm-date">' +
-          escapeHtml(formatPrettyDateTime(state.selectedIso, state.selectedSlot)) + '</p>' +
-          '<p>Te hemos enviado un email con el enlace de Google Meet a ' +
-          '<strong>' + escapeHtml(data.get('email') || '') + '</strong>.</p>' +
-          '<p class="booking-confirm-disclaimer">⚠️ Esta es una demo. En Fase 2.4 este botón enviará la reserva al backend real.</p>';
-        state.step = 'confirmed';
-        render();
+        clearFormError();
+        if (state.submitting) return;
+        if (!state.selectedIso || !state.selectedSlot) return;
+        state.submitting = true;
+        const submitBtn = els.form.querySelector('button[type="submit"]');
+        const prevLabel = submitBtn ? submitBtn.textContent : '';
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Reservando…'; }
+        try {
+          const data = new FormData(els.form);
+          const captchaToken = await getCaptchaToken();
+          const payload = buildBookingPayload(data, state.selectedIso, state.selectedSlot, captchaToken);
+          const result = await postBooking(payload);
+          if (result.ok) {
+            renderConfirmed(data, result);
+            state.step = 'confirmed';
+            render();
+            return;
+          }
+          if (result.reason === 'slot_taken') {
+            const key = monthKey(state.viewYear, state.viewMonth);
+            monthCache.delete(key);
+            monthStatus.delete(key);
+            state.selectedSlot = null;
+            state.step = 'picker';
+            showFormError(bookingErrorMessage('slot_taken'));
+            ensureMonthLoaded(state.viewYear, state.viewMonth);
+            render();
+            return;
+          }
+          showFormError(bookingErrorMessage(result.reason));
+        } catch (err) {
+          showFormError('No hemos podido conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+        } finally {
+          state.submitting = false;
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = prevLabel; }
+        }
       });
+    }
+
+    function renderConfirmed(formDataObj, result) {
+      const meetLink = (result && result.meetLink) || '';
+      const linkHtml = meetLink
+        ? '<p>Te hemos enviado la invitación de Google Calendar a <strong>' +
+          escapeHtml(formDataObj.get('email') || '') + '</strong> con este enlace de Meet:<br>' +
+          '<a href="' + escapeHtml(meetLink) + '" target="_blank" rel="noopener">' +
+          escapeHtml(meetLink) + '</a></p>'
+        : '<p>Te hemos enviado la invitación de Google Calendar a <strong>' +
+          escapeHtml(formDataObj.get('email') || '') + '</strong>.</p>';
+      els.confirmSummary.innerHTML =
+        '<p><strong>' + escapeHtml(formDataObj.get('nombre') || '') + '</strong>, ' +
+        'tu valoración gratuita ha quedado reservada para:</p>' +
+        '<p class="booking-confirm-date">' +
+        escapeHtml(formatPrettyDateTime(state.selectedIso, state.selectedSlot)) + '</p>' +
+        linkHtml;
+    }
+
+    function showFormError(msg) {
+      let box = els.formPanel.querySelector('[data-form-error]');
+      if (!box) {
+        box = document.createElement('div');
+        box.className = 'booking-form-error';
+        box.setAttribute('role', 'alert');
+        box.setAttribute('data-form-error', '');
+        els.formPanel.insertBefore(box, els.formPanel.firstChild);
+      }
+      box.textContent = msg;
+      box.hidden = false;
+    }
+
+    function clearFormError() {
+      const box = els.formPanel.querySelector('[data-form-error]');
+      if (box) { box.textContent = ''; box.hidden = true; }
     }
 
     if (els.confirmRestart) {

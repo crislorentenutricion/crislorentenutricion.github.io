@@ -169,6 +169,71 @@ function apiUrlFor(hostname, devUrl, prodUrl) {
   return prodUrl;
 }
 
+/* ============================================================
+ * POST book: construcción del payload y parseo de la respuesta
+ * ============================================================ */
+
+// Payload que se envía al backend. `formData` puede ser FormData, Map o plain object
+// con las claves del <form>. `slot` es `{ start, end }`.
+function buildBookingPayload(formData, isoDate, slot, captchaToken) {
+  function get(k) {
+    if (!formData) return '';
+    if (typeof formData.get === 'function') return formData.get(k) || '';
+    return formData[k] !== undefined && formData[k] !== null ? formData[k] : '';
+  }
+  const privacidadRaw = get('privacidad');
+  return {
+    action: 'book',
+    nombre: String(get('nombre')).trim(),
+    email: String(get('email')).trim(),
+    telefono: String(get('telefono')).trim(),
+    objetivo: String(get('objetivo')).trim(),
+    plan: String(get('plan') || '').trim(),
+    privacidad: privacidadRaw === true || privacidadRaw === 'on' || privacidadRaw === 'true',
+    slot: { date: isoDate, start: slot && slot.start ? slot.start : '' },
+    captchaToken: captchaToken || ''
+  };
+}
+
+// Normaliza la respuesta del POST /exec.
+// Devuelve `{ ok, meetLink, reason, errors, errorCodes }` (reason según contrato GAS).
+function parseBookingResponse(obj) {
+  if (!obj || typeof obj !== 'object') {
+    return { ok: false, reason: 'invalid_shape' };
+  }
+  if (obj.ok === true) {
+    return { ok: true, meetLink: obj.meetLink || '', eventId: obj.eventId || '' };
+  }
+  return {
+    ok: false,
+    reason: obj.reason || 'unknown',
+    errors: Array.isArray(obj.errors) ? obj.errors : [],
+    errorCodes: Array.isArray(obj.errorCodes) ? obj.errorCodes : []
+  };
+}
+
+// Traducción de `reason` del backend a mensaje legible para la UI.
+function bookingErrorMessage(reason) {
+  switch (reason) {
+    case 'slot_taken':
+      return 'Justo alguien acaba de reservar ese hueco. He refrescado la disponibilidad — elige otro.';
+    case 'captcha_failed':
+      return 'No se pudo verificar que no eres un bot. Refresca la página y vuelve a intentarlo.';
+    case 'rate_limited':
+      return 'Has reservado demasiadas veces desde este email en la última hora. Inténtalo más tarde.';
+    case 'invalid_payload':
+      return 'Faltan datos obligatorios. Revisa el formulario.';
+    case 'calendar_error':
+      return 'Hubo un problema al crear la cita en el calendario. Inténtalo en unos minutos.';
+    case 'invalid_json':
+    case 'invalid_shape':
+    case 'unknown_action':
+      return 'El servidor devolvió una respuesta inesperada. Inténtalo de nuevo.';
+    default:
+      return 'No hemos podido confirmar la reserva. Inténtalo de nuevo en unos minutos.';
+  }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     parseTime,
@@ -185,6 +250,9 @@ if (typeof module !== 'undefined' && module.exports) {
     buildSlotsRange,
     indexAvailability,
     parseApiResponse,
-    apiUrlFor
+    apiUrlFor,
+    buildBookingPayload,
+    parseBookingResponse,
+    bookingErrorMessage
   };
 }
