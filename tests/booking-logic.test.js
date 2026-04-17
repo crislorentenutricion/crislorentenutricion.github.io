@@ -215,3 +215,106 @@ test('apiUrlFor: hostname vacío → dev (conservador)', () => {
   assert.equal(booking.apiUrlFor('', '/dev', '/prod'), '/dev');
   assert.equal(booking.apiUrlFor(undefined, '/dev', '/prod'), '/dev');
 });
+
+/* ============================================================
+ * POST book: buildBookingPayload / parseBookingResponse / bookingErrorMessage
+ * ============================================================ */
+
+const makeFormDataLike = () => {
+  const map = new Map();
+  map.set('nombre', '  Ana  ');
+  map.set('email', 'ana@example.com');
+  map.set('telefono', '612345678');
+  map.set('objetivo', 'Organizarme mejor');
+  map.set('plan', '');
+  map.set('privacidad', 'on');
+  return { get: (k) => map.get(k) || '' };
+};
+
+test('buildBookingPayload: arma el JSON con action=book y privacidad=true', () => {
+  const payload = booking.buildBookingPayload(
+    makeFormDataLike(),
+    '2026-04-20',
+    { start: '10:00', end: '10:30' },
+    'token-123'
+  );
+  assert.equal(payload.action, 'book');
+  assert.equal(payload.nombre, 'Ana');
+  assert.equal(payload.email, 'ana@example.com');
+  assert.equal(payload.telefono, '612345678');
+  assert.equal(payload.objetivo, 'Organizarme mejor');
+  assert.equal(payload.plan, '');
+  assert.equal(payload.privacidad, true);
+  assert.deepEqual(payload.slot, { date: '2026-04-20', start: '10:00' });
+  assert.equal(payload.captchaToken, 'token-123');
+});
+
+test('buildBookingPayload: acepta plain object además de FormData', () => {
+  const payload = booking.buildBookingPayload(
+    { nombre: 'Ana', email: 'a@b.c', telefono: '', objetivo: 'Ok', plan: 'Premium', privacidad: true },
+    '2026-04-20',
+    { start: '10:00', end: '10:30' },
+    ''
+  );
+  assert.equal(payload.nombre, 'Ana');
+  assert.equal(payload.plan, 'Premium');
+  assert.equal(payload.privacidad, true);
+});
+
+test('buildBookingPayload: privacidad=false si el checkbox no viene', () => {
+  const p = booking.buildBookingPayload(
+    { nombre: 'Ana', email: 'a@b.c', objetivo: 'Ok' },
+    '2026-04-20',
+    { start: '10:00', end: '10:30' },
+    ''
+  );
+  assert.equal(p.privacidad, false);
+});
+
+test('buildBookingPayload: captchaToken vacío por defecto', () => {
+  const p = booking.buildBookingPayload({}, '2026-04-20', { start: '10:00' }, null);
+  assert.equal(p.captchaToken, '');
+});
+
+test('parseBookingResponse: ok=true propaga meetLink y eventId', () => {
+  const res = booking.parseBookingResponse({
+    ok: true,
+    meetLink: 'https://meet/abc',
+    eventId: 'evt_1'
+  });
+  assert.equal(res.ok, true);
+  assert.equal(res.meetLink, 'https://meet/abc');
+  assert.equal(res.eventId, 'evt_1');
+});
+
+test('parseBookingResponse: ok=false con reason y errors', () => {
+  const res = booking.parseBookingResponse({
+    ok: false, reason: 'invalid_payload', errors: ['email_invalid']
+  });
+  assert.equal(res.ok, false);
+  assert.equal(res.reason, 'invalid_payload');
+  assert.deepEqual(res.errors, ['email_invalid']);
+});
+
+test('parseBookingResponse: ok=false sin reason → unknown', () => {
+  const res = booking.parseBookingResponse({ ok: false });
+  assert.equal(res.ok, false);
+  assert.equal(res.reason, 'unknown');
+});
+
+test('parseBookingResponse: null / string → invalid_shape', () => {
+  assert.equal(booking.parseBookingResponse(null).reason, 'invalid_shape');
+  assert.equal(booking.parseBookingResponse('nope').reason, 'invalid_shape');
+});
+
+test('bookingErrorMessage: reasons conocidos devuelven mensajes distintos', () => {
+  const reasons = ['slot_taken', 'captcha_failed', 'rate_limited', 'invalid_payload', 'calendar_error'];
+  const messages = new Set(reasons.map(booking.bookingErrorMessage));
+  assert.equal(messages.size, reasons.length, 'mensajes deben ser distintos');
+  for (const m of messages) assert.ok(m.length > 10, 'mensajes no vacíos');
+});
+
+test('bookingErrorMessage: reason desconocido → fallback genérico', () => {
+  const msg = booking.bookingErrorMessage('totally_new_reason');
+  assert.ok(msg.length > 10);
+});
