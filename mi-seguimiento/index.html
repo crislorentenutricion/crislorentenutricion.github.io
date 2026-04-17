@@ -1640,7 +1640,9 @@
     submitBtn.textContent = 'Enviar código';
 
     if (error) {
-      showStatus('No hemos podido enviar el código. Prueba de nuevo en un minuto.', 'error');
+      console.error('signInWithOtp error:', error);
+      const detail = error.message ? ' (' + error.message + ')' : '';
+      showStatus('No hemos podido enviar el código' + detail + '. Prueba de nuevo en un minuto.', 'error');
       return;
     }
     // Recordamos el email ya aquí: aunque la sesión real se crea al verificar
