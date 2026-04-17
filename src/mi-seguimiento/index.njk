@@ -1047,7 +1047,6 @@ appleTitle: "Mi seguimiento"
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
       storage: window.localStorage
     }
   });
@@ -1500,7 +1499,7 @@ appleTitle: "Mi seguimiento"
     // pre-check pero lo dejamos visible para que pueda desmarcarlo si quiere.
     const cb = $('#ms-consent');
     if (cb) cb.checked = true;
-    // Foco directo en el botón de enviar enlace: un solo clic para entrar.
+    // Foco directo en el botón de enviar código: un solo clic para pedirlo.
     requestAnimationFrame(() => submitBtn.focus());
   }
   function ocultarWelcomeBack() {
@@ -1566,7 +1565,7 @@ appleTitle: "Mi seguimiento"
     const email = emailInput.value.trim().toLowerCase();
     if (!email) return;
     if (!consentBox.checked) {
-      showStatus('Para recibir el enlace tienes que aceptar la política de privacidad.', 'error');
+      showStatus('Para recibir el código tienes que aceptar la política de privacidad.', 'error');
       consentBox.focus();
       return;
     }
@@ -1593,7 +1592,7 @@ appleTitle: "Mi seguimiento"
     otpForm.hidden = false;
     requestAnimationFrame(() => otpInput.focus());
 
-    // A3/A4: tras enviar el magic link, ofrece el mini-tutorial de instalación
+    // A3/A4: tras enviar el código OTP, ofrece el mini-tutorial de instalación
     // (o, si está dentro de Instagram/FB/etc., el banner para abrir en Chrome/Safari).
     // Delay de ~2.6s para no solapar el toast verde del status.
     setTimeout(() => {
@@ -1883,7 +1882,7 @@ appleTitle: "Mi seguimiento"
       ocultarWelcomeBack();
       emailInput.value = normalizado;
     }
-    // Focus the submit button so the flow is: open email → click → click "Enviar enlace".
+    // Focus the submit button so the flow is: open email → click → click "Enviar código".
     requestAnimationFrame(() => submitBtn.focus());
   })();
 
