@@ -103,28 +103,32 @@
   </script>
 </head>
 <body>
-    <div class="header-accent"></div>
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+    <div class="header-accent" aria-hidden="true"></div>
   <header class="site-header">
     <div class="container header-inner">
-      <a href="/" class="logo">Cris Lorente Nutrición</a>
+      <a href="/" class="logo" aria-label="Cris Lorente Nutrición — Inicio">
+        <span class="logo-mark" aria-hidden="true">cl</span>
+        <span class="logo-text">Cris Lorente Nutrición</span>
+      </a>
       <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
       <nav class="main-nav" id="main-nav" aria-label="Principal">
         <ul>
           <li><a href="/" >Inicio</a></li>
-          <li><a href="/seguimiento/" >Seguimiento</a></li>
           <li><a href="/sobre-mi/" >Sobre mí</a></li>
           <li><a href="/metodo/" >Método</a></li>
+          <li><a href="/seguimiento/" >Seguimiento</a></li>
           <li><a href="/testimonios/" class="active" aria-current="page">Testimonios</a></li>
-          <li><a href="/blog/" >Aprende</a></li>
-          <li><a href="/#formulario-contacto" class="btn btn-primary btn-sm">Reserva gratuita</a></li>
+          <li><a href="/blog/" aria-label="Blog de nutrición" >Aprende</a></li>
+          <li class="nav-cta"><a href="/#formulario-contacto" class="btn btn-primary btn-sm">Valoración gratis</a></li>
         </ul>
       </nav>
     </div>
   </header>
 
-  <main>
+  <main id="main">
     
 <script type="application/ld+json">
 {
