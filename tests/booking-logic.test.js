@@ -318,3 +318,67 @@ test('bookingErrorMessage: reason desconocido → fallback genérico', () => {
   const msg = booking.bookingErrorMessage('totally_new_reason');
   assert.ok(msg.length > 10);
 });
+
+/* ============================================================
+ * Accesibilidad: navegación por teclado
+ * ============================================================ */
+
+test('addDaysToIso: suma y resta días correctamente', () => {
+  assert.equal(booking.addDaysToIso('2026-04-20', 1), '2026-04-21');
+  assert.equal(booking.addDaysToIso('2026-04-20', -1), '2026-04-19');
+  assert.equal(booking.addDaysToIso('2026-04-20', 7), '2026-04-27');
+  assert.equal(booking.addDaysToIso('2026-04-20', -7), '2026-04-13');
+});
+
+test('addDaysToIso: cruza mes', () => {
+  assert.equal(booking.addDaysToIso('2026-04-30', 1), '2026-05-01');
+  assert.equal(booking.addDaysToIso('2026-05-01', -1), '2026-04-30');
+});
+
+test('addDaysToIso: cruza año', () => {
+  assert.equal(booking.addDaysToIso('2026-12-31', 1), '2027-01-01');
+  assert.equal(booking.addDaysToIso('2027-01-01', -1), '2026-12-31');
+});
+
+test('findFocusableIso: siguiente día disponible salta los no disponibles', () => {
+  const avail = new Map([
+    ['2026-04-20', []], ['2026-04-22', []], ['2026-04-23', []]
+  ]);
+  // Desde 2026-04-20 con delta=+1, 2026-04-21 no existe → salta a 2026-04-22.
+  const next = booking.findFocusableIso('2026-04-20', 1, avail, '2026-04-15', 2026, 3);
+  assert.equal(next, '2026-04-22');
+});
+
+test('findFocusableIso: devuelve null si se sale del mes visible', () => {
+  const avail = new Map([['2026-04-20', []]]);
+  // Desde 2026-04-30 avanzando +1 → 2026-05-01 (fuera del mes) → null.
+  const next = booking.findFocusableIso('2026-04-30', 1, avail, '2026-04-15', 2026, 3);
+  assert.equal(next, null);
+});
+
+test('findFocusableIso: ignora fechas anteriores a hoy', () => {
+  const avail = new Map([['2026-04-10', []], ['2026-04-20', []]]);
+  // Desde 2026-04-19 con delta=-1, 2026-04-18 no existe y 2026-04-10 es pasado → null.
+  const next = booking.findFocusableIso('2026-04-19', -1, avail, '2026-04-15', 2026, 3);
+  assert.equal(next, null);
+});
+
+test('findFocusableIso: delta +7 sobre semana típica', () => {
+  const avail = new Map([['2026-04-20', []], ['2026-04-27', []]]);
+  const next = booking.findFocusableIso('2026-04-20', 7, avail, '2026-04-15', 2026, 3);
+  assert.equal(next, '2026-04-27');
+});
+
+test('firstFocusableIsoInMonth: primer disponible dentro del mes visible', () => {
+  const avail = new Map([
+    ['2026-03-28', []], ['2026-04-02', []], ['2026-04-20', []], ['2026-05-01', []]
+  ]);
+  const first = booking.firstFocusableIsoInMonth(avail, '2026-04-15', 2026, 3);
+  assert.equal(first, '2026-04-20'); // 04-02 es pasado, descarta
+});
+
+test('firstFocusableIsoInMonth: null si no hay ninguno', () => {
+  const avail = new Map([['2026-05-01', []]]);
+  const first = booking.firstFocusableIsoInMonth(avail, '2026-04-15', 2026, 3);
+  assert.equal(first, null);
+});

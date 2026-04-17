@@ -103,6 +103,7 @@
       viewMonth: today.getMonth(),
       selectedIso: null,
       selectedSlot: null,
+      focusedIso: null,
       step: 'picker',
       submitting: false
     };
@@ -218,6 +219,8 @@
         els.grid.appendChild(th);
       });
       const availByDate = currentMonthSlots() || new Map();
+      // Determina qué celda tiene el "roving focus" (tabindex=0). Solo una en todo el grid.
+      const rovingIso = resolveRovingIso(availByDate);
       const weeks = buildMonthGrid(state.viewYear, state.viewMonth);
       weeks.forEach(function (week) {
         week.forEach(function (cell) {
@@ -228,8 +231,10 @@
             el.className += ' is-empty';
             el.disabled = true;
             el.setAttribute('aria-hidden', 'true');
+            el.setAttribute('tabindex', '-1');
           } else {
             el.textContent = String(cell.day);
+            el.setAttribute('data-iso', cell.iso);
             const hasSlots = availByDate.has(cell.iso);
             const isPast = cell.iso < todayIso;
             const available = hasSlots && !isPast;
@@ -238,6 +243,7 @@
               el.disabled = true;
               el.setAttribute('aria-disabled', 'true');
               el.setAttribute('aria-label', cell.day + ' — sin huecos');
+              el.setAttribute('tabindex', '-1');
             } else {
               el.className += ' is-available';
               if (cell.iso === state.selectedIso) {
@@ -245,8 +251,10 @@
                 el.setAttribute('aria-current', 'date');
               }
               el.setAttribute('aria-label', cell.day + ' — huecos disponibles');
+              el.setAttribute('tabindex', cell.iso === rovingIso ? '0' : '-1');
               el.addEventListener('click', function () {
                 state.selectedIso = cell.iso;
+                state.focusedIso = cell.iso;
                 state.selectedSlot = null;
                 state.step = 'picker';
                 render();
@@ -257,6 +265,54 @@
         });
       });
     }
+
+    // ISO con tabindex=0 en el grid. Prioridad: focusedIso → selectedIso → primer disponible.
+    function resolveRovingIso(availByDate) {
+      if (state.focusedIso && availByDate.has(state.focusedIso) && state.focusedIso >= todayIso) {
+        return state.focusedIso;
+      }
+      if (state.selectedIso && availByDate.has(state.selectedIso) && state.selectedIso >= todayIso) {
+        return state.selectedIso;
+      }
+      return firstFocusableIsoInMonth(availByDate, todayIso, state.viewYear, state.viewMonth);
+    }
+
+    // Navegación por teclado dentro del calendario (roving tabindex + arrow keys).
+    els.grid.addEventListener('keydown', function (e) {
+      const target = e.target.closest('[data-iso]');
+      if (!target) return;
+      const currentIso = target.getAttribute('data-iso');
+      const availByDate = currentMonthSlots() || new Map();
+      let delta = 0;
+      switch (e.key) {
+        case 'ArrowLeft':  delta = -1; break;
+        case 'ArrowRight': delta = +1; break;
+        case 'ArrowUp':    delta = -7; break;
+        case 'ArrowDown':  delta = +7; break;
+        case 'Home':       delta = 0; break;
+        case 'End':        delta = 0; break;
+        default: return;
+      }
+      e.preventDefault();
+      let nextIso;
+      if (e.key === 'Home' || e.key === 'End') {
+        // Primer/último disponible del mes visible.
+        const keys = Array.from(availByDate.keys()).filter(function (iso) {
+          const p = iso.split('-').map(Number);
+          return p[0] === state.viewYear && p[1] - 1 === state.viewMonth && iso >= todayIso;
+        }).sort();
+        nextIso = e.key === 'Home' ? keys[0] : keys[keys.length - 1];
+      } else {
+        nextIso = findFocusableIso(
+          currentIso, delta, availByDate, todayIso, state.viewYear, state.viewMonth
+        );
+      }
+      if (!nextIso) return;
+      state.focusedIso = nextIso;
+      render();
+      const newCell = els.grid.querySelector('[data-iso="' + nextIso + '"]');
+      if (newCell) newCell.focus();
+    });
 
     function renderSlots() {
       els.slotsList.innerHTML = '';
@@ -340,6 +396,12 @@
         state.step = 'picker';
         state.selectedSlot = null;
         render();
+        setTimeout(function () {
+          const cell = state.selectedIso
+            ? els.grid.querySelector('[data-iso="' + state.selectedIso + '"]')
+            : els.grid.querySelector('[tabindex="0"][data-iso]');
+          if (cell) cell.focus();
+        }, 80);
       });
     }
 
@@ -362,6 +424,8 @@
             renderConfirmed(data, result);
             state.step = 'confirmed';
             render();
+            const h = els.confirmPanel.querySelector('[data-confirm-heading]');
+            if (h) setTimeout(function () { h.focus(); }, 80);
             return;
           }
           if (result.reason === 'slot_taken') {
@@ -425,8 +489,13 @@
         state.step = 'picker';
         state.selectedIso = null;
         state.selectedSlot = null;
+        state.focusedIso = null;
         if (els.form) els.form.reset();
         render();
+        setTimeout(function () {
+          const cell = els.grid.querySelector('[tabindex="0"][data-iso]');
+          if (cell) cell.focus();
+        }, 80);
       });
     }
 
@@ -434,6 +503,7 @@
       if (state.viewYear === today.getFullYear() && state.viewMonth === today.getMonth()) return;
       state.viewMonth -= 1;
       if (state.viewMonth < 0) { state.viewMonth = 11; state.viewYear -= 1; }
+      state.focusedIso = null;
       ensureMonthLoaded(state.viewYear, state.viewMonth);
       render();
     });
@@ -441,6 +511,7 @@
     els.nextBtn.addEventListener('click', function () {
       state.viewMonth += 1;
       if (state.viewMonth > 11) { state.viewMonth = 0; state.viewYear += 1; }
+      state.focusedIso = null;
       ensureMonthLoaded(state.viewYear, state.viewMonth);
       render();
     });
