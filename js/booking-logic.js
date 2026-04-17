@@ -212,6 +212,49 @@ function parseBookingResponse(obj) {
   };
 }
 
+/* ============================================================
+ * Accesibilidad: navegación por teclado del calendario
+ * ============================================================ */
+
+// Suma `deltaDays` al ISO (YYYY-MM-DD) y devuelve el ISO resultante.
+// Usa Date UTC para no sufrir saltos de DST.
+function addDaysToIso(isoDate, deltaDays) {
+  const parts = isoDate.split('-').map(Number);
+  const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+
+// Busca la celda enfocable al aplicar `delta` repetidas veces desde `currentIso`.
+// Enfocable = dentro del mes visible + día presente/futuro + con huecos.
+// Devuelve el ISO encontrado o null si se sale del mes sin éxito tras maxSteps.
+function findFocusableIso(currentIso, delta, availByDate, todayIso, viewYear, viewMonth, maxSteps) {
+  const steps = maxSteps || 40;
+  let candidate = addDaysToIso(currentIso, delta);
+  for (let i = 0; i < steps; i++) {
+    const parts = candidate.split('-').map(Number);
+    const candYear = parts[0];
+    const candMonth = parts[1] - 1;
+    if (candYear !== viewYear || candMonth !== viewMonth) return null;
+    if (candidate >= todayIso && availByDate.has(candidate)) return candidate;
+    candidate = addDaysToIso(candidate, delta > 0 ? 1 : -1);
+  }
+  return null;
+}
+
+// Primer ISO enfocable dentro del mes visible (el más temprano disponible).
+function firstFocusableIsoInMonth(availByDate, todayIso, viewYear, viewMonth) {
+  const sorted = Array.from(availByDate.keys()).sort();
+  for (const iso of sorted) {
+    const parts = iso.split('-').map(Number);
+    if (parts[0] === viewYear && parts[1] - 1 === viewMonth && iso >= todayIso) return iso;
+  }
+  return null;
+}
+
 // Traducción de `reason` del backend a mensaje legible para la UI.
 function bookingErrorMessage(reason) {
   switch (reason) {
@@ -253,6 +296,9 @@ if (typeof module !== 'undefined' && module.exports) {
     apiUrlFor,
     buildBookingPayload,
     parseBookingResponse,
-    bookingErrorMessage
+    bookingErrorMessage,
+    addDaysToIso,
+    findFocusableIso,
+    firstFocusableIsoInMonth
   };
 }
