@@ -77,13 +77,118 @@ preloadImage: /img/hero-food.jpg
     "itemListElement": [
       {
         "@type": "Offer",
-        "name": "Asesoría nutricional personalizada",
+        "name": "Primer mes (prueba)",
+        "price": "15",
+        "priceCurrency": "EUR",
+        "url": "https://www.crislorentenutricion.com/#formulario-contacto",
+        "availability": "https://schema.org/InStock",
+        "category": "Prueba",
+        "eligibleCustomerType": "https://schema.org/NewCustomer",
+        "description": "Primer mes completo a 15 €: menú personalizado, seguimientos, WhatsApp. Sin permanencia."
+      },
+      {
+        "@type": "Offer",
+        "name": "Asesoría nutricional mensual",
         "price": "40",
         "priceCurrency": "EUR",
-        "description": "Menú mensual personalizado con gramajes, lista de la compra, 2 seguimientos/mes, WhatsApp 24h. Primer mes a 15 €."
+        "url": "https://www.crislorentenutricion.com/#formulario-contacto",
+        "availability": "https://schema.org/InStock",
+        "description": "Menú mensual personalizado con gramajes, lista de la compra, 2 seguimientos/mes, WhatsApp 24h.",
+        "priceSpecification": {
+          "@type": "UnitPriceSpecification",
+          "price": "40",
+          "priceCurrency": "EUR",
+          "unitText": "MON",
+          "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": "MON" }
+        }
+      },
+      {
+        "@type": "Offer",
+        "name": "Valoración gratuita",
+        "price": "0",
+        "priceCurrency": "EUR",
+        "url": "https://www.crislorentenutricion.com/#formulario-contacto",
+        "availability": "https://schema.org/InStock",
+        "description": "Videollamada de 30 minutos sin compromiso para conocernos y ver si encajamos."
       }
     ]
+  },
+  "termsOfService": "https://www.crislorentenutricion.com/legal/condiciones/",
+  "potentialAction": {
+    "@type": "ReserveAction",
+    "name": "Reservar valoración gratuita",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://www.crislorentenutricion.com/#formulario-contacto",
+      "inLanguage": "es-ES",
+      "actionPlatform": ["https://schema.org/DesktopWebPlatform", "https://schema.org/MobileWebPlatform"]
+    },
+    "result": {
+      "@type": "Reservation",
+      "name": "Valoración gratuita de 30 minutos"
+    }
   }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": [".faq-item summary", ".faq-item p"]
+  },
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "¿Qué incluye la valoración gratuita?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Una videollamada de 30 minutos para conocernos, hablar de tu objetivo, hábitos y estilo de vida. Sin compromiso. Si después decides empezar, genial. Si no, también."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Cuánto cuesta y hay permanencia?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "40 €/mes. El primer mes es de prueba a 15 € para que compruebes si encaja contigo. Sin permanencia: si decides no continuar, avisas con 7 días de antelación al siguiente ciclo y listo. Sin letras pequeñas."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Eres nutricionista o dietista?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Soy Técnica Superior en Dietética — la titulación oficial de FP del sistema educativo español — y Técnica en Farmacia. En España, «nutricionista» se usa coloquialmente tanto para el graduado universitario en Nutrición como para el técnico superior en dietética. Mi formación me habilita para planificar menús y hacer seguimiento nutricional en población sana. Si tu caso necesita atención médica por patología diagnosticada, te derivo al profesional adecuado."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿En qué se diferencia de una app como MyFitnessPal o una dieta de internet?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Una app te hace contar calorías tú sola. Una dieta de internet es genérica. Aquí recibes un menú diseñado desde cero para ti, con gramajes calculados según tu peso y tu objetivo, y hay una persona real al otro lado respondiendo tus dudas por WhatsApp. El seguimiento diario solo te pide tres segundos: marcas «lo seguí», «a medias» o «hoy no». Cero fricción, cero cuenta-calorías."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Es solo para perder peso?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No necesariamente. Trabajo cualquier objetivo: perder grasa, ganar masa muscular, mejorar energía, regular el ciclo hormonal o simplemente aprender a comer mejor."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "¿Necesito saber cocinar o tener mucho tiempo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Los menús están pensados para semanas reales: recetas rápidas, ingredientes accesibles y sin necesidad de ser chef."
+      }
+    }
+  ]
 }
 </script>
 
@@ -95,7 +200,7 @@ preloadImage: /img/hero-food.jpg
       <h1 class="hero-animate hero-animate-2">Pierde grasa <span class="gradient-text">sin dietas estrictas</span> ni obsesión</h1>
       <p class="hero-subtitle hero-animate hero-animate-3">En 30 días tendrás un menú hecho para tu vida real, no otra dieta que abandonarás en dos semanas.</p>
       <div class="hero-animate hero-animate-4">
-        <a href="/servicios/#formulario-contacto" class="btn btn-primary btn-lg btn-pulse">Reserva tu valoración gratuita →</a>
+        <a href="/#formulario-contacto" class="btn btn-primary btn-lg btn-pulse">Reserva tu valoración gratuita →</a>
         <p class="hero-price-hint">Primer mes: <strong>15 €</strong> · Después 40 €/mes · Sin permanencia</p>
         <a href="/testimonios/" class="hero-social-proof">
           <span class="hero-social-stars" aria-label="5 de 5 estrellas">★★★★★</span>
@@ -183,11 +288,14 @@ preloadImage: /img/hero-food.jpg
         <div class="plan-price"><span class="price">15 €</span><span class="period"> el primer mes</span></div>
         <p class="plan-subprice">Después: 40 €/mes</p>
         <ul class="plan-features"><li>Menú mensual personalizado con gramajes</li><li>Lista de la compra</li><li>2 seguimientos/mes (30 min, videollamada)</li><li>WhatsApp (respuesta 24h)</li><li>Ajustes del menú durante el mes</li></ul>
-        <a href="/servicios/#formulario-contacto" class="btn btn-primary btn-full">Empezar por 15 € →</a>
+        <a href="#formulario-contacto" class="btn btn-primary btn-full plan-btn" data-plan="Asesoría nutricional personalizada">Empezar por 15 € →</a>
       </div>
     </div>
   </div>
 </section>
+
+{# ── CTA SEGUIMIENTO ── #}
+{% include "cta-seguimiento.njk" %}
 
 {# ── CITA / FILOSOFÍA ── #}
 <section class="section section-white">
@@ -264,7 +372,7 @@ preloadImage: /img/hero-food.jpg
   </div>
 </section>
 
-{# ── MINI FAQ ── #}
+{# ── FAQ ── #}
 <section class="section section-cream">
   <div class="container">
     <h2 class="section-title reveal">Preguntas frecuentes</h2>
@@ -274,8 +382,16 @@ preloadImage: /img/hero-food.jpg
         <p>Una videollamada de 30 minutos para conocernos, hablar de tu objetivo, hábitos y estilo de vida. Sin compromiso. Si después decides empezar, genial. Si no, también.</p>
       </details>
       <details class="faq-item reveal">
-        <summary>¿Puedo cancelar cuando quiera?</summary>
-        <p>Sí, sin permanencia. Si decides no continuar, avisas con 7 días de antelación al siguiente ciclo y listo. Sin letras pequeñas.</p>
+        <summary>¿Cuánto cuesta y hay permanencia?</summary>
+        <p>40 €/mes. El primer mes es de prueba a 15 € para que compruebes si encaja contigo. Sin permanencia: si decides no continuar, avisas con 7 días de antelación al siguiente ciclo y listo. Sin letras pequeñas.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿Eres nutricionista o dietista?</summary>
+        <p>Soy Técnica Superior en Dietética — la titulación oficial de FP del sistema educativo español — y Técnica en Farmacia. En España, «nutricionista» se usa coloquialmente tanto para el graduado universitario en Nutrición como para el técnico superior en dietética. Mi formación me habilita para planificar menús y hacer seguimiento nutricional en población sana. Si tu caso necesita atención médica por patología diagnosticada, te derivo al profesional adecuado.</p>
+      </details>
+      <details class="faq-item reveal">
+        <summary>¿En qué se diferencia de una app como MyFitnessPal o una dieta de internet?</summary>
+        <p>Una app te hace contar calorías tú sola. Una dieta de internet es genérica. Aquí recibes un menú diseñado desde cero para ti, con gramajes calculados según tu peso y tu objetivo, y hay una persona real al otro lado respondiendo tus dudas por WhatsApp. Además, el <a href="/seguimiento/">seguimiento diario</a> solo te pide tres segundos: marcas «lo seguí», «a medias» o «hoy no». Cero fricción, cero cuenta-calorías.</p>
       </details>
       <details class="faq-item reveal">
         <summary>¿Es solo para perder peso?</summary>
@@ -286,20 +402,62 @@ preloadImage: /img/hero-food.jpg
         <p>No. Los menús están pensados para semanas reales: recetas rápidas, ingredientes accesibles y sin necesidad de ser chef.</p>
       </details>
     </div>
-    <div class="section-cta reveal">
-      <a href="/servicios/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita →</a>
-    </div>
   </div>
 </section>
 
-{# ── CTA FINAL ── #}
-<section class="section section-green">
-  <div class="deco-float deco-float-1"></div>
-  <div class="deco-float deco-float-2"></div>
-  <div class="container text-center">
-    <h2>¿Lista para empezar?</h2>
-    <p>La valoración inicial es gratuita, dura 30 minutos y no tiene ningún compromiso.</p>
-    <div class="cta-spacer"></div>
-    <a href="/servicios/#formulario-contacto" class="btn btn-white btn-lg">Reserva tu valoración gratuita →</a>
+{# ── FORMULARIO ── #}
+<section class="section section-white" id="formulario-contacto">
+  <div class="container form-container reveal">
+    <h2>Reserva tu valoración gratuita</h2>
+    <p class="form-subtitle">30 minutos por videollamada, sin compromiso. Cuéntame un poco sobre ti y me pongo en contacto contigo en menos de 24h.</p>
+
+    <div class="form-promise">
+      <div class="form-promise-item">
+        <span class="form-promise-icon">{% set iconName = "clock" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
+        <span>Te contesto en <strong>menos de 24h</strong></span>
+      </div>
+      <div class="form-promise-item">
+        <span class="form-promise-icon">{% set iconName = "video" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
+        <span>Videollamada de <strong>30 minutos</strong></span>
+      </div>
+      <div class="form-promise-item">
+        <span class="form-promise-icon">{% set iconName = "check" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
+        <span><strong>Sin compromiso</strong> ninguno</span>
+      </div>
+    </div>
+
+    <form class="contact-form" action="https://formspree.io/f/xeerpnrq" method="POST">
+      <div class="form-group">
+        <label for="nombre">Nombre *</label>
+        <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+      </div>
+      <div class="form-group">
+        <label for="email">Email *</label>
+        <input type="email" id="email" name="email" required placeholder="tu@email.com">
+      </div>
+      <div class="form-group">
+        <label for="telefono">Teléfono (opcional)</label>
+        <input type="tel" id="telefono" name="telefono" placeholder="612 345 678">
+      </div>
+      <input type="hidden" id="plan-elegido" name="plan" value="">
+      <div class="form-group">
+        <label for="objetivo">¿Qué te gustaría mejorar? *</label>
+        <textarea id="objetivo" name="objetivo" rows="4" required placeholder="Ej: quiero organizarme mejor con las comidas y perder algo de grasa"></textarea>
+      </div>
+      <div class="form-group form-group--checkbox">
+        <label class="checkbox-label">
+          <input type="checkbox" name="privacidad" required>
+          <span>He leído y acepto la <a href="/legal/privacidad/" target="_blank">política de privacidad</a></span>
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Reservar mi valoración gratuita →</button>
+    </form>
+
+    <div class="form-mini-testimonial">
+      <p>"He perdido 5 kg sin pasar hambre. Lo mejor es el acompañamiento."</p>
+      <span>— Marina R., 5 meses con Cristina</span>
+    </div>
+
+    <p class="form-reassurance">Sin compromiso · Sin permanencia · Valoración 100% gratuita</p>
   </div>
 </section>
