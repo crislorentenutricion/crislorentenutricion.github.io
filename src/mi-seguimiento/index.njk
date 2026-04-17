@@ -1212,8 +1212,8 @@ appleTitle: "Mi seguimiento"
     </section>
 
     {# ============================== LISTA DE LA COMPRA — entry + view ============================== #}
-    <section class="ms-compra-entry" aria-label="Abrir lista de la compra">
-      <button type="button" class="ms-compra-cta" id="ms-compra-open" aria-label="Abrir lista de la compra">
+    <section class="ms-compra-entry" aria-label="Abrir lista de la compra semanal">
+      <button type="button" class="ms-compra-cta" id="ms-compra-open" aria-label="Abrir lista de la compra semanal">
         <span class="ms-compra-cta-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 4h2l2.6 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.5L21 7H6"/>
@@ -1231,7 +1231,7 @@ appleTitle: "Mi seguimiento"
 
     <section class="ms-compra" id="ms-compra" aria-labelledby="ms-compra-title">
       <button type="button" class="ms-back-today ms-compra-back" id="ms-compra-back">← volver a hoy</button>
-      <h2 id="ms-compra-title" class="ms-section-title"><span>lista de la compra</span></h2>
+      <h2 id="ms-compra-title" class="ms-section-title"><span>la compra de esta semana</span></h2>
       <p class="ms-compra-progress" id="ms-compra-progress">—</p>
       <div class="ms-compra-cats" id="ms-compra-cats"></div>
     </section>
@@ -1741,19 +1741,19 @@ appleTitle: "Mi seguimiento"
     if (!meta || !prog) return;
     if (compraTotal === 0) {
       meta.textContent = 'Disponible con tu próximo menú';
-      prog.textContent = 'Aún no hay lista para este menú.';
+      prog.textContent = 'Aún no hay lista para esta semana.';
       prog.classList.remove('is-done');
       return;
     }
     const hechos = compraState.size;
     meta.textContent = hechos === 0
-      ? compraTotal + ' productos'
-      : hechos + ' de ' + compraTotal + ' comprados';
+      ? 'Semanal · ' + compraTotal + ' productos'
+      : 'Semanal · ' + hechos + '/' + compraTotal + ' comprados';
     if (hechos === compraTotal) {
-      prog.textContent = '¡Todo comprado! Buen trabajo.';
+      prog.textContent = '¡Compra de la semana completa! Buen trabajo.';
       prog.classList.add('is-done');
     } else {
-      prog.textContent = hechos + ' de ' + compraTotal + ' comprados';
+      prog.textContent = hechos + ' de ' + compraTotal + ' comprados esta semana';
       prog.classList.remove('is-done');
     }
   }
@@ -1766,7 +1766,7 @@ appleTitle: "Mi seguimiento"
     compraTotal = totalItemsCompra(lista);
 
     if (compraTotal === 0) {
-      container.innerHTML = '<p class="ms-compra-empty">Aún no hay lista de la compra para este menú.<br>Aparecerá aquí en cuanto Cristina la prepare.</p>';
+      container.innerHTML = '<p class="ms-compra-empty">Aún no hay lista de la compra semanal para este menú.<br>Aparecerá aquí en cuanto Cristina la prepare.</p>';
       updateCompraMeta();
       return;
     }
