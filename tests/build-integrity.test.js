@@ -80,6 +80,25 @@ test("posts con .article-content tienen ids automáticos en todos sus h2/h3", ()
   assert.ok(postsConHeadings > 0, "ningún post tiene h2/h3 dentro de .article-content: test sin valor");
 });
 
+test("preview-booking: página interna con noindex y fuera del sitemap", () => {
+  // Página interna del picker de reservas (Fase 2.2 del plan booking-v3).
+  // Debe: existir el HTML, tener meta robots=noindex, cargar booking.css
+  // y los dos scripts (booking-logic.js + booking.js), y NO aparecer en sitemap.
+  const file = path.join(SITE, "preview-booking", "index.html");
+  assert.ok(fs.existsSync(file), "falta /preview-booking/index.html");
+  const html = fs.readFileSync(file, "utf8");
+  assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
+  assert.match(html, /href="\/css\/booking\.css"/, "falta <link> a booking.css");
+  assert.match(html, /src="\/js\/booking-logic\.js"/, "falta <script> booking-logic.js");
+  assert.match(html, /src="\/js\/booking\.js"/, "falta <script> booking.js");
+  assert.match(html, /data-booking-mock/, "falta el shell del picker con data-booking-mock");
+  const sitemap = fs.readFileSync(path.join(SITE, "sitemap.xml"), "utf8");
+  assert.ok(!sitemap.includes("/preview-booking/"), "sitemap no debe incluir /preview-booking/");
+  assert.ok(fs.existsSync(path.join(SITE, "css", "booking.css")), "falta _site/css/booking.css");
+  assert.ok(fs.existsSync(path.join(SITE, "js", "booking.js")), "falta _site/js/booking.js");
+  assert.ok(fs.existsSync(path.join(SITE, "js", "booking-logic.js")), "falta _site/js/booking-logic.js");
+});
+
 test("stub de redirect /servicios/ mantiene canonical + meta refresh", () => {
   // Ver convenciones/negocio/web-tecnico.md → Redirects activos
   // Este stub no se publica en sitemap pero absorbe tráfico legacy al formulario en home.
