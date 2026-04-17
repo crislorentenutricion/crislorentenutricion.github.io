@@ -463,7 +463,9 @@ appleTitle: "Mi seguimiento"
   }
   .ms-cal-cell {
     aspect-ratio: 1 / 1;
+    border: 0;
     border-radius: 50%;
+    padding: 0;
     background: #efeadd;
     display: grid;
     place-items: center;
@@ -471,9 +473,15 @@ appleTitle: "Mi seguimiento"
     font-size: 0.82rem;
     font-weight: 500;
     color: #8a8678;
+    cursor: pointer;
     transition: transform 0.15s ease;
   }
-  .ms-cal-cell.is-empty { background: transparent; color: transparent; }
+  .ms-cal-cell:not(.is-empty):hover { transform: scale(1.08); }
+  .ms-cal-cell:focus-visible {
+    outline: 2px solid var(--color-green-dark);
+    outline-offset: 2px;
+  }
+  .ms-cal-cell.is-empty { background: transparent; color: transparent; cursor: default; pointer-events: none; }
   .ms-cal-cell.is-ok,
   .ms-cal-cell.is-mid,
   .ms-cal-cell.is-no { color: #fff; font-weight: 600; }
@@ -627,6 +635,61 @@ appleTitle: "Mi seguimiento"
     transition: background 0.2s ease;
   }
   .ms-modal-ok:hover { background: var(--color-green-dark); }
+
+  /* ---------- day detail modal ---------- */
+  .ms-day-modal {
+    text-align: left;
+    position: relative;
+    padding-top: 46px;
+    max-height: 86vh;
+    overflow-y: auto;
+    max-width: 440px;
+  }
+  .ms-day-close {
+    position: absolute;
+    top: 8px; right: 10px;
+    background: none;
+    border: 0;
+    padding: 8px 14px;
+    font-size: 1.6rem;
+    line-height: 1;
+    color: #8a8678;
+    cursor: pointer;
+  }
+  .ms-day-close:hover { color: var(--color-green); }
+  .ms-day-title {
+    text-align: center;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+  .ms-day-meals { margin: 0 0 22px; padding: 0; list-style: none; }
+  .ms-day-status {
+    text-align: center;
+    padding: 18px 4px 4px;
+    border-top: 1px dashed #e4dfcf;
+  }
+  .ms-day-badge {
+    display: inline-block;
+    padding: 7px 18px;
+    border-radius: 999px;
+    font-family: var(--font-family);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #fff;
+    margin-bottom: 12px;
+  }
+  .ms-day-badge.is-ok  { background: var(--color-green); }
+  .ms-day-badge.is-mid { background: #d9b36a; }
+  .ms-day-badge.is-no  { background: #d9a08e; }
+  .ms-day-msg {
+    margin: 0;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.96rem;
+    color: #55524a;
+    line-height: 1.55;
+  }
+  .ms-day-msg.is-soft { color: #8a8678; }
 
   /* ---------- milestone celebration ---------- */
   .ms-milestone { z-index: 55; }
@@ -978,6 +1041,16 @@ appleTitle: "Mi seguimiento"
     </div>
   </div>
 
+  {# ============================== DAY DETAIL MODAL ============================== #}
+  <div id="ms-day" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-day-title" hidden>
+    <div class="ms-modal ms-day-modal">
+      <button type="button" class="ms-day-close" id="ms-day-close" aria-label="Cerrar">×</button>
+      <h2 id="ms-day-title" class="ms-modal-title ms-day-title"></h2>
+      <ol class="ms-meals ms-day-meals" id="ms-day-meals"></ol>
+      <div class="ms-day-status" id="ms-day-status"></div>
+    </div>
+  </div>
+
   {# ============================== INSTALL TUTORIAL (A3) ============================== #}
   <div id="ms-install" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-install-title" aria-live="polite" hidden>
     <div class="ms-modal">
@@ -1071,6 +1144,7 @@ appleTitle: "Mi seguimiento"
 
   let paciente = null;
   let checkinsMap = new Map();
+  let menuVigente = null;
 
   // -------- utils --------
   const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
@@ -1305,8 +1379,11 @@ appleTitle: "Mi seguimiento"
     }
     for (let day = 1; day <= lastDay.getDate(); day++) {
       const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-      const c = document.createElement('div');
+      const c = document.createElement('button');
+      c.type = 'button';
       c.className = 'ms-cal-cell';
+      c.dataset.iso = iso;
+      c.setAttribute('aria-label', `Ver el menú del día ${day}`);
       c.textContent = String(day);
       const estado = checkinsMap.get(iso);
       if (estado === 'seguido') c.classList.add('is-ok');
@@ -1325,6 +1402,51 @@ appleTitle: "Mi seguimiento"
 
   function setActiveCheck(estado) {
     $$('.ms-check-btn').forEach(b => b.classList.toggle('is-active', b.dataset.estado === estado));
+  }
+
+  // -------- day detail (read-only view from calendar tap) --------
+  const DAY_STATUS = {
+    seguido: { cls: 'is-ok',  label: '«Lo seguí»', msg: 'Un día más cuidándote. Cada uno cuenta.' },
+    parcial: { cls: 'is-mid', label: '«A medias»', msg: 'Mantuviste la constancia. Seguir es ganar.' },
+    no:      { cls: 'is-no',  label: '«Hoy no»',   msg: 'Un día suelto no te define. Mañana vuelves.' }
+  };
+
+  function renderDayMeals(weekday) {
+    const dia = menuVigente?.contenido?.dias?.[weekday];
+    if (!dia) {
+      return `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Sin menú</span><p class="ms-meal-text">No hay menú planificado para este día.</p></li>`;
+    }
+    return COMIDAS.map(([k, label]) =>
+      `<li class="ms-meal"><span class="ms-meal-time">${label}</span><p class="ms-meal-text">${escapeHtml(dia[k] || '—')}</p></li>`
+    ).join('');
+  }
+
+  function renderDayStatus(iso) {
+    const estado = checkinsMap.get(iso);
+    const cfg = DAY_STATUS[estado];
+    if (cfg) {
+      return `<span class="ms-day-badge ${cfg.cls}">${cfg.label}</span><p class="ms-day-msg">${cfg.msg}</p>`;
+    }
+    const todayISO = toISO(new Date());
+    const msg = iso > todayISO
+      ? 'Aún está por llegar. Cuando sea, lo marcas.'
+      : iso === todayISO
+        ? 'Aún no has marcado hoy. Hazlo cuando termines el día.'
+        : 'Este día no lo marcaste. Sin drama, sigue tu camino.';
+    return `<p class="ms-day-msg is-soft">${msg}</p>`;
+  }
+
+  function abrirDetalleDia(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    const fecha = new Date(y, m - 1, d);
+    const weekday = DIAS_JS[fecha.getDay()];
+    $('#ms-day-title').textContent = capitalize(
+      fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+    );
+    $('#ms-day-meals').innerHTML  = renderDayMeals(weekday);
+    $('#ms-day-status').innerHTML = renderDayStatus(iso);
+    $('#ms-day').hidden = false;
+    $('#ms-day-close').focus();
   }
 
   // pdf_url guarda la ruta dentro del bucket privado (ej. "{uuid}/menu-1.pdf").
@@ -1473,6 +1595,7 @@ appleTitle: "Mi seguimiento"
     ]);
 
     checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
+    menuVigente = menu;
 
     renderMeals(menu);
     renderPdfLink(menu);
@@ -1855,6 +1978,15 @@ appleTitle: "Mi seguimiento"
       } catch (e) { console.error('resync', e); }
     });
   });
+
+  $('#ms-calendar-grid').addEventListener('click', (e) => {
+    const iso = e.target.closest('.ms-cal-cell')?.dataset.iso;
+    if (iso) abrirDetalleDia(iso);
+  });
+  const dayModal = $('#ms-day');
+  $('#ms-day-close').addEventListener('click', () => { dayModal.hidden = true; });
+  dayModal.addEventListener('click', (e) => { if (e.target === dayModal) dayModal.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !dayModal.hidden) dayModal.hidden = true; });
 
   $('#ms-signout').addEventListener('click', async () => {
     // Cierre explícito: también olvidamos el "paciente conocido" local.
