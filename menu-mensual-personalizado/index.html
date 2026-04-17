@@ -49,7 +49,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  
+  <link rel="preload" as="image" href="/img/hero-menu-mensual.jpg" fetchpriority="high">
 
   <script type="application/ld+json">
   {
@@ -243,14 +243,19 @@
 </script>
 
 
-<section class="hero section-cream">
-  <div class="container hero-inner hero-centered">
-    <div class="hero-text">
-      <h1 class="hero-animate hero-animate-1">Menú mensual personalizado que se adapta a ti, no al revés</h1>
-      <p class="hero-subtitle hero-animate hero-animate-2">Si llevas tiempo probando menús con los que no consigues bajar de peso, el problema no eres tú. Es que ninguno estaba diseñado para tu vida, tus gustos y tu cuerpo. Yo sí hago eso.</p>
-      <div class="hero-animate hero-animate-3">
-        <a href="/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita →</a>
+<section class="hero hero-food-split">
+  <div class="hero-food-split-inner">
+    <div class="hero-food-text">
+      <span class="hero-label hero-animate hero-animate-1">Menú mensual personalizado</span>
+      <h1 class="hero-animate hero-animate-2">Un menú que <span class="gradient-text">se adapta a ti</span>, no al revés</h1>
+      <p class="hero-subtitle hero-animate hero-animate-3">Si llevas tiempo probando menús con los que no consigues bajar de peso, el problema no eres tú. Es que ninguno estaba diseñado para tu vida, tus gustos y tu cuerpo.</p>
+      <div class="hero-animate hero-animate-4">
+        <a href="/#formulario-contacto" class="btn btn-primary btn-lg">Reserva tu valoración gratuita →</a>
+        <p class="hero-price-hint">Primer mes: <strong>15 €</strong> · Después 40 €/mes · Sin permanencia</p>
       </div>
+    </div>
+    <div class="hero-food-pic hero-animate hero-animate-4">
+      <img src="/img/hero-menu-mensual.jpg" alt="Meal prep con tuppers de cristal: arroz con verduras, pasta con pollo y ensalada, con lista de la compra" width="1200" height="670" fetchpriority="high" decoding="async" style="object-position:center center">
     </div>
   </div>
 </section>
@@ -262,14 +267,17 @@
     <p class="section-subtitle reveal">La mayoría de personas que llegan a mí han pasado por lo mismo</p>
     <div class="steps-grid steps-grid--3">
       <div class="step-card reveal reveal-delay-1">
+        <span class="step-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4a7c59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></span>
         <h3>Has probado de todo</h3>
         <p>Keto, ayuno, batidos, apps con puntos… Bajas algo, lo recuperas, y encima acabas con peor relación con la comida.</p>
       </div>
       <div class="step-card reveal reveal-delay-2">
+        <span class="step-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4a7c59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14.01"/><line x1="12" y1="14" x2="12" y2="14.01"/><line x1="16" y1="14" x2="16" y2="14.01"/></svg></span>
         <h3>Te aburres del menú a la semana</h3>
         <p>Las dietas genéricas se repiten hasta cansar. Al final dejas de seguirlas porque no puedes comer lo mismo cada día.</p>
       </div>
       <div class="step-card reveal reveal-delay-3">
+        <span class="step-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#4a7c59" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg></span>
         <h3>No sabes si estás comiendo bien</h3>
         <p>¿100 g o 150 g de arroz? ¿Cuánta verdura? Sin gramajes reales es imposible saber si tu plato tiene sentido para tu objetivo.</p>
       </div>
@@ -386,7 +394,7 @@
 
 
 
-<section class="section section-cream">
+<section class="section section-white">
   <div class="container text-center">
     <h2 class="section-title reveal">¿Cómo lo empezamos?</h2>
     <p class="section-subtitle reveal">Desde tu primer mensaje hasta tu primer menú pasan menos de 48 horas.</p>
@@ -397,7 +405,7 @@
 </section>
 
 
-<section class="section section-white">
+<section class="section section-cream">
   <div class="container">
     <h2 class="section-title reveal">Preguntas frecuentes</h2>
     <div class="faq-list">
@@ -434,14 +442,13 @@
 </section>
 
 
-  <section class="section section-cream">
-    <div class="container text-center reveal">
-      <h2>¿Te ha gustado este artículo?</h2>
-      <p class="section-subtitle" style="margin-bottom:32px;">Si quieres que te acompañe en tu proceso, reserva una valoración gratuita sin compromiso.</p>
-      <a href="/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita →</a>
-    </div>
-  </section>
-
+<section class="section section-white">
+  <div class="container text-center reveal">
+    <h2>¿Quieres un menú hecho para ti?</h2>
+    <p class="section-subtitle" style="margin-bottom:32px;">Reserva una valoración gratuita y hablamos de lo que necesitas. Sin compromiso.</p>
+    <a href="/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita →</a>
+  </div>
+</section>
 
   </main>
     <div class="footer-accent"></div>
