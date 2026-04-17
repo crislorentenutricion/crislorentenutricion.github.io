@@ -1623,7 +1623,9 @@ appleTitle: "Mi seguimiento"
     otpSubmit.textContent = 'Entrar';
 
     if (error) {
-      showStatus('Código incorrecto o caducado. Pide otro pulsando «Enviar código».', 'error');
+      console.error('verifyOtp error:', error);
+      const detail = error.message ? ' (' + error.message + ')' : '';
+      showStatus('Código incorrecto o caducado' + detail + '. Pide otro pulsando «Enviar código».', 'error');
       otpInput.select();
       return;
     }
