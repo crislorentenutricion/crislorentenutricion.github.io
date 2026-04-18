@@ -80,23 +80,24 @@ test("posts con .article-content tienen ids automáticos en todos sus h2/h3", ()
   assert.ok(postsConHeadings > 0, "ningún post tiene h2/h3 dentro de .article-content: test sin valor");
 });
 
-test("preview-booking: página interna con noindex y fuera del sitemap", () => {
-  // Página interna del picker de reservas (Fase 2.2 del plan booking-v3).
-  // Debe: existir el HTML, tener meta robots=noindex, cargar booking.css
-  // y los dos scripts (booking-logic.js + booking.js), y NO aparecer en sitemap.
-  const file = path.join(SITE, "preview-booking", "index.html");
-  assert.ok(fs.existsSync(file), "falta /preview-booking/index.html");
+test("home: picker de reservas montado en #formulario-contacto (fase 3.2)", () => {
+  // Fase 3.2 del plan booking-v3: swap directo del form de Formspree por el picker.
+  // La home debe cargar booking.css + los dos scripts y renderizar el shell.
+  // El form legacy y la referencia a Formspree tienen que haber desaparecido.
+  const file = path.join(SITE, "index.html");
   const html = fs.readFileSync(file, "utf8");
-  assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
-  assert.match(html, /href="\/css\/booking\.css"/, "falta <link> a booking.css");
-  assert.match(html, /src="\/js\/booking-logic\.js"/, "falta <script> booking-logic.js");
-  assert.match(html, /src="\/js\/booking\.js"/, "falta <script> booking.js");
-  assert.match(html, /data-booking-mock/, "falta el shell del picker con data-booking-mock");
-  const sitemap = fs.readFileSync(path.join(SITE, "sitemap.xml"), "utf8");
-  assert.ok(!sitemap.includes("/preview-booking/"), "sitemap no debe incluir /preview-booking/");
+  assert.match(html, /id="formulario-contacto"/, "ancla #formulario-contacto rota");
+  assert.match(html, /href="\/css\/booking\.css"/, "falta <link> a booking.css en la home");
+  assert.match(html, /src="\/js\/booking-logic\.js"/, "falta <script> booking-logic.js en la home");
+  assert.match(html, /src="\/js\/booking\.js"/, "falta <script> booking.js en la home");
+  assert.match(html, /data-booking-mock/, "falta el shell del picker");
+  assert.match(html, /id="plan-elegido"/, "falta el hidden input plan-elegido dentro del picker");
+  assert.ok(!html.includes("formspree.io"), "la home todavía referencia formspree.io");
+  assert.ok(!/<form[^>]*class="contact-form"/.test(html), "la home todavía tiene el form legacy .contact-form");
   assert.ok(fs.existsSync(path.join(SITE, "css", "booking.css")), "falta _site/css/booking.css");
   assert.ok(fs.existsSync(path.join(SITE, "js", "booking.js")), "falta _site/js/booking.js");
   assert.ok(fs.existsSync(path.join(SITE, "js", "booking-logic.js")), "falta _site/js/booking-logic.js");
+  assert.ok(!fs.existsSync(path.join(SITE, "preview-booking", "index.html")), "/preview-booking/ debe haber sido eliminada");
 });
 
 test("stub de redirect /servicios/ mantiene canonical + meta refresh", () => {

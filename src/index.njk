@@ -405,59 +405,103 @@ preloadImage: /img/hero-food.jpg
   </div>
 </section>
 
-{# ── FORMULARIO ── #}
+{# ── RESERVA (picker booking-v3) ── #}
+<link rel="stylesheet" href="/css/booking.css">
 <section class="section section-white" id="formulario-contacto">
-  <div class="container form-container reveal">
-    <h2>Reserva tu valoración gratuita</h2>
-    <p class="form-subtitle">30 minutos por videollamada, sin compromiso. Cuéntame un poco sobre ti y me pongo en contacto contigo en menos de 24h.</p>
+  <div class="container reveal">
+    <div class="booking-intro">
+      <h2>Reserva tu valoración gratuita</h2>
+      <p class="form-subtitle">30 minutos por videollamada, sin compromiso. Elige un hueco en mi agenda y te mando el enlace de Meet al instante.</p>
 
-    <div class="form-promise">
-      <div class="form-promise-item">
-        <span class="form-promise-icon">{% set iconName = "clock" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
-        <span>Te contesto en <strong>menos de 24h</strong></span>
-      </div>
-      <div class="form-promise-item">
-        <span class="form-promise-icon">{% set iconName = "video" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
-        <span>Videollamada de <strong>30 minutos</strong></span>
-      </div>
-      <div class="form-promise-item">
-        <span class="form-promise-icon">{% set iconName = "check" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
-        <span><strong>Sin compromiso</strong> ninguno</span>
+      <div class="form-promise">
+        <div class="form-promise-item">
+          <span class="form-promise-icon">{% set iconName = "clock" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
+          <span>Confirmación <strong>inmediata</strong></span>
+        </div>
+        <div class="form-promise-item">
+          <span class="form-promise-icon">{% set iconName = "video" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
+          <span>Videollamada de <strong>30 minutos</strong></span>
+        </div>
+        <div class="form-promise-item">
+          <span class="form-promise-icon">{% set iconName = "check" %}{% set iconSize = 22 %}{% include "icon.njk" %}</span>
+          <span><strong>Sin compromiso</strong> ninguno</span>
+        </div>
       </div>
     </div>
 
-    <form class="contact-form" action="https://formspree.io/f/xeerpnrq" method="POST">
-      <div class="form-group">
-        <label for="nombre">Nombre *</label>
-        <input type="text" id="nombre" name="nombre" required placeholder="Tu nombre">
+    <div class="booking-shell" data-booking-mock>
+      <div class="booking-head">
+        <div class="booking-head-nav">
+          <span class="booking-month-label" data-month-label>—</span>
+          <div class="booking-nav">
+            <button type="button" class="booking-nav-btn" data-prev-month aria-label="Mes anterior">‹</button>
+            <button type="button" class="booking-nav-btn" data-next-month aria-label="Mes siguiente">›</button>
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label for="email">Email *</label>
-        <input type="email" id="email" name="email" required placeholder="tu@email.com">
-      </div>
-      <div class="form-group">
-        <label for="telefono">Teléfono (opcional)</label>
-        <input type="tel" id="telefono" name="telefono" placeholder="612 345 678">
-      </div>
-      <input type="hidden" id="plan-elegido" name="plan" value="">
-      <div class="form-group">
-        <label for="objetivo">¿Qué te gustaría mejorar? *</label>
-        <textarea id="objetivo" name="objetivo" rows="4" required placeholder="Ej: quiero organizarme mejor con las comidas y perder algo de grasa"></textarea>
-      </div>
-      <div class="form-group form-group--checkbox">
-        <label class="checkbox-label">
-          <input type="checkbox" name="privacidad" required>
-          <span>He leído y acepto la <a href="/legal/privacidad/" target="_blank">política de privacidad</a></span>
-        </label>
-      </div>
-      <button type="submit" class="btn btn-primary btn-full">Reservar mi valoración gratuita →</button>
-    </form>
 
-    <div class="form-mini-testimonial">
-      <p>"He perdido 5 kg sin pasar hambre. Lo mejor es el acompañamiento."</p>
-      <span>— Marina R., 5 meses con Cristina</span>
+      <div class="booking-body">
+        <div class="booking-cal-grid" data-calendar-grid role="grid" aria-label="Calendario de disponibilidad"></div>
+
+        <div>
+          <div data-slots-panel>
+            <h3 class="booking-slots-title">Horarios disponibles</h3>
+            <p class="booking-slots-hint" data-slots-hint>Elige un día para ver los horarios.</p>
+            <div class="booking-slots-list" data-slots-list></div>
+          </div>
+
+          <div class="booking-form-panel" data-form-panel hidden>
+            <div class="booking-form-summary" data-form-summary>—</div>
+            <form data-booking-form>
+              <div class="booking-form-group">
+                <label for="booking-nombre">Nombre *</label>
+                <input type="text" id="booking-nombre" name="nombre" required placeholder="Tu nombre">
+              </div>
+              <div class="booking-form-group">
+                <label for="booking-email">Email *</label>
+                <input type="email" id="booking-email" name="email" required placeholder="tu@email.com">
+              </div>
+              <div class="booking-form-group">
+                <label for="booking-telefono">Teléfono (opcional)</label>
+                <input type="tel" id="booking-telefono" name="telefono" placeholder="612 345 678">
+              </div>
+              <input type="hidden" id="plan-elegido" name="plan" value="">
+              <div class="booking-form-group">
+                <label for="booking-objetivo">¿Qué te gustaría mejorar? *</label>
+                <textarea id="booking-objetivo" name="objetivo" rows="3" required placeholder="Ej: quiero organizarme mejor con las comidas"></textarea>
+              </div>
+              <div class="booking-form-group">
+                <label class="booking-checkbox-label">
+                  <input type="checkbox" name="privacidad" required>
+                  <span>He leído y acepto la <a href="/legal/privacidad/" target="_blank">política de privacidad</a></span>
+                </label>
+              </div>
+              <div class="booking-form-actions">
+                <button type="button" class="booking-back-btn" data-form-back>← Cambiar hora</button>
+                <button type="submit" class="btn btn-primary">Confirmar reserva →</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="booking-confirm-panel" data-confirm-panel hidden role="status" aria-live="polite">
+            <h2 data-confirm-heading tabindex="-1">¡Reserva confirmada!</h2>
+            <div data-confirm-summary></div>
+            <button type="button" class="booking-back-btn" data-confirm-restart>Hacer otra reserva</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <p class="form-reassurance">Sin compromiso · Sin permanencia · Valoración 100% gratuita</p>
+    <div class="booking-footer">
+      <div class="form-mini-testimonial">
+        <p>"He perdido 5 kg sin pasar hambre. Lo mejor es el acompañamiento."</p>
+        <span>— Marina R., 5 meses con Cristina</span>
+      </div>
+
+      <p class="form-reassurance">Sin compromiso · Sin permanencia · Valoración 100% gratuita</p>
+    </div>
   </div>
 </section>
+
+<script src="/js/booking-logic.js" defer></script>
+<script src="/js/booking.js" defer></script>
