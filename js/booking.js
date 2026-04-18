@@ -10,11 +10,9 @@
   const CONFIG = {
     USE_REAL_BACKEND: true,
     DEV_API_URL: 'https://script.google.com/macros/s/AKfycbyRxyJLvzxjdn1NGjVH4Iewk2twA7Ch4KSgCRwOfHtEytutGo_ARFkVfsMu23BZn7vIFQ/exec',
-    PROD_API_URL: null, // se definirá en Fase 3.1
+    PROD_API_URL: 'https://script.google.com/macros/s/AKfycbw4l1ok-Oi7_OE5eYbs-Sn-fyR7yUvHuR_Szqs3KjCf9Sda_evRQd4NcSyZcI9LNI9hbQ/exec',
     TIMEOUT_MS: 10000,
-    // hCaptcha: null hasta que Cristina cree la cuenta (Fase 3.x). Sin site key,
-    // el frontend envía captchaToken vacío y el backend lo deja pasar.
-    HCAPTCHA_SITE_KEY: null
+    HCAPTCHA_SITE_KEY: '9a82e394-bf54-4d36-8e8a-ed9e1f94f7fe'
   };
 
   function currentApiUrl() {
@@ -64,8 +62,14 @@
     }
   }
 
-  // Resuelve un token de hCaptcha invisible. Si no hay site key configurada,
-  // devuelve cadena vacía (el backend entonces no verifica).
+  function track(eventName, props) {
+    try {
+      if (typeof window !== 'undefined' && window.amplitude && typeof window.amplitude.track === 'function') {
+        window.amplitude.track(eventName, props || {});
+      }
+    } catch (_) { /* noop: telemetry never breaks UX */ }
+  }
+
   function getCaptchaToken() {
     if (!CONFIG.HCAPTCHA_SITE_KEY) return Promise.resolve('');
     if (typeof window.hcaptcha === 'undefined' || !window.hcaptcha.execute) {
@@ -258,6 +262,7 @@
                 state.selectedSlot = null;
                 state.step = 'picker';
                 render();
+                track('booking_slot_viewed', { date: cell.iso });
               });
             }
           }
@@ -337,6 +342,7 @@
           state.selectedSlot = slot;
           state.step = 'form';
           render();
+          track('booking_slot_selected', { date: state.selectedIso, start: slot.start, end: slot.end });
           setTimeout(function () {
             const first = els.form.querySelector('input, textarea');
             if (first) first.focus();
@@ -415,6 +421,7 @@
         const submitBtn = els.form.querySelector('button[type="submit"]');
         const prevLabel = submitBtn ? submitBtn.textContent : '';
         if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Reservando…'; }
+        track('booking_submitted', { date: state.selectedIso, start: state.selectedSlot.start });
         try {
           const data = new FormData(els.form);
           const captchaToken = await getCaptchaToken();
@@ -424,6 +431,7 @@
             renderConfirmed(data, result);
             state.step = 'confirmed';
             render();
+            track('booking_confirmed', { date: state.selectedIso, start: state.selectedSlot.start, plan: (data.get('plan') || '').toString() });
             const h = els.confirmPanel.querySelector('[data-confirm-heading]');
             if (h) setTimeout(function () { h.focus(); }, 80);
             return;
@@ -437,11 +445,14 @@
             showFormError(bookingErrorMessage('slot_taken'));
             ensureMonthLoaded(state.viewYear, state.viewMonth);
             render();
+            track('booking_failed', { reason: 'slot_taken' });
             return;
           }
           showFormError(bookingErrorMessage(result.reason));
+          track('booking_failed', { reason: result.reason || 'unknown' });
         } catch (err) {
           showFormError('No hemos podido conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.');
+          track('booking_failed', { reason: 'network_error' });
         } finally {
           state.submitting = false;
           if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = prevLabel; }

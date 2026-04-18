@@ -44,7 +44,7 @@ document.querySelectorAll('.plan-btn[data-plan]').forEach(function(btn) {
   btn.addEventListener('click', function() {
     var plan = btn.getAttribute('data-plan');
     var hidden = document.getElementById('plan-elegido');
-    var textarea = document.getElementById('objetivo');
+    var textarea = document.getElementById('booking-objetivo');
     if (hidden) hidden.value = plan;
     if (textarea && !textarea.value.trim()) {
       textarea.placeholder = 'Me interesa el plan ' + plan + '. Quiero mejorar...';
