@@ -70,26 +70,39 @@
     } catch (_) { /* noop: telemetry never breaks UX */ }
   }
 
-  // El script se carga con ?render=<sitekey>, que crea un widget invisible
-  // automáticamente. Hay que esperar a que window.hcaptcha.execute exista
-  // antes de llamarlo o devuelve token vacío y el backend rechaza con
-  // missing_token.
-  function whenHcaptchaReady() {
-    if (!CONFIG.HCAPTCHA_SITE_KEY) return Promise.resolve(false);
-    return new Promise(function (resolve) {
-      const deadline = Date.now() + 8000;
-      (function poll() {
-        if (window.hcaptcha && window.hcaptcha.execute) return resolve(true);
-        if (Date.now() > deadline) return resolve(false);
-        setTimeout(poll, 100);
-      })();
-    });
-  }
+  // Render explícito de hCaptcha invisible: creamos un contenedor oculto y
+  // llamamos a hcaptcha.render() desde el callback onload del script. Solo
+  // entonces execute(widgetId) funciona. El patrón ?render=<sitekey> parece
+  // no rendering el widget a tiempo en algunos navegadores → token vacío.
+  let hcaptchaWidgetId = null;
+  const hcaptchaReady = new Promise(function (resolve) {
+    if (!CONFIG.HCAPTCHA_SITE_KEY) return resolve(false);
+    window.__onHcaptchaLoad = function () {
+      try {
+        let container = document.getElementById('hcaptcha-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'hcaptcha-container';
+          container.style.display = 'none';
+          document.body.appendChild(container);
+        }
+        hcaptchaWidgetId = window.hcaptcha.render('hcaptcha-container', {
+          sitekey: CONFIG.HCAPTCHA_SITE_KEY,
+          size: 'invisible'
+        });
+        resolve(true);
+      } catch (err) {
+        resolve(false);
+      }
+    };
+    setTimeout(function () { resolve(hcaptchaWidgetId !== null); }, 10000);
+  });
 
   async function getCaptchaToken() {
-    if (!(await whenHcaptchaReady())) return '';
+    if (!CONFIG.HCAPTCHA_SITE_KEY) return '';
+    if (!(await hcaptchaReady)) return '';
     try {
-      const res = await window.hcaptcha.execute(CONFIG.HCAPTCHA_SITE_KEY, { async: true });
+      const res = await window.hcaptcha.execute(hcaptchaWidgetId, { async: true });
       return (res && res.response) || '';
     } catch (err) {
       return '';
@@ -127,8 +140,7 @@
     // Carga el script de hCaptcha sólo si hay site key configurada.
     if (CONFIG.HCAPTCHA_SITE_KEY && !document.querySelector('script[data-hcaptcha]')) {
       const s = document.createElement('script');
-      s.src = 'https://js.hcaptcha.com/1/api.js?render=' +
-        encodeURIComponent(CONFIG.HCAPTCHA_SITE_KEY);
+      s.src = 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=__onHcaptchaLoad';
       s.async = true;
       s.defer = true;
       s.setAttribute('data-hcaptcha', '');
