@@ -70,17 +70,29 @@
     } catch (_) { /* noop: telemetry never breaks UX */ }
   }
 
-  function getCaptchaToken() {
-    if (!CONFIG.HCAPTCHA_SITE_KEY) return Promise.resolve('');
-    if (typeof window.hcaptcha === 'undefined' || !window.hcaptcha.execute) {
-      return Promise.resolve('');
-    }
+  // El script se carga con ?render=<sitekey>, que crea un widget invisible
+  // automáticamente. Hay que esperar a que window.hcaptcha.execute exista
+  // antes de llamarlo o devuelve token vacío y el backend rechaza con
+  // missing_token.
+  function whenHcaptchaReady() {
+    if (!CONFIG.HCAPTCHA_SITE_KEY) return Promise.resolve(false);
+    return new Promise(function (resolve) {
+      const deadline = Date.now() + 8000;
+      (function poll() {
+        if (window.hcaptcha && window.hcaptcha.execute) return resolve(true);
+        if (Date.now() > deadline) return resolve(false);
+        setTimeout(poll, 100);
+      })();
+    });
+  }
+
+  async function getCaptchaToken() {
+    if (!(await whenHcaptchaReady())) return '';
     try {
-      return Promise.resolve(window.hcaptcha.execute(CONFIG.HCAPTCHA_SITE_KEY, { async: true }))
-        .then(function (res) { return (res && res.response) || ''; })
-        .catch(function () { return ''; });
+      const res = await window.hcaptcha.execute(CONFIG.HCAPTCHA_SITE_KEY, { async: true });
+      return (res && res.response) || '';
     } catch (err) {
-      return Promise.resolve('');
+      return '';
     }
   }
 
@@ -115,7 +127,8 @@
     // Carga el script de hCaptcha sólo si hay site key configurada.
     if (CONFIG.HCAPTCHA_SITE_KEY && !document.querySelector('script[data-hcaptcha]')) {
       const s = document.createElement('script');
-      s.src = 'https://js.hcaptcha.com/1/api.js?render=explicit';
+      s.src = 'https://js.hcaptcha.com/1/api.js?render=' +
+        encodeURIComponent(CONFIG.HCAPTCHA_SITE_KEY);
       s.async = true;
       s.defer = true;
       s.setAttribute('data-hcaptcha', '');
