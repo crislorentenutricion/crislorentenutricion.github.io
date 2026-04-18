@@ -193,7 +193,6 @@
   color: var(--color-gray);
   font-size: 0.9rem;
   margin: 0 0 12px;
-  text-transform: capitalize;
 }
 .booking-slots-list {
   display: flex;
