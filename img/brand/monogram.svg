@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Cris Lorente Nutrición">
+  <title>Cris Lorente Nutrición — monograma</title>
+  <text x="4" y="104"
+        font-family="Lora, Georgia, 'Times New Roman', serif"
+        font-weight="600"
+        font-size="112"
+        fill="#4a7c59">C</text>
+  <g transform="translate(90, 10) scale(0.52)"
+     fill="#4a7c59"
+     stroke="#4a7c59"
+     stroke-width="3"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     vector-effect="non-scaling-stroke">
+    <path d="M 32 56 C 28 46 36 38 30 26 C 26 18 34 14 32 8" fill="none"/>
+    <path d="M 30 46 C 20 45 14 40 12 32 C 22 31 29 38 30 46 Z"/>
+    <path d="M 32 34 C 44 33 50 28 52 20 C 42 19 33 26 32 34 Z"/>
+    <path d="M 30 22 C 24 21 19 17 17 11 C 24 10 29 15 30 22 Z"/>
+    <ellipse cx="32" cy="8" rx="3" ry="4" stroke="none"/>
+  </g>
+</svg>
