@@ -13,9 +13,10 @@
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
   <meta property="og:title" content="{{ title }}{% if title %} — {% endif %}Cris Lorente">
   <meta property="og:description" content="{{ description }}">
-  <meta property="og:image" content="{{ site.url }}{{ ogImage or site.defaultImage }}">
-  <meta property="og:image:secure_url" content="{{ site.url }}{{ ogImage or site.defaultImage }}">
-  <meta property="og:image:type" content="image/jpeg">
+  {% set _ogImagePath = ogImage or site.defaultImage %}
+  <meta property="og:image" content="{{ site.url }}{{ _ogImagePath }}">
+  <meta property="og:image:secure_url" content="{{ site.url }}{{ _ogImagePath }}">
+  <meta property="og:image:type" content="image/{% if '.png' in _ogImagePath %}png{% else %}jpeg{% endif %}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="{{ ogImageAlt or title or site.name }}">
