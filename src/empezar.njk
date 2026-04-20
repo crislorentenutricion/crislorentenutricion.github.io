@@ -562,9 +562,11 @@ noIndex: true
           </ol>
         </div>
 
+        <p class="onb-submit-error" id="onb-submit-error" role="alert" hidden></p>
+
         <div class="onb-actions">
           <button type="button" class="btn btn-secondary" data-prev="6">← Atrás</button>
-          <button type="submit" class="btn btn-primary btn-lg">Enviar mis datos ✓</button>
+          <button type="submit" class="btn btn-primary btn-lg" id="onb-submit-btn">Enviar mis datos ✓</button>
         </div>
       </div>
 
@@ -1496,6 +1498,17 @@ noIndex: true
     margin-bottom: 0;
   }
 
+  .onb-submit-error {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    background: #fdecea;
+    border: 1px solid #f5c2c0;
+    color: #a12a25;
+    border-radius: 10px;
+    font-size: 0.94rem;
+    line-height: 1.45;
+  }
+
   /* Mobile */
   @media (max-width: 640px) {
     .onb { padding: 16px 0 64px; }
@@ -1613,10 +1626,10 @@ noIndex: true
       return valid;
     }
 
-    // Persistencia en localStorage (draft)
-    function saveDraft() {
-      if (!form) return;
+    // Recoge el form completo como objeto (único o array si el name se repite)
+    function collectFormData() {
       const data = {};
+      if (!form) return data;
       const fd = new FormData(form);
       for (const [k, v] of fd.entries()) {
         if (data[k] !== undefined) {
@@ -1625,7 +1638,13 @@ noIndex: true
           data[k] = v;
         }
       }
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+      return data;
+    }
+
+    // Persistencia en localStorage (draft)
+    function saveDraft() {
+      if (!form) return;
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectFormData())); } catch (e) {}
     }
     function loadDraft() {
       try {
@@ -1666,18 +1685,37 @@ noIndex: true
       });
     });
 
-    // Submit (solo visual — muestra paso de gracias)
+    // Submit: delega la persistencia a window.onbSubmitAnamnesis (Supabase,
+    // definido en el <script type="module"> al final del fichero).
     if (form) {
-      form.addEventListener('submit', function(e) {
+      const submitBtn = document.getElementById('onb-submit-btn');
+      const submitErr = document.getElementById('onb-submit-error');
+      const originalLabel = submitBtn ? submitBtn.textContent : '';
+      form.addEventListener('submit', async function(e) {
         e.preventDefault();
         if (!validateStep(7)) return;
-        // Personaliza nombre en paso de gracias
-        const nombreField = form.querySelector('[name="nombre"]');
-        const firstName = nombreField && nombreField.value.trim().split(/\s+/)[0] || 'tú';
-        const nameSpan = document.getElementById('onb-thanks-name');
-        if (nameSpan) nameSpan.textContent = firstName;
-        goToStep(8);
-        // En el prototipo no limpiamos localStorage — facilita volver a probar
+        if (submitErr) { submitErr.hidden = true; submitErr.textContent = ''; }
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando…'; }
+        try {
+          const data = collectFormData();
+          if (typeof window.onbSubmitAnamnesis !== 'function') {
+            throw new Error('Cliente Supabase no cargado');
+          }
+          await window.onbSubmitAnamnesis(data);
+          const nombreField = form.querySelector('[name="nombre"]');
+          const firstName = nombreField && nombreField.value.trim().split(/\s+/)[0] || 'tú';
+          const nameSpan = document.getElementById('onb-thanks-name');
+          if (nameSpan) nameSpan.textContent = firstName;
+          try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
+          goToStep(8);
+        } catch (err) {
+          console.error('onb submit', err);
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalLabel; }
+          if (submitErr) {
+            submitErr.hidden = false;
+            submitErr.textContent = 'No hemos podido guardar tus datos. Refresca la página e inténtalo de nuevo, o escríbeme por WhatsApp.';
+          }
+        }
       });
     }
 
@@ -1814,4 +1852,47 @@ noIndex: true
     // Arranca en el paso 0 (bienvenida)
     goToStep(0);
   })();
+</script>
+
+<script type="module">
+  // Cliente Supabase + auth-guard. Mismo patrón que /mi-seguimiento/index.njk.
+  // La anamnesis vive dentro del perímetro auth del PWA: sin sesión la paciente
+  // vuelve al login de Mi Seguimiento.
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const SUPABASE_URL = '{{ env.supabaseUrl }}';
+  const SUPABASE_KEY = '{{ env.supabasePublishableKey }}';
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    console.error('[empezar] Supabase env vars vacías — submit no funcionará');
+  } else {
+    const supa = createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage }
+    });
+    window.supa = supa;
+
+    supa.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION' && !session) {
+        window.location.replace('/mi-seguimiento/');
+      }
+    });
+
+    // Expone el submit real al IIFE. Lanza si no hay sesión; el handler lo
+    // convierte en mensaje visible.
+    window.onbSubmitAnamnesis = async function(data) {
+      const { data: sess } = await supa.auth.getSession();
+      const session = sess && sess.session;
+      if (!session || !session.user || !session.user.email) {
+        throw new Error('Sin sesión activa');
+      }
+      const { error } = await supa
+        .from('pacientes')
+        .update({
+          anamnesis: data,
+          anamnesis_completed_at: new Date().toISOString()
+        })
+        .eq('email', session.user.email);
+      if (error) throw error;
+    };
+  }
 </script>
