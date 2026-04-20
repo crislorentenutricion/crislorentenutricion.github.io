@@ -509,19 +509,11 @@
     white-space: nowrap;
     transition: background 0.15s ease-out, transform 0.15s ease-out;
   }
+  .ms-revision-cta-btn[hidden] { display: none; }
   .ms-revision-cta-btn:hover {
     background: var(--color-green-dark, #3a6447);
     transform: translateY(-1px);
     text-decoration: none;
-  }
-  .ms-revision-cta[data-state="done"] .ms-revision-cta-btn {
-    background: transparent;
-    color: var(--color-green) !important;
-    border: 1.5px solid var(--color-green);
-  }
-  .ms-revision-cta[data-state="done"] .ms-revision-cta-btn:hover {
-    background: var(--color-green);
-    color: #fff !important;
   }
 
   /* ---------- meals (menú del día) ---------- */
@@ -2491,14 +2483,14 @@
       if (action) {
         action.textContent = 'Enviar revisión mensual';
         action.setAttribute('href', '/mi-seguimiento/revision/');
+        action.hidden = false;
       }
     } else if (state === 'done') {
       const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : '';
       if (msg) msg.textContent = 'Revisión enviada ✓ · nos vemos ' + when;
-      if (action) {
-        action.textContent = 'Editar o repasar';
-        action.setAttribute('href', '/mi-seguimiento/revision/');
-      }
+      // Sin botón: una vez enviada no se puede editar (evita dobles submits
+      // y complejidad en el backend). La paciente ve solo el mensaje de OK.
+      if (action) action.hidden = true;
     }
   }
 

@@ -1422,6 +1422,17 @@
     });
     updateConditionals();
 
+    // Expone un salto directo a la pantalla de gracias — lo invoca el
+    // script module cuando detecta que la revisión ya está enviada para
+    // la próxima sesión. Evita que la paciente rellene el formulario una
+    // segunda vez y genere un duplicado en `revisiones`.
+    window.onbGoToThanks = function (firstName) {
+      const nameSpan = document.getElementById('onb-thanks-name');
+      if (nameSpan && firstName) nameSpan.textContent = firstName;
+      try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
+      goToStep(THANKS_STEP);
+    };
+
     goToStep(0);
   })();
 </script>
@@ -1443,22 +1454,61 @@
     });
     window.supa = supa;
 
-    supa.auth.onAuthStateChange((event, session) => {
+    supa.auth.onAuthStateChange(async (event, session) => {
       if (event !== 'INITIAL_SESSION') return;
       if (!session) {
-        // Sin sesión → volvemos al login. El gate sigue visible durante la navegación.
         const gateMsg = document.querySelector('.onb-auth-gate-msg');
         if (gateMsg) gateMsg.textContent = 'Volvamos al login…';
         window.location.replace('/mi-seguimiento/');
         return;
       }
-      // Con sesión → oculta el gate y revela el container con fade-in.
+
+      // ¿Ya enviada la revisión para la próxima sesión? Si sí, saltamos
+      // directamente a la pantalla de gracias — una vez enviada, no se
+      // puede editar (decisión Cristina 2026-04-20). Evita dobles submits
+      // y complejidad de manejo de updates.
+      let yaEnviada = false;
+      let firstName = '';
+      try {
+        const { data: pac } = await supa
+          .from('pacientes')
+          .select('id, nombre')
+          .eq('email', session.user.email)
+          .maybeSingle();
+        if (pac && pac.id) {
+          const token = String(pac.nombre || '').trim().split(/\s+/)[0] || '';
+          firstName = token ? token.charAt(0).toUpperCase() + token.slice(1).toLowerCase() : 'tú';
+          const nowIso = new Date().toISOString();
+          const { data: proxima } = await supa
+            .from('sesiones')
+            .select('id')
+            .eq('paciente_id', pac.id)
+            .gte('fecha', nowIso)
+            .order('fecha', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          if (proxima && proxima.id) {
+            const { data: rev } = await supa
+              .from('revisiones')
+              .select('id')
+              .eq('sesion_id', proxima.id)
+              .limit(1);
+            yaEnviada = !!(rev && rev.length);
+          }
+        }
+      } catch (e) {
+        console.warn('[revision] chequeo yaEnviada falló, sigo al formulario', e);
+      }
+
       const gate = document.getElementById('onb-auth-gate');
       const container = document.querySelector('.onb-container');
       if (gate) gate.hidden = true;
       if (container) {
         container.hidden = false;
         container.classList.add('onb-fade-in');
+      }
+      if (yaEnviada && typeof window.onbGoToThanks === 'function') {
+        window.onbGoToThanks(firstName);
       }
     });
 
