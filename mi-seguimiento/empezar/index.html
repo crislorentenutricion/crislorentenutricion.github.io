@@ -71,7 +71,6 @@
   <main>
     
 
-
 <section class="onb">
   
   <div id="onb-auth-gate" class="onb-auth-gate" aria-live="polite" aria-busy="true">
@@ -187,15 +186,15 @@
 
         <fieldset class="onb-fieldset">
           <legend class="onb-legend">Medidas corporales <span class="onb-optional">(opcional)</span></legend>
-          <div class="onb-hint-box onb-hint-with-action">
-            <div>
-              <strong>¿Cómo medirte?</strong> Ponte de pie, relajada, con una cinta métrica. Si ahora no puedes, déjalo en blanco y me avisas por WhatsApp.
-            </div>
-            <button type="button" class="onb-guide-btn" data-open-modal="medidas">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-              Ver guía visual
-            </button>
-          </div>
+          
+<div class="onb-hint-box onb-hint-with-action">
+  <div><strong>¿Cómo medirte?</strong> Ponte de pie, relajada, con una cinta métrica. Si ahora no puedes, déjalo en blanco y me avisas por WhatsApp.</div>
+  <button type="button" class="onb-guide-btn" data-open-modal="medidas">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    Ver guía visual
+  </button>
+</div>
+
 
           <div class="onb-grid-2">
             <div class="onb-field">
@@ -1854,8 +1853,10 @@
   }
 
   /* ======================================================
-     HINT BOX con botón de guía
+     HINT BOX con botón de guía (markup + estilos compartidos en
+     src/_includes/onb-hint-medidas.njk). Mismos estilos usados en revision.
      ====================================================== */
+  
   .onb-hint-with-action {
     display: flex;
     gap: 16px;
@@ -1887,6 +1888,12 @@
     box-shadow: 0 4px 12px var(--color-green-glow);
   }
   .onb-guide-btn svg { flex-shrink: 0; }
+  @media (max-width: 640px) {
+    .onb-hint-with-action { flex-direction: column; align-items: stretch; gap: 10px; }
+    .onb-hint-with-action > div { flex: 0 0 auto; }
+    .onb-guide-btn { justify-content: center; }
+  }
+
 
   /* ======================================================
      MODAL de guía de medidas
@@ -2234,8 +2241,6 @@
     .onb-medida { display: grid; grid-template-columns: 80px 1fr; gap: 14px; text-align: left; align-items: center; }
     .onb-medida-fig img { max-width: 180px; }
     .onb-medida-fig { margin-bottom: 0; }
-    .onb-hint-with-action { flex-direction: column; align-items: stretch; }
-    .onb-guide-btn { justify-content: center; }
   }
 </style>
 
