@@ -301,6 +301,20 @@ appleTitle: "CLN"
      ============================================================ */
   .ms-authed { padding-top: 4px; }
 
+  /* Estado "sin menú vigente": ocultamos acciones que rompen si no hay
+     menú aún (check-in, calendario, lista compra, PDF, revisión). La
+     paciente ve la bienvenida y el mensaje de "aún no hay menú" dentro
+     de .ms-today; el resto se activa en cuanto Cristina sube el menú. */
+  .ms-authed.is-locked .ms-streak,
+  .ms-authed.is-locked .ms-revision-cta,
+  .ms-authed.is-locked .ms-tip,
+  .ms-authed.is-locked .ms-check,
+  .ms-authed.is-locked .ms-calendar,
+  .ms-authed.is-locked .ms-compra-entry,
+  .ms-authed.is-locked .ms-compra,
+  .ms-authed.is-locked .ms-pdf-link,
+  .ms-authed.is-locked .ms-back-today { display: none !important; }
+
   .ms-hero {
     display: flex;
     align-items: flex-end;
@@ -2288,15 +2302,27 @@ appleTitle: "CLN"
 
     checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
     menuVigente = menu;
+
+    // Sin menú vigente, bloqueamos interacciones que dependen del menú
+    // (check-in, calendario, compra, PDF, revisión). La paciente solo ve
+    // la bienvenida + mensaje "aún no hay menú" + cerrar sesión.
+    authedView.classList.toggle('is-locked', !menu);
+
     mostrarHoy();
     renderPdfLink(menu);
     renderCompra(menu);
     renderTip();
 
-    const rota = detectarRachaRota(checkinsMap);
-
+    const rota = menu ? detectarRachaRota(checkinsMap) : false;
     const racha = renderStreak(checkinsMap);
     renderCalendar(checkinsMap);
+
+    if (!menu) {
+      // Ocultar también el CTA de revisión por si venía visible de un render previo.
+      const cta = $('#ms-revision-cta');
+      if (cta) cta.hidden = true;
+      return { racha, rota };
+    }
 
     // Recordatorio de revisión mensual — no bloquea si falla (best-effort).
     try {
