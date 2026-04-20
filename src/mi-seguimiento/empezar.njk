@@ -9,6 +9,7 @@ manifest: /mi-seguimiento/manifest.webmanifest
 appleTouchIcon: /img/mi-seguimiento/apple-touch-180.png
 appleTitle: "CLN"
 ---
+{%- import "onb-hint-medidas.njk" as hintMedidas -%}
 
 {% set categoriasAlimentos = [
   { id: "carnes", nombre: "Carnes", items: ["Pollo", "Pavo", "Ternera", "Cerdo", "Conejo", "Cordero", "Jamón york", "Pechuga de pavo fiambre"] },
@@ -140,15 +141,7 @@ appleTitle: "CLN"
 
         <fieldset class="onb-fieldset">
           <legend class="onb-legend">Medidas corporales <span class="onb-optional">(opcional)</span></legend>
-          <div class="onb-hint-box onb-hint-with-action">
-            <div>
-              <strong>¿Cómo medirte?</strong> Ponte de pie, relajada, con una cinta métrica. Si ahora no puedes, déjalo en blanco y me avisas por WhatsApp.
-            </div>
-            <button type="button" class="onb-guide-btn" data-open-modal="medidas">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-              Ver guía visual
-            </button>
-          </div>
+          {{ hintMedidas.render('<strong>¿Cómo medirte?</strong> Ponte de pie, relajada, con una cinta métrica. Si ahora no puedes, déjalo en blanco y me avisas por WhatsApp.') }}
 
           <div class="onb-grid-2">
             <div class="onb-field">
@@ -1242,39 +1235,10 @@ appleTitle: "CLN"
   }
 
   /* ======================================================
-     HINT BOX con botón de guía
+     HINT BOX con botón de guía (markup + estilos compartidos en
+     src/_includes/onb-hint-medidas.njk). Mismos estilos usados en revision.
      ====================================================== */
-  .onb-hint-with-action {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-  .onb-hint-with-action > div { flex: 1 1 260px; }
-  .onb-guide-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 18px;
-    border-radius: 100px;
-    border: 1.5px solid var(--color-green);
-    background: var(--color-white);
-    color: var(--color-green-dark);
-    font-family: var(--font-family);
-    font-size: 0.88rem;
-    font-weight: var(--font-weight-semibold);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-    flex-shrink: 0;
-  }
-  .onb-guide-btn:hover {
-    background: var(--color-green);
-    color: var(--color-white);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px var(--color-green-glow);
-  }
-  .onb-guide-btn svg { flex-shrink: 0; }
+  {{ hintMedidas.styles() | safe }}
 
   /* ======================================================
      MODAL de guía de medidas
@@ -1622,8 +1586,6 @@ appleTitle: "CLN"
     .onb-medida { display: grid; grid-template-columns: 80px 1fr; gap: 14px; text-align: left; align-items: center; }
     .onb-medida-fig img { max-width: 180px; }
     .onb-medida-fig { margin-bottom: 0; }
-    .onb-hint-with-action { flex-direction: column; align-items: stretch; }
-    .onb-guide-btn { justify-content: center; }
   }
 </style>
 
