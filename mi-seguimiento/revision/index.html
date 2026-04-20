@@ -957,7 +957,12 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px 16px;
+    /* env(safe-area-inset-*) respeta notch/home indicator en iOS.
+       Fallback a 20px para navegadores sin soporte. */
+    padding:
+      max(20px, env(safe-area-inset-top, 20px))
+      16px
+      max(20px, env(safe-area-inset-bottom, 20px));
     z-index: 1000;
     animation: onbBackdropFade 0.25s var(--ease-out);
   }
@@ -975,8 +980,9 @@
     border-radius: var(--border-radius-lg);
     max-width: 900px;
     width: 100%;
-    max-height: calc(100vh - 40px);
-    max-height: calc(100dvh - 40px);
+    /* Descontar padding del backdrop (safe-area + 20px aire) para que
+       el modal nunca quede detrás del notch o del home indicator. */
+    max-height: calc(100dvh - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 20px) - 40px);
     padding: 40px 36px 32px;
     box-shadow: var(--shadow-elevated);
     overflow-y: auto;
@@ -1114,8 +1120,17 @@
   .onb-modal-tip strong { color: var(--color-green-dark); }
 
   @media (max-width: 640px) {
-    .onb-modal-backdrop { padding: 12px 12px; }
-    .onb-modal { padding: 28px 18px 20px; border-radius: 18px; }
+    .onb-modal-backdrop {
+      padding:
+        max(12px, env(safe-area-inset-top, 12px))
+        12px
+        max(12px, env(safe-area-inset-bottom, 12px));
+    }
+    .onb-modal {
+      padding: 48px 18px 20px;
+      border-radius: 18px;
+    }
+    .onb-modal-close { top: 10px; right: 10px; width: 36px; height: 36px; }
     .onb-modal-header { margin: 0 auto 20px; padding-top: 4px; }
 
     .onb-medida-grid { grid-template-columns: 1fr; gap: 14px; }
