@@ -980,9 +980,12 @@
     border-radius: var(--border-radius-lg);
     max-width: 900px;
     width: 100%;
-    /* Descontar padding del backdrop (safe-area + 20px aire) para que
-       el modal nunca quede detrás del notch o del home indicator. */
-    max-height: calc(100dvh - env(safe-area-inset-top, 20px) - env(safe-area-inset-bottom, 20px) - 40px);
+    /* max-height: 100% es el padding-box del backdrop (ya descuenta
+       safe-area + margen porque el backdrop es quien aplica el padding).
+       Con align-items: center esto garantiza que el modal NUNCA sobresale
+       del área visible — antes el calc() daba un max-height mayor y el
+       overflow salía por arriba, visualmente "pegado al bottom". */
+    max-height: 100%;
     padding: 40px 36px 32px;
     box-shadow: var(--shadow-elevated);
     overflow-y: auto;
