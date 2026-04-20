@@ -1975,6 +1975,14 @@ appleTitle: "Mi seguimiento"
       showSinPaciente();
       return;
     }
+    // Gate M1: sin anamnesis, la paciente no ve /mi-seguimiento/ — completa
+    // el formulario en /empezar/ primero. Al enviar, el módulo Supabase de
+    // /empezar/ rellena anamnesis_completed_at y la vuelta a /mi-seguimiento/
+    // pasa el gate.
+    if (!paciente.anamnesis_completed_at) {
+      window.location.replace('/empezar/');
+      return;
+    }
     $('#ms-name').textContent = primerNombre(paciente.nombre);
 
     const today = toISO(new Date());
