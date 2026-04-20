@@ -213,17 +213,29 @@
   .onb-modal-tip strong { color: var(--color-green-dark); }
 
   @media (max-width: 640px) {
-    .onb-modal-backdrop {
-      padding:
-        max(12px, env(safe-area-inset-top, 12px))
-        12px
-        max(12px, env(safe-area-inset-bottom, 12px));
-    }
+    /* Full-screen sheet en móvil: el modal ocupa todo el viewport
+       visible, el backdrop queda SOLO detrás del notch/home indicator
+       (área no visible del usuario). Evita la franja crema que
+       aparecía entre el status bar y el modal centrado. */
+    .onb-modal-backdrop { padding: 0; }
     .onb-modal {
-      padding: 48px 18px 20px;
-      border-radius: 18px;
+      margin: 0;
+      width: 100%;
+      max-width: none;
+      min-height: 100%;
+      border-radius: 0;
+      /* padding respeta safe-area internamente + hueco para close button */
+      padding:
+        calc(env(safe-area-inset-top, 20px) + 48px)
+        18px
+        calc(env(safe-area-inset-bottom, 20px) + 20px);
     }
-    .onb-modal-close { top: 10px; right: 10px; width: 36px; height: 36px; }
+    .onb-modal-close {
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
+      right: 10px;
+      width: 36px;
+      height: 36px;
+    }
     .onb-modal-header { margin: 0 auto 20px; padding-top: 4px; }
 
     .onb-medida-grid { grid-template-columns: 1fr; gap: 14px; }
