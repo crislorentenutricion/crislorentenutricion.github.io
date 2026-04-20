@@ -764,12 +764,23 @@
     border-color: #c0392b;
     background: #fdf2f2;
   }
-  .onb-field.has-error::after {
+  .onb-field.has-error::after,
+  .onb-consent.has-error::after {
     content: attr(data-error);
     display: block;
     color: #c0392b;
     font-size: 0.82rem;
     margin-top: 6px;
+  }
+  .onb-consent.has-error {
+    border-color: #c0392b;
+    background: #fdf2f2;
+    animation: onbConsentShake 0.4s var(--ease-out);
+  }
+  @keyframes onbConsentShake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-6px); }
+    75%      { transform: translateX(6px); }
   }
 
   .onb-radios,
@@ -1225,7 +1236,7 @@
     }
 
     function markError(field, msg) {
-      const wrapper = field.closest('.onb-field');
+      const wrapper = field.closest('.onb-field, .onb-consent');
       if (wrapper) {
         wrapper.classList.add('has-error');
         wrapper.setAttribute('data-error', msg);
@@ -1269,7 +1280,8 @@
         }
       });
       if (firstInvalid) {
-        firstInvalid.closest('.onb-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const scrollTarget = firstInvalid.closest('.onb-field, .onb-consent');
+        if (scrollTarget) scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
       return valid;
     }
