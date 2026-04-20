@@ -1,6 +1,6 @@
 {
-  "name": "Mi seguimiento — Cris Lorente Nutrición",
-  "short_name": "Mi seguimiento",
+  "name": "CLN — Cris Lorente Nutrición",
+  "short_name": "CLN",
   "description": "Tu espacio privado de seguimiento nutricional.",
   "start_url": "/mi-seguimiento/",
   "scope": "/",
