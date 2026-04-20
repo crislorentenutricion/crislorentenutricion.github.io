@@ -297,34 +297,45 @@ test("getRevisionCtaState: sin próxima sesión devuelve 'hidden'", () => {
   assert.equal(getRevisionCtaState({ now }), 'hidden');
 });
 
-test("getRevisionCtaState: sesión en >48h sin revisión → 'hidden' (solo visible dentro de la ventana de 48h)", () => {
-  const now = new Date(2026, 4, 1, 10, 0);
-  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 10, 0) }; // +4 días
+// La ventana del CTA está alineada con el cron Apps Script: se abre el día
+// (sesión − 2 días civiles) a las 09:00 locales (hora de envío del email).
+
+test("getRevisionCtaState: sesión dentro de 3 días completos sin revisión → 'hidden'", () => {
+  // Sesión el día 5 a las 14:00; now es el día 2 a las 10:00 (email aún no enviado).
+  const now = new Date(2026, 4, 2, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
   assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'hidden');
 });
 
-test("getRevisionCtaState: sesión a +49h sin revisión → 'hidden' (una hora fuera de la ventana)", () => {
-  const now = new Date(2026, 4, 1, 10, 0);
-  const proxima = { id: 's1', fecha: new Date(2026, 4, 3, 11, 0) }; // +49h
+test("getRevisionCtaState: mismo día de envío del email a las 08:59 → 'hidden' (un minuto antes)", () => {
+  // Sesión el día 5; email se envía el día 3 a las 09:00. now = día 3 a las 08:59.
+  const now = new Date(2026, 4, 3, 8, 59);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
   assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'hidden');
 });
 
-test("getRevisionCtaState: sesión en ≤48h sin revisión → 'urgent'", () => {
-  const now = new Date(2026, 4, 1, 10, 0);
-  const proxima = { id: 's1', fecha: new Date(2026, 4, 3, 9, 0) }; // +47h
+test("getRevisionCtaState: mismo día de envío del email a las 09:00 → 'urgent' (ya se envió)", () => {
+  const now = new Date(2026, 4, 3, 9, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
   assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'urgent');
 });
 
-test("getRevisionCtaState: sesión en el límite de 48h redondo → 'urgent'", () => {
-  const now = new Date(2026, 4, 1, 10, 0);
-  const proxima = { id: 's1', fecha: new Date(2026, 4, 3, 10, 0) }; // exactamente +48h
+test("getRevisionCtaState: sesión mañana a cualquier hora → 'urgent'", () => {
+  const now = new Date(2026, 4, 4, 20, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'urgent');
+});
+
+test("getRevisionCtaState: sesión hoy a la misma hora → 'urgent'", () => {
+  const now = new Date(2026, 4, 5, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
   assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'urgent');
 });
 
 test("getRevisionCtaState: revisión enviada dentro de la ventana → 'done'", () => {
-  const now = new Date(2026, 4, 1, 10, 0);
-  const proximaUrgente = { id: 's1', fecha: new Date(2026, 4, 2, 10, 0) }; // +24h
-  assert.equal(getRevisionCtaState({ proximaSesion: proximaUrgente, revisionEnviada: true, now }), 'done');
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: true, now }), 'done');
 });
 
 test("getRevisionCtaState: revisión enviada pero sesión lejana → 'hidden' (CTA oculto fuera de la ventana)", () => {
