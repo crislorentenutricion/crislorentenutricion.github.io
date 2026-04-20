@@ -3,7 +3,7 @@
   "short_name": "Mi seguimiento",
   "description": "Tu espacio privado de seguimiento nutricional.",
   "start_url": "/mi-seguimiento/",
-  "scope": "/mi-seguimiento/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f8f6f0",
