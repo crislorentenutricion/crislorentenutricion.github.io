@@ -1,0 +1,1187 @@
+---
+layout: layouts/base.njk
+title: "Revisión mensual — Cris Lorente Nutrición"
+description: "Cuéntame cómo te ha ido este mes para ajustar tu próximo menú. 4 pasos, 5 minutos."
+navActive: revision
+permalink: /revision/
+eleventyExcludeFromCollections: true
+noIndex: true
+---
+
+<section class="onb">
+  <div class="onb-container">
+
+    <!-- ============================================
+         PASO 0 — BIENVENIDA
+         ============================================ -->
+    <div class="onb-step is-active" data-step="0">
+      <div class="onb-welcome">
+        <img src="/img/cristina-profesional.jpg" alt="Cristina Lorente" class="onb-avatar" width="120" height="120">
+        <span class="overline">Revisión mensual</span>
+        <h1>¿Cómo te ha ido este mes?</h1>
+        <p class="onb-welcome-text">
+          Un ratito para contarme cómo te has sentido este mes — platos que han funcionado, los que no, cómo va tu cuerpo y tu ánimo. Con eso afino lo que viene.
+        </p>
+        <ul class="onb-welcome-list">
+          <li><span class="onb-check" aria-hidden="true">✓</span><span>Son <strong>5 minutos</strong>, en 4 pasos cortos.</span></li>
+          <li><span class="onb-check" aria-hidden="true">✓</span><span>Puedes <strong>pausar y continuar</strong> más tarde, tus respuestas se guardan.</span></li>
+          <li><span class="onb-check" aria-hidden="true">✓</span><span>Todo lo que me cuentes es <strong>confidencial</strong> y solo lo veo yo.</span></li>
+        </ul>
+        <button type="button" class="btn btn-primary btn-lg" data-next="1">Empezar →</button>
+        <p class="onb-welcome-foot">¿Tienes dudas antes? <a href="https://wa.me/34622279695" target="_blank" rel="noopener">Escríbeme por WhatsApp</a></p>
+      </div>
+    </div>
+
+    <!-- Progress bar (visible desde paso 1) -->
+    <div class="onb-progress" id="onb-progress" hidden>
+      <div class="onb-progress-meta">
+        <span>Paso <strong id="onb-step-current">1</strong> de 4</span>
+        <span id="onb-step-title">Tú y tus medidas</span>
+      </div>
+      <div class="onb-progress-track">
+        <div class="onb-progress-fill" id="onb-progress-fill"></div>
+      </div>
+    </div>
+
+    <form id="onb-form" autocomplete="on" novalidate>
+
+      <!-- ============================================
+           PASO 1 — TÚ Y TUS MEDIDAS
+           ============================================ -->
+      <div class="onb-step" data-step="1" data-title="Tú y tus medidas">
+        <span class="overline">Paso 1 de 4</span>
+        <h2>Tú y tus medidas</h2>
+        <p class="onb-subtitle">Empecemos con los datos actuales. Comparo con los del mes pasado para ver tu evolución.</p>
+
+        <fieldset class="onb-fieldset">
+          <legend class="onb-legend">Te identifico</legend>
+
+          <div class="onb-field">
+            <label for="f-nombre">Nombre completo <span class="req">*</span></label>
+            <input type="text" id="f-nombre" name="nombre" required autocomplete="name">
+          </div>
+
+          <div class="onb-field">
+            <label for="f-email">Correo electrónico <span class="req">*</span></label>
+            <input type="email" id="f-email" name="email" required autocomplete="email" inputmode="email">
+          </div>
+        </fieldset>
+
+        <fieldset class="onb-fieldset">
+          <legend class="onb-legend">Peso de hoy</legend>
+          <div class="onb-field">
+            <label for="f-peso">Peso actual (kg) <span class="req">*</span></label>
+            <input type="number" id="f-peso" name="peso" required step="0.1" min="30" max="250" inputmode="decimal">
+          </div>
+        </fieldset>
+
+        <fieldset class="onb-fieldset">
+          <legend class="onb-legend">Medidas corporales <span class="onb-optional">(opcional)</span></legend>
+          <div class="onb-hint-box onb-hint-with-action">
+            <div>
+              <strong>Recuerda medirte igual que la primera vez.</strong> Por la mañana, en ayunas y relajada. Si ahora no puedes, déjalo en blanco.
+            </div>
+            <button type="button" class="onb-guide-btn" data-open-modal="medidas">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              Ver guía visual
+            </button>
+          </div>
+
+          <div class="onb-grid-2">
+            <div class="onb-field">
+              <label for="f-cintura">Cintura (cm)</label>
+              <input type="number" id="f-cintura" name="cintura" min="40" max="200" inputmode="numeric">
+              <small class="onb-hint">A la altura del ombligo, sin apretar ni soltar.</small>
+            </div>
+            <div class="onb-field">
+              <label for="f-cadera">Cadera (cm)</label>
+              <input type="number" id="f-cadera" name="cadera" min="50" max="200" inputmode="numeric">
+              <small class="onb-hint">En el punto más ancho de los glúteos.</small>
+            </div>
+            <div class="onb-field">
+              <label for="f-pecho">Pecho (cm)</label>
+              <input type="number" id="f-pecho" name="pecho" min="50" max="200" inputmode="numeric">
+              <small class="onb-hint">Por encima del pecho, justo bajo las axilas.</small>
+            </div>
+            <div class="onb-field">
+              <label for="f-brazo">Brazo (cm)</label>
+              <input type="number" id="f-brazo" name="brazo" min="15" max="80" inputmode="numeric">
+              <small class="onb-hint">Contraído, en el punto más ancho del bíceps.</small>
+            </div>
+            <div class="onb-field">
+              <label for="f-pierna">Pierna (cm)</label>
+              <input type="number" id="f-pierna" name="pierna" min="30" max="120" inputmode="numeric">
+              <small class="onb-hint">En el punto más ancho del muslo, de pie.</small>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="onb-actions">
+          <button type="button" class="btn btn-secondary" data-prev="0">← Atrás</button>
+          <button type="button" class="btn btn-primary" data-next="2">Continuar →</button>
+        </div>
+      </div>
+
+      <!-- ============================================
+           PASO 2 — CÓMO TE HA IDO EL MENÚ
+           ============================================ -->
+      <div class="onb-step" data-step="2" data-title="Cómo te ha ido el menú">
+        <span class="overline">Paso 2 de 4</span>
+        <h2>Cómo te ha ido el menú</h2>
+        <p class="onb-subtitle">Tu feedback honesto es lo que me deja afinar el próximo menú. Cuanto más concreta, mejor.</p>
+
+        <div class="onb-field">
+          <label>¿Cómo ha ido con el menú? <span class="req">*</span></label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="adherencia" value="buena" required><span>Buena — lo he seguido sin problema</span></label>
+            <label class="onb-radio"><input type="radio" name="adherencia" value="regular"><span>Regular — he tenido algún tropiezo</span></label>
+            <label class="onb-radio"><input type="radio" name="adherencia" value="mala"><span>Mala — me ha costado bastante</span></label>
+          </div>
+        </div>
+
+        <div class="onb-field">
+          <label for="f-dificultades">¿Has tenido dificultades para seguir el menú? ¿Cuáles?</label>
+          <textarea id="f-dificultades" name="dificultades" rows="3" placeholder="Ej: falta de tiempo, no encuentro un ingrediente, no me organizo con la compra..."></textarea>
+        </div>
+
+        <div class="onb-field">
+          <label for="f-platos-no">Platos o comidas que <strong>NO</strong> te han gustado</label>
+          <textarea id="f-platos-no" name="platos_no_gustaron" rows="3" placeholder="Nómbralos con su día o comida si puedes — los retiro del próximo menú."></textarea>
+        </div>
+
+        <div class="onb-field">
+          <label for="f-platos-si">Platos o comidas que <strong>SÍ</strong> te han gustado</label>
+          <textarea id="f-platos-si" name="platos_gustaron" rows="3" placeholder="Los que repetirías sin dudar — me sirven para el próximo menú."></textarea>
+        </div>
+
+        <div class="onb-field">
+          <label>¿Has comido fuera de casa o pedido a domicilio más de lo habitual?</label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="come_fuera" value="si"><span>Sí</span></label>
+            <label class="onb-radio"><input type="radio" name="come_fuera" value="no"><span>No</span></label>
+          </div>
+        </div>
+
+        <div class="onb-actions">
+          <button type="button" class="btn btn-secondary" data-prev="1">← Atrás</button>
+          <button type="button" class="btn btn-primary" data-next="3">Continuar →</button>
+        </div>
+      </div>
+
+      <!-- ============================================
+           PASO 3 — TU BIENESTAR
+           ============================================ -->
+      <div class="onb-step" data-step="3" data-title="Tu bienestar">
+        <span class="overline">Paso 3 de 4</span>
+        <h2>Tu bienestar</h2>
+        <p class="onb-subtitle">Estas señales me dicen si el plan te está sentando bien o hay que afinar algo.</p>
+
+        <div class="onb-field">
+          <label>¿Cómo está tu nivel de energía?</label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="energia" value="bueno"><span>Bueno — con energía a lo largo del día</span></label>
+            <label class="onb-radio"><input type="radio" name="energia" value="normal"><span>Normal</span></label>
+            <label class="onb-radio"><input type="radio" name="energia" value="baja"><span>Baja — me falta energía o me canso pronto</span></label>
+          </div>
+        </div>
+
+        <div class="onb-field">
+          <label>¿Cómo es tu calidad de sueño respecto al mes anterior?</label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="sueno" value="mejor"><span>Mejor</span></label>
+            <label class="onb-radio"><input type="radio" name="sueno" value="igual"><span>Igual</span></label>
+            <label class="onb-radio"><input type="radio" name="sueno" value="peor"><span>Peor</span></label>
+          </div>
+        </div>
+
+        <div class="onb-field">
+          <label>¿Cómo va tu digestión?</label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="digestion" value="bien"><span>Bien</span></label>
+            <label class="onb-radio"><input type="radio" name="digestion" value="problema"><span>He tenido algún problema</span></label>
+          </div>
+        </div>
+
+        <div class="onb-field onb-conditional" data-show-when="digestion=problema" hidden>
+          <label for="f-digestion-detalle">Cuéntame qué ha pasado</label>
+          <textarea id="f-digestion-detalle" name="digestion_detalle" rows="2" placeholder="Ej: hinchazón después de comer, estreñimiento, acidez..."></textarea>
+        </div>
+
+        <div class="onb-field">
+          <label>¿Tienes hambre entre comidas?</label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="hambre" value="si"><span>Sí</span></label>
+            <label class="onb-radio"><input type="radio" name="hambre" value="a_veces"><span>A veces</span></label>
+            <label class="onb-radio"><input type="radio" name="hambre" value="no"><span>No</span></label>
+          </div>
+        </div>
+
+        <div class="onb-field">
+          <label>¿Sientes ansiedad o ganas de picar entre horas?</label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="ansiedad" value="si"><span>Sí</span></label>
+            <label class="onb-radio"><input type="radio" name="ansiedad" value="a_veces"><span>A veces</span></label>
+            <label class="onb-radio"><input type="radio" name="ansiedad" value="no"><span>No</span></label>
+          </div>
+        </div>
+
+        <div class="onb-field">
+          <label for="f-animo">¿Cómo te encuentras anímicamente?</label>
+          <textarea id="f-animo" name="estado_animo" rows="3" placeholder="Con tus palabras — estrés, motivación, cansancio, momentos buenos..."></textarea>
+        </div>
+
+        <div class="onb-actions">
+          <button type="button" class="btn btn-secondary" data-prev="2">← Atrás</button>
+          <button type="button" class="btn btn-primary" data-next="4">Continuar →</button>
+        </div>
+      </div>
+
+      <!-- ============================================
+           PASO 4 — ACTIVIDAD Y OBSERVACIONES
+           ============================================ -->
+      <div class="onb-step" data-step="4" data-title="Actividad y últimas preguntas">
+        <span class="overline">Paso 4 de 4</span>
+        <h2>Actividad y últimas preguntas</h2>
+        <p class="onb-subtitle">Lo último. En un par de minutos enviamos y me pongo con tu próximo menú.</p>
+
+        <div class="onb-field">
+          <label>¿Estás haciendo ejercicio?</label>
+          <div class="onb-radios">
+            <label class="onb-radio"><input type="radio" name="ejercicio" value="si"><span>Sí, como estaba previsto</span></label>
+            <label class="onb-radio"><input type="radio" name="ejercicio" value="menos"><span>Menos de lo previsto</span></label>
+            <label class="onb-radio"><input type="radio" name="ejercicio" value="no"><span>No</span></label>
+          </div>
+        </div>
+
+        <div class="onb-field">
+          <label for="f-cambios-actividad">¿Algún cambio en tu actividad física respecto al mes anterior?</label>
+          <textarea id="f-cambios-actividad" name="cambios_actividad" rows="2" placeholder="Ej: he empezado a caminar más, he dejado el gym, me han operado..."></textarea>
+        </div>
+
+        <div class="onb-field">
+          <label for="f-observaciones">¿Hay algo más que quieras contarme?</label>
+          <textarea id="f-observaciones" name="observaciones" rows="3" placeholder="Cualquier cosa que no haya preguntado y sientas que debería saber."></textarea>
+        </div>
+
+        <div class="onb-consent">
+          <label class="onb-check-item onb-check-consent">
+            <input type="checkbox" id="f-consent" name="consentimiento" required>
+            <span>
+              Confirmo que los datos son verídicos y consiento el tratamiento de mis datos personales y de salud para el seguimiento del servicio de asesoría nutricional. Ver <a href="/legal/privacidad/" target="_blank">Política de privacidad</a>. <span class="req">*</span>
+            </span>
+          </label>
+        </div>
+
+        <div class="onb-reassure">
+          <p><strong>¿Qué pasará después?</strong></p>
+          <ol>
+            <li>Recibo tus respuestas y preparo la comparativa con los datos del mes anterior.</li>
+            <li>Nos vemos en la <strong>videollamada de seguimiento</strong> para repasar juntas tu evolución, lo que te ha ido bien y los ajustes que vamos a hacer.</li>
+            <li>Después de la videollamada, en un máximo de <strong>48 horas</strong> tienes tu siguiente menú mensual por email — y también en tu zona privada <strong>Mi Seguimiento</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="onb-actions">
+          <button type="button" class="btn btn-secondary" data-prev="3">← Atrás</button>
+          <button type="submit" class="btn btn-primary btn-lg">Enviar revisión ✓</button>
+        </div>
+      </div>
+
+      <!-- ============================================
+           PASO 5 — GRACIAS
+           ============================================ -->
+      <div class="onb-step" data-step="5">
+        <div class="onb-thanks">
+          <div class="onb-thanks-icon">✓</div>
+          <h1>¡Gracias, <span id="onb-thanks-name">tú</span>!</h1>
+          <p class="onb-thanks-text">
+            He recibido tu revisión. Ahora la repaso con calma y nos vemos en la <strong>videollamada de seguimiento</strong> para verlo juntas. Después, en un máximo de <strong>48 horas</strong>, tienes tu siguiente menú mensual por email y en tu zona privada <strong>Mi Seguimiento</strong>.
+          </p>
+          <div class="onb-thanks-cards">
+            <a href="/mi-seguimiento/" class="btn btn-primary btn-lg">Ir a Mi Seguimiento</a>
+            <a href="/" class="btn btn-secondary">Volver al inicio</a>
+          </div>
+          <p class="onb-thanks-foot">Mientras esperas, puedes echarle un ojo al <a href="/blog/">blog</a> o seguirme en <a href="https://instagram.com/crislorente_nutricion" target="_blank" rel="noopener">@crislorente_nutricion</a>.</p>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- ============================================
+         MODAL: Guía visual de medidas
+         ============================================ -->
+    <div class="onb-modal-backdrop" id="modal-medidas" hidden>
+      <div class="onb-modal" role="dialog" aria-modal="true" aria-labelledby="modal-medidas-title">
+        <button type="button" class="onb-modal-close" aria-label="Cerrar guía" data-close-modal>
+          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+
+        <div class="onb-modal-header">
+          <span class="overline">Guía visual</span>
+          <h2 id="modal-medidas-title">Cómo tomarte las medidas</h2>
+          <p class="onb-modal-sub">Mídete de pie, relajada, en ropa interior o ropa ajustada. Por la mañana en ayunas, mejor. Usa una cinta métrica flexible.</p>
+        </div>
+
+        <div class="onb-medida-grid">
+          <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">1</span>
+            <div class="onb-medida-fig">
+              <img src="/img/medidas/medida-cintura.png" alt="Silueta femenina con cinta métrica en la cintura" loading="lazy" width="600" height="343">
+            </div>
+            <h3>Cintura</h3>
+            <p>A la altura del <strong>ombligo</strong>, ni muy apretada ni muy suelta. Respira normal y relaja el abdomen.</p>
+          </article>
+
+          <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">2</span>
+            <div class="onb-medida-fig">
+              <img src="/img/medidas/medida-cadera.png" alt="Silueta femenina con cinta métrica en la cadera" loading="lazy" width="600" height="343">
+            </div>
+            <h3>Cadera</h3>
+            <p>En la <strong>parte más ancha</strong> de los glúteos. De pie, pies juntos, sin apretar.</p>
+          </article>
+
+          <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">3</span>
+            <div class="onb-medida-fig">
+              <img src="/img/medidas/medida-pecho.png" alt="Silueta femenina con cinta métrica en el pecho" loading="lazy" width="600" height="343">
+            </div>
+            <h3>Pecho</h3>
+            <p>Por el <strong>punto más ancho</strong>, justo por debajo de las axilas. Brazos relajados a los lados.</p>
+          </article>
+
+          <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">4</span>
+            <div class="onb-medida-fig">
+              <img src="/img/medidas/medida-brazo.png" alt="Silueta femenina con brazo flexionado y cinta métrica en el bíceps" loading="lazy" width="600" height="343">
+            </div>
+            <h3>Brazo</h3>
+            <p>Contraído, en el <strong>punto más ancho del bíceps</strong>. Usa tu brazo dominante (el que más usas).</p>
+          </article>
+
+          <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">5</span>
+            <div class="onb-medida-fig">
+              <img src="/img/medidas/medida-pierna.png" alt="Silueta femenina con cinta métrica en el muslo" loading="lazy" width="600" height="343">
+            </div>
+            <h3>Pierna</h3>
+            <p>En el <strong>punto más ancho del muslo</strong>, de pie y relajada. Usa la pierna dominante.</p>
+          </article>
+        </div>
+
+        <div class="onb-modal-foot">
+          <button type="button" class="btn btn-primary" data-close-modal>Entendido, volver al formulario</button>
+          <p class="onb-modal-tip">💡 Mídete siempre <strong>por la mañana en ayunas</strong> y el <strong>mismo día de la semana</strong>. Así los cambios son comparables.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  /* ======================================================
+     ONBOARDING — mismas clases .onb-* que /empezar/
+     (duplicado inline; si se extrae, hacerlo en ambos sitios)
+     ====================================================== */
+
+  .onb {
+    background: var(--color-cream);
+    padding: 48px 0 96px;
+    min-height: calc(100vh - 200px);
+  }
+  .onb-container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-left: max(var(--container-padding), env(safe-area-inset-left));
+    padding-right: max(var(--container-padding), env(safe-area-inset-right));
+  }
+
+  .onb-progress {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-cream);
+    padding: 16px 0 12px;
+    margin-bottom: 24px;
+  }
+  .onb-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--color-gray);
+    margin-bottom: 8px;
+  }
+  .onb-progress-meta strong { color: var(--color-green-dark); }
+  .onb-progress-meta span:last-child {
+    color: var(--color-green-dark);
+    font-weight: var(--font-weight-semibold);
+  }
+  .onb-progress-track {
+    height: 6px;
+    background: var(--color-green-muted);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .onb-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-green) 0%, #6ba37a 100%);
+    border-radius: 100px;
+    width: 0%;
+    transition: width 0.4s var(--ease-out);
+  }
+
+  .onb-step {
+    display: none;
+    background: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    padding: 48px 40px;
+    box-shadow: var(--shadow-card);
+    border: 1px solid var(--color-border);
+    animation: onbFadeIn 0.4s var(--ease-out);
+  }
+  .onb-step.is-active { display: block; }
+
+  @keyframes onbFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .onb-step h1, .onb-step h2 {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+  .onb-step h1 { font-size: clamp(1.8rem, 4vw, 2.4rem); }
+  .onb-step h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  .onb-subtitle {
+    color: var(--color-gray);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  .onb-welcome { text-align: center; padding: 16px 0; }
+  .onb-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 20px;
+    border: 3px solid var(--color-green-muted);
+    display: block;
+  }
+  .onb-welcome-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--color-gray);
+    max-width: 520px;
+    margin: 0 auto 28px;
+  }
+  .onb-welcome-list {
+    text-align: left;
+    max-width: 440px;
+    margin: 0 auto 36px;
+    list-style: none;
+    padding: 0;
+  }
+  .onb-welcome-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-border);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    line-height: 1.6;
+  }
+  .onb-welcome-list li:last-child { border-bottom: 0; }
+  .onb-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px; height: 24px;
+    background: var(--color-green-muted);
+    color: var(--color-green-dark);
+    border-radius: 50%;
+    font-weight: bold;
+    flex-shrink: 0;
+    font-size: 0.85rem;
+  }
+  .onb-welcome-foot {
+    margin-top: 24px;
+    color: var(--color-gray);
+    font-size: 0.9rem;
+  }
+
+  .onb-fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0 0 32px 0;
+  }
+  .onb-legend {
+    font-weight: var(--font-weight-bold);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: var(--letter-spacing-wide);
+    color: var(--color-green);
+    margin-bottom: 16px;
+    display: block;
+    padding: 0;
+  }
+  .onb-optional {
+    color: var(--color-gray);
+    font-weight: var(--font-weight-regular);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.75rem;
+  }
+
+  .onb-field {
+    margin-bottom: 20px;
+  }
+  .onb-field label {
+    display: block;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-black);
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .onb-field label .req {
+    color: #c0392b;
+    font-weight: var(--font-weight-regular);
+  }
+  .onb-field input[type="text"],
+  .onb-field input[type="email"],
+  .onb-field input[type="tel"],
+  .onb-field input[type="number"],
+  .onb-field input[type="date"],
+  .onb-field select,
+  .onb-field textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    font-family: var(--font-family);
+    font-size: 1rem;
+    background: var(--color-white);
+    color: var(--color-black);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  }
+  .onb-field input:focus,
+  .onb-field select:focus,
+  .onb-field textarea:focus {
+    outline: 0;
+    border-color: var(--color-green);
+    box-shadow: 0 0 0 3px var(--color-green-tint);
+  }
+  .onb-field textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.6;
+  }
+  .onb-hint {
+    display: block;
+    color: var(--color-gray);
+    font-size: 0.82rem;
+    margin-top: 6px;
+    line-height: 1.5;
+    font-weight: var(--font-weight-regular);
+  }
+  .onb-hint-box {
+    background: var(--color-green-light);
+    border-left: 3px solid var(--color-green);
+    padding: 12px 14px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 20px;
+    color: var(--color-black);
+    font-size: 0.9rem;
+  }
+  .onb-hint-box strong { color: var(--color-green-dark); }
+
+  .onb-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .onb-field.has-error input,
+  .onb-field.has-error select,
+  .onb-field.has-error textarea {
+    border-color: #c0392b;
+    background: #fdf2f2;
+  }
+  .onb-field.has-error::after {
+    content: attr(data-error);
+    display: block;
+    color: #c0392b;
+    font-size: 0.82rem;
+    margin-top: 6px;
+  }
+
+  .onb-radios,
+  .onb-checks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .onb-radio,
+  .onb-check-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    font-size: 0.95rem;
+    background: var(--color-white);
+    font-weight: var(--font-weight-regular);
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+  .onb-radio:hover,
+  .onb-check-item:hover {
+    border-color: var(--color-green);
+    background: var(--color-green-light);
+  }
+  .onb-radio input,
+  .onb-check-item input {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    margin: 0 6px 0 0;
+    accent-color: var(--color-green);
+    cursor: pointer;
+  }
+  .onb-radio span,
+  .onb-check-item span {
+    flex: 1;
+  }
+  .onb-radio input:checked ~ span,
+  .onb-check-item input:checked ~ span {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-green-dark);
+  }
+  .onb-radio:has(input:checked),
+  .onb-check-item:has(input:checked) {
+    border-color: var(--color-green);
+    background: var(--color-green-light);
+  }
+
+  .onb-conditional {
+    animation: onbConditionalIn 0.25s var(--ease-out);
+  }
+  @keyframes onbConditionalIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .onb-consent {
+    background: var(--color-green-light);
+    border: 1.5px solid var(--color-green-muted);
+    border-radius: var(--border-radius-card);
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+  .onb-check-consent {
+    align-items: flex-start;
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+  .onb-check-consent:hover {
+    background: transparent;
+    border: 0;
+  }
+  .onb-check-consent span {
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+  .onb-check-consent input {
+    margin-top: 3px;
+  }
+
+  .onb-reassure {
+    background: var(--color-cream-dark);
+    border-radius: var(--border-radius-card);
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+  .onb-reassure p {
+    margin-bottom: 12px;
+    color: var(--color-green-dark);
+  }
+  .onb-reassure ol {
+    padding-left: 20px;
+    color: var(--color-gray);
+    font-size: 0.95rem;
+    line-height: 1.7;
+  }
+  .onb-reassure ol li { margin-bottom: 6px; }
+
+  .onb-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-border);
+  }
+  .onb-actions .btn { flex: 0 1 auto; }
+
+  .onb-thanks { text-align: center; padding: 24px 0; }
+  .onb-thanks-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--color-green) 0%, #6ba37a 100%);
+    color: var(--color-white);
+    border-radius: 50%;
+    font-size: 2.8rem;
+    font-weight: bold;
+    margin: 0 auto 24px;
+    box-shadow: 0 8px 24px var(--color-green-glow);
+  }
+  .onb-thanks h1 { margin-bottom: 16px; }
+  .onb-thanks-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--color-gray);
+    max-width: 520px;
+    margin: 0 auto 36px;
+  }
+  .onb-thanks-cards {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .onb-thanks-foot {
+    color: var(--color-gray);
+    font-size: 0.9rem;
+  }
+
+  .onb-hint-with-action {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .onb-hint-with-action > div { flex: 1 1 260px; }
+  .onb-guide-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 100px;
+    border: 1.5px solid var(--color-green);
+    background: var(--color-white);
+    color: var(--color-green-dark);
+    font-family: var(--font-family);
+    font-size: 0.88rem;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+  }
+  .onb-guide-btn:hover {
+    background: var(--color-green);
+    color: var(--color-white);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--color-green-glow);
+  }
+  .onb-guide-btn svg { flex-shrink: 0; }
+
+  .onb-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 17, 17, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    z-index: 1000;
+    overflow-y: auto;
+    animation: onbBackdropFade 0.25s var(--ease-out);
+  }
+  .onb-modal-backdrop[hidden] { display: none; }
+  body:has(.onb-modal-backdrop:not([hidden])) { overflow: hidden; }
+
+  @keyframes onbBackdropFade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .onb-modal {
+    position: relative;
+    background: var(--color-white);
+    border-radius: var(--border-radius-lg);
+    max-width: 900px;
+    width: 100%;
+    padding: 40px 36px 32px;
+    box-shadow: var(--shadow-elevated);
+    animation: onbModalIn 0.3s var(--ease-out);
+    margin: auto 0;
+  }
+  @keyframes onbModalIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .onb-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 0;
+    background: var(--color-cream);
+    color: var(--color-gray);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    z-index: 2;
+  }
+  .onb-modal-close:hover {
+    background: var(--color-green);
+    color: var(--color-white);
+    transform: rotate(90deg);
+  }
+
+  .onb-modal-header {
+    text-align: center;
+    margin-bottom: 32px;
+    max-width: 580px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .onb-modal-header h2 {
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    margin: 8px 0 12px;
+  }
+  .onb-modal-sub {
+    color: var(--color-gray);
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+
+  .onb-medida-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .onb-medida {
+    position: relative;
+    background: var(--color-cream);
+    border-radius: var(--border-radius-card);
+    padding: 20px 18px;
+    text-align: center;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    border: 1px solid transparent;
+  }
+  .onb-medida:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(74,124,89,0.08);
+    border-color: var(--color-green-muted);
+  }
+  .onb-medida-num {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-green);
+    color: var(--color-white);
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(74,124,89,0.25);
+    z-index: 1;
+  }
+  .onb-medida-fig {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .onb-medida-fig img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+  }
+  .onb-medida h3 {
+    font-size: 1.05rem;
+    color: var(--color-green-dark);
+    margin-bottom: 6px;
+  }
+  .onb-medida p {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--color-black);
+    margin: 0;
+  }
+  .onb-medida p strong { color: var(--color-green-dark); }
+
+  .onb-modal-foot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+  }
+  .onb-modal-tip {
+    font-size: 0.88rem;
+    color: var(--color-gray);
+    text-align: center;
+    max-width: 520px;
+    margin: 0;
+    line-height: 1.55;
+  }
+  .onb-modal-tip strong { color: var(--color-green-dark); }
+
+  @media (max-width: 640px) {
+    .onb { padding: 16px 0 64px; }
+    .onb-step { padding: 28px 20px; border-radius: var(--border-radius-card); }
+    .onb-grid-2 { grid-template-columns: 1fr; gap: 0; }
+    .onb-actions { flex-direction: column-reverse; }
+    .onb-actions .btn { width: 100%; }
+    .onb-progress { padding: 12px 0 10px; }
+    .onb-avatar { width: 96px; height: 96px; }
+    .onb-modal-backdrop { padding: 20px 12px; }
+    .onb-modal { padding: 32px 20px 24px; }
+    .onb-medida-grid { grid-template-columns: 1fr; gap: 14px; }
+    .onb-medida { display: grid; grid-template-columns: 80px 1fr; gap: 14px; text-align: left; align-items: center; }
+    .onb-medida-fig img { max-width: 180px; }
+    .onb-medida-fig { margin-bottom: 0; }
+    .onb-hint-with-action { flex-direction: column; align-items: stretch; }
+    .onb-guide-btn { justify-content: center; }
+  }
+</style>
+
+<script>
+  (function() {
+    const steps = document.querySelectorAll('.onb-step');
+    const progress = document.getElementById('onb-progress');
+    const progressFill = document.getElementById('onb-progress-fill');
+    const stepCurrent = document.getElementById('onb-step-current');
+    const stepTitle = document.getElementById('onb-step-title');
+    const form = document.getElementById('onb-form');
+    const totalSteps = 4;
+    const STORAGE_KEY = 'rev-draft-v1';
+    const SUBMIT_STEP = 4;
+    const THANKS_STEP = 5;
+    let currentStep = 0;
+
+    function goToStep(n) {
+      steps.forEach(function(s) { s.classList.remove('is-active'); });
+      const target = document.querySelector('[data-step="' + n + '"]');
+      if (!target) return;
+      target.classList.add('is-active');
+      currentStep = n;
+      updateProgress(n);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateProgress(n) {
+      if (n === 0 || n > totalSteps) {
+        progress.hidden = true;
+      } else {
+        progress.hidden = false;
+        stepCurrent.textContent = String(n);
+        const pct = (n / totalSteps) * 100;
+        progressFill.style.width = pct + '%';
+        const target = document.querySelector('[data-step="' + n + '"]');
+        if (target && target.dataset.title) stepTitle.textContent = target.dataset.title;
+      }
+    }
+
+    function clearErrors(step) {
+      step.querySelectorAll('.has-error').forEach(function(f) {
+        f.classList.remove('has-error');
+        f.removeAttribute('data-error');
+      });
+    }
+
+    function markError(field, msg) {
+      const wrapper = field.closest('.onb-field');
+      if (wrapper) {
+        wrapper.classList.add('has-error');
+        wrapper.setAttribute('data-error', msg);
+      }
+    }
+
+    function validateStep(n) {
+      const step = document.querySelector('[data-step="' + n + '"]');
+      if (!step) return true;
+      clearErrors(step);
+      const required = step.querySelectorAll('[required]');
+      let valid = true;
+      let firstInvalid = null;
+      required.forEach(function(el) {
+        if (el.type === 'radio') {
+          const group = step.querySelectorAll('input[name="' + el.name + '"]');
+          const anyChecked = Array.from(group).some(function(r) { return r.checked; });
+          if (!anyChecked) {
+            valid = false;
+            if (!firstInvalid) firstInvalid = el;
+            markError(el, 'Elige una opción.');
+          }
+          return;
+        }
+        if (el.type === 'checkbox' && !el.checked) {
+          valid = false;
+          if (!firstInvalid) firstInvalid = el;
+          markError(el, 'Marca esta casilla para continuar.');
+          return;
+        }
+        if (!el.value.trim()) {
+          valid = false;
+          if (!firstInvalid) firstInvalid = el;
+          markError(el, 'Este campo es obligatorio.');
+          return;
+        }
+        if (el.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value)) {
+          valid = false;
+          if (!firstInvalid) firstInvalid = el;
+          markError(el, 'Revisa el formato del correo.');
+        }
+      });
+      if (firstInvalid) {
+        firstInvalid.closest('.onb-field').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return valid;
+    }
+
+    function saveDraft() {
+      if (!form) return;
+      const data = {};
+      const fd = new FormData(form);
+      for (const [k, v] of fd.entries()) {
+        if (data[k] !== undefined) {
+          data[k] = [].concat(data[k], v);
+        } else {
+          data[k] = v;
+        }
+      }
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+    }
+    function loadDraft() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+        Object.keys(data).forEach(function(name) {
+          const value = data[name];
+          const fields = form.querySelectorAll('[name="' + name + '"]');
+          if (!fields.length) return;
+          if (fields[0].type === 'radio') {
+            fields.forEach(function(f) { if (f.value === value) f.checked = true; });
+          } else if (fields[0].type === 'checkbox') {
+            const arr = Array.isArray(value) ? value : [value];
+            fields.forEach(function(f) { if (arr.indexOf(f.value) !== -1) f.checked = true; });
+          } else {
+            fields[0].value = value;
+          }
+        });
+      } catch (e) {}
+    }
+    loadDraft();
+    if (form) form.addEventListener('input', saveDraft);
+
+    document.querySelectorAll('[data-next]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const to = Number(btn.dataset.next);
+        if (validateStep(currentStep)) goToStep(to);
+      });
+    });
+    document.querySelectorAll('[data-prev]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const to = Number(btn.dataset.prev);
+        goToStep(to);
+      });
+    });
+
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (!validateStep(SUBMIT_STEP)) return;
+        const nombreField = form.querySelector('[name="nombre"]');
+        const firstName = nombreField && nombreField.value.trim().split(/\s+/)[0] || 'tú';
+        const nameSpan = document.getElementById('onb-thanks-name');
+        if (nameSpan) nameSpan.textContent = firstName;
+        goToStep(THANKS_STEP);
+        // Prototipo: no limpiamos localStorage
+      });
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById('modal-' + id);
+      if (!modal) return;
+      modal.hidden = false;
+      const closeBtn = modal.querySelector('.onb-modal-close');
+      if (closeBtn) closeBtn.focus();
+    }
+    function closeModal() {
+      document.querySelectorAll('.onb-modal-backdrop').forEach(function(m) { m.hidden = true; });
+    }
+    document.querySelectorAll('[data-open-modal]').forEach(function(btn) {
+      btn.addEventListener('click', function() { openModal(btn.dataset.openModal); });
+    });
+    document.querySelectorAll('[data-close-modal]').forEach(function(btn) {
+      btn.addEventListener('click', closeModal);
+    });
+    document.querySelectorAll('.onb-modal-backdrop').forEach(function(bd) {
+      bd.addEventListener('click', function(e) {
+        if (e.target === bd) closeModal();
+      });
+    });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    function updateConditionals() {
+      document.querySelectorAll('.onb-conditional').forEach(function(el) {
+        const rule = el.dataset.showWhen || '';
+        const parts = rule.split('=');
+        if (parts.length !== 2) return;
+        const name = parts[0];
+        const value = parts[1];
+        const input = form.querySelector('input[name="' + name + '"]:checked');
+        const show = input && input.value === value;
+        el.hidden = !show;
+        if (!show) {
+          el.querySelectorAll('input, textarea').forEach(function(f) { f.value = ''; });
+        }
+      });
+    }
+    form.querySelectorAll('input[type="radio"]').forEach(function(r) {
+      r.addEventListener('change', updateConditionals);
+    });
+    updateConditionals();
+
+    goToStep(0);
+  })();
+</script>
