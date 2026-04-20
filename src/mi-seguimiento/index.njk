@@ -2362,13 +2362,6 @@ appleTitle: "CLN"
         action.textContent = 'Enviar revisión mensual';
         action.setAttribute('href', '/mi-seguimiento/revision/');
       }
-    } else if (state === 'soon') {
-      const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : 'pronto';
-      if (msg) msg.textContent = 'Tu próxima sesión es ' + when + '.';
-      if (action) {
-        action.textContent = 'Enviar revisión (opcional)';
-        action.setAttribute('href', '/mi-seguimiento/revision/');
-      }
     } else if (state === 'done') {
       const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : '';
       if (msg) msg.textContent = 'Revisión enviada ✓ · nos vemos ' + when;

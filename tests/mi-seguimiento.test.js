@@ -297,10 +297,16 @@ test("getRevisionCtaState: sin próxima sesión devuelve 'hidden'", () => {
   assert.equal(getRevisionCtaState({ now }), 'hidden');
 });
 
-test("getRevisionCtaState: sesión en >48h sin revisión → 'soon'", () => {
+test("getRevisionCtaState: sesión en >48h sin revisión → 'hidden' (solo visible dentro de la ventana de 48h)", () => {
   const now = new Date(2026, 4, 1, 10, 0);
   const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 10, 0) }; // +4 días
-  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'soon');
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'hidden');
+});
+
+test("getRevisionCtaState: sesión a +49h sin revisión → 'hidden' (una hora fuera de la ventana)", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 3, 11, 0) }; // +49h
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'hidden');
 });
 
 test("getRevisionCtaState: sesión en ≤48h sin revisión → 'urgent'", () => {
@@ -315,12 +321,16 @@ test("getRevisionCtaState: sesión en el límite de 48h redondo → 'urgent'", (
   assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'urgent');
 });
 
-test("getRevisionCtaState: revisión ya enviada → 'done' (independiente de la ventana)", () => {
+test("getRevisionCtaState: revisión enviada dentro de la ventana → 'done'", () => {
   const now = new Date(2026, 4, 1, 10, 0);
-  const proximaUrgente = { id: 's1', fecha: new Date(2026, 4, 2, 10, 0) };
-  const proximaLejana  = { id: 's2', fecha: new Date(2026, 4, 10, 10, 0) };
+  const proximaUrgente = { id: 's1', fecha: new Date(2026, 4, 2, 10, 0) }; // +24h
   assert.equal(getRevisionCtaState({ proximaSesion: proximaUrgente, revisionEnviada: true, now }), 'done');
-  assert.equal(getRevisionCtaState({ proximaSesion: proximaLejana,  revisionEnviada: true, now }), 'done');
+});
+
+test("getRevisionCtaState: revisión enviada pero sesión lejana → 'hidden' (CTA oculto fuera de la ventana)", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proximaLejana = { id: 's2', fecha: new Date(2026, 4, 10, 10, 0) }; // +9 días
+  assert.equal(getRevisionCtaState({ proximaSesion: proximaLejana, revisionEnviada: true, now }), 'hidden');
 });
 
 test("getRevisionCtaState: sesión en el pasado sin revisión → 'hidden' (ya pasó)", () => {
