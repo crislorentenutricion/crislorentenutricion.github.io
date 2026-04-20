@@ -310,6 +310,11 @@
           </div>
         </div>
 
+        <div class="onb-field onb-conditional" data-show-when="objetivo=otro" hidden>
+          <label for="f-objetivo-otro">Cuéntame cuál</label>
+          <input type="text" id="f-objetivo-otro" name="objetivo_otro" placeholder="Descríbemelo con tus palabras">
+        </div>
+
         <div class="onb-field">
           <label for="f-motivacion">¿Qué te ha motivado a buscar asesoría ahora?</label>
           <textarea id="f-motivacion" name="motivacion" rows="3" placeholder="Ej: He probado muchas cosas por mi cuenta y siento que necesito ayuda profesional..."></textarea>
@@ -373,8 +378,9 @@
           </div>
         </div>
 
-        <div class="onb-field">
+        <div class="onb-field onb-field-sensitive">
           <label>¿Has tenido o tienes algún trastorno de la conducta alimentaria?</label>
+          <p class="onb-sensitive-note">Te lo pregunto porque influye directamente en cómo diseño tu menú y el acompañamiento. Lo que me cuentes queda entre tú y yo.</p>
           <div class="onb-radios">
             <label class="onb-radio"><input type="radio" name="tca" value="nunca"><span>Nunca</span></label>
             <label class="onb-radio"><input type="radio" name="tca" value="pasado"><span>En el pasado</span></label>
@@ -414,6 +420,11 @@
             <label class="onb-radio"><input type="radio" name="alimentacion_especial" value="pescetariana"><span>Pescetariana</span></label>
             <label class="onb-radio"><input type="radio" name="alimentacion_especial" value="otra"><span>Otra</span></label>
           </div>
+        </div>
+
+        <div class="onb-field onb-conditional" data-show-when="alimentacion_especial=otra" hidden>
+          <label for="f-alimentacion-otra">¿Cuál?</label>
+          <input type="text" id="f-alimentacion-otra" name="alimentacion_especial_otra" placeholder="Ej: paleo, cetogénica, flexitariana...">
         </div>
 
         <div class="onb-actions">
@@ -1200,7 +1211,25 @@
       <div class="onb-step" data-step="7" data-title="Casi listo">
         <span class="overline">Paso 7 de 7</span>
         <h2>Ya está, solo falta tu consentimiento</h2>
-        <p class="onb-subtitle">Revisa que todo sea correcto y acepta el tratamiento de datos para que pueda trabajar con tu información.</p>
+        <p class="onb-subtitle">Echa un vistazo rápido a lo que vas a enviarme. Si algo falla, vuelve atrás y lo ajustas.</p>
+
+        <div class="onb-summary" id="onb-summary">
+          <div class="onb-summary-head">
+            <h3>Resumen de tu información</h3>
+            <button type="button" class="onb-summary-edit" data-prev="1">Editar</button>
+          </div>
+          <dl class="onb-summary-list">
+            <div><dt>Nombre</dt><dd data-sum="nombre">—</dd></div>
+            <div><dt>Email</dt><dd data-sum="email">—</dd></div>
+            <div><dt>Objetivo</dt><dd data-sum="objetivo">—</dd></div>
+            <div><dt>Peso / Altura</dt><dd data-sum="peso_altura">—</dd></div>
+            <div><dt>Comidas al día</dt><dd data-sum="num_comidas">—</dd></div>
+            <div><dt>Nivel actividad</dt><dd data-sum="nivel_actividad">—</dd></div>
+            <div><dt>Alergias</dt><dd data-sum="alergias">—</dd></div>
+            <div><dt>Condiciones</dt><dd data-sum="condiciones">—</dd></div>
+            <div><dt>Alimentación</dt><dd data-sum="alimentacion_especial">—</dd></div>
+          </dl>
+        </div>
 
         <div class="onb-consent">
           <label class="onb-check-item onb-check-consent">
@@ -1264,6 +1293,7 @@
         <div class="onb-medida-grid">
           <!-- CINTURA -->
           <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">1</span>
             <div class="onb-medida-fig">
               <img src="/img/medidas/medida-cintura.png" alt="Silueta femenina con cinta métrica en la cintura" loading="lazy" width="600" height="343">
             </div>
@@ -1273,6 +1303,7 @@
 
           <!-- CADERA -->
           <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">2</span>
             <div class="onb-medida-fig">
               <img src="/img/medidas/medida-cadera.png" alt="Silueta femenina con cinta métrica en la cadera" loading="lazy" width="600" height="343">
             </div>
@@ -1282,6 +1313,7 @@
 
           <!-- PECHO -->
           <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">3</span>
             <div class="onb-medida-fig">
               <img src="/img/medidas/medida-pecho.png" alt="Silueta femenina con cinta métrica en el pecho" loading="lazy" width="600" height="343">
             </div>
@@ -1291,6 +1323,7 @@
 
           <!-- BRAZO -->
           <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">4</span>
             <div class="onb-medida-fig">
               <img src="/img/medidas/medida-brazo.png" alt="Silueta femenina con brazo flexionado y cinta métrica en el bíceps" loading="lazy" width="600" height="343">
             </div>
@@ -1300,6 +1333,7 @@
 
           <!-- PIERNA -->
           <article class="onb-medida">
+            <span class="onb-medida-num" aria-hidden="true">5</span>
             <div class="onb-medida-fig">
               <img src="/img/medidas/medida-pierna.png" alt="Silueta femenina con cinta métrica en el muslo" loading="lazy" width="600" height="343">
             </div>
@@ -1310,6 +1344,7 @@
 
         <div class="onb-modal-foot">
           <button type="button" class="btn btn-primary" data-close-modal>Entendido, volver al formulario</button>
+          <p class="onb-modal-tip">💡 Mídete siempre <strong>por la mañana en ayunas</strong> y el <strong>mismo día de la semana</strong>. Así los cambios son comparables.</p>
         </div>
       </div>
     </div>
@@ -1621,6 +1656,92 @@
     background: var(--color-green-light);
   }
 
+  /* Campos condicionales (aparecen según respuesta) */
+  .onb-conditional {
+    animation: onbConditionalIn 0.25s var(--ease-out);
+  }
+  @keyframes onbConditionalIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Nota sensible (TCA y similares) */
+  .onb-sensitive-note {
+    background: var(--color-cream-dark);
+    border-left: 3px solid var(--color-green);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 6px 0 14px;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--color-gray);
+  }
+
+  /* Resumen antes de enviar (paso 7) */
+  .onb-summary {
+    background: var(--color-cream);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-card);
+    padding: 22px 24px;
+    margin-bottom: 28px;
+  }
+  .onb-summary-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .onb-summary-head h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--color-green-dark);
+  }
+  .onb-summary-edit {
+    background: transparent;
+    border: 1px solid var(--color-green);
+    color: var(--color-green-dark);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  .onb-summary-edit:hover {
+    background: var(--color-green);
+    color: var(--color-white);
+  }
+  .onb-summary-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px 24px;
+    margin: 0;
+  }
+  .onb-summary-list > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--color-border);
+  }
+  .onb-summary-list dt {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-gray);
+    font-weight: 500;
+  }
+  .onb-summary-list dd {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-black);
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
   /* Consent */
   .onb-consent {
     background: var(--color-green-light);
@@ -1763,6 +1884,7 @@
     overflow-y: auto;
     animation: onbBackdropFade 0.25s var(--ease-out);
   }
+  .onb-modal-backdrop[hidden] { display: none; }
   body:has(.onb-modal-backdrop:not([hidden])) { overflow: hidden; }
 
   @keyframes onbBackdropFade {
@@ -1834,6 +1956,7 @@
   }
 
   .onb-medida {
+    position: relative;
     background: var(--color-cream);
     border-radius: var(--border-radius-card);
     padding: 20px 18px;
@@ -1846,11 +1969,30 @@
     box-shadow: 0 8px 20px rgba(74,124,89,0.08);
     border-color: var(--color-green-muted);
   }
+  .onb-medida-num {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--color-green);
+    color: var(--color-white);
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    box-shadow: 0 2px 6px rgba(74,124,89,0.25);
+    z-index: 1;
+  }
   .onb-medida-fig {
     display: flex;
     justify-content: center;
     margin-bottom: 12px;
-    background: var(--color-cream);
+    background: var(--color-white);
+    border: 1px solid var(--color-border);
     border-radius: 12px;
     overflow: hidden;
   }
@@ -1875,10 +2017,21 @@
 
   .onb-modal-foot {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
     padding-top: 20px;
     border-top: 1px solid var(--color-border);
   }
+  .onb-modal-tip {
+    font-size: 0.88rem;
+    color: var(--color-gray);
+    text-align: center;
+    max-width: 520px;
+    margin: 0;
+    line-height: 1.55;
+  }
+  .onb-modal-tip strong { color: var(--color-green-dark); }
 
   /* ======================================================
      FOODS — bloques de alimentos con acordeones y chips
@@ -2073,6 +2226,7 @@
       target.classList.add('is-active');
       currentStep = n;
       updateProgress(n);
+      if (n === 7 && typeof updateSummary === 'function') updateSummary();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -2239,6 +2393,90 @@
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeModal();
     });
+
+    // Campos condicionales: mostrar / ocultar según radio seleccionado
+    function updateConditionals() {
+      document.querySelectorAll('.onb-conditional').forEach(function(el) {
+        const rule = el.dataset.showWhen || '';
+        const parts = rule.split('=');
+        if (parts.length !== 2) return;
+        const name = parts[0];
+        const value = parts[1];
+        const input = form.querySelector('input[name="' + name + '"]:checked');
+        const show = input && input.value === value;
+        el.hidden = !show;
+        if (!show) {
+          el.querySelectorAll('input, textarea').forEach(function(f) { f.value = ''; });
+        }
+      });
+    }
+    form.querySelectorAll('input[type="radio"]').forEach(function(r) {
+      r.addEventListener('change', updateConditionals);
+    });
+    updateConditionals();
+
+    // Resumen en paso 7
+    const OBJETIVO_LABELS = {
+      perder_grasa: 'Perder grasa',
+      ganar_masa: 'Ganar masa muscular',
+      'mantener_hábitos': 'Mantener peso y mejorar hábitos',
+      salud: 'Mejorar un tema de salud',
+      otro: 'Otro'
+    };
+    const ACTIVIDAD_LABELS = {
+      sedentario: 'Sedentario',
+      ligero: 'Ligero',
+      moderado: 'Moderado',
+      activo: 'Activo',
+      muy_activo: 'Muy activo'
+    };
+    const ALIMENTACION_LABELS = {
+      no: 'Sin restricciones',
+      vegetariana: 'Vegetariana',
+      vegana: 'Vegana',
+      pescetariana: 'Pescetariana',
+      otra: 'Otra'
+    };
+    function getRadio(name) {
+      const r = form.querySelector('input[name="' + name + '"]:checked');
+      return r ? r.value : '';
+    }
+    function getChecks(name) {
+      return Array.from(form.querySelectorAll('input[name="' + name + '"]:checked')).map(function(c) { return c.value; });
+    }
+    function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : ''; }
+    function updateSummary() {
+      const set = function(key, val) {
+        const el = document.querySelector('[data-sum="' + key + '"]');
+        if (el) el.textContent = val && val.length ? val : '—';
+      };
+      const nombre = (form.querySelector('[name="nombre"]') || {}).value || '';
+      const email = (form.querySelector('[name="email"]') || {}).value || '';
+      const peso = (form.querySelector('[name="peso"]') || {}).value || '';
+      const altura = (form.querySelector('[name="altura"]') || {}).value || '';
+      const objetivo = getRadio('objetivo');
+      const objetivoOtro = (form.querySelector('[name="objetivo_otro"]') || {}).value || '';
+      const numComidas = getRadio('num_comidas');
+      const nivelAct = getRadio('nivel_actividad');
+      const alergias = getChecks('alergias');
+      const condiciones = getChecks('condiciones');
+      const alim = getRadio('alimentacion_especial');
+      const alimOtra = (form.querySelector('[name="alimentacion_especial_otra"]') || {}).value || '';
+
+      set('nombre', nombre.trim());
+      set('email', email.trim());
+      let objLabel = OBJETIVO_LABELS[objetivo] || '';
+      if (objetivo === 'otro' && objetivoOtro) objLabel += ' — ' + objetivoOtro;
+      set('objetivo', objLabel);
+      set('peso_altura', (peso && altura) ? (peso + ' kg · ' + altura + ' cm') : '');
+      set('num_comidas', numComidas === 'varia' ? 'Varía' : numComidas);
+      set('nivel_actividad', ACTIVIDAD_LABELS[nivelAct] || '');
+      set('alergias', alergias.length ? alergias.map(capitalize).join(', ') : '');
+      set('condiciones', condiciones.length ? condiciones.map(capitalize).join(', ') : '');
+      let alimLabel = ALIMENTACION_LABELS[alim] || '';
+      if (alim === 'otra' && alimOtra) alimLabel += ' — ' + alimOtra;
+      set('alimentacion_especial', alimLabel);
+    }
 
     // Contador de chips marcados por categoría
     function updateFoodCounters() {
