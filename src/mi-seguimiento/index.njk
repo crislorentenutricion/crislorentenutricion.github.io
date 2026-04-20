@@ -54,18 +54,69 @@ appleTitle: "CLN"
 
   /* ============================================================
      LOADING VIEW (boot)
+     Ramita de marca que se traza, respira y acompaña al mensaje
+     editorial. El loader nunca es "un spinner": forma parte del
+     lenguaje visual de CLN (crecimiento, pausa, cuidado).
      ============================================================ */
   .ms-loading {
-    padding-top: 18vh;
+    padding-top: 14vh;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+    animation: ms-loading-in 420ms ease-out both;
+  }
+  .ms-loading[hidden] { display: none; }
+  .ms-loading-sprig {
+    width: 72px;
+    height: 72px;
+    color: var(--color-green);
+    transform-origin: 50% 82%;
+    animation: ms-loading-breathe 3s ease-in-out infinite 1500ms;
+  }
+  .ms-loading-sprig path,
+  .ms-loading-sprig circle {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: ms-loading-draw 900ms cubic-bezier(.7,.2,.2,1) forwards;
+  }
+  .ms-loading-sprig path:nth-of-type(1) { animation-delay: 0ms; }
+  .ms-loading-sprig path:nth-of-type(2) { animation-delay: 260ms; }
+  .ms-loading-sprig path:nth-of-type(3) { animation-delay: 440ms; }
+  .ms-loading-sprig path:nth-of-type(4) { animation-delay: 620ms; }
+  .ms-loading-sprig path:nth-of-type(5) { animation-delay: 800ms; }
+  .ms-loading-sprig circle { animation-delay: 1000ms; stroke-dasharray: 20; stroke-dashoffset: 20; }
+  .ms-loading-msgs {
+    position: relative;
+    height: 1.6em;
+    min-width: 240px;
     text-align: center;
   }
-  .ms-loading p {
+  .ms-loading-msg {
+    position: absolute;
+    inset: 0;
+    margin: 0;
     font-family: 'Lora', serif;
     font-style: italic;
     font-size: 1rem;
     color: #8a8678;
-    margin: 0;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 440ms ease, transform 440ms ease;
   }
+  .ms-loading-msg.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @keyframes ms-loading-draw  { to { stroke-dashoffset: 0; } }
+  @keyframes ms-loading-breathe {
+    0%, 100% { transform: scale(1);      opacity: 0.88; }
+    50%      { transform: scale(1.028);  opacity: 1; }
+  }
+  @keyframes ms-loading-in { from { opacity: 0; } to { opacity: 1; } }
 
   /* ============================================================
      LOGIN VIEW
@@ -1169,6 +1220,81 @@ appleTitle: "CLN"
     padding: 0 0 0 8px;
     cursor: pointer;
   }
+
+  /* ============================================================
+     SKELETON UTILITIES
+     Líneas y bloques con shimmer que rellenan los placeholders
+     mientras hydrate() resuelve. Se reemplazan al poner textContent
+     / innerHTML en el render correspondiente.
+     ============================================================ */
+  .sk-line {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    border-radius: 5px;
+    background: linear-gradient(90deg, #ece7d6 0%, #f6f1e2 45%, #ece7d6 90%);
+    background-size: 220% 100%;
+    animation: sk-shimmer 1.8s linear infinite;
+  }
+  .sk-line--eyebrow    { width: 150px; height: 0.78em; }
+  .sk-line--name       { width: 104px; height: 0.82em; vertical-align: baseline; background: linear-gradient(90deg, #e6ddc6 0%, #f0e7d0 45%, #e6ddc6 90%); background-size: 220% 100%; }
+  .sk-line--streak     { width: 34px;  height: 0.88em; background: linear-gradient(90deg, rgba(200,104,56,0.18) 0%, rgba(200,104,56,0.34) 45%, rgba(200,104,56,0.18) 90%); background-size: 220% 100%; border-radius: 5px; margin-top: 2px; }
+  .sk-line--meta       { width: 150px; height: 0.82em; }
+  .sk-line--meal       { display: block; width: 100%; height: 0.85em; margin: 4px 0; }
+  .sk-line--meal-short { width: 62%; }
+
+  .ms-meal.is-skeleton .ms-meal-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 4px;
+  }
+
+  .ms-cal-cell.is-loading {
+    background: linear-gradient(90deg, #efeadd 0%, #f6f1e2 45%, #efeadd 90%);
+    background-size: 220% 100%;
+    animation: sk-shimmer 1.8s linear infinite;
+    animation-delay: var(--sk-delay, 0ms);
+    color: transparent;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  @keyframes sk-shimmer {
+    0%   { background-position: 120% 0; }
+    100% { background-position: -20% 0; }
+  }
+
+  /* ============================================================
+     BUTTON LOADING STATE (sprig mini spinner)
+     Spinner inline para .ms-submit / .ms-modal-ok en curso.
+     ============================================================ */
+  .ms-btn-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: -2px;
+    color: currentColor;
+    animation: ms-btn-rotate 900ms linear infinite;
+  }
+  .ms-submit.is-loading .ms-btn-spinner,
+  .ms-modal-ok.is-loading .ms-btn-spinner {
+    display: inline-block;
+  }
+  .ms-submit.is-loading,
+  .ms-modal-ok.is-loading { cursor: progress; }
+  @keyframes ms-btn-rotate { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sk-line,
+    .ms-cal-cell.is-loading,
+    .ms-btn-spinner { animation: none; }
+    .ms-loading-sprig,
+    .ms-loading-sprig path,
+    .ms-loading-sprig circle { animation: none; stroke-dashoffset: 0; }
+    .ms-loading-msg { transition: opacity 200ms linear; transform: none; }
+  }
 </style>
 
 <div class="ms-page">
@@ -1181,8 +1307,20 @@ appleTitle: "CLN"
   </aside>
 
   {# ============================== LOADING VIEW (boot) ============================== #}
-  <section id="ms-loading" class="ms-loading" aria-live="polite">
-    <p>Cargando tu seguimiento…</p>
+  <section id="ms-loading" class="ms-loading" aria-live="polite" aria-busy="true">
+    <svg class="ms-loading-sprig" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M40 72 Q40 44 40 12" pathLength="100"/>
+      <path d="M40 55 Q27 51 19 36" pathLength="100"/>
+      <path d="M40 46 Q53 43 61 27" pathLength="100"/>
+      <path d="M40 35 Q29 32 24 18" pathLength="100"/>
+      <path d="M40 27 Q52 25 58 13" pathLength="100"/>
+      <circle cx="40" cy="10" r="1.8" fill="currentColor" stroke="none"/>
+    </svg>
+    <div class="ms-loading-msgs">
+      <p class="ms-loading-msg is-visible">Preparando tu espacio…</p>
+      <p class="ms-loading-msg">Abriendo el diario de hoy…</p>
+      <p class="ms-loading-msg">Casi listo, un momento…</p>
+    </div>
   </section>
 
   {# ============================== LOGIN VIEW ============================== #}
@@ -1223,7 +1361,10 @@ appleTitle: "CLN"
         <input id="ms-consent" type="checkbox" class="ms-consent-box" required>
         <span>Acepto el tratamiento de mis datos según la <a href="/privacidad-seguimiento/" target="_blank" rel="noopener">política de privacidad de la zona de seguimiento</a>.</span>
       </label>
-      <button type="submit" id="ms-login-submit" class="ms-submit">Enviar código</button>
+      <button type="submit" id="ms-login-submit" class="ms-submit">
+        <svg class="ms-btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="20 45"/></svg>
+        <span class="ms-submit-label">Enviar código</span>
+      </button>
       <p class="ms-login-hint">Revisa tu bandeja de entrada (y spam, por si acaso).</p>
     </form>
 
@@ -1243,7 +1384,10 @@ appleTitle: "CLN"
         placeholder="123456"
         aria-describedby="ms-otp-hint"
       >
-      <button type="submit" id="ms-otp-submit" class="ms-submit">Entrar</button>
+      <button type="submit" id="ms-otp-submit" class="ms-submit">
+        <svg class="ms-btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="20 45"/></svg>
+        <span class="ms-submit-label">Entrar</span>
+      </button>
       <p id="ms-otp-hint" class="ms-login-hint">Lo encontrarás en el correo que acabamos de enviarte.</p>
     </form>
 
@@ -1254,14 +1398,14 @@ appleTitle: "CLN"
   <section id="ms-authed" class="ms-authed" data-view="today" hidden>
     <header class="ms-hero">
       <div class="ms-hero-text">
-        <p class="ms-eyebrow" id="ms-date">Cargando…</p>
-        <h1 class="ms-greeting">Buenos días, <em id="ms-name">…</em></h1>
+        <p class="ms-eyebrow" id="ms-date"><span class="sk-line sk-line--eyebrow" aria-hidden="true"></span></p>
+        <h1 class="ms-greeting">Buenos días, <em id="ms-name"><span class="sk-line sk-line--name" aria-hidden="true"></span></em></h1>
       </div>
       <div class="ms-streak" aria-label="Racha de días seguidos">
         <svg class="ms-flame" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 2c.4 3.2 3 4.5 3 8 0 1.6-.9 3-2.2 3.7.4-1.4-.2-2.7-1.3-3.4.2 2.3-2.5 3-2.5 5.7 0 2.4 2 4 5 4s5-1.9 5-4.5c0-4.9-4.2-6.7-7-13.5z" fill="currentColor"/>
         </svg>
-        <span class="ms-streak-num" id="ms-streak-num">–</span>
+        <span class="ms-streak-num" id="ms-streak-num"><span class="sk-line sk-line--streak" aria-hidden="true"></span></span>
         <span class="ms-streak-label">días</span>
       </div>
     </header>
@@ -1279,11 +1423,11 @@ appleTitle: "CLN"
       <button type="button" class="ms-back-today" id="ms-back-today">← volver a hoy</button>
       <h2 id="ms-today-title" class="ms-section-title"><span id="ms-today-label">hoy</span></h2>
       <ol class="ms-meals" id="ms-meals">
-        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Desayuno</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
-        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Almuerzo</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
-        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Comida</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
-        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Merienda</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
-        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Cena</span><p class="ms-meal-text">Tu menú se está cargando.</p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Desayuno</span><p class="ms-meal-text" aria-label="Cargando menú"><span class="sk-line sk-line--meal" aria-hidden="true"></span><span class="sk-line sk-line--meal sk-line--meal-short" aria-hidden="true"></span></p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Almuerzo</span><p class="ms-meal-text" aria-hidden="true"><span class="sk-line sk-line--meal"></span><span class="sk-line sk-line--meal sk-line--meal-short"></span></p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Comida</span><p class="ms-meal-text" aria-hidden="true"><span class="sk-line sk-line--meal"></span><span class="sk-line sk-line--meal sk-line--meal-short"></span></p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Merienda</span><p class="ms-meal-text" aria-hidden="true"><span class="sk-line sk-line--meal"></span><span class="sk-line sk-line--meal sk-line--meal-short"></span></p></li>
+        <li class="ms-meal is-skeleton"><span class="ms-meal-time">Cena</span><p class="ms-meal-text" aria-hidden="true"><span class="sk-line sk-line--meal"></span><span class="sk-line sk-line--meal sk-line--meal-short"></span></p></li>
       </ol>
     </section>
 
@@ -1315,7 +1459,10 @@ appleTitle: "CLN"
         <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
       </div>
       <div class="ms-calendar-grid" id="ms-calendar-grid" aria-label="Calendario del mes">
-        {# Relleno con el script en Fase 5 #}
+        {# Celdas shimmer. renderCalendar() las reemplaza en cuanto llegan los checkins. #}
+        {% for i in range(0, 35) %}
+        <span class="ms-cal-cell is-loading" style="--sk-delay: {{ i * 40 }}ms" aria-hidden="true"></span>
+        {% endfor %}
       </div>
       <p class="ms-calendar-legend">
         <span><span class="ms-legend-dot is-ok"></span>lo seguí</span>
@@ -1336,7 +1483,7 @@ appleTitle: "CLN"
         </span>
         <span class="ms-compra-cta-text">
           <span class="ms-compra-cta-title">Lista de la compra</span>
-          <span class="ms-compra-cta-meta" id="ms-compra-meta">Cargando…</span>
+          <span class="ms-compra-cta-meta" id="ms-compra-meta"><span class="sk-line sk-line--meta" aria-hidden="true"></span></span>
         </span>
         <span class="ms-compra-cta-arrow" aria-hidden="true">→</span>
       </button>
@@ -1479,12 +1626,39 @@ appleTitle: "CLN"
     otpInput.value = '';
   }
 
+  // Cambia solo la etiqueta del botón (deja intacto el spinner SVG).
+  function setSubmitLabel(btn, text) {
+    if (!btn) return;
+    const label = btn.querySelector('.ms-submit-label');
+    if (label) label.textContent = text;
+    else btn.textContent = text;
+  }
+
+  // Boot loader: rota los mensajes editoriales cada 1.8s mientras esté visible.
+  // Si el boot resuelve rápido (<1.8s) el primer mensaje es el único que se ve.
+  let bootMsgTimer = null;
+  (function startBootMessages() {
+    const msgs = loadingView ? loadingView.querySelectorAll('.ms-loading-msg') : [];
+    if (!msgs || msgs.length <= 1) return;
+    let idx = 0;
+    bootMsgTimer = setInterval(() => {
+      if (loadingView.hidden) return;
+      msgs.forEach(m => m.classList.remove('is-visible'));
+      idx = (idx + 1) % msgs.length;
+      msgs[idx].classList.add('is-visible');
+    }, 1800);
+  })();
+  function stopBootMessages() {
+    if (bootMsgTimer) { clearInterval(bootMsgTimer); bootMsgTimer = null; }
+  }
+
   // Safety net + guard se registran ANTES de createClient para sobrevivir
   // a un throw síncrono (env vars vacías en dev local rompen la URL del
   // cliente y truncarían el resto del script).
   setTimeout(() => {
     if (firstRenderDone) return;
     loadingView.hidden = true;
+    stopBootMessages();
     loginView.hidden = false;
   }, 4000);
 
@@ -2282,6 +2456,7 @@ appleTitle: "CLN"
   async function render(session) {
     firstRenderDone = true;
     loadingView.hidden = true;
+    stopBootMessages();
     if (session) {
       loginView.hidden  = true;
       authedView.hidden = false;
@@ -2327,7 +2502,8 @@ appleTitle: "CLN"
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Enviando…';
+    submitBtn.classList.add('is-loading');
+    setSubmitLabel(submitBtn, 'Enviando…');
     statusEl.hidden = true;
 
     // shouldCreateUser:false → si el email no fue admitido vía /alta-paciente,
@@ -2339,7 +2515,8 @@ appleTitle: "CLN"
     });
 
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Enviar código';
+    submitBtn.classList.remove('is-loading');
+    setSubmitLabel(submitBtn, 'Enviar código');
 
     if (error) {
       console.error('signInWithOtp error:', error);
@@ -2379,7 +2556,8 @@ appleTitle: "CLN"
       return;
     }
     otpSubmit.disabled = true;
-    otpSubmit.textContent = 'Entrando…';
+    otpSubmit.classList.add('is-loading');
+    setSubmitLabel(otpSubmit, 'Entrando…');
     statusEl.hidden = true;
 
     const { error } = await supa.auth.verifyOtp({
@@ -2389,7 +2567,8 @@ appleTitle: "CLN"
     });
 
     otpSubmit.disabled = false;
-    otpSubmit.textContent = 'Entrar';
+    otpSubmit.classList.remove('is-loading');
+    setSubmitLabel(otpSubmit, 'Entrar');
 
     if (error) {
       console.error('verifyOtp error:', error);
