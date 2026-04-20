@@ -1976,11 +1976,11 @@ appleTitle: "CLN"
       return;
     }
     // Gate M1: sin anamnesis, la paciente no ve /mi-seguimiento/ — completa
-    // el formulario en /empezar/ primero. Al enviar, el módulo Supabase de
-    // /empezar/ rellena anamnesis_completed_at y la vuelta a /mi-seguimiento/
-    // pasa el gate.
+    // el formulario en /mi-seguimiento/empezar/ primero. Al enviar, el módulo
+    // Supabase de /mi-seguimiento/empezar/ rellena anamnesis_completed_at y
+    // la vuelta a /mi-seguimiento/ pasa el gate.
     if (!paciente.anamnesis_completed_at) {
-      window.location.replace('/empezar/');
+      window.location.replace('/mi-seguimiento/empezar/');
       return;
     }
     $('#ms-name').textContent = primerNombre(paciente.nombre);
