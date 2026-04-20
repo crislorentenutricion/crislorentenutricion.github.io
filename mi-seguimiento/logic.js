@@ -117,12 +117,13 @@
   //   revisionEnviada  : boolean — true si ya hay revisión vinculada a esa sesión
   //   now              : Date — inyectable para tests
   //
-  // Reglas:
-  //   - Sin próxima sesión → 'hidden' (nada que recordar).
-  //   - Sesión en >48h y sin revisión → 'soon' (variante discreta opcional).
-  //   - Sesión en ≤48h y sin revisión → 'urgent' (banner + modal).
-  //   - Revisión ya enviada → 'done' (confirmación verde).
-  //   - Sesión en el pasado (desfase reloj paciente/UTC): tratar como 'hidden'.
+  // Reglas (la sección SOLO es visible dentro de la ventana de 48h antes
+  // de la sesión — decisión Cristina 2026-04-20):
+  //   - Sin próxima sesión, sesión pasada o sesión en >48h → 'hidden'.
+  //   - Sesión en ≤48h y sin revisión → 'urgent' (banner + modal one-shot).
+  //   - Sesión en ≤48h con revisión enviada → 'done' (confirmación verde).
+  //
+  // Cambiar la ventana de 48h requiere tocar REV_URGENT_MS.
   const REV_URGENT_MS = 48 * 60 * 60 * 1000;
 
   function getRevisionCtaState(opts) {
@@ -134,10 +135,10 @@
     const sesion = proxima.fecha instanceof Date ? proxima.fecha : new Date(proxima.fecha);
     if (isNaN(sesion.getTime())) return 'hidden';
     const delta = sesion.getTime() - now.getTime();
+    if (delta < 0) return 'hidden';               // sesión pasada
+    if (delta > REV_URGENT_MS) return 'hidden';   // fuera de la ventana de 48h
     if (revisionEnviada) return 'done';
-    if (delta < 0) return 'hidden'; // sesión pasada sin revisión: el estado deja de ser relevante aquí
-    if (delta <= REV_URGENT_MS) return 'urgent';
-    return 'soon';
+    return 'urgent';
   }
 
   // Formatea la fecha de la próxima sesión en el texto del modal:
