@@ -392,6 +392,72 @@
     background: #e4dfcf;
   }
 
+  /* ---------- revision CTA (recordatorio de revisión mensual) ---------- */
+  .ms-revision-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 18px;
+    margin: 0 0 28px;
+    background: #f6f1e3;
+    border: 1px solid #e4dfcf;
+    border-left: 4px solid var(--color-green);
+    border-radius: 14px;
+  }
+  .ms-revision-cta[data-state="done"] {
+    background: #eaf3ed;
+    border-left-color: var(--color-green-dark, var(--color-green));
+  }
+  .ms-revision-cta[data-state="urgent"] {
+    background: #f0ede0;
+    border-left-color: var(--color-green);
+    box-shadow: 0 2px 10px rgba(74,124,89,0.08);
+  }
+  .ms-revision-cta-body { flex: 1 1 240px; min-width: 0; }
+  .ms-revision-cta-eyebrow {
+    display: block;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: #8a8678;
+    margin-bottom: 4px;
+  }
+  .ms-revision-cta-msg {
+    margin: 0;
+    color: #2d2a24;
+    font-size: 0.98rem;
+    line-height: 1.5;
+  }
+  .ms-revision-cta-btn {
+    display: inline-block;
+    padding: 10px 18px;
+    border-radius: 100px;
+    background: var(--color-green);
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.15s ease-out, transform 0.15s ease-out;
+  }
+  .ms-revision-cta-btn:hover {
+    background: var(--color-green-dark, #3a6447);
+    transform: translateY(-1px);
+    text-decoration: none;
+  }
+  .ms-revision-cta[data-state="done"] .ms-revision-cta-btn {
+    background: transparent;
+    color: var(--color-green) !important;
+    border: 1.5px solid var(--color-green);
+  }
+  .ms-revision-cta[data-state="done"] .ms-revision-cta-btn:hover {
+    background: var(--color-green);
+    color: #fff !important;
+  }
+
   /* ---------- meals (menú del día) ---------- */
   .ms-today { margin-bottom: 44px; }
   .ms-meals {
@@ -1123,18 +1189,23 @@
     gap: 10px;
   }
   .ms-modal-secondary {
-    background: none;
-    border: 0;
-    padding: 10px 16px;
-    font-family: 'Lora', serif;
-    font-style: italic;
-    font-size: 0.92rem;
-    color: #8a8678;
+    display: inline-block;
+    padding: 10px 22px;
+    border-radius: 100px;
+    background: transparent;
+    color: var(--color-green);
+    border: 1.5px solid var(--color-green);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
     cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    text-decoration: none;
+    transition: background 0.15s ease-out, color 0.15s ease-out;
   }
-  .ms-modal-secondary:hover { color: var(--color-green); }
+  .ms-modal-secondary:hover {
+    background: var(--color-green);
+    color: #fff;
+  }
 
   .ms-install-hint {
     display: none;
@@ -1255,6 +1326,15 @@
         <span class="ms-streak-label">días</span>
       </div>
     </header>
+
+    
+    <aside id="ms-revision-cta" class="ms-revision-cta" data-state="hidden" hidden>
+      <div class="ms-revision-cta-body">
+        <span class="ms-revision-cta-eyebrow">revisión mensual</span>
+        <p id="ms-revision-cta-msg" class="ms-revision-cta-msg">—</p>
+      </div>
+      <a id="ms-revision-cta-action" class="ms-revision-cta-btn" href="/mi-seguimiento/revision/">Enviar revisión mensual</a>
+    </aside>
 
     <section class="ms-today" aria-labelledby="ms-today-title">
       <button type="button" class="ms-back-today" id="ms-back-today">← volver a hoy</button>
@@ -1413,6 +1493,18 @@
   </div>
 
   
+  <div id="ms-revision-modal" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-revision-modal-title" hidden>
+    <div class="ms-modal">
+      <h2 id="ms-revision-modal-title" class="ms-modal-title">¡Nos vemos <em>pronto</em>! 💚</h2>
+      <p id="ms-revision-modal-body" class="ms-modal-intro">—</p>
+      <div class="ms-modal-actions">
+        <button type="button" class="ms-modal-ok" id="ms-revision-modal-go">Empezar revisión →</button>
+        <button type="button" class="ms-modal-secondary" id="ms-revision-modal-later">Ahora no</button>
+      </div>
+    </div>
+  </div>
+
+  
   <div id="ms-toast" class="ms-toast" role="status" aria-live="polite" hidden></div>
 </div>
 
@@ -1420,7 +1512,7 @@
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
   // Lógica pura (ver src/mi-seguimiento/logic.js y tests/mi-seguimiento.test.js).
-  const { toISO, detectarMilestone, countStreak, detectarRachaRota, tipDelDia, buildCalendarCells } = window.MsLogic;
+  const { toISO, detectarMilestone, countStreak, detectarRachaRota, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa } = window.MsLogic;
 
   const SUPABASE_URL = 'https://nvjoupgpncprgpemqydg.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_kcnv9Us0xUtLaYAvsxT_Qw_YOzv05RS';
@@ -1590,6 +1682,33 @@
       if (error) throw error;
       return data || [];
     }, { retries: 1, delay: 700 });
+  }
+
+  // -------- próxima sesión + estado revisión mensual --------
+  // Lee la próxima sesión futura del paciente (tabla `sesiones`) y, si existe,
+  // comprueba si ya hay revisión (tabla `revisiones`) vinculada. Devuelve un
+  // objeto plano para pasarlo a getRevisionCtaState (lógica pura en logic.js).
+  async function loadProximaSesion(pacienteId) {
+    const nowIso = new Date().toISOString();
+    const { data, error } = await supa.from('sesiones')
+      .select('id, fecha')
+      .eq('paciente_id', pacienteId)
+      .gte('fecha', nowIso)
+      .order('fecha', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (error) { console.warn('proxima sesion', error); return null; }
+    return data || null;
+  }
+
+  async function loadRevisionEnviadaParaSesion(sesionId) {
+    if (!sesionId) return false;
+    const { data, error } = await supa.from('revisiones')
+      .select('id')
+      .eq('sesion_id', sesionId)
+      .limit(1);
+    if (error) { console.warn('revision sesion', error); return false; }
+    return !!(data && data.length);
   }
 
   async function upsertCheckin(estado) {
@@ -2066,7 +2185,92 @@
     const racha = renderStreak(checkinsMap);
     renderCalendar(checkinsMap);
 
+    // Recordatorio de revisión mensual — no bloquea si falla (best-effort).
+    try {
+      const proxima = await loadProximaSesion(paciente.id);
+      const enviada = await loadRevisionEnviadaParaSesion(proxima && proxima.id);
+      renderRevisionCta({ proxima, enviada });
+      maybeMostrarRevisionModal({ proxima, enviada });
+    } catch (e) {
+      console.warn('revision cta', e);
+      renderRevisionCta({ proxima: null, enviada: false });
+    }
+
     return { racha, rota };
+  }
+
+  // -------- revision CTA + modal --------
+  function renderRevisionCta({ proxima, enviada }) {
+    const cta = $('#ms-revision-cta');
+    if (!cta) return;
+    const state = getRevisionCtaState({
+      proximaSesion: proxima,
+      revisionEnviada: enviada,
+      now: new Date()
+    });
+    cta.dataset.state = state;
+    const msg = $('#ms-revision-cta-msg');
+    const action = $('#ms-revision-cta-action');
+    if (state === 'hidden') {
+      cta.hidden = true;
+      return;
+    }
+    cta.hidden = false;
+    if (state === 'urgent') {
+      const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : 'pronto';
+      if (msg) msg.textContent = 'Tienes sesión ' + when + '. Dedica 5 minutos a la revisión antes.';
+      if (action) {
+        action.textContent = 'Enviar revisión mensual';
+        action.setAttribute('href', '/mi-seguimiento/revision/');
+      }
+    } else if (state === 'soon') {
+      const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : 'pronto';
+      if (msg) msg.textContent = 'Tu próxima sesión es ' + when + '.';
+      if (action) {
+        action.textContent = 'Enviar revisión (opcional)';
+        action.setAttribute('href', '/mi-seguimiento/revision/');
+      }
+    } else if (state === 'done') {
+      const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : '';
+      if (msg) msg.textContent = 'Revisión enviada ✓ · nos vemos ' + when;
+      if (action) {
+        action.textContent = 'Editar o repasar';
+        action.setAttribute('href', '/mi-seguimiento/revision/');
+      }
+    }
+  }
+
+  function maybeMostrarRevisionModal({ proxima, enviada }) {
+    if (!proxima || !proxima.id) return;
+    const state = getRevisionCtaState({
+      proximaSesion: proxima,
+      revisionEnviada: enviada,
+      now: new Date()
+    });
+    if (state !== 'urgent') return;
+    const key = 'rev-modal-shown:' + proxima.id;
+    try { if (localStorage.getItem(key) === '1') return; } catch (e) {}
+    const modal = $('#ms-revision-modal');
+    if (!modal) return;
+    const when = formatFechaRelativa(new Date(proxima.fecha), new Date());
+    const body = $('#ms-revision-modal-body');
+    if (body) body.textContent = 'Tenemos sesión ' + when + '. Antes de vernos, cuéntame en 5 minutos cómo ha ido este mes — los platos que han funcionado, los que no, tu energía, tu ánimo. Así afino bien tu próximo menú.';
+    modal.hidden = false;
+    const markSeen = () => { try { localStorage.setItem(key, '1'); } catch (e) {} };
+    const primary = $('#ms-revision-modal-go');
+    const secondary = $('#ms-revision-modal-later');
+    if (primary) {
+      primary.onclick = () => {
+        markSeen();
+        window.location.href = '/mi-seguimiento/revision/';
+      };
+    }
+    if (secondary) {
+      secondary.onclick = () => {
+        markSeen();
+        modal.hidden = true;
+      };
+    }
   }
 
   // -------- known-patient (B2) --------
