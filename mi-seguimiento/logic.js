@@ -117,14 +117,19 @@
   //   revisionEnviada  : boolean — true si ya hay revisión vinculada a esa sesión
   //   now              : Date — inyectable para tests
   //
-  // Reglas (la sección SOLO es visible dentro de la ventana de 48h antes
-  // de la sesión — decisión Cristina 2026-04-20):
-  //   - Sin próxima sesión, sesión pasada o sesión en >48h → 'hidden'.
-  //   - Sesión en ≤48h y sin revisión → 'urgent' (banner + modal one-shot).
-  //   - Sesión en ≤48h con revisión enviada → 'done' (confirmación verde).
+  // Reglas (decisión Cristina 2026-04-20): la sección aparece EN EL
+  // MISMO MOMENTO en que se envía el email de recordatorio por el cron
+  // Apps Script — el día (sesión - 2 días civiles) a las 9:00 locales
+  // (Europe/Madrid). Ver `scripts/apps-script/booking/reminders.js`:
+  // `REVISION_REMINDER_DIAS_ANTES=2` + `REVISION_REMINDER_HOUR=9`. Si
+  // se cambia uno, cambiar el otro.
   //
-  // Cambiar la ventana de 48h requiere tocar REV_URGENT_MS.
-  const REV_URGENT_MS = 48 * 60 * 60 * 1000;
+  //   - Sin próxima sesión o sesión pasada → 'hidden'.
+  //   - Sesión futura pero aún antes de la hora de envío → 'hidden'.
+  //   - Desde la hora de envío hasta la sesión, sin revisión → 'urgent'.
+  //   - Desde la hora de envío hasta la sesión, con revisión → 'done'.
+  const REV_REMINDER_DAYS_BEFORE = 2;
+  const REV_REMINDER_HOUR = 9;
 
   function getRevisionCtaState(opts) {
     const o = opts || {};
@@ -134,9 +139,17 @@
     if (!proxima || !proxima.fecha) return 'hidden';
     const sesion = proxima.fecha instanceof Date ? proxima.fecha : new Date(proxima.fecha);
     if (isNaN(sesion.getTime())) return 'hidden';
-    const delta = sesion.getTime() - now.getTime();
-    if (delta < 0) return 'hidden';               // sesión pasada
-    if (delta > REV_URGENT_MS) return 'hidden';   // fuera de la ventana de 48h
+    if (sesion.getTime() - now.getTime() < 0) return 'hidden';
+    // "Visible desde" = día civil de la sesión - N días, a las HH:00 locales.
+    // Con componentes locales (getFullYear/getMonth/getDate) la Date resultante
+    // también está en la zona horaria del navegador — la paciente está en España.
+    const visibleFrom = new Date(
+      sesion.getFullYear(),
+      sesion.getMonth(),
+      sesion.getDate() - REV_REMINDER_DAYS_BEFORE,
+      REV_REMINDER_HOUR, 0, 0, 0
+    );
+    if (now.getTime() < visibleFrom.getTime()) return 'hidden';
     if (revisionEnviada) return 'done';
     return 'urgent';
   }
