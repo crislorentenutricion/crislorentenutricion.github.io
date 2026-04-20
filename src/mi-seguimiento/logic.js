@@ -107,7 +107,67 @@
     return cells;
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells };
+  // -----------------------------------------------------------------
+  // Recordatorio de revisión mensual
+  // -----------------------------------------------------------------
+
+  // Estados del CTA "Enviar revisión" en la home de /mi-seguimiento/.
+  // Entradas (todas opcionales salvo `now`):
+  //   proximaSesion    : { id, fecha } | null — próxima sesión futura del paciente
+  //   revisionEnviada  : boolean — true si ya hay revisión vinculada a esa sesión
+  //   now              : Date — inyectable para tests
+  //
+  // Reglas:
+  //   - Sin próxima sesión → 'hidden' (nada que recordar).
+  //   - Sesión en >48h y sin revisión → 'soon' (variante discreta opcional).
+  //   - Sesión en ≤48h y sin revisión → 'urgent' (banner + modal).
+  //   - Revisión ya enviada → 'done' (confirmación verde).
+  //   - Sesión en el pasado (desfase reloj paciente/UTC): tratar como 'hidden'.
+  const REV_URGENT_MS = 48 * 60 * 60 * 1000;
+
+  function getRevisionCtaState(opts) {
+    const o = opts || {};
+    const proxima = o.proximaSesion;
+    const revisionEnviada = !!o.revisionEnviada;
+    const now = o.now instanceof Date ? o.now : new Date();
+    if (!proxima || !proxima.fecha) return 'hidden';
+    const sesion = proxima.fecha instanceof Date ? proxima.fecha : new Date(proxima.fecha);
+    if (isNaN(sesion.getTime())) return 'hidden';
+    const delta = sesion.getTime() - now.getTime();
+    if (revisionEnviada) return 'done';
+    if (delta < 0) return 'hidden'; // sesión pasada sin revisión: el estado deja de ser relevante aquí
+    if (delta <= REV_URGENT_MS) return 'urgent';
+    return 'soon';
+  }
+
+  // Formatea la fecha de la próxima sesión en el texto del modal:
+  //   mismo día civil  → 'hoy a las HH:MM'
+  //   día civil+1      → 'mañana a las HH:MM'
+  //   día civil+2 o +  → 'el [lunes/martes/…] a las HH:MM'
+  //
+  // Usa la zona horaria del runtime (en producción: `es-ES` con Europe/Madrid
+  // servido por el navegador de la paciente, que está en España). `now`
+  // inyectable para tests.
+  const DIAS_SEMANA_ES = [
+    'domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'
+  ];
+
+  function _pad2(n) { return String(n).padStart(2, '0'); }
+
+  function formatFechaRelativa(fecha, now) {
+    const f = fecha instanceof Date ? fecha : new Date(fecha);
+    const n = now instanceof Date ? now : new Date();
+    if (isNaN(f.getTime())) return '';
+    const hora = _pad2(f.getHours()) + ':' + _pad2(f.getMinutes());
+    const midnightNow = new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    const midnightF = new Date(f.getFullYear(), f.getMonth(), f.getDate());
+    const diffDays = Math.round((midnightF - midnightNow) / 86400000);
+    if (diffDays === 0) return 'hoy a las ' + hora;
+    if (diffDays === 1) return 'mañana a las ' + hora;
+    return 'el ' + DIAS_SEMANA_ES[f.getDay()] + ' a las ' + hora;
+  }
+
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

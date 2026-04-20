@@ -10,6 +10,8 @@ const {
   TIPS,
   tipDelDia,
   buildCalendarCells,
+  getRevisionCtaState,
+  formatFechaRelativa,
 } = require("../src/mi-seguimiento/logic.js");
 
 // ------------------------------- toISO -------------------------------
@@ -285,4 +287,94 @@ test("buildCalendarCells: año bisiesto — febrero 2024 tiene 29 días", () => 
   const days = cells.filter(c => c.type === "day");
   assert.equal(days.length, 29);
   assert.equal(days.at(-1).iso, "2024-02-29");
+});
+
+// ------------------------- getRevisionCtaState -------------------------
+
+test("getRevisionCtaState: sin próxima sesión devuelve 'hidden'", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  assert.equal(getRevisionCtaState({ proximaSesion: null, revisionEnviada: false, now }), 'hidden');
+  assert.equal(getRevisionCtaState({ now }), 'hidden');
+});
+
+test("getRevisionCtaState: sesión en >48h sin revisión → 'soon'", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 10, 0) }; // +4 días
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'soon');
+});
+
+test("getRevisionCtaState: sesión en ≤48h sin revisión → 'urgent'", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 3, 9, 0) }; // +47h
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'urgent');
+});
+
+test("getRevisionCtaState: sesión en el límite de 48h redondo → 'urgent'", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 3, 10, 0) }; // exactamente +48h
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'urgent');
+});
+
+test("getRevisionCtaState: revisión ya enviada → 'done' (independiente de la ventana)", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proximaUrgente = { id: 's1', fecha: new Date(2026, 4, 2, 10, 0) };
+  const proximaLejana  = { id: 's2', fecha: new Date(2026, 4, 10, 10, 0) };
+  assert.equal(getRevisionCtaState({ proximaSesion: proximaUrgente, revisionEnviada: true, now }), 'done');
+  assert.equal(getRevisionCtaState({ proximaSesion: proximaLejana,  revisionEnviada: true, now }), 'done');
+});
+
+test("getRevisionCtaState: sesión en el pasado sin revisión → 'hidden' (ya pasó)", () => {
+  const now = new Date(2026, 4, 5, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 3, 10, 0) };
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'hidden');
+});
+
+test("getRevisionCtaState: acepta fecha como string ISO", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 2, 10, 0).toISOString() };
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'urgent');
+});
+
+test("getRevisionCtaState: fecha inválida → 'hidden' (no rompe)", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: 'no-es-una-fecha' };
+  assert.equal(getRevisionCtaState({ proximaSesion: proxima, revisionEnviada: false, now }), 'hidden');
+});
+
+// --------------------------- formatFechaRelativa -----------------------
+
+test("formatFechaRelativa: mismo día civil → 'hoy a las HH:MM'", () => {
+  const now = new Date(2026, 4, 1, 9, 0);  // viernes 1 mayo 2026, 09:00
+  const sesion = new Date(2026, 4, 1, 17, 30);
+  assert.equal(formatFechaRelativa(sesion, now), 'hoy a las 17:30');
+});
+
+test("formatFechaRelativa: día civil +1 → 'mañana a las HH:MM'", () => {
+  const now = new Date(2026, 4, 1, 20, 0);
+  const sesion = new Date(2026, 4, 2, 9, 5);
+  assert.equal(formatFechaRelativa(sesion, now), 'mañana a las 09:05');
+});
+
+test("formatFechaRelativa: día civil +2 → 'el [dia_semana] a las HH:MM'", () => {
+  const now = new Date(2026, 4, 1, 10, 0);   // viernes 1 mayo 2026
+  const sesion = new Date(2026, 4, 3, 18, 0); // domingo 3 mayo
+  assert.equal(formatFechaRelativa(sesion, now), 'el domingo a las 18:00');
+});
+
+test("formatFechaRelativa: rellena ceros a la izquierda en la hora", () => {
+  const now = new Date(2026, 4, 1, 7, 0);
+  const sesion = new Date(2026, 4, 1, 8, 5);
+  assert.equal(formatFechaRelativa(sesion, now), 'hoy a las 08:05');
+});
+
+test("formatFechaRelativa: atraviesa cambio de mes sin romper", () => {
+  const now = new Date(2026, 3, 30, 10, 0);  // jueves 30 abril
+  const sesion = new Date(2026, 4, 1, 17, 0); // viernes 1 mayo → +1 día civil
+  assert.equal(formatFechaRelativa(sesion, now), 'mañana a las 17:00');
+});
+
+test("formatFechaRelativa: acepta strings ISO", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const sesion = new Date(2026, 4, 2, 15, 0).toISOString();
+  assert.equal(formatFechaRelativa(sesion, now), 'mañana a las 15:00');
 });
