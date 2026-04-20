@@ -1894,16 +1894,27 @@
   /* Modal "Cómo tomarte las medidas" (componente compartido con revision). */
   
   .onb-modal-backdrop {
+    /* height: 100dvh explícito (no inset: 0) — Android Chrome con URL
+       bar visible usa el layout viewport para inset, dejando el modal
+       descentrado. 100dvh es el visual viewport real. */
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100dvh;
     background: rgba(17, 17, 17, 0.55);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    /* flex + align-items: flex-start + margin: auto 0 en el modal =
+       centrado cuando cabe, scroll interno cuando no. Patrón clásico
+       bulletproof; no depende de max-height resolviéndose contra un
+       padding-box (lo que fallaba en Android Chrome). */
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    /* env(safe-area-inset-*) respeta notch/home indicator en iOS.
-       Fallback a 20px para navegadores sin soporte. */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding:
       max(20px, env(safe-area-inset-top, 20px))
       16px
@@ -1925,17 +1936,12 @@
     border-radius: var(--border-radius-lg);
     max-width: 900px;
     width: 100%;
-    /* max-height: 100% es el padding-box del backdrop (ya descuenta
-       safe-area + margen porque el backdrop es quien aplica el padding).
-       Con align-items: center esto garantiza que el modal NUNCA sobresale
-       del área visible — antes el calc() daba un max-height mayor y el
-       overflow salía por arriba, visualmente "pegado al bottom". */
-    max-height: 100%;
+    /* margin: auto 0 centra el modal en el cross-axis cuando cabe; si
+       excede el backdrop, margin auto se resuelve a 0 y el modal empieza
+       desde arriba (align-items: flex-start) — el backdrop scrollea. */
+    margin: auto 0;
     padding: 40px 36px 32px;
     box-shadow: var(--shadow-elevated);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
     animation: onbModalIn 0.3s var(--ease-out);
   }
   @keyframes onbModalIn {
