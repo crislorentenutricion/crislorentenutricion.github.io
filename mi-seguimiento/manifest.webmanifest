@@ -3,7 +3,7 @@
   "short_name": "CLN",
   "description": "Tu espacio privado de seguimiento nutricional.",
   "start_url": "/mi-seguimiento/",
-  "scope": "/",
+  "scope": "/mi-seguimiento/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f8f6f0",
