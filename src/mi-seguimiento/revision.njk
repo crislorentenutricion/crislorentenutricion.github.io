@@ -10,6 +10,7 @@ appleTouchIcon: /img/mi-seguimiento/apple-touch-180.png
 appleTitle: "CLN"
 ---
 {%- import "onb-hint-medidas.njk" as hintMedidas -%}
+{%- import "onb-modal-medidas.njk" as modalMedidas -%}
 
 <section class="onb">
   {# Gate: visible mientras onAuthStateChange confirma la sesión.
@@ -305,74 +306,7 @@ appleTitle: "CLN"
 
     </form>
 
-    <!-- ============================================
-         MODAL: Guía visual de medidas
-         ============================================ -->
-    <div class="onb-modal-backdrop" id="modal-medidas" hidden>
-      <div class="onb-modal" role="dialog" aria-modal="true" aria-labelledby="modal-medidas-title">
-        <button type="button" class="onb-modal-close" aria-label="Cerrar guía" data-close-modal>
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-
-        <div class="onb-modal-header">
-          <span class="overline">Guía visual</span>
-          <h2 id="modal-medidas-title">Cómo tomarte las medidas</h2>
-          <p class="onb-modal-sub">Mídete de pie, relajada, en ropa interior o ropa ajustada. Por la mañana en ayunas, mejor. Usa una cinta métrica flexible.</p>
-        </div>
-
-        <div class="onb-medida-grid">
-          <article class="onb-medida">
-            <span class="onb-medida-num" aria-hidden="true">1</span>
-            <div class="onb-medida-fig">
-              <img src="/img/medidas/medida-cintura.png" alt="Silueta femenina con cinta métrica en la cintura" loading="lazy" width="600" height="343">
-            </div>
-            <h3>Cintura</h3>
-            <p>A la altura del <strong>ombligo</strong>, ni muy apretada ni muy suelta. Respira normal y relaja el abdomen.</p>
-          </article>
-
-          <article class="onb-medida">
-            <span class="onb-medida-num" aria-hidden="true">2</span>
-            <div class="onb-medida-fig">
-              <img src="/img/medidas/medida-cadera.png" alt="Silueta femenina con cinta métrica en la cadera" loading="lazy" width="600" height="343">
-            </div>
-            <h3>Cadera</h3>
-            <p>En la <strong>parte más ancha</strong> de los glúteos. De pie, pies juntos, sin apretar.</p>
-          </article>
-
-          <article class="onb-medida">
-            <span class="onb-medida-num" aria-hidden="true">3</span>
-            <div class="onb-medida-fig">
-              <img src="/img/medidas/medida-pecho.png" alt="Silueta femenina con cinta métrica en el pecho" loading="lazy" width="600" height="343">
-            </div>
-            <h3>Pecho</h3>
-            <p>Por el <strong>punto más ancho</strong>, justo por debajo de las axilas. Brazos relajados a los lados.</p>
-          </article>
-
-          <article class="onb-medida">
-            <span class="onb-medida-num" aria-hidden="true">4</span>
-            <div class="onb-medida-fig">
-              <img src="/img/medidas/medida-brazo.png" alt="Silueta femenina con brazo flexionado y cinta métrica en el bíceps" loading="lazy" width="600" height="343">
-            </div>
-            <h3>Brazo</h3>
-            <p>Contraído, en el <strong>punto más ancho del bíceps</strong>. Usa tu brazo dominante (el que más usas).</p>
-          </article>
-
-          <article class="onb-medida">
-            <span class="onb-medida-num" aria-hidden="true">5</span>
-            <div class="onb-medida-fig">
-              <img src="/img/medidas/medida-pierna.png" alt="Silueta femenina con cinta métrica en el muslo" loading="lazy" width="600" height="343">
-            </div>
-            <h3>Pierna</h3>
-            <p>En el <strong>punto más ancho del muslo</strong>, de pie y relajada. Usa la pierna dominante.</p>
-          </article>
-        </div>
-
-        <div class="onb-modal-foot">
-          <button type="button" class="btn btn-primary" data-close-modal>Entendido, volver al formulario</button>
-          <p class="onb-modal-tip">💡 Mídete siempre <strong>por la mañana en ayunas</strong> y el <strong>mismo día de la semana</strong>. Así los cambios son comparables.</p>
-        </div>
-      </div>
-    </div>
+    {{ modalMedidas.render() }}
 
   </div>
 </section>
@@ -843,168 +777,8 @@ appleTitle: "CLN"
      src/_includes/onb-hint-medidas.njk (mismo en empezar.njk). */
   {{ hintMedidas.styles() | safe }}
 
-  .onb-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(17, 17, 17, 0.55);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 40px 16px;
-    z-index: 1000;
-    overflow-y: auto;
-    animation: onbBackdropFade 0.25s var(--ease-out);
-  }
-  .onb-modal-backdrop[hidden] { display: none; }
-  body:has(.onb-modal-backdrop:not([hidden])) { overflow: hidden; }
-
-  @keyframes onbBackdropFade {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  .onb-modal {
-    position: relative;
-    background: var(--color-white);
-    border-radius: var(--border-radius-lg);
-    max-width: 900px;
-    width: 100%;
-    padding: 40px 36px 32px;
-    box-shadow: var(--shadow-elevated);
-    animation: onbModalIn 0.3s var(--ease-out);
-    margin: auto 0;
-  }
-  @keyframes onbModalIn {
-    from { opacity: 0; transform: translateY(16px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  .onb-modal-close {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 0;
-    background: var(--color-cream);
-    color: var(--color-gray);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all var(--transition-fast);
-    z-index: 2;
-  }
-  .onb-modal-close:hover {
-    background: var(--color-green);
-    color: var(--color-white);
-    transform: rotate(90deg);
-  }
-
-  .onb-modal-header {
-    text-align: center;
-    margin-bottom: 32px;
-    max-width: 580px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .onb-modal-header h2 {
-    font-size: clamp(1.6rem, 3vw, 2rem);
-    margin: 8px 0 12px;
-  }
-  .onb-modal-sub {
-    color: var(--color-gray);
-    font-size: 0.95rem;
-    line-height: 1.6;
-  }
-
-  .onb-medida-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-    margin-bottom: 28px;
-  }
-
-  .onb-medida {
-    position: relative;
-    background: var(--color-cream);
-    border-radius: var(--border-radius-card);
-    padding: 20px 18px;
-    text-align: center;
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-    border: 1px solid transparent;
-  }
-  .onb-medida:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(74,124,89,0.08);
-    border-color: var(--color-green-muted);
-  }
-  .onb-medida-num {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--color-green);
-    color: var(--color-white);
-    font-size: 0.82rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
-    box-shadow: 0 2px 6px rgba(74,124,89,0.25);
-    z-index: 1;
-  }
-  .onb-medida-fig {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 12px;
-    background: var(--color-white);
-    border: 1px solid var(--color-border);
-    border-radius: 12px;
-    overflow: hidden;
-  }
-  .onb-medida-fig img {
-    width: 100%;
-    height: auto;
-    display: block;
-    object-fit: contain;
-  }
-  .onb-medida h3 {
-    font-size: 1.05rem;
-    color: var(--color-green-dark);
-    margin-bottom: 6px;
-  }
-  .onb-medida p {
-    font-size: 0.88rem;
-    line-height: 1.6;
-    color: var(--color-black);
-    margin: 0;
-  }
-  .onb-medida p strong { color: var(--color-green-dark); }
-
-  .onb-modal-foot {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    padding-top: 20px;
-    border-top: 1px solid var(--color-border);
-  }
-  .onb-modal-tip {
-    font-size: 0.88rem;
-    color: var(--color-gray);
-    text-align: center;
-    max-width: 520px;
-    margin: 0;
-    line-height: 1.55;
-  }
-  .onb-modal-tip strong { color: var(--color-green-dark); }
+  /* Modal "Cómo tomarte las medidas" (componente compartido con empezar). */
+  {{ modalMedidas.styles() | safe }}
 
   @media (max-width: 640px) {
     .onb { padding: 16px 0 64px; }
@@ -1016,12 +790,6 @@ appleTitle: "CLN"
     .onb-actions .btn { width: 100%; }
     .onb-progress { padding: 12px 0 10px; }
     .onb-avatar { width: 96px; height: 96px; }
-    .onb-modal-backdrop { padding: 20px 12px; }
-    .onb-modal { padding: 32px 20px 24px; }
-    .onb-medida-grid { grid-template-columns: 1fr; gap: 14px; }
-    .onb-medida { display: grid; grid-template-columns: 120px 1fr; gap: 4px 14px; text-align: left; align-items: start; }
-    .onb-medida-fig { grid-row: 1 / span 2; align-self: center; margin-bottom: 0; }
-    .onb-medida-fig img { max-width: 180px; }
     .onb-medida h3 { grid-column: 2; }
     .onb-medida p { grid-column: 2; }
   }
