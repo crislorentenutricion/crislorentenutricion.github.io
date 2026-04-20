@@ -253,7 +253,10 @@
       <article class="onb-medida">
         <span class="onb-medida-num" aria-hidden="true">{{ m.num }}</span>
         <div class="onb-medida-fig">
-          <img src="/img/medidas/medida-{{ m.img }}.png" alt="{{ m.alt }}" loading="lazy" width="600" height="343">
+          <picture>
+            <source srcset="/img/medidas/medida-{{ m.img }}.webp" type="image/webp">
+            <img src="/img/medidas/medida-{{ m.img }}.png" alt="{{ m.alt }}" loading="lazy" width="800" height="436">
+          </picture>
         </div>
         <h3>{{ m.nombre }}</h3>
         <p>{{ m.desc | safe }}</p>
