@@ -56,20 +56,6 @@ appleTitle: "CLN"
         <p class="onb-subtitle">Empecemos con los datos actuales. Comparo con los del mes pasado para ver tu evolución.</p>
 
         <fieldset class="onb-fieldset">
-          <legend class="onb-legend">Te identifico</legend>
-
-          <div class="onb-field">
-            <label for="f-nombre">Nombre completo <span class="req">*</span></label>
-            <input type="text" id="f-nombre" name="nombre" required autocomplete="name">
-          </div>
-
-          <div class="onb-field">
-            <label for="f-email">Correo electrónico <span class="req">*</span></label>
-            <input type="email" id="f-email" name="email" required autocomplete="email" inputmode="email">
-          </div>
-        </fieldset>
-
-        <fieldset class="onb-fieldset">
           <legend class="onb-legend">Peso de hoy</legend>
           <div class="onb-field">
             <label for="f-peso">Peso actual (kg) <span class="req">*</span></label>
@@ -463,7 +449,7 @@ appleTitle: "CLN"
     margin-bottom: 32px;
   }
 
-  .onb-welcome { text-align: center; padding: 16px 0; }
+  .onb-welcome { text-align: center; padding: 16px 0 0; }
   .onb-avatar {
     width: 120px;
     height: 120px;
@@ -509,7 +495,8 @@ appleTitle: "CLN"
     font-size: 0.85rem;
   }
   .onb-welcome-foot {
-    margin-top: 24px;
+    margin-top: 20px;
+    margin-bottom: 0;
     color: var(--color-gray);
     font-size: 0.9rem;
   }
@@ -965,6 +952,8 @@ appleTitle: "CLN"
   @media (max-width: 640px) {
     .onb { padding: 16px 0 64px; }
     .onb-step { padding: 28px 20px; border-radius: var(--border-radius-card); }
+    .onb-step[data-step="0"] { padding-bottom: 20px; }
+    .onb-welcome-list { margin-bottom: 24px; }
     .onb-grid-2 { grid-template-columns: 1fr; gap: 0; }
     .onb-actions { flex-direction: column-reverse; }
     .onb-actions .btn { width: 100%; }
@@ -976,7 +965,8 @@ appleTitle: "CLN"
     .onb-medida { display: grid; grid-template-columns: 80px 1fr; gap: 14px; text-align: left; align-items: center; }
     .onb-medida-fig img { max-width: 180px; }
     .onb-medida-fig { margin-bottom: 0; }
-    .onb-hint-with-action { flex-direction: column; align-items: stretch; }
+    .onb-hint-with-action { flex-direction: column; align-items: stretch; gap: 10px; }
+    .onb-hint-with-action > div { flex: 0 0 auto; }
     .onb-guide-btn { justify-content: center; }
   }
 </style>
@@ -1162,9 +1152,8 @@ appleTitle: "CLN"
           if (typeof window.onbSubmitRevision !== 'function') {
             throw new Error('Cliente Supabase no cargado');
           }
-          await window.onbSubmitRevision(data);
-          const nombreField = form.querySelector('[name="nombre"]');
-          const firstName = nombreField && nombreField.value.trim().split(/\s+/)[0] || 'tú';
+          const result = await window.onbSubmitRevision(data);
+          const firstName = (result && result.firstName) || 'tú';
           const nameSpan = document.getElementById('onb-thanks-name');
           if (nameSpan) nameSpan.textContent = firstName;
           try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
@@ -1259,14 +1248,20 @@ appleTitle: "CLN"
         throw new Error('Sin sesión activa');
       }
 
-      // Resuelve paciente_id por email.
+      // Resuelve paciente_id + nombre por email de sesión (la paciente no
+      // los reescribe en el formulario).
       const { data: pac, error: pacErr } = await supa
         .from('pacientes')
-        .select('id')
+        .select('id, nombre')
         .eq('email', session.user.email)
         .maybeSingle();
       if (pacErr) throw pacErr;
       if (!pac || !pac.id) throw new Error('Paciente no encontrado');
+
+      // Inyecta identidad desde la sesión: el JSONB mantiene el mismo shape
+      // (`contenido.nombre`, `contenido.email`) que el Google Form legacy.
+      data.nombre = pac.nombre || '';
+      data.email = session.user.email;
 
       // Resuelve próxima sesión futura (si existe): vincula la revisión con
       // la próxima cita para que el banner/modal de la home sepa que ya está
@@ -1291,6 +1286,11 @@ appleTitle: "CLN"
           contenido: data
         });
       if (insErr) throw insErr;
+
+      // Devuelve el primer nombre capitalizado para la pantalla de gracias.
+      const token = String(pac.nombre || '').trim().split(/\s+/)[0] || '';
+      const firstName = token ? token.charAt(0).toUpperCase() + token.slice(1).toLowerCase() : 'tú';
+      return { firstName: firstName };
     };
   }
 </script>
