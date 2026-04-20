@@ -71,7 +71,20 @@
   <main>
     
 <section class="onb">
-  <div class="onb-container">
+  
+  <div id="onb-auth-gate" class="onb-auth-gate" aria-live="polite" aria-busy="true">
+    <svg class="onb-auth-gate-sprig" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M40 72 Q40 44 40 12" pathLength="100"/>
+      <path d="M40 55 Q27 51 19 36" pathLength="100"/>
+      <path d="M40 46 Q53 43 61 27" pathLength="100"/>
+      <path d="M40 35 Q29 32 24 18" pathLength="100"/>
+      <path d="M40 27 Q52 25 58 13" pathLength="100"/>
+      <circle cx="40" cy="10" r="1.8" fill="currentColor" stroke="none"/>
+    </svg>
+    <p class="onb-auth-gate-msg">Verificando tu acceso…</p>
+  </div>
+
+  <div class="onb-container" hidden>
 
     <!-- ============================================
          PASO 0 — BIENVENIDA
@@ -331,7 +344,10 @@
 
         <div class="onb-actions">
           <button type="button" class="btn btn-secondary" data-prev="3">← Atrás</button>
-          <button type="submit" class="btn btn-primary btn-lg">Enviar revisión ✓</button>
+          <button type="submit" class="btn btn-primary btn-lg">
+            <svg class="btn-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke-dasharray="20 45"/></svg>
+            <span class="btn-label">Enviar revisión ✓</span>
+          </button>
         </div>
       </div>
 
@@ -443,6 +459,81 @@
     margin: 0 auto;
     padding-left: max(var(--container-padding), env(safe-area-inset-left));
     padding-right: max(var(--container-padding), env(safe-area-inset-right));
+  }
+  .onb-container[hidden] { display: none; }
+  .onb-fade-in { animation: onbContainerFadeIn 420ms var(--ease-out) both; }
+  @keyframes onbContainerFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============================================================
+     AUTH GATE — se muestra mientras Supabase confirma la sesión.
+     Misma ramita que /mi-seguimiento/ boot loader para coherencia.
+     ============================================================ */
+  .onb-auth-gate {
+    min-height: 60vh;
+    padding-top: 14vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+    animation: onbContainerFadeIn 320ms var(--ease-out) both;
+  }
+  .onb-auth-gate[hidden] { display: none; }
+  .onb-auth-gate-sprig {
+    width: 64px;
+    height: 64px;
+    color: var(--color-green);
+    transform-origin: 50% 82%;
+    animation: onbAuthBreathe 3s ease-in-out infinite 1400ms;
+  }
+  .onb-auth-gate-sprig path,
+  .onb-auth-gate-sprig circle {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: onbAuthDraw 900ms cubic-bezier(.7,.2,.2,1) forwards;
+  }
+  .onb-auth-gate-sprig path:nth-of-type(1) { animation-delay: 0ms; }
+  .onb-auth-gate-sprig path:nth-of-type(2) { animation-delay: 260ms; }
+  .onb-auth-gate-sprig path:nth-of-type(3) { animation-delay: 440ms; }
+  .onb-auth-gate-sprig path:nth-of-type(4) { animation-delay: 620ms; }
+  .onb-auth-gate-sprig path:nth-of-type(5) { animation-delay: 800ms; }
+  .onb-auth-gate-sprig circle { animation-delay: 1000ms; stroke-dasharray: 20; stroke-dashoffset: 20; }
+  .onb-auth-gate-msg {
+    margin: 0;
+    font-family: 'Lora', serif;
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--color-gray);
+    letter-spacing: 0.01em;
+  }
+  @keyframes onbAuthDraw { to { stroke-dashoffset: 0; } }
+  @keyframes onbAuthBreathe {
+    0%, 100% { transform: scale(1);     opacity: 0.88; }
+    50%      { transform: scale(1.028); opacity: 1; }
+  }
+
+  /* Button spinner (submit en curso) */
+  .btn-spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    vertical-align: -2px;
+    color: currentColor;
+    animation: onbBtnRotate 900ms linear infinite;
+  }
+  .btn.is-loading .btn-spinner { display: inline-block; }
+  .btn.is-loading { cursor: progress; }
+  @keyframes onbBtnRotate { to { transform: rotate(360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .onb-auth-gate-sprig,
+    .onb-auth-gate-sprig path,
+    .onb-auth-gate-sprig circle { animation: none; stroke-dashoffset: 0; }
+    .btn-spinner,
+    .onb-fade-in { animation: none; }
   }
 
   .onb-progress {
@@ -1182,7 +1273,14 @@
     // definido en el <script type="module"> al final del fichero).
     if (form) {
       const submitBtn = form.querySelector('button[type="submit"]');
-      const originalLabel = submitBtn ? submitBtn.textContent : '';
+      const submitLabelEl = submitBtn ? submitBtn.querySelector('.btn-label') : null;
+      const originalLabel = submitLabelEl
+        ? submitLabelEl.textContent
+        : (submitBtn ? submitBtn.textContent : '');
+      function setBtnLabel(text) {
+        if (submitLabelEl) submitLabelEl.textContent = text;
+        else if (submitBtn) submitBtn.textContent = text;
+      }
       let submitErr = document.getElementById('onb-submit-error');
       if (!submitErr) {
         submitErr = document.createElement('p');
@@ -1199,7 +1297,11 @@
         e.preventDefault();
         if (!validateStep(SUBMIT_STEP)) return;
         submitErr.hidden = true; submitErr.textContent = '';
-        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando…'; }
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.classList.add('is-loading');
+          setBtnLabel('Enviando…');
+        }
         try {
           // Recoge todos los campos del form (incluye radios, checkboxes, textareas).
           const data = {};
@@ -1222,7 +1324,11 @@
           goToStep(THANKS_STEP);
         } catch (err) {
           console.error('rev submit', err);
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalLabel; }
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('is-loading');
+            setBtnLabel(originalLabel);
+          }
           submitErr.hidden = false;
           submitErr.textContent = 'No hemos podido guardar tu revisión. Refresca la página e inténtalo de nuevo, o escríbeme por WhatsApp.';
         }
@@ -1296,8 +1402,21 @@
     window.supa = supa;
 
     supa.auth.onAuthStateChange((event, session) => {
-      if (event === 'INITIAL_SESSION' && !session) {
+      if (event !== 'INITIAL_SESSION') return;
+      if (!session) {
+        // Sin sesión → volvemos al login. El gate sigue visible durante la navegación.
+        const gateMsg = document.querySelector('.onb-auth-gate-msg');
+        if (gateMsg) gateMsg.textContent = 'Volvamos al login…';
         window.location.replace('/mi-seguimiento/');
+        return;
+      }
+      // Con sesión → oculta el gate y revela el container con fade-in.
+      const gate = document.getElementById('onb-auth-gate');
+      const container = document.querySelector('.onb-container');
+      if (gate) gate.hidden = true;
+      if (container) {
+        container.hidden = false;
+        container.classList.add('onb-fade-in');
       }
     });
 
