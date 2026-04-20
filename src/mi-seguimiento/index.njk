@@ -2118,15 +2118,26 @@ appleTitle: "Mi seguimiento"
     submitBtn.textContent = 'Enviando…';
     statusEl.hidden = true;
 
-    const { error } = await supa.auth.signInWithOtp({ email });
+    // shouldCreateUser:false → si el email no fue admitido vía /alta-paciente,
+    // Supabase devuelve error en vez de disparar el template "Confirm signup"
+    // (link a la home). Garantiza que solo pacientes admitidas reciben OTP.
+    const { error } = await supa.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: false }
+    });
 
     submitBtn.disabled = false;
     submitBtn.textContent = 'Enviar código';
 
     if (error) {
       console.error('signInWithOtp error:', error);
-      const detail = error.message ? ' (' + error.message + ')' : '';
-      showStatus('No hemos podido enviar el código' + detail + '. Prueba de nuevo en un minuto.', 'error');
+      const notAllowed = /signups?\s+not\s+allowed|user\s+not\s+found/i.test(error.message || '');
+      if (notAllowed) {
+        showStatus('Este correo no está dado de alta. Si acabas de pagar, escríbeme por WhatsApp y lo reviso.', 'error');
+      } else {
+        const detail = error.message ? ' (' + error.message + ')' : '';
+        showStatus('No hemos podido enviar el código' + detail + '. Prueba de nuevo en un minuto.', 'error');
+      }
       return;
     }
     // Recordamos el email ya aquí: aunque la sesión real se crea al verificar
