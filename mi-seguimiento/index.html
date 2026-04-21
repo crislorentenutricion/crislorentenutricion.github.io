@@ -1991,14 +1991,14 @@
     }
     const hoy = DIAS_JS[new Date().getDay()];
     const dia = menu.contenido.dias && menu.contenido.dias[hoy];
-    if (!dia) {
+    const tomas = window.MsLogic.visibleMeals(dia, COMIDAS);
+    if (!tomas.length) {
       container.innerHTML = `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Hoy</span><p class="ms-meal-text">Hoy no hay comidas planificadas en este menú.</p></li>`;
       return;
     }
-    container.innerHTML = COMIDAS.map(([k, label]) => {
-      const text = dia[k] || '—';
-      return `<li class="ms-meal"><span class="ms-meal-time">${label}</span><p class="ms-meal-text">${escapeHtml(text)}</p></li>`;
-    }).join('');
+    container.innerHTML = tomas.map(m =>
+      `<li class="ms-meal"><span class="ms-meal-time">${m.label}</span><p class="ms-meal-text">${escapeHtml(m.text)}</p></li>`
+    ).join('');
   }
 
   async function marcarMilestoneVisto(pacienteId, nuevo, actual) {

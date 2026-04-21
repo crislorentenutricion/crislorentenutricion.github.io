@@ -181,7 +181,17 @@
     return 'el ' + DIAS_SEMANA_ES[f.getDay()] + ' a las ' + hora;
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa };
+  // Pacientes con distinto nº de tomas (4 vs 5) → filtramos slots vacíos
+  // para no mostrar "—" en la app. `dia` es el objeto { desayuno, almuerzo, ... }
+  // del menú; `comidas` es el array [[key, label], ...].
+  function visibleMeals(dia, comidas) {
+    if (!dia || !Array.isArray(comidas)) return [];
+    return comidas
+      .map(function (c) { return { key: c[0], label: c[1], text: dia[c[0]] }; })
+      .filter(function (m) { return m.text != null && String(m.text).trim() !== ''; });
+  }
+
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();
