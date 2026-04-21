@@ -191,7 +191,527 @@
       .filter(function (m) { return m.text != null && String(m.text).trim() !== ''; });
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals };
+  // -----------------------------------------------------------------
+  // Detección de plataforma y navegador embebido (install flow PWA)
+  // -----------------------------------------------------------------
+
+  // iPadOS 13+ se anuncia como Mac con touch → lo tratamos como iOS para
+  // mostrar las instrucciones de "Añadir a pantalla de inicio" de Safari.
+  function detectPlatform(opts) {
+    const o = opts || {};
+    const ua = String(o.ua || '').toLowerCase();
+    const maxTouchPoints = Number(o.maxTouchPoints || 0);
+    if (/iphone|ipad|ipod/.test(ua)) return 'ios';
+    if (/macintosh/.test(ua) && maxTouchPoints > 1) return 'ios';
+    if (/android/.test(ua)) return 'android';
+    return 'other';
+  }
+
+  // Detecta si la paciente está dentro del navegador embebido de una app
+  // (Instagram, Facebook, TikTok…). En esos navegadores "Añadir a pantalla"
+  // no instala como app estándar — la invitamos a abrir en Chrome/Safari.
+  function detectInAppBrowser(ua) {
+    const s = String(ua || '');
+    if (/Instagram/i.test(s)) return 'instagram';
+    if (/FBAN|FBAV|FB_IAB/i.test(s)) return 'facebook';
+    if (/\bLine\//i.test(s)) return 'line';
+    if (/musical_ly|Bytedance|TikTok/i.test(s)) return 'tiktok';
+    if (/LinkedInApp/i.test(s)) return 'linkedin';
+    if (/Snapchat/i.test(s)) return 'snapchat';
+    if (/Android.*;\s*wv\)/i.test(s)) return 'webview';
+    return null;
+  }
+
+  // Etiqueta humana del navegador embebido para el modal. Desconocido → "una app".
+  const NOMBRES_APP_EMBEBIDA = {
+    instagram: 'Instagram',
+    facebook: 'Facebook',
+    line: 'Line',
+    tiktok: 'TikTok',
+    linkedin: 'LinkedIn',
+    snapchat: 'Snapchat',
+    webview: 'una app'
+  };
+  function nombreAppEmbebida(kind) {
+    return NOMBRES_APP_EMBEBIDA[kind] || 'una app';
+  }
+
+  // -----------------------------------------------------------------
+  // Clasificación de errores para reintentar (retry con backoff)
+  // -----------------------------------------------------------------
+
+  // Reintenta solo errores transitorios: red caída o 5xx.
+  // 4xx se considera permanente (auth expirada, payload inválido…).
+  function esErrorTransitorio(err) {
+    if (!err) return false;
+    if (err instanceof TypeError) return true;
+    const status = err.status || err.statusCode || (err.context && err.context.status);
+    if (typeof status === 'number') {
+      if (status >= 500 && status < 600) return true;
+      return false;
+    }
+    const msg = String(err.message || err).toLowerCase();
+    if (/network|fetch|timeout|failed to fetch|load failed/.test(msg)) return true;
+    return false;
+  }
+
+  // -----------------------------------------------------------------
+  // Nombres: primer nombre desde NOMBRE COMPLETO o desde email
+  // -----------------------------------------------------------------
+
+  // Nombre completo en MAYÚSCULAS → primer nombre con mayúscula inicial.
+  // Saludos a pacientes se muestran así (p.ej. "Hola Ana").
+  function primerNombre(nombre) {
+    if (!nombre) return '';
+    const first = String(nombre).trim().split(/\s+/)[0];
+    if (!first) return '';
+    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  }
+
+  // Fallback cuando solo tenemos email: "maria.garcia@…" → "Maria".
+  // Si el prefijo está vacío o no hay email → "de nuevo".
+  function primerNombreDesdeEmail(email) {
+    if (!email) return 'de nuevo';
+    const raw = String(email).split('@')[0] || '';
+    const first = raw.split(/[._\-+]/)[0];
+    if (!first) return 'de nuevo';
+    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  }
+
+  // -----------------------------------------------------------------
+  // Lista de la compra: clave estable por item + totales
+  // -----------------------------------------------------------------
+
+  // Clave estable categoría+texto para persistir el check en localStorage.
+  // Si Cristina reedita el texto de un item, se pierde el check — aceptado.
+  function slugifyItem(categoria, texto) {
+    return (String(categoria) + '::' + String(texto))
+      .toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  }
+
+  // Clave de localStorage: una por menú (ms-compra-<menu_id>).
+  // Si no hay menú.id → null (no se persiste, evita pisar otros estados).
+  function compraStorageKey(menu) {
+    return (menu && menu.id) ? ('ms-compra-' + menu.id) : null;
+  }
+
+  // Nº total de items en la lista de compra, sumando solo las categorías
+  // conocidas (evita contar claves extras que Supabase pudiera guardar).
+  function totalItemsCompra(lista, categorias) {
+    if (!lista || !Array.isArray(categorias)) return 0;
+    let n = 0;
+    for (const cat of categorias) {
+      if (Array.isArray(lista[cat])) n += lista[cat].length;
+    }
+    return n;
+  }
+
+  // -----------------------------------------------------------------
+  // Login / OTP: validación pura del formulario
+  // -----------------------------------------------------------------
+
+  function normalizeEmail(email) {
+    return String(email == null ? '' : email).trim().toLowerCase();
+  }
+
+  // Devuelve { ok: true, email } o { ok: false, error: 'empty'|'invalid'|'no-consent' }.
+  // El email se normaliza (trim + lowercase) antes de validar.
+  function validateLoginForm(opts) {
+    const o = opts || {};
+    const email = normalizeEmail(o.email);
+    const consent = !!o.consent;
+    if (!email) return { ok: false, error: 'empty' };
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: 'invalid' };
+    if (!consent) return { ok: false, error: 'no-consent' };
+    return { ok: true, email };
+  }
+
+  // Valida el código OTP que la paciente teclea. Supabase emite 6 dígitos por
+  // default; si se cambia allí, cambiar aquí también.
+  function validateOtpCode(code) {
+    const t = String(code == null ? '' : code).trim();
+    if (!/^\d{6}$/.test(t)) return { ok: false, error: 'invalid' };
+    return { ok: true, code: t };
+  }
+
+  // -----------------------------------------------------------------
+  // Login inicial: prefill desde ?email= y welcome-back
+  // -----------------------------------------------------------------
+
+  // Decide con qué email arranca el form de login y en qué modo.
+  //   - queryEmail (URL ?email=) gana siempre que esté presente.
+  //   - Si coincide con el último paciente recordado → welcome-back.
+  //   - Si difiere → modo 'query' (prefill pero sin saludo cálido).
+  //   - Sin query pero con lastEmail → welcome-back.
+  //   - Sin nada → 'fresh'.
+  function resolveInitialLogin(opts) {
+    const o = opts || {};
+    const query = o.queryEmail ? normalizeEmail(o.queryEmail) : null;
+    const last = o.lastEmail ? normalizeEmail(o.lastEmail) : null;
+    if (query && last && query === last) return { email: query, mode: 'welcome-back' };
+    if (query) return { email: query, mode: 'query' };
+    if (last) return { email: last, mode: 'welcome-back' };
+    return { email: '', mode: 'fresh' };
+  }
+
+  // -----------------------------------------------------------------
+  // Install / in-app: qué banner mostrar
+  // -----------------------------------------------------------------
+
+  // Coordinator del install flow: dado el entorno (standalone?, navegador
+  // embebido?, plataforma, tutorial ya visto?), decide si mostrar el modal
+  // de "añadir a pantalla de inicio", el modal de "abre en Safari/Chrome"
+  // o nada. En escritorio normal no mostramos nada.
+  function shouldShowInstallHint(opts) {
+    const o = opts || {};
+    if (o.standalone) return { kind: 'none' };
+    if (o.tutorialSeen) return { kind: 'none' };
+    if (o.inAppBrowser) return { kind: 'inapp', inApp: o.inAppBrowser };
+    const plat = o.platform;
+    if (plat === 'ios' || plat === 'android') return { kind: 'install', plat };
+    return { kind: 'none' };
+  }
+
+  // -----------------------------------------------------------------
+  // visibilitychange: qué hacer al volver a la pestaña
+  // -----------------------------------------------------------------
+
+  // Debounce + branch: al recuperar visibilidad, decide 'ignore' (debounce o
+  // no visible), 'go-login' (sin sesión tras bloqueo), 'rehydrate' (sesión
+  // OK y estábamos autenticados) o 'noop' (sesión OK pero no estamos en la
+  // vista autenticada).
+  function shouldRehydrateOnVisibility(opts) {
+    const o = opts || {};
+    if (o.visibilityState && o.visibilityState !== 'visible') return 'ignore';
+    const now = typeof o.now === 'number' ? o.now : Date.now();
+    const last = typeof o.lastRefreshAt === 'number' ? o.lastRefreshAt : 0;
+    if (now - last < 2000) return 'ignore';
+    if (!o.hasSession) return 'go-login';
+    if (o.authedVisible && o.hasPaciente) return 'rehydrate';
+    return 'noop';
+  }
+
+  // -----------------------------------------------------------------
+  // Milestone celebration: detectarMilestone + gate de onboarding
+  // -----------------------------------------------------------------
+
+  // Solo celebramos milestone si el onboarding ya se vio (evita apilar modales
+  // encima del primer tour). Devuelve el número a celebrar o null.
+  function shouldCelebrarMilestone(opts) {
+    const o = opts || {};
+    if (!o.onboarding) return null;
+    if (typeof o.racha !== 'number') return null;
+    return detectarMilestone(o.racha, o.vistos || []);
+  }
+
+  // -----------------------------------------------------------------
+  // Vista día (tap celda calendario) y vista hoy
+  // -----------------------------------------------------------------
+
+  // Config de estados del detalle de día. Copys aprobados — hablar de
+  // etiquetas, no de colores (accesibilidad + consistencia con la UI).
+  const DAY_STATUS_LABELS = {
+    seguido: { cls: 'is-ok',  label: '«Lo seguí»', msg: 'Un día más cuidándote. Cada uno cuenta.' },
+    parcial: { cls: 'is-mid', label: '«A medias»', msg: 'Mantuviste la constancia. Seguir es ganar.' },
+    no:      { cls: 'is-no',  label: '«Hoy no»',   msg: 'Un día suelto no te define. Mañana vuelves.' }
+  };
+
+  // Claves canónicas del JSON del menú (ver plan-nutricional-supabase.md).
+  // Alineadas con Date.getDay(): 0 = domingo.
+  const WEEKDAY_KEYS_JSON = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+
+  // Estado y copy del detalle de día abierto desde el calendario.
+  // Entradas:
+  //   iso          : 'YYYY-MM-DD' del día a mostrar
+  //   menu         : menú vigente ({contenido: {dias: {lunes: {...}}}}) o null
+  //   checkinsMap  : Map<iso,estado>
+  //   now          : Date — inyectable, default new Date()
+  //   comidas      : [[key, label], ...] — slots de comida a mostrar en orden
+  //   weekdayKeys  : override de las claves del menú; default WEEKDAY_KEYS_JSON
+  // Salida:
+  //   weekday  : clave del día en el JSON (ej. 'miercoles')
+  //   meals    : array de visibleMeals (puede ser [] si no hay menú ese día)
+  //   status   : {kind: 'marked', cls, label, msg} si hay checkin;
+  //              {kind: 'unmarked', msg} si no (copy depende de pasado/hoy/futuro).
+  function computeDayView(opts) {
+    const o = opts || {};
+    const iso = o.iso;
+    const menu = o.menu || null;
+    const checkinsMap = o.checkinsMap instanceof Map ? o.checkinsMap : new Map();
+    const now = o.now instanceof Date ? o.now : new Date();
+    const comidas = Array.isArray(o.comidas) ? o.comidas : [];
+    const weekdayKeys = Array.isArray(o.weekdayKeys) ? o.weekdayKeys : WEEKDAY_KEYS_JSON;
+
+    const parts = String(iso || '').split('-').map(Number);
+    const fecha = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+    const weekday = weekdayKeys[fecha.getDay()];
+    const dia = menu && menu.contenido && menu.contenido.dias ? menu.contenido.dias[weekday] : null;
+    const meals = visibleMeals(dia, comidas);
+    const estado = checkinsMap.get(iso);
+    const cfg = DAY_STATUS_LABELS[estado];
+    let status;
+    if (cfg) {
+      status = { kind: 'marked', cls: cfg.cls, label: cfg.label, msg: cfg.msg };
+    } else {
+      const todayISO = toISO(now);
+      let msg;
+      if (iso > todayISO) msg = 'Aún está por llegar. Cuando sea, lo marcas.';
+      else if (iso === todayISO) msg = 'Aún no has marcado hoy. Hazlo cuando termines el día.';
+      else msg = 'Este día no lo marcaste. Sin drama, sigue tu camino.';
+      status = { kind: 'unmarked', msg };
+    }
+    return { weekday, dia, meals, status };
+  }
+
+  // Vista "hoy": mismo shape que computeDayView pero simplificado.
+  // No incluye status porque la vista hoy muestra los botones de check-in,
+  // no la pastilla de estado.
+  function computeTodayView(opts) {
+    const o = opts || {};
+    const menu = o.menu || null;
+    const checkinsMap = o.checkinsMap instanceof Map ? o.checkinsMap : new Map();
+    const now = o.now instanceof Date ? o.now : new Date();
+    const comidas = Array.isArray(o.comidas) ? o.comidas : [];
+    const weekdayKeys = Array.isArray(o.weekdayKeys) ? o.weekdayKeys : WEEKDAY_KEYS_JSON;
+
+    const weekday = weekdayKeys[now.getDay()];
+    const dia = menu && menu.contenido && menu.contenido.dias ? menu.contenido.dias[weekday] : null;
+    const meals = visibleMeals(dia, comidas);
+    const todayISO = toISO(now);
+    const activeCheck = checkinsMap.get(todayISO) || null;
+    return { weekday, dia, meals, activeCheck, todayISO };
+  }
+
+  // -----------------------------------------------------------------
+  // Lista de la compra: modelo + meta + toggle inmutable
+  // -----------------------------------------------------------------
+
+  // Modelo renderizable de la lista de la compra:
+  //   - empty: true si no hay items (muestra estado vacío).
+  //   - cats: [{cat, comprados, total, items: [{text, key, done}]}]
+  //   - total/hechos globales.
+  // Filtra categorías sin items para no emitir <details> vacíos.
+  function buildCompraModel(opts) {
+    const o = opts || {};
+    const lista = (o.menu && o.menu.contenido && o.menu.contenido.lista_compra) || {};
+    const estadoSet = o.estadoSet instanceof Set ? o.estadoSet : new Set(o.estadoSet || []);
+    const categorias = Array.isArray(o.categorias) ? o.categorias : [];
+    const total = totalItemsCompra(lista, categorias);
+    const hechos = estadoSet.size;
+    if (total === 0) return { empty: true, total: 0, hechos: 0, cats: [] };
+    const cats = [];
+    for (const cat of categorias) {
+      const items = Array.isArray(lista[cat]) ? lista[cat] : null;
+      if (!items || !items.length) continue;
+      const itemsOut = items.map(function (text) {
+        const key = slugifyItem(cat, text);
+        return { text, key, done: estadoSet.has(key) };
+      });
+      const comprados = itemsOut.reduce(function (n, it) { return n + (it.done ? 1 : 0); }, 0);
+      cats.push({ cat, comprados, total: items.length, items: itemsOut });
+    }
+    return { empty: false, total, hechos, cats };
+  }
+
+  // Meta de la entry card + barra de progreso. "Semanal" explícito en el copy
+  // (feedback 2026-04-17: la paciente necesita saber la cadencia).
+  function computeCompraMeta(opts) {
+    const o = opts || {};
+    const total = Number(o.total || 0);
+    const hechos = Number(o.hechos || 0);
+    if (total === 0) {
+      return {
+        metaText: 'Disponible con tu próximo menú',
+        progressText: 'Aún no hay lista para esta semana.',
+        progressDone: false,
+        actionsHidden: true
+      };
+    }
+    const metaText = hechos === 0
+      ? 'Semanal · ' + total + ' productos'
+      : 'Semanal · ' + hechos + '/' + total + ' comprados';
+    if (hechos === total) {
+      return {
+        metaText,
+        progressText: '¡Compra de la semana completa! Buen trabajo.',
+        progressDone: true,
+        actionsHidden: false
+      };
+    }
+    return {
+      metaText,
+      progressText: hechos + ' de ' + total + ' comprados esta semana',
+      progressDone: false,
+      actionsHidden: hechos === 0
+    };
+  }
+
+  // Toggle inmutable: devuelve un Set nuevo con el item añadido o quitado.
+  // `done` refleja el estado final del item para que el caller pinte el CSS.
+  // Si el Set original se comparte con otros consumers, no se muta.
+  function withCompraToggle(estadoSet, key) {
+    const s = new Set(estadoSet || []);
+    if (!key) return { set: s, done: false };
+    if (s.has(key)) { s.delete(key); return { set: s, done: false }; }
+    s.add(key);
+    return { set: s, done: true };
+  }
+
+  // -----------------------------------------------------------------
+  // Check-in optimista: aplicar + revertir
+  // -----------------------------------------------------------------
+
+  // UI optimista: al clic, pintamos el nuevo estado inmediatamente y
+  // persistimos prevEstado para poder revertir si el upsert falla. Muta el
+  // Map por eficiencia (ya es un estado local del módulo).
+  function applyCheckinOptimistic(checkinsMap, iso, estado) {
+    const prev = checkinsMap.has(iso) ? checkinsMap.get(iso) : undefined;
+    checkinsMap.set(iso, estado);
+    return prev;
+  }
+
+  // Revert al estado previo tras fallo de red o sesión expirada.
+  function revertCheckin(checkinsMap, iso, prev) {
+    if (prev === undefined) checkinsMap.delete(iso);
+    else checkinsMap.set(iso, prev);
+  }
+
+  // -----------------------------------------------------------------
+  // Revisión mensual: copy del CTA + modal one-shot
+  // -----------------------------------------------------------------
+
+  // Copy del CTA de revisión según el estado actual. Separa la decisión
+  // lógica (getRevisionCtaState) de la redacción.
+  function buildRevisionCtaCopy(opts) {
+    const o = opts || {};
+    const proxima = o.proximaSesion;
+    const now = o.now instanceof Date ? o.now : new Date();
+    const state = getRevisionCtaState({
+      proximaSesion: proxima,
+      revisionEnviada: !!o.revisionEnviada,
+      now
+    });
+    if (state === 'hidden') return { state, hidden: true };
+    const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), now) : '';
+    if (state === 'urgent') {
+      return {
+        state, hidden: false,
+        msg: 'Tienes sesión ' + (when || 'pronto') + '. Dedica 5 minutos a la revisión antes.',
+        action: { label: 'Enviar revisión mensual', href: '/mi-seguimiento/revision/' }
+      };
+    }
+    // done
+    return {
+      state, hidden: false,
+      msg: 'Revisión enviada ✓ · nos vemos ' + when,
+      action: null
+    };
+  }
+
+  // Modal one-shot 2 días antes de la sesión. Se muestra solo si el estado
+  // es 'urgent' y la sesión no está ya en `seenModalIds` (LS). Devuelve el
+  // texto del body y la key de LS que el caller debe marcar al cerrar.
+  function shouldMostrarRevisionModal(opts) {
+    const o = opts || {};
+    const proxima = o.proximaSesion;
+    if (!proxima || !proxima.id) return { show: false };
+    const now = o.now instanceof Date ? o.now : new Date();
+    const state = getRevisionCtaState({
+      proximaSesion: proxima,
+      revisionEnviada: !!o.revisionEnviada,
+      now
+    });
+    if (state !== 'urgent') return { show: false };
+    const seen = Array.isArray(o.seenModalIds) ? o.seenModalIds : [];
+    if (seen.indexOf(proxima.id) !== -1) return { show: false };
+    const when = formatFechaRelativa(new Date(proxima.fecha), now);
+    const body = 'Tenemos sesión ' + when + '. Antes de vernos, cuéntame en 5 minutos cómo ha ido este mes — los platos que han funcionado, los que no, tu energía, tu ánimo. Así afino bien tu próximo menú.';
+    return { show: true, lsKey: 'rev-modal-shown:' + proxima.id, body };
+  }
+
+  // -----------------------------------------------------------------
+  // Hydrate del dashboard: orquesta queries → estado renderizable
+  // -----------------------------------------------------------------
+
+  // Nudo central de la PWA autenticada. Recibe un "driver" supa con cuatro
+  // métodos (loadMenuVigente, loadCheckins, loadProximaSesion,
+  // loadRevisionEnviadaParaSesion) y devuelve el estado que el njk tiene que
+  // pintar. El wrapper imperativo del njk solo se encarga del DOM.
+  //
+  // `view` decide el flujo:
+  //   - 'sin-paciente'    : showSinPaciente().
+  //   - 'redirect-empezar': window.location.replace('/mi-seguimiento/empezar/').
+  //   - 'locked'          : menú no disponible → .is-locked, oculta interacciones.
+  //   - 'normal'          : render completo (meals, streak, calendar, compra, CTA revisión, PDF).
+  //
+  // Si la query de revisión falla (red inestable) degradamos a hidden: el
+  // resto del hydrate no bloquea.
+  async function hydrateDashboard(opts) {
+    const o = opts || {};
+    const supa = o.supa || {};
+    const paciente = o.paciente;
+    const now = o.now instanceof Date ? o.now : new Date();
+    if (!paciente) return { view: 'sin-paciente' };
+    if (!paciente.anamnesis_completed_at) return { view: 'redirect-empezar' };
+
+    const today = toISO(now);
+    const from = toISO(new Date(now.getTime() - 60 * 864e5));
+    const [menu, checkinsRaw] = await Promise.all([
+      supa.loadMenuVigente(today),
+      supa.loadCheckins(from)
+    ]);
+    const arr = Array.isArray(checkinsRaw) ? checkinsRaw : [];
+    const checkinsMap = new Map(arr.map(function (c) { return [c.fecha, c.estado]; }));
+    const streak = countStreak(checkinsMap, now);
+
+    if (!menu) {
+      return {
+        view: 'locked',
+        menu: null,
+        checkinsMap,
+        streak,
+        rota: false,
+        revisionCta: { state: 'hidden', hidden: true },
+        revisionModal: { show: false }
+      };
+    }
+
+    const rota = detectarRachaRota(checkinsMap, now);
+    let proxima = null;
+    let revisionEnviada = false;
+    try {
+      proxima = await supa.loadProximaSesion(paciente.id);
+      if (proxima && proxima.id) {
+        revisionEnviada = !!(await supa.loadRevisionEnviadaParaSesion(proxima.id));
+      }
+    } catch (e) {
+      proxima = null;
+      revisionEnviada = false;
+    }
+    const revisionCta = buildRevisionCtaCopy({ proximaSesion: proxima, revisionEnviada, now });
+    const revisionModal = shouldMostrarRevisionModal({
+      proximaSesion: proxima,
+      revisionEnviada,
+      now,
+      seenModalIds: o.seenModalIds || []
+    });
+    return {
+      view: 'normal',
+      menu,
+      checkinsMap,
+      streak,
+      rota,
+      proximaSesion: proxima,
+      revisionEnviada,
+      revisionCta,
+      revisionModal
+    };
+  }
+
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, slugifyItem, compraStorageKey, totalItemsCompra, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

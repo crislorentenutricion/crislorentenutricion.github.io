@@ -1605,7 +1605,20 @@ appleTitle: "CLN"
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
   // Lógica pura (ver src/mi-seguimiento/logic.js y tests/mi-seguimiento.test.js).
-  const { toISO, detectarMilestone, countStreak, detectarRachaRota, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa } = window.MsLogic;
+  const {
+    toISO, detectarMilestone, countStreak, detectarRachaRota,
+    tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa,
+    detectPlatform, detectInAppBrowser, nombreAppEmbebida,
+    esErrorTransitorio, primerNombre, primerNombreDesdeEmail,
+    slugifyItem, compraStorageKey, totalItemsCompra,
+    validateLoginForm, validateOtpCode, resolveInitialLogin,
+    shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone,
+    computeDayView, computeTodayView,
+    buildCompraModel, computeCompraMeta,
+    applyCheckinOptimistic, revertCheckin,
+    buildRevisionCtaCopy, shouldMostrarRevisionModal,
+    hydrateDashboard
+  } = window.MsLogic;
 
   const SUPABASE_URL = '{{ env.supabaseUrl }}';
   const SUPABASE_KEY = '{{ env.supabasePublishableKey }}';
@@ -1712,13 +1725,13 @@ appleTitle: "CLN"
   }
 
   // -------- platform + in-app detection (A3/A4) --------
-  function detectPlatform() {
-    const ua = (navigator.userAgent || '').toLowerCase();
-    if (/iphone|ipad|ipod/.test(ua)) return 'ios';
-    // iPadOS 13+ se anuncia como Mac con touch
-    if (/macintosh/.test(ua) && navigator.maxTouchPoints > 1) return 'ios';
-    if (/android/.test(ua)) return 'android';
-    return 'other';
+  // detectPlatform / detectInAppBrowser / nombreAppEmbebida viven en logic.js.
+  // isStandalone depende del DOM (matchMedia) → se queda aquí.
+  function detectPlatformLocal() {
+    return detectPlatform({ ua: navigator.userAgent || '', maxTouchPoints: navigator.maxTouchPoints || 0 });
+  }
+  function detectInAppBrowserLocal() {
+    return detectInAppBrowser(navigator.userAgent || '');
   }
   function isStandalone() {
     try {
@@ -1727,24 +1740,11 @@ appleTitle: "CLN"
     } catch (e) { /* noop */ }
     return false;
   }
-  function detectInAppBrowser() {
-    const ua = navigator.userAgent || '';
-    // Instagram, Facebook (FBAN/FBAV), Line, TikTok (musical_ly/Bytedance), LinkedIn, Snapchat,
-    // y WebView genérico Android (;?\s?wv\))
-    if (/Instagram/i.test(ua)) return 'instagram';
-    if (/FBAN|FBAV|FB_IAB/i.test(ua)) return 'facebook';
-    if (/\bLine\//i.test(ua)) return 'line';
-    if (/musical_ly|Bytedance|TikTok/i.test(ua)) return 'tiktok';
-    if (/LinkedInApp/i.test(ua)) return 'linkedin';
-    if (/Snapchat/i.test(ua)) return 'snapchat';
-    // WebView Android genérica: "; wv)" dentro del UA
-    if (/Android.*;\s*wv\)/i.test(ua)) return 'webview';
-    return null;
-  }
 
   // -------- retry con backoff (B5) --------
   // Reintenta fn() una vez tras `delay` ms si el error parece transitorio
   // (red caída, 5xx). No reintenta errores de auth (401/403) ni 4xx.
+  // esErrorTransitorio vive en logic.js (pura, testada).
   async function withRetry(fn, opts) {
     const { retries = 1, delay = 700 } = opts || {};
     let lastErr;
@@ -1759,21 +1759,6 @@ appleTitle: "CLN"
       }
     }
     throw lastErr;
-  }
-  function esErrorTransitorio(err) {
-    if (!err) return false;
-    // fetch sin respuesta: TypeError "Failed to fetch" / "Load failed"
-    if (err instanceof TypeError) return true;
-    // Supabase devuelve error con status numérico
-    const status = err.status || err.statusCode || (err.context && err.context.status);
-    if (typeof status === 'number') {
-      if (status >= 500 && status < 600) return true;
-      return false; // 4xx no se reintenta
-    }
-    // Error de red sin status conocido: mensaje típico
-    const msg = String(err.message || err).toLowerCase();
-    if (/network|fetch|timeout|failed to fetch|load failed/.test(msg)) return true;
-    return false;
   }
 
   // -------- data loaders --------
@@ -1921,14 +1906,10 @@ appleTitle: "CLN"
   }
 
   // -------- day detail (read-only view from calendar tap) --------
-  const DAY_STATUS = {
-    seguido: { cls: 'is-ok',  label: '«Lo seguí»', msg: 'Un día más cuidándote. Cada uno cuenta.' },
-    parcial: { cls: 'is-mid', label: '«A medias»', msg: 'Mantuviste la constancia. Seguir es ganar.' },
-    no:      { cls: 'is-no',  label: '«Hoy no»',   msg: 'Un día suelto no te define. Mañana vuelves.' }
-  };
+  // Datos puros (weekday, dia, meals, status) vienen de computeDayView/
+  // computeTodayView (logic.js). Aquí solo rendering.
 
-  function renderDayMeals(weekday) {
-    const dia = menuVigente?.contenido?.dias?.[weekday];
+  function renderDayMealsDom(dia) {
     if (!dia) {
       return `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Sin menú</span><p class="ms-meal-text">No hay menú planificado para este día.</p></li>`;
     }
@@ -1937,32 +1918,24 @@ appleTitle: "CLN"
     ).join('');
   }
 
-  function renderDayStatus(iso) {
-    const estado = checkinsMap.get(iso);
-    const cfg = DAY_STATUS[estado];
-    if (cfg) {
-      return `<span class="ms-day-badge ${cfg.cls}">${cfg.label}</span><p class="ms-day-msg">${cfg.msg}</p>`;
+  function renderDayStatusDom(status) {
+    if (status.kind === 'marked') {
+      return `<span class="ms-day-badge ${status.cls}">${status.label}</span><p class="ms-day-msg">${status.msg}</p>`;
     }
-    const todayISO = toISO(new Date());
-    const msg = iso > todayISO
-      ? 'Aún está por llegar. Cuando sea, lo marcas.'
-      : iso === todayISO
-        ? 'Aún no has marcado hoy. Hazlo cuando termines el día.'
-        : 'Este día no lo marcaste. Sin drama, sigue tu camino.';
-    return `<p class="ms-day-msg is-soft">${msg}</p>`;
+    return `<p class="ms-day-msg is-soft">${status.msg}</p>`;
   }
 
   function mostrarDia(iso) {
     if (iso === toISO(new Date())) { mostrarHoy(); return; }
+    const v = computeDayView({ iso, menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS });
     const [y, m, d] = iso.split('-').map(Number);
     const fecha = new Date(y, m - 1, d);
-    const weekday = DIAS_JS[fecha.getDay()];
     $('#ms-today-label').textContent = capitalize(
       fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
     );
     $('#ms-check-label').textContent = 'ese día';
-    $('#ms-meals').innerHTML = renderDayMeals(weekday);
-    $('#ms-check-status').innerHTML = renderDayStatus(iso);
+    $('#ms-meals').innerHTML = renderDayMealsDom(v.dia);
+    $('#ms-check-status').innerHTML = renderDayStatusDom(v.status);
     $('#ms-authed').dataset.view = 'day';
     $('#ms-authed').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -1972,8 +1945,8 @@ appleTitle: "CLN"
     $('#ms-check-label').textContent = '¿cómo ha ido hoy?';
     renderMeals(menuVigente);
     $('#ms-authed').dataset.view = 'today';
-    const estado = checkinsMap.get(toISO(new Date()));
-    setActiveCheck(estado || null);
+    const v = computeTodayView({ menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS });
+    setActiveCheck(v.activeCheck);
   }
 
   // -------- lista de la compra (localStorage por menú) --------
@@ -1988,19 +1961,7 @@ appleTitle: "CLN"
     'FRUTOS SECOS Y VARIOS'
   ];
 
-  // Key estable por categoría+texto. Si Cristina reedita el texto de un item,
-  // el check se pierde — aceptable, no hay sync ni historial.
-  function slugifyItem(categoria, texto) {
-    return (categoria + '::' + texto)
-      .toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-  }
-
-  function compraStorageKey(menu) {
-    return (menu && menu.id) ? ('ms-compra-' + menu.id) : null;
-  }
+  // slugifyItem / compraStorageKey viven en logic.js (puras, testadas).
 
   function loadCompraState(menu) {
     const key = compraStorageKey(menu);
@@ -2027,12 +1988,9 @@ appleTitle: "CLN"
     return (menu && menu.contenido && menu.contenido.lista_compra) || {};
   }
 
-  function totalItemsCompra(lista) {
-    let n = 0;
-    for (const cat of CATEGORIAS_COMPRA) {
-      if (Array.isArray(lista[cat])) n += lista[cat].length;
-    }
-    return n;
+  // totalItemsCompra vive en logic.js (pura, testada). Curry con CATEGORIAS_COMPRA.
+  function totalItemsCompraLocal(lista) {
+    return totalItemsCompra(lista, CATEGORIAS_COMPRA);
   }
 
   function updateCompraMeta() {
@@ -2040,67 +1998,45 @@ appleTitle: "CLN"
     const prog = $('#ms-compra-progress');
     const actions = $('#ms-compra-actions');
     if (!meta || !prog) return;
-    if (compraTotal === 0) {
-      meta.textContent = 'Disponible con tu próximo menú';
-      prog.textContent = 'Aún no hay lista para esta semana.';
-      prog.classList.remove('is-done');
-      if (actions) actions.hidden = true;
-      return;
-    }
-    const hechos = compraState.size;
-    meta.textContent = hechos === 0
-      ? 'Semanal · ' + compraTotal + ' productos'
-      : 'Semanal · ' + hechos + '/' + compraTotal + ' comprados';
-    if (hechos === compraTotal) {
-      prog.textContent = '¡Compra de la semana completa! Buen trabajo.';
-      prog.classList.add('is-done');
-    } else {
-      prog.textContent = hechos + ' de ' + compraTotal + ' comprados esta semana';
-      prog.classList.remove('is-done');
-    }
-    if (actions) actions.hidden = hechos === 0;
+    const cfg = computeCompraMeta({ total: compraTotal, hechos: compraState.size });
+    meta.textContent = cfg.metaText;
+    prog.textContent = cfg.progressText;
+    prog.classList.toggle('is-done', cfg.progressDone);
+    if (actions) actions.hidden = cfg.actionsHidden;
   }
 
   function renderCompra(menu) {
     const container = $('#ms-compra-cats');
     if (!container) return;
-    const lista = getListaCompra(menu);
     compraState = loadCompraState(menu);
-    compraTotal = totalItemsCompra(lista);
+    const model = buildCompraModel({ menu, estadoSet: compraState, categorias: CATEGORIAS_COMPRA });
+    compraTotal = model.total;
 
-    if (compraTotal === 0) {
+    if (model.empty) {
       container.innerHTML = '<p class="ms-compra-empty">Aún no hay lista de la compra semanal para este menú.<br>Aparecerá aquí en cuanto Cristina la prepare.</p>';
       updateCompraMeta();
       return;
     }
 
-    const bloques = CATEGORIAS_COMPRA
-      .filter(cat => Array.isArray(lista[cat]) && lista[cat].length)
-      .map(cat => {
-        const items = lista[cat];
-        const comprados = items.reduce((n, it) =>
-          n + (compraState.has(slugifyItem(cat, it)) ? 1 : 0), 0);
-        const total = items.length;
-        const countCls = comprados === total ? 'ms-compra-cat-count is-done' : 'ms-compra-cat-count';
-        const itemsHtml = items.map(it => {
-          const key = slugifyItem(cat, it);
-          const done = compraState.has(key);
-          return '<li class="ms-compra-item' + (done ? ' is-done' : '') + '" data-key="' + escapeHtml(key) + '">'
-            + '<label>'
-            + '<input type="checkbox"' + (done ? ' checked' : '') + '>'
-            + '<span class="ms-compra-item-text">' + escapeHtml(it) + '</span>'
-            + '</label>'
-            + '</li>';
-        }).join('');
-        return '<details class="ms-compra-cat" open>'
-          + '<summary class="ms-compra-cat-head">'
-          + '<span class="ms-compra-cat-name">' + escapeHtml(cat.toLowerCase()) + '</span>'
-          + '<span class="' + countCls + '" data-cat-count>' + comprados + '/' + total + '</span>'
-          + '<span class="ms-compra-cat-chevron" aria-hidden="true">▾</span>'
-          + '</summary>'
-          + '<ul class="ms-compra-items">' + itemsHtml + '</ul>'
-          + '</details>';
-      }).join('');
+    const bloques = model.cats.map(c => {
+      const countCls = c.comprados === c.total ? 'ms-compra-cat-count is-done' : 'ms-compra-cat-count';
+      const itemsHtml = c.items.map(it =>
+        '<li class="ms-compra-item' + (it.done ? ' is-done' : '') + '" data-key="' + escapeHtml(it.key) + '">'
+        + '<label>'
+        + '<input type="checkbox"' + (it.done ? ' checked' : '') + '>'
+        + '<span class="ms-compra-item-text">' + escapeHtml(it.text) + '</span>'
+        + '</label>'
+        + '</li>'
+      ).join('');
+      return '<details class="ms-compra-cat" open>'
+        + '<summary class="ms-compra-cat-head">'
+        + '<span class="ms-compra-cat-name">' + escapeHtml(c.cat.toLowerCase()) + '</span>'
+        + '<span class="' + countCls + '" data-cat-count>' + c.comprados + '/' + c.total + '</span>'
+        + '<span class="ms-compra-cat-chevron" aria-hidden="true">▾</span>'
+        + '</summary>'
+        + '<ul class="ms-compra-items">' + itemsHtml + '</ul>'
+        + '</details>';
+    }).join('');
     container.innerHTML = bloques;
     updateCompraMeta();
   }
@@ -2226,7 +2162,11 @@ appleTitle: "CLN"
 
   async function maybeCelebrarMilestone(racha) {
     if (!paciente) return;
-    const m = detectarMilestone(racha, paciente.milestones_vistos || []);
+    const m = shouldCelebrarMilestone({
+      racha,
+      vistos: paciente.milestones_vistos || [],
+      onboarding: !!paciente.onboarding
+    });
     if (m) showMilestone(m);
   }
 
@@ -2253,12 +2193,7 @@ appleTitle: "CLN"
     }, { once: true });
   }
 
-  function primerNombre(nombre) {
-    // NOMBRE COMPLETO EN MAYÚSCULAS → Primer nombre con mayúscula inicial
-    if (!nombre) return '';
-    const first = nombre.trim().split(/\s+/)[0];
-    return first.charAt(0) + first.slice(1).toLowerCase();
-  }
+  // primerNombre vive en logic.js (pura, testada).
 
   function showSinPaciente() {
     $('#ms-name').textContent = 'hola';
@@ -2271,117 +2206,101 @@ appleTitle: "CLN"
   async function hydrate() {
     renderDate();
     paciente = await loadPaciente();
-    if (!paciente) {
-      showSinPaciente();
-      return;
-    }
+
+    // Toda la decisión lógica (vista + queries en paralelo + CTA revisión)
+    // vive en hydrateDashboard (logic.js, testado). Aquí solo pintamos.
+    const supaDriver = {
+      loadMenuVigente, loadCheckins, loadProximaSesion, loadRevisionEnviadaParaSesion
+    };
+    const result = await hydrateDashboard({ supa: supaDriver, paciente, now: new Date() });
+
+    if (result.view === 'sin-paciente') { showSinPaciente(); return; }
     // Gate M1: sin anamnesis, la paciente no ve /mi-seguimiento/ — completa
-    // el formulario en /mi-seguimiento/empezar/ primero. Al enviar, el módulo
-    // Supabase de /mi-seguimiento/empezar/ rellena anamnesis_completed_at y
-    // la vuelta a /mi-seguimiento/ pasa el gate.
-    if (!paciente.anamnesis_completed_at) {
+    // /mi-seguimiento/empezar/ primero; al enviar, vuelve y pasa el gate.
+    if (result.view === 'redirect-empezar') {
       window.location.replace('/mi-seguimiento/empezar/');
       return;
     }
+
+    // view === 'locked' | 'normal'
     $('#ms-name').textContent = primerNombre(paciente.nombre);
-
-    const today = toISO(new Date());
-    const from = toISO(new Date(Date.now() - 60 * 864e5));
-
-    const [menu, checkins] = await Promise.all([
-      loadMenuVigente(today),
-      loadCheckins(from)
-    ]);
-
-    checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
-    menuVigente = menu;
+    menuVigente = result.menu;
+    checkinsMap = result.checkinsMap;
 
     // Sin menú vigente, bloqueamos interacciones que dependen del menú
     // (check-in, calendario, compra, PDF, revisión). La paciente solo ve
     // la bienvenida + mensaje "aún no hay menú" + cerrar sesión.
-    authedView.classList.toggle('is-locked', !menu);
+    authedView.classList.toggle('is-locked', result.view === 'locked');
 
     mostrarHoy();
-    renderPdfLink(menu);
-    renderCompra(menu);
+    renderPdfLink(result.menu);
+    renderCompra(result.menu);
     renderTip();
-
-    const rota = menu ? detectarRachaRota(checkinsMap) : false;
-    const racha = renderStreak(checkinsMap);
+    renderStreak(checkinsMap);
     renderCalendar(checkinsMap);
 
-    if (!menu) {
+    if (result.view === 'locked') {
       // Ocultar también el CTA de revisión por si venía visible de un render previo.
       const cta = $('#ms-revision-cta');
       if (cta) cta.hidden = true;
-      return { racha, rota };
+      return { racha: result.streak, rota: false };
     }
 
-    // Recordatorio de revisión mensual — no bloquea si falla (best-effort).
-    try {
-      const proxima = await loadProximaSesion(paciente.id);
-      const enviada = await loadRevisionEnviadaParaSesion(proxima && proxima.id);
-      renderRevisionCta({ proxima, enviada });
-      maybeMostrarRevisionModal({ proxima, enviada });
-    } catch (e) {
-      console.warn('revision cta', e);
-      renderRevisionCta({ proxima: null, enviada: false });
-    }
+    // normal: renderRevisionCta + maybeMostrarRevisionModal leen su copy/LS
+    // por su cuenta (la decisión lógica ya está tomada en hydrateDashboard).
+    renderRevisionCta({ proxima: result.proximaSesion, enviada: result.revisionEnviada });
+    maybeMostrarRevisionModal({ proxima: result.proximaSesion, enviada: result.revisionEnviada });
 
-    return { racha, rota };
+    return { racha: result.streak, rota: result.rota };
   }
 
   // -------- revision CTA + modal --------
+  // Copy y decisiones lógicas (state, show) vienen de logic.js. Aquí solo DOM.
   function renderRevisionCta({ proxima, enviada }) {
     const cta = $('#ms-revision-cta');
     if (!cta) return;
-    const state = getRevisionCtaState({
+    const cfg = buildRevisionCtaCopy({
       proximaSesion: proxima,
       revisionEnviada: enviada,
       now: new Date()
     });
-    cta.dataset.state = state;
+    cta.dataset.state = cfg.state;
+    if (cfg.hidden) { cta.hidden = true; return; }
+    cta.hidden = false;
     const msg = $('#ms-revision-cta-msg');
     const action = $('#ms-revision-cta-action');
-    if (state === 'hidden') {
-      cta.hidden = true;
-      return;
-    }
-    cta.hidden = false;
-    if (state === 'urgent') {
-      const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : 'pronto';
-      if (msg) msg.textContent = 'Tienes sesión ' + when + '. Dedica 5 minutos a la revisión antes.';
-      if (action) {
-        action.textContent = 'Enviar revisión mensual';
-        action.setAttribute('href', '/mi-seguimiento/revision/');
+    if (msg) msg.textContent = cfg.msg;
+    if (action) {
+      if (cfg.action) {
+        action.textContent = cfg.action.label;
+        action.setAttribute('href', cfg.action.href);
         action.hidden = false;
+      } else {
+        // Sin botón en estado 'done': una vez enviada no se edita (evita
+        // dobles submits y complejidad en backend).
+        action.hidden = true;
       }
-    } else if (state === 'done') {
-      const when = proxima && proxima.fecha ? formatFechaRelativa(new Date(proxima.fecha), new Date()) : '';
-      if (msg) msg.textContent = 'Revisión enviada ✓ · nos vemos ' + when;
-      // Sin botón: una vez enviada no se puede editar (evita dobles submits
-      // y complejidad en el backend). La paciente ve solo el mensaje de OK.
-      if (action) action.hidden = true;
     }
   }
 
   function maybeMostrarRevisionModal({ proxima, enviada }) {
-    if (!proxima || !proxima.id) return;
-    const state = getRevisionCtaState({
+    let seen = [];
+    if (proxima && proxima.id) {
+      try { if (localStorage.getItem('rev-modal-shown:' + proxima.id) === '1') seen = [proxima.id]; } catch (e) {}
+    }
+    const cfg = shouldMostrarRevisionModal({
       proximaSesion: proxima,
       revisionEnviada: enviada,
-      now: new Date()
+      now: new Date(),
+      seenModalIds: seen
     });
-    if (state !== 'urgent') return;
-    const key = 'rev-modal-shown:' + proxima.id;
-    try { if (localStorage.getItem(key) === '1') return; } catch (e) {}
+    if (!cfg.show) return;
     const modal = $('#ms-revision-modal');
     if (!modal) return;
-    const when = formatFechaRelativa(new Date(proxima.fecha), new Date());
     const body = $('#ms-revision-modal-body');
-    if (body) body.textContent = 'Tenemos sesión ' + when + '. Antes de vernos, cuéntame en 5 minutos cómo ha ido este mes — los platos que han funcionado, los que no, tu energía, tu ánimo. Así afino bien tu próximo menú.';
+    if (body) body.textContent = cfg.body;
     modal.hidden = false;
-    const markSeen = () => { try { localStorage.setItem(key, '1'); } catch (e) {} };
+    const markSeen = () => { try { localStorage.setItem(cfg.lsKey, '1'); } catch (e) {} };
     const primary = $('#ms-revision-modal-go');
     const secondary = $('#ms-revision-modal-later');
     if (primary) {
@@ -2454,15 +2373,7 @@ appleTitle: "CLN"
     requestAnimationFrame(() => emailInput.focus());
   }
 
-  function primerNombreDesdeEmail(email) {
-    // Fallback amable si no tenemos el nombre real: deriva del prefijo del
-    // correo. "maria.garcia@..." → "Maria". Si falla, "de nuevo".
-    if (!email) return 'de nuevo';
-    const raw = String(email).split('@')[0] || '';
-    const first = raw.split(/[._\-+]/)[0];
-    if (!first) return 'de nuevo';
-    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
-  }
+  // primerNombreDesdeEmail vive en logic.js (pura, testada).
 
   // -------- auth wiring --------
   async function render(session) {
@@ -2487,8 +2398,9 @@ appleTitle: "CLN"
         showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
       }
       maybeShowOnboarding();
-      // Celebra milestone sólo si el onboarding no está en pantalla (ya visto).
-      if (result && typeof result.racha === 'number' && paciente && paciente.onboarding) {
+      // shouldCelebrarMilestone (en logic.js) ya gatea sobre paciente.onboarding
+      // para no apilar el modal del milestone encima del onboarding.
+      if (result && typeof result.racha === 'number') {
         maybeCelebrarMilestone(result.racha);
       }
     } else {
@@ -2505,13 +2417,19 @@ appleTitle: "CLN"
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = emailInput.value.trim().toLowerCase();
-    if (!email) return;
-    if (!consentBox.checked) {
-      showStatus('Para recibir el código tienes que aceptar la política de privacidad.', 'error');
-      consentBox.focus();
+    const v = validateLoginForm({ email: emailInput.value, consent: consentBox.checked });
+    if (!v.ok) {
+      if (v.error === 'no-consent') {
+        showStatus('Para recibir el código tienes que aceptar la política de privacidad.', 'error');
+        consentBox.focus();
+      } else if (v.error === 'invalid') {
+        showStatus('Ese correo no parece válido. Revísalo y vuelve a enviar.', 'error');
+        emailInput.focus();
+      }
+      // 'empty' → silencioso (UX: no regañar antes de que escriba)
       return;
     }
+    const email = v.email;
 
     submitBtn.disabled = true;
     submitBtn.classList.add('is-loading');
@@ -2561,12 +2479,13 @@ appleTitle: "CLN"
   // -------- OTP submit (verifica el código de 6 dígitos) --------
   otpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const code = otpInput.value.replace(/\D/g, '');
-    if (code.length !== 6 || !pendingOtpEmail) {
+    const v = validateOtpCode(otpInput.value.replace(/\D/g, ''));
+    if (!v.ok || !pendingOtpEmail) {
       showStatus('Escribe el código de 6 dígitos que te hemos enviado.', 'error');
       otpInput.focus();
       return;
     }
+    const code = v.code;
     otpSubmit.disabled = true;
     otpSubmit.classList.add('is-loading');
     setSubmitLabel(otpSubmit, 'Entrando…');
@@ -2607,19 +2526,17 @@ appleTitle: "CLN"
   const inappIntro     = $('#ms-inapp-intro');
 
   function maybeMostrarInstallFlow() {
-    if (isStandalone()) return; // ya instalada
-    try { if (localStorage.getItem(TUTORIAL_SEEN_KEY) === '1') return; } catch (e) { /* noop */ }
-
-    const inApp = detectInAppBrowser();
-    if (inApp) {
-      mostrarInAppModal(inApp);
-      return;
-    }
-    const plat = detectPlatform();
-    if (plat === 'ios' || plat === 'android') {
-      mostrarInstallModal(plat);
-    }
-    // escritorio u otros: no mostramos nada
+    let tutorialSeen = false;
+    try { tutorialSeen = localStorage.getItem(TUTORIAL_SEEN_KEY) === '1'; } catch (e) { /* noop */ }
+    const hint = shouldShowInstallHint({
+      standalone: isStandalone(),
+      tutorialSeen,
+      inAppBrowser: detectInAppBrowserLocal(),
+      platform: detectPlatformLocal()
+    });
+    if (hint.kind === 'inapp') mostrarInAppModal(hint.inApp);
+    else if (hint.kind === 'install') mostrarInstallModal(hint.plat);
+    // 'none' → no mostramos nada (ya instalada, tutorial visto, o escritorio normal).
   }
 
   function mostrarInstallModal(plat) {
@@ -2666,7 +2583,7 @@ appleTitle: "CLN"
   });
 
   function mostrarInAppModal(kind) {
-    const plat = detectPlatform();
+    const plat = detectPlatformLocal();
     if (plat === 'android') {
       inappAction.textContent = 'Abrir en Chrome';
       inappAction.dataset.mode = 'android';
@@ -2685,14 +2602,7 @@ appleTitle: "CLN"
     requestAnimationFrame(() => inappAction.focus());
   }
 
-  function nombreAppEmbebida(kind) {
-    const nombres = {
-      instagram: 'Instagram', facebook: 'Facebook', line: 'Line',
-      tiktok: 'TikTok', linkedin: 'LinkedIn', snapchat: 'Snapchat',
-      webview: 'una app'
-    };
-    return nombres[kind] || 'una app';
-  }
+  // nombreAppEmbebida vive en logic.js (pura, testada).
 
   inappAction.addEventListener('click', async () => {
     const mode = inappAction.dataset.mode;
@@ -2742,31 +2652,24 @@ appleTitle: "CLN"
       // Así el feedback es inmediato aunque la red o la sesión estén lentas
       // (p.ej. al volver de bloquear el móvil).
       const todayISO = toISO(new Date());
-      const estadoPrevio = checkinsMap.get(todayISO);
-      checkinsMap.set(todayISO, estado);
+      const estadoPrevio = applyCheckinOptimistic(checkinsMap, todayISO, estado);
       renderStreak(checkinsMap);
       renderCalendar(checkinsMap);
 
       const res = await upsertCheckin(estado);
-      // B4: sesión caducada → vuelta amable al login (welcome-back hará su magia).
-      if (res && res.sessionExpired) {
-        if (estadoPrevio === undefined) checkinsMap.delete(todayISO);
-        else checkinsMap.set(todayISO, estadoPrevio);
+      if (res && (res.sessionExpired || res.error)) {
+        revertCheckin(checkinsMap, todayISO, estadoPrevio);
         if (estadoPrevio) setActiveCheck(estadoPrevio);
         renderStreak(checkinsMap);
         renderCalendar(checkinsMap);
-        showToast('Tu sesión ha caducado. Te llevamos a iniciar sesión.');
-        render(null);
-        return;
-      }
-      if (res && res.error) {
-        console.error(res.error);
-        if (estadoPrevio === undefined) checkinsMap.delete(todayISO);
-        else checkinsMap.set(todayISO, estadoPrevio);
-        if (estadoPrevio) setActiveCheck(estadoPrevio);
-        renderStreak(checkinsMap);
-        renderCalendar(checkinsMap);
-        showToast('No hemos podido guardarlo. Prueba otra vez en un momento.');
+        if (res.sessionExpired) {
+          // B4: sesión caducada → vuelta amable al login (welcome-back hará su magia).
+          showToast('Tu sesión ha caducado. Te llevamos a iniciar sesión.');
+          render(null);
+        } else {
+          console.error(res.error);
+          showToast('No hemos podido guardarlo. Prueba otra vez en un momento.');
+        }
         return;
       }
       // Re-fetch para sincronizar con servidor (silencioso si falla).
@@ -2828,18 +2731,33 @@ appleTitle: "CLN"
   // stale mientras la pestaña está congelada.
   let lastVisibilityRefresh = 0;
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState !== 'visible') return;
-    const now = Date.now();
-    if (now - lastVisibilityRefresh < 2000) return;
-    lastVisibilityRefresh = now;
+    // Pre-check barato: debounce sin tocar red.
+    const preDecision = shouldRehydrateOnVisibility({
+      visibilityState: document.visibilityState,
+      now: Date.now(),
+      lastRefreshAt: lastVisibilityRefresh,
+      hasSession: true,  // todavía no lo sabemos; si no, lo corregimos abajo
+      authedVisible: !authedView.hidden,
+      hasPaciente: !!paciente
+    });
+    if (preDecision === 'ignore') return;
+    lastVisibilityRefresh = Date.now();
     const { data } = await supa.auth.getSession();
-    if (!data.session) {
+    const decision = shouldRehydrateOnVisibility({
+      visibilityState: document.visibilityState,
+      now: Date.now(),
+      lastRefreshAt: 0,  // ya actualizado, saltar debounce
+      hasSession: !!data.session,
+      authedVisible: !authedView.hidden,
+      hasPaciente: !!paciente
+    });
+    if (decision === 'go-login') {
       // sesión caducada mientras el móvil estaba bloqueado
       authedView.hidden = true;
       loginView.hidden = false;
       return;
     }
-    if (!authedView.hidden && paciente) {
+    if (decision === 'rehydrate') {
       try { await hydrate(); } catch (e) { console.error('rehydrate', e); }
     }
   });
@@ -2851,14 +2769,13 @@ appleTitle: "CLN"
     const params = new URLSearchParams(window.location.search);
     const qEmail = params.get('email');
     if (!qEmail) return;
-    const normalizado = qEmail.trim().toLowerCase();
-    emailInput.value = normalizado;
-    // Si el param coincide con el paciente conocido, mantenemos welcome-back.
-    // Si difiere, ocultamos welcome-back: es otro correo.
-    const known = pacienteConocido();
-    if (known && known !== normalizado) {
+    const r = resolveInitialLogin({ queryEmail: qEmail, lastEmail: pacienteConocido() });
+    emailInput.value = r.email;
+    if (r.mode === 'query') {
+      // Query distinto al paciente conocido → volvemos a la variante fresh
+      // para no saludar con el nombre equivocado. Email queda prefilled.
       ocultarWelcomeBack();
-      emailInput.value = normalizado;
+      emailInput.value = r.email;
     }
     // Focus the submit button so the flow is: open email → click → click "Enviar código".
     requestAnimationFrame(() => submitBtn.focus());

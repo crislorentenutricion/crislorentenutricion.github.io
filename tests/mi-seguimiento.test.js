@@ -13,6 +13,33 @@ const {
   getRevisionCtaState,
   formatFechaRelativa,
   visibleMeals,
+  detectPlatform,
+  detectInAppBrowser,
+  nombreAppEmbebida,
+  esErrorTransitorio,
+  primerNombre,
+  primerNombreDesdeEmail,
+  slugifyItem,
+  compraStorageKey,
+  totalItemsCompra,
+  normalizeEmail,
+  validateLoginForm,
+  validateOtpCode,
+  resolveInitialLogin,
+  shouldShowInstallHint,
+  shouldRehydrateOnVisibility,
+  shouldCelebrarMilestone,
+  WEEKDAY_KEYS_JSON,
+  computeDayView,
+  computeTodayView,
+  buildCompraModel,
+  computeCompraMeta,
+  withCompraToggle,
+  applyCheckinOptimistic,
+  revertCheckin,
+  buildRevisionCtaCopy,
+  shouldMostrarRevisionModal,
+  hydrateDashboard,
 } = require("../src/mi-seguimiento/logic.js");
 
 // ------------------------------- toISO -------------------------------
@@ -433,4 +460,984 @@ test("visibleMeals: filtra también strings solo con espacios y valores nulos", 
 test("visibleMeals: dia nulo o comidas no-array → array vacío", () => {
   assert.deepEqual(visibleMeals(null, COMIDAS_5), []);
   assert.deepEqual(visibleMeals({}, null), []);
+});
+
+// ------------------------------ detectPlatform -----------------------------
+
+test("detectPlatform: iPhone UA → 'ios'", () => {
+  const ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15';
+  assert.equal(detectPlatform({ ua, maxTouchPoints: 5 }), 'ios');
+});
+
+test("detectPlatform: iPad UA → 'ios'", () => {
+  const ua = 'Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X)';
+  assert.equal(detectPlatform({ ua, maxTouchPoints: 5 }), 'ios');
+});
+
+test("detectPlatform: iPadOS 13+ se anuncia como Macintosh con touch → 'ios'", () => {
+  const ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15';
+  assert.equal(detectPlatform({ ua, maxTouchPoints: 5 }), 'ios');
+});
+
+test("detectPlatform: Mac sin touch points → 'other' (no confundir con iPad)", () => {
+  const ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)';
+  assert.equal(detectPlatform({ ua, maxTouchPoints: 0 }), 'other');
+});
+
+test("detectPlatform: Android UA → 'android'", () => {
+  const ua = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36';
+  assert.equal(detectPlatform({ ua, maxTouchPoints: 5 }), 'android');
+});
+
+test("detectPlatform: escritorio Windows → 'other'", () => {
+  const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120';
+  assert.equal(detectPlatform({ ua, maxTouchPoints: 0 }), 'other');
+});
+
+test("detectPlatform: sin args / ua vacío → 'other'", () => {
+  assert.equal(detectPlatform(), 'other');
+  assert.equal(detectPlatform({}), 'other');
+  assert.equal(detectPlatform({ ua: '' }), 'other');
+});
+
+// --------------------------- detectInAppBrowser ----------------------------
+
+test("detectInAppBrowser: Instagram UA", () => {
+  const ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) Instagram 300.0.0.22.111';
+  assert.equal(detectInAppBrowser(ua), 'instagram');
+});
+
+test("detectInAppBrowser: Facebook (FBAN/FBAV)", () => {
+  assert.equal(detectInAppBrowser('Mozilla/5.0 (iPhone) FBAN/FBIOS;FBAV/450.0'), 'facebook');
+  assert.equal(detectInAppBrowser('Mozilla/5.0 FB_IAB/FB4A'), 'facebook');
+});
+
+test("detectInAppBrowser: TikTok UA (musical_ly / Bytedance)", () => {
+  assert.equal(detectInAppBrowser('Mozilla/5.0 musical_ly_31.1.0 JsSdk/2.0'), 'tiktok');
+  assert.equal(detectInAppBrowser('Mozilla/5.0 BytedanceWebview/1.0'), 'tiktok');
+});
+
+test("detectInAppBrowser: LinkedIn, Snapchat, Line", () => {
+  assert.equal(detectInAppBrowser('Mozilla/5.0 LinkedInApp'), 'linkedin');
+  assert.equal(detectInAppBrowser('Mozilla/5.0 Snapchat/12'), 'snapchat');
+  assert.equal(detectInAppBrowser('Mozilla/5.0 Line/13.0.0'), 'line');
+});
+
+test("detectInAppBrowser: WebView Android genérica ('; wv)')", () => {
+  const ua = 'Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36';
+  assert.equal(detectInAppBrowser(ua), 'webview');
+});
+
+test("detectInAppBrowser: Safari/Chrome normal → null (no es embebido)", () => {
+  const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15 Version/17.0 Mobile Safari';
+  const chrome = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0 Mobile Safari';
+  assert.equal(detectInAppBrowser(safari), null);
+  assert.equal(detectInAppBrowser(chrome), null);
+});
+
+test("detectInAppBrowser: ua vacío o null → null", () => {
+  assert.equal(detectInAppBrowser(''), null);
+  assert.equal(detectInAppBrowser(null), null);
+  assert.equal(detectInAppBrowser(undefined), null);
+});
+
+// ---------------------------- nombreAppEmbebida ----------------------------
+
+test("nombreAppEmbebida: mapea kinds conocidos a label humano", () => {
+  assert.equal(nombreAppEmbebida('instagram'), 'Instagram');
+  assert.equal(nombreAppEmbebida('facebook'), 'Facebook');
+  assert.equal(nombreAppEmbebida('tiktok'), 'TikTok');
+  assert.equal(nombreAppEmbebida('linkedin'), 'LinkedIn');
+  assert.equal(nombreAppEmbebida('snapchat'), 'Snapchat');
+  assert.equal(nombreAppEmbebida('line'), 'Line');
+  assert.equal(nombreAppEmbebida('webview'), 'una app');
+});
+
+test("nombreAppEmbebida: kind desconocido → 'una app' (fallback)", () => {
+  assert.equal(nombreAppEmbebida('marcianos'), 'una app');
+  assert.equal(nombreAppEmbebida(null), 'una app');
+  assert.equal(nombreAppEmbebida(undefined), 'una app');
+});
+
+// --------------------------- esErrorTransitorio ----------------------------
+
+test("esErrorTransitorio: TypeError ('Failed to fetch') → true", () => {
+  assert.equal(esErrorTransitorio(new TypeError('Failed to fetch')), true);
+  assert.equal(esErrorTransitorio(new TypeError('Load failed')), true);
+});
+
+test("esErrorTransitorio: status 500/502/503/504 → true", () => {
+  assert.equal(esErrorTransitorio({ status: 500 }), true);
+  assert.equal(esErrorTransitorio({ status: 502 }), true);
+  assert.equal(esErrorTransitorio({ status: 503 }), true);
+  assert.equal(esErrorTransitorio({ status: 504 }), true);
+});
+
+test("esErrorTransitorio: status 4xx (auth, payload) → false (NO reintentar)", () => {
+  assert.equal(esErrorTransitorio({ status: 400 }), false);
+  assert.equal(esErrorTransitorio({ status: 401 }), false);
+  assert.equal(esErrorTransitorio({ status: 403 }), false);
+  assert.equal(esErrorTransitorio({ status: 404 }), false);
+  assert.equal(esErrorTransitorio({ status: 429 }), false);
+});
+
+test("esErrorTransitorio: Supabase error shape con context.status", () => {
+  const err5xx = { context: { status: 503 } };
+  const err4xx = { context: { status: 401 } };
+  assert.equal(esErrorTransitorio(err5xx), true);
+  assert.equal(esErrorTransitorio(err4xx), false);
+});
+
+test("esErrorTransitorio: error sin status con mensaje de red → true", () => {
+  assert.equal(esErrorTransitorio(new Error('network timeout')), true);
+  assert.equal(esErrorTransitorio(new Error('Failed to fetch')), true);
+  assert.equal(esErrorTransitorio(new Error('Load failed')), true);
+  assert.equal(esErrorTransitorio({ message: 'fetch aborted' }), true);
+});
+
+test("esErrorTransitorio: Error genérico sin rastro de red → false", () => {
+  assert.equal(esErrorTransitorio(new Error('boom')), false);
+  assert.equal(esErrorTransitorio({ message: 'algo raro' }), false);
+});
+
+test("esErrorTransitorio: null / undefined → false (no hay nada que reintentar)", () => {
+  assert.equal(esErrorTransitorio(null), false);
+  assert.equal(esErrorTransitorio(undefined), false);
+});
+
+// ------------------------------- primerNombre ------------------------------
+
+test("primerNombre: NOMBRE EN MAYÚSCULAS → Title Case del primer nombre", () => {
+  assert.equal(primerNombre('ANA MARIA LOPEZ'), 'Ana');
+  assert.equal(primerNombre('MARIA'), 'Maria');
+});
+
+test("primerNombre: ya en Title Case → se conserva (solo capitaliza la inicial)", () => {
+  assert.equal(primerNombre('Ana Lopez'), 'Ana');
+});
+
+test("primerNombre: espacios al principio, múltiples nombres → primer token", () => {
+  assert.equal(primerNombre('  ANA MARIA '), 'Ana');
+  assert.equal(primerNombre('Ana   Maria  Lopez'), 'Ana');
+});
+
+test("primerNombre: vacío / null / undefined → ''", () => {
+  assert.equal(primerNombre(''), '');
+  assert.equal(primerNombre(null), '');
+  assert.equal(primerNombre(undefined), '');
+});
+
+test("primerNombre: solo espacios → ''", () => {
+  assert.equal(primerNombre('   '), '');
+});
+
+// -------------------------- primerNombreDesdeEmail -------------------------
+
+test("primerNombreDesdeEmail: prefijo simple → Title Case", () => {
+  assert.equal(primerNombreDesdeEmail('ana@example.com'), 'Ana');
+  assert.equal(primerNombreDesdeEmail('MARIA@example.com'), 'Maria');
+});
+
+test("primerNombreDesdeEmail: separadores '.', '_', '-', '+' → solo primer token", () => {
+  assert.equal(primerNombreDesdeEmail('maria.garcia@example.com'), 'Maria');
+  assert.equal(primerNombreDesdeEmail('maria_garcia@example.com'), 'Maria');
+  assert.equal(primerNombreDesdeEmail('maria-garcia@example.com'), 'Maria');
+  assert.equal(primerNombreDesdeEmail('maria+promos@example.com'), 'Maria');
+});
+
+test("primerNombreDesdeEmail: email vacío / null / undefined → 'de nuevo'", () => {
+  assert.equal(primerNombreDesdeEmail(''), 'de nuevo');
+  assert.equal(primerNombreDesdeEmail(null), 'de nuevo');
+  assert.equal(primerNombreDesdeEmail(undefined), 'de nuevo');
+});
+
+test("primerNombreDesdeEmail: prefijo vacío ('@gmail.com' o '.@...') → 'de nuevo'", () => {
+  assert.equal(primerNombreDesdeEmail('@gmail.com'), 'de nuevo');
+  assert.equal(primerNombreDesdeEmail('.maria@gmail.com'), 'de nuevo');
+});
+
+// ------------------------------- slugifyItem -------------------------------
+
+test("slugifyItem: categoría+texto con acentos → slug sin diacríticos", () => {
+  assert.equal(slugifyItem('LÁCTEOS', 'Yogur natural'), 'lacteos-yogur-natural');
+  assert.equal(slugifyItem('CARNES', 'Pollo al ajillo'), 'carnes-pollo-al-ajillo');
+});
+
+test("slugifyItem: quita caracteres no alfanuméricos", () => {
+  assert.equal(slugifyItem('Frutas', 'Manzana (Fuji)'), 'frutas-manzana-fuji');
+  assert.equal(slugifyItem('Varios', 'Aceite / vinagre'), 'varios-aceite-vinagre');
+});
+
+test("slugifyItem: mismos inputs → misma key (estable)", () => {
+  const a = slugifyItem('FRUTAS', 'Plátano');
+  const b = slugifyItem('FRUTAS', 'Plátano');
+  assert.equal(a, b);
+});
+
+test("slugifyItem: inputs distintos → keys distintas (sin colisiones obvias)", () => {
+  assert.notEqual(
+    slugifyItem('FRUTAS', 'Manzana'),
+    slugifyItem('VERDURAS', 'Manzana')
+  );
+});
+
+test("slugifyItem: texto editado → pierde el check (aceptado, sin historial)", () => {
+  // Documenta la decisión: si Cristina cambia el texto, la key cambia.
+  assert.notEqual(
+    slugifyItem('FRUTAS', 'Manzana'),
+    slugifyItem('FRUTAS', 'Manzana Fuji')
+  );
+});
+
+// ----------------------------- compraStorageKey ----------------------------
+
+test("compraStorageKey: menu con id → 'ms-compra-<id>'", () => {
+  assert.equal(compraStorageKey({ id: 'abc-123' }), 'ms-compra-abc-123');
+});
+
+test("compraStorageKey: menu sin id o null → null (no persiste)", () => {
+  assert.equal(compraStorageKey(null), null);
+  assert.equal(compraStorageKey(undefined), null);
+  assert.equal(compraStorageKey({}), null);
+  assert.equal(compraStorageKey({ id: '' }), null);
+});
+
+test("compraStorageKey: ids distintos → keys distintas (cada menú su lista)", () => {
+  assert.notEqual(compraStorageKey({ id: 'uno' }), compraStorageKey({ id: 'dos' }));
+});
+
+// ----------------------------- totalItemsCompra ----------------------------
+
+const CATEGORIAS_COMPRA = [
+  'CARNES Y PESCADOS',
+  'VERDURAS Y HORTALIZAS',
+  'FRUTAS',
+  'LÁCTEOS Y HUEVOS',
+  'LEGUMBRES Y CEREALES',
+  'FRUTOS SECOS Y VARIOS'
+];
+
+test("totalItemsCompra: suma items de todas las categorías conocidas", () => {
+  const lista = {
+    'CARNES Y PESCADOS': ['Pollo', 'Merluza'],
+    'FRUTAS': ['Manzana', 'Pera', 'Kiwi']
+  };
+  assert.equal(totalItemsCompra(lista, CATEGORIAS_COMPRA), 5);
+});
+
+test("totalItemsCompra: ignora claves no listadas en 'categorias' (evita contar ruido)", () => {
+  const lista = {
+    'FRUTAS': ['Manzana'],
+    'OTRO_CAMPO_EXTRA': ['no', 'debería', 'contar']
+  };
+  assert.equal(totalItemsCompra(lista, CATEGORIAS_COMPRA), 1);
+});
+
+test("totalItemsCompra: categoría no-array → ignorada (sin crash)", () => {
+  const lista = {
+    'FRUTAS': ['Manzana'],
+    'CARNES Y PESCADOS': null,
+    'VERDURAS Y HORTALIZAS': 'string raro'
+  };
+  assert.equal(totalItemsCompra(lista, CATEGORIAS_COMPRA), 1);
+});
+
+test("totalItemsCompra: lista vacía → 0", () => {
+  assert.equal(totalItemsCompra({}, CATEGORIAS_COMPRA), 0);
+});
+
+test("totalItemsCompra: lista o categorias null → 0 (no revienta)", () => {
+  assert.equal(totalItemsCompra(null, CATEGORIAS_COMPRA), 0);
+  assert.equal(totalItemsCompra({ FRUTAS: ['a'] }, null), 0);
+  assert.equal(totalItemsCompra(undefined, undefined), 0);
+});
+
+// ------------------------- normalizeEmail / validateLoginForm --------------
+
+test("normalizeEmail: trim + lowercase", () => {
+  assert.equal(normalizeEmail("  Maria@Example.com  "), "maria@example.com");
+  assert.equal(normalizeEmail("ANA@X.com"), "ana@x.com");
+});
+
+test("normalizeEmail: null / undefined / vacío → ''", () => {
+  assert.equal(normalizeEmail(null), "");
+  assert.equal(normalizeEmail(undefined), "");
+  assert.equal(normalizeEmail(""), "");
+});
+
+test("validateLoginForm: email válido + consent → ok", () => {
+  const r = validateLoginForm({ email: "Maria@Example.com", consent: true });
+  assert.deepEqual(r, { ok: true, email: "maria@example.com" });
+});
+
+test("validateLoginForm: email vacío → error 'empty'", () => {
+  assert.deepEqual(validateLoginForm({ email: "", consent: true }), { ok: false, error: "empty" });
+  assert.deepEqual(validateLoginForm({ email: "   ", consent: true }), { ok: false, error: "empty" });
+  assert.deepEqual(validateLoginForm({ consent: true }), { ok: false, error: "empty" });
+});
+
+test("validateLoginForm: email sin arroba o sin dominio → error 'invalid'", () => {
+  assert.deepEqual(validateLoginForm({ email: "no-arroba", consent: true }), { ok: false, error: "invalid" });
+  assert.deepEqual(validateLoginForm({ email: "maria@", consent: true }), { ok: false, error: "invalid" });
+  assert.deepEqual(validateLoginForm({ email: "maria@nada", consent: true }), { ok: false, error: "invalid" });
+});
+
+test("validateLoginForm: consent en false → error 'no-consent' (aunque el email esté OK)", () => {
+  assert.deepEqual(
+    validateLoginForm({ email: "maria@example.com", consent: false }),
+    { ok: false, error: "no-consent" }
+  );
+});
+
+// ------------------------------- validateOtpCode --------------------------
+
+test("validateOtpCode: 6 dígitos → ok con código trimeado", () => {
+  assert.deepEqual(validateOtpCode("123456"), { ok: true, code: "123456" });
+  assert.deepEqual(validateOtpCode(" 654321 "), { ok: true, code: "654321" });
+});
+
+test("validateOtpCode: menos de 6 dígitos, más, letras o vacío → error", () => {
+  assert.deepEqual(validateOtpCode("12345"), { ok: false, error: "invalid" });
+  assert.deepEqual(validateOtpCode("1234567"), { ok: false, error: "invalid" });
+  assert.deepEqual(validateOtpCode("12345a"), { ok: false, error: "invalid" });
+  assert.deepEqual(validateOtpCode(""), { ok: false, error: "invalid" });
+  assert.deepEqual(validateOtpCode(null), { ok: false, error: "invalid" });
+});
+
+// ------------------------------- resolveInitialLogin ---------------------
+
+test("resolveInitialLogin: query coincide con last → 'welcome-back'", () => {
+  assert.deepEqual(
+    resolveInitialLogin({ queryEmail: "maria@x.com", lastEmail: "Maria@X.com" }),
+    { email: "maria@x.com", mode: "welcome-back" }
+  );
+});
+
+test("resolveInitialLogin: query sin last → 'query' con prefill", () => {
+  assert.deepEqual(
+    resolveInitialLogin({ queryEmail: "NEW@x.com" }),
+    { email: "new@x.com", mode: "query" }
+  );
+});
+
+test("resolveInitialLogin: query distinta al last → 'query' (prefill, sin saludo)", () => {
+  assert.deepEqual(
+    resolveInitialLogin({ queryEmail: "otra@x.com", lastEmail: "maria@x.com" }),
+    { email: "otra@x.com", mode: "query" }
+  );
+});
+
+test("resolveInitialLogin: solo lastEmail → 'welcome-back'", () => {
+  assert.deepEqual(
+    resolveInitialLogin({ lastEmail: "maria@x.com" }),
+    { email: "maria@x.com", mode: "welcome-back" }
+  );
+});
+
+test("resolveInitialLogin: sin query ni last → 'fresh'", () => {
+  assert.deepEqual(resolveInitialLogin({}), { email: "", mode: "fresh" });
+  assert.deepEqual(resolveInitialLogin(), { email: "", mode: "fresh" });
+});
+
+// ------------------------------- shouldShowInstallHint --------------------
+
+test("shouldShowInstallHint: standalone → 'none' (ya instalada)", () => {
+  assert.deepEqual(shouldShowInstallHint({ standalone: true, platform: "ios" }), { kind: "none" });
+});
+
+test("shouldShowInstallHint: tutorialSeen → 'none' (no acosar)", () => {
+  assert.deepEqual(shouldShowInstallHint({ tutorialSeen: true, platform: "ios" }), { kind: "none" });
+});
+
+test("shouldShowInstallHint: dentro de Instagram → 'inapp' (prioritario sobre install)", () => {
+  const r = shouldShowInstallHint({ inAppBrowser: "instagram", platform: "ios" });
+  assert.deepEqual(r, { kind: "inapp", inApp: "instagram" });
+});
+
+test("shouldShowInstallHint: iOS Safari no instalado → 'install' con plat='ios'", () => {
+  assert.deepEqual(shouldShowInstallHint({ platform: "ios" }), { kind: "install", plat: "ios" });
+});
+
+test("shouldShowInstallHint: Android Chrome no instalado → 'install' con plat='android'", () => {
+  assert.deepEqual(shouldShowInstallHint({ platform: "android" }), { kind: "install", plat: "android" });
+});
+
+test("shouldShowInstallHint: escritorio → 'none' (no invitar a instalar)", () => {
+  assert.deepEqual(shouldShowInstallHint({ platform: "other" }), { kind: "none" });
+});
+
+// ---------------------------- shouldRehydrateOnVisibility -----------------
+
+test("shouldRehydrateOnVisibility: no visible → 'ignore'", () => {
+  assert.equal(
+    shouldRehydrateOnVisibility({ visibilityState: "hidden", hasSession: true, authedVisible: true, hasPaciente: true }),
+    "ignore"
+  );
+});
+
+test("shouldRehydrateOnVisibility: debounce (<2s desde último refresh) → 'ignore'", () => {
+  const now = 10_000;
+  assert.equal(
+    shouldRehydrateOnVisibility({ visibilityState: "visible", now, lastRefreshAt: 9_500, hasSession: true, authedVisible: true, hasPaciente: true }),
+    "ignore"
+  );
+});
+
+test("shouldRehydrateOnVisibility: sin sesión → 'go-login'", () => {
+  assert.equal(
+    shouldRehydrateOnVisibility({ visibilityState: "visible", now: 10_000, lastRefreshAt: 0, hasSession: false }),
+    "go-login"
+  );
+});
+
+test("shouldRehydrateOnVisibility: sesión OK + vista autenticada + paciente → 'rehydrate'", () => {
+  assert.equal(
+    shouldRehydrateOnVisibility({ visibilityState: "visible", now: 10_000, lastRefreshAt: 0, hasSession: true, authedVisible: true, hasPaciente: true }),
+    "rehydrate"
+  );
+});
+
+test("shouldRehydrateOnVisibility: sesión OK pero no estamos en la vista authed → 'noop'", () => {
+  assert.equal(
+    shouldRehydrateOnVisibility({ visibilityState: "visible", now: 10_000, lastRefreshAt: 0, hasSession: true, authedVisible: false, hasPaciente: true }),
+    "noop"
+  );
+});
+
+// ---------------------------- shouldCelebrarMilestone --------------------
+
+test("shouldCelebrarMilestone: onboarding aún no visto → null (no apilar modales)", () => {
+  assert.equal(shouldCelebrarMilestone({ racha: 30, vistos: [], onboarding: false }), null);
+});
+
+test("shouldCelebrarMilestone: onboarding visto + racha cruza hito → devuelve el hito", () => {
+  assert.equal(shouldCelebrarMilestone({ racha: 7, vistos: [], onboarding: true }), 7);
+  assert.equal(shouldCelebrarMilestone({ racha: 30, vistos: [7, 14], onboarding: true }), 30);
+});
+
+test("shouldCelebrarMilestone: onboarding visto pero racha no cruza ningún hito → null", () => {
+  assert.equal(shouldCelebrarMilestone({ racha: 6, vistos: [], onboarding: true }), null);
+});
+
+test("shouldCelebrarMilestone: racha no es número → null", () => {
+  assert.equal(shouldCelebrarMilestone({ racha: null, vistos: [], onboarding: true }), null);
+  assert.equal(shouldCelebrarMilestone({ onboarding: true }), null);
+});
+
+// ---------------------------- computeDayView -----------------------------
+
+const COMIDAS_CFG = [
+  ['desayuno', 'Desayuno'],
+  ['almuerzo', 'Almuerzo'],
+  ['comida',   'Comida'],
+  ['merienda', 'Merienda'],
+  ['cena',     'Cena'],
+];
+
+const MENU_VIGENTE = {
+  id: 'm1',
+  contenido: {
+    dias: {
+      lunes:     { desayuno: 'D-L', almuerzo: 'A-L', comida: 'C-L', merienda: 'M-L', cena: 'N-L' },
+      martes:    { desayuno: 'D-M', almuerzo: '',    comida: 'C-M', merienda: 'M-M', cena: 'N-M' },
+      miercoles: { desayuno: 'D-X', almuerzo: 'A-X', comida: 'C-X', merienda: 'M-X', cena: 'N-X' },
+      jueves:    { desayuno: 'D-J', almuerzo: 'A-J', comida: 'C-J', merienda: 'M-J', cena: 'N-J' },
+      viernes:   { desayuno: 'D-V', almuerzo: 'A-V', comida: 'C-V', merienda: 'M-V', cena: 'N-V' },
+      sabado:    { desayuno: 'D-S', almuerzo: 'A-S', comida: 'C-S', merienda: 'M-S', cena: 'N-S' },
+      domingo:   { desayuno: 'D-D', almuerzo: 'A-D', comida: 'C-D', merienda: 'M-D', cena: 'N-D' }
+    }
+  }
+};
+
+test("WEEKDAY_KEYS_JSON expone las claves canónicas del JSON del menú", () => {
+  assert.deepEqual(
+    WEEKDAY_KEYS_JSON,
+    ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado']
+  );
+});
+
+test("computeDayView: día pasado con checkin 'seguido' → status marked con copy de «Lo seguí»", () => {
+  const now = new Date(2026, 3, 17); // viernes 17 abr 2026
+  const map = new Map([["2026-04-15", "seguido"]]); // miércoles
+  const r = computeDayView({ iso: "2026-04-15", menu: MENU_VIGENTE, checkinsMap: map, now, comidas: COMIDAS_CFG });
+  assert.equal(r.weekday, "miercoles");
+  assert.equal(r.status.kind, "marked");
+  assert.equal(r.status.cls, "is-ok");
+  assert.equal(r.status.label, "«Lo seguí»");
+  assert.match(r.status.msg, /cuidándote/);
+  assert.equal(r.meals.length, 5);
+  assert.equal(r.meals[0].text, "D-X");
+});
+
+test("computeDayView: día pasado con checkin 'parcial' → «A medias» con msg motivador", () => {
+  const now = new Date(2026, 3, 17);
+  const map = new Map([["2026-04-15", "parcial"]]);
+  const r = computeDayView({ iso: "2026-04-15", menu: MENU_VIGENTE, checkinsMap: map, now, comidas: COMIDAS_CFG });
+  assert.equal(r.status.label, "«A medias»");
+  assert.equal(r.status.cls, "is-mid");
+});
+
+test("computeDayView: día pasado con checkin 'no' → «Hoy no» con msg suave", () => {
+  const now = new Date(2026, 3, 17);
+  const map = new Map([["2026-04-15", "no"]]);
+  const r = computeDayView({ iso: "2026-04-15", menu: MENU_VIGENTE, checkinsMap: map, now, comidas: COMIDAS_CFG });
+  assert.equal(r.status.label, "«Hoy no»");
+  assert.equal(r.status.cls, "is-no");
+});
+
+test("computeDayView: día pasado sin marcar → unmarked con copy 'este día no lo marcaste'", () => {
+  const now = new Date(2026, 3, 17);
+  const r = computeDayView({ iso: "2026-04-10", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.status.kind, "unmarked");
+  assert.match(r.status.msg, /no lo marcaste/);
+});
+
+test("computeDayView: día hoy sin marcar → unmarked con copy 'aún no has marcado hoy'", () => {
+  const now = new Date(2026, 3, 17);
+  const r = computeDayView({ iso: "2026-04-17", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.status.kind, "unmarked");
+  assert.match(r.status.msg, /Aún no has marcado hoy/);
+});
+
+test("computeDayView: día futuro → unmarked con copy 'aún está por llegar'", () => {
+  const now = new Date(2026, 3, 17);
+  const r = computeDayView({ iso: "2026-04-25", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.status.kind, "unmarked");
+  assert.match(r.status.msg, /por llegar/);
+});
+
+test("computeDayView: slot vacío en el menú → visibleMeals filtra (pacientes con 4 tomas)", () => {
+  const now = new Date(2026, 3, 17);
+  const r = computeDayView({ iso: "2026-04-14", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  // Martes tiene almuerzo: '' → se filtra.
+  assert.equal(r.weekday, "martes");
+  assert.equal(r.meals.length, 4);
+  assert.ok(r.meals.every(m => m.key !== "almuerzo"));
+});
+
+test("computeDayView: menu null → meals vacío, status según checkin", () => {
+  const now = new Date(2026, 3, 17);
+  const map = new Map([["2026-04-15", "seguido"]]);
+  const r = computeDayView({ iso: "2026-04-15", menu: null, checkinsMap: map, now, comidas: COMIDAS_CFG });
+  assert.deepEqual(r.meals, []);
+  assert.equal(r.status.kind, "marked");
+});
+
+// ---------------------------- computeTodayView ---------------------------
+
+test("computeTodayView: viernes con menú → devuelve 5 comidas del viernes + activeCheck='seguido'", () => {
+  const now = new Date(2026, 3, 17, 10, 0); // viernes
+  const map = new Map([["2026-04-17", "seguido"]]);
+  const r = computeTodayView({ menu: MENU_VIGENTE, checkinsMap: map, now, comidas: COMIDAS_CFG });
+  assert.equal(r.weekday, "viernes");
+  assert.equal(r.todayISO, "2026-04-17");
+  assert.equal(r.activeCheck, "seguido");
+  assert.equal(r.meals.length, 5);
+  assert.equal(r.meals[2].text, "C-V");
+});
+
+test("computeTodayView: martes con almuerzo vacío → 4 comidas", () => {
+  const now = new Date(2026, 3, 14, 10, 0); // martes
+  const r = computeTodayView({ menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.weekday, "martes");
+  assert.equal(r.meals.length, 4);
+  assert.equal(r.activeCheck, null);
+});
+
+test("computeTodayView: menu null → meals vacío", () => {
+  const now = new Date(2026, 3, 17, 10, 0);
+  const r = computeTodayView({ menu: null, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.deepEqual(r.meals, []);
+  assert.equal(r.activeCheck, null);
+});
+
+// ---------------------------- buildCompraModel ---------------------------
+
+const CATEGORIAS = [
+  'CARNES Y PESCADOS',
+  'VERDURAS Y HORTALIZAS',
+  'FRUTAS',
+  'LÁCTEOS Y HUEVOS',
+  'LEGUMBRES Y CEREALES',
+  'FRUTOS SECOS Y VARIOS'
+];
+
+const MENU_COMPRA = {
+  id: 'm1',
+  contenido: {
+    lista_compra: {
+      'FRUTAS': ['Manzana', 'Pera'],
+      'CARNES Y PESCADOS': ['Pollo'],
+      'VERDURAS Y HORTALIZAS': []  // vacía → se filtra
+    }
+  }
+};
+
+test("buildCompraModel: lista vacía → empty:true", () => {
+  const r = buildCompraModel({ menu: { id: 'x', contenido: { lista_compra: {} } }, estadoSet: new Set(), categorias: CATEGORIAS });
+  assert.equal(r.empty, true);
+  assert.equal(r.total, 0);
+  assert.equal(r.cats.length, 0);
+});
+
+test("buildCompraModel: filtra categorías sin items y respeta orden de CATEGORIAS", () => {
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: new Set(), categorias: CATEGORIAS });
+  assert.equal(r.empty, false);
+  assert.equal(r.total, 3);
+  assert.equal(r.cats.length, 2);
+  assert.equal(r.cats[0].cat, 'CARNES Y PESCADOS'); // viene primero en CATEGORIAS
+  assert.equal(r.cats[1].cat, 'FRUTAS');
+});
+
+test("buildCompraModel: marca 'done' en items presentes en estadoSet", () => {
+  const set = new Set([slugifyItem('FRUTAS', 'Manzana')]);
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: set, categorias: CATEGORIAS });
+  const frutas = r.cats.find(c => c.cat === 'FRUTAS');
+  assert.equal(frutas.items[0].done, true);
+  assert.equal(frutas.items[1].done, false);
+  assert.equal(frutas.comprados, 1);
+  assert.equal(frutas.total, 2);
+  assert.equal(r.hechos, 1);
+});
+
+test("buildCompraModel: cada item tiene key estable (slugify)", () => {
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: new Set(), categorias: CATEGORIAS });
+  const frutas = r.cats.find(c => c.cat === 'FRUTAS');
+  assert.equal(frutas.items[0].key, slugifyItem('FRUTAS', 'Manzana'));
+});
+
+test("buildCompraModel: estadoSet puede venir como array (convertible)", () => {
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: [slugifyItem('FRUTAS', 'Pera')], categorias: CATEGORIAS });
+  const frutas = r.cats.find(c => c.cat === 'FRUTAS');
+  assert.equal(frutas.items.find(i => i.text === 'Pera').done, true);
+});
+
+// ---------------------------- computeCompraMeta --------------------------
+
+test("computeCompraMeta: total=0 → mensaje 'Disponible con tu próximo menú' + actions hidden", () => {
+  const r = computeCompraMeta({ total: 0, hechos: 0 });
+  assert.equal(r.metaText, 'Disponible con tu próximo menú');
+  assert.equal(r.progressDone, false);
+  assert.equal(r.actionsHidden, true);
+});
+
+test("computeCompraMeta: total>0 y hechos=0 → copy 'Semanal · N productos' y actions hidden (nada que reiniciar)", () => {
+  const r = computeCompraMeta({ total: 10, hechos: 0 });
+  assert.equal(r.metaText, 'Semanal · 10 productos');
+  assert.equal(r.actionsHidden, true);
+  assert.equal(r.progressDone, false);
+});
+
+test("computeCompraMeta: progreso parcial → copy 'X/Y comprados' + actions visibles", () => {
+  const r = computeCompraMeta({ total: 10, hechos: 3 });
+  assert.equal(r.metaText, 'Semanal · 3/10 comprados');
+  assert.equal(r.progressText, '3 de 10 comprados esta semana');
+  assert.equal(r.progressDone, false);
+  assert.equal(r.actionsHidden, false);
+});
+
+test("computeCompraMeta: hechos=total → copy 'completa' + progressDone=true", () => {
+  const r = computeCompraMeta({ total: 5, hechos: 5 });
+  assert.equal(r.metaText, 'Semanal · 5/5 comprados');
+  assert.equal(r.progressText, '¡Compra de la semana completa! Buen trabajo.');
+  assert.equal(r.progressDone, true);
+  assert.equal(r.actionsHidden, false);
+});
+
+// ---------------------------- withCompraToggle ---------------------------
+
+test("withCompraToggle: key nueva → la añade y devuelve done=true", () => {
+  const r = withCompraToggle(new Set(), 'frutas-manzana');
+  assert.equal(r.done, true);
+  assert.ok(r.set.has('frutas-manzana'));
+});
+
+test("withCompraToggle: key ya presente → la quita y devuelve done=false", () => {
+  const r = withCompraToggle(new Set(['frutas-manzana', 'frutas-pera']), 'frutas-manzana');
+  assert.equal(r.done, false);
+  assert.ok(!r.set.has('frutas-manzana'));
+  assert.ok(r.set.has('frutas-pera'));
+});
+
+test("withCompraToggle: no muta el Set original (inmutable)", () => {
+  const orig = new Set(['a']);
+  const r = withCompraToggle(orig, 'b');
+  assert.deepEqual([...orig], ['a']);
+  assert.deepEqual([...r.set].sort(), ['a', 'b']);
+});
+
+test("withCompraToggle: key vacía / null → devuelve set igual y done=false", () => {
+  const r = withCompraToggle(new Set(['a']), '');
+  assert.deepEqual([...r.set], ['a']);
+  assert.equal(r.done, false);
+});
+
+// -------------------- applyCheckinOptimistic / revertCheckin --------------
+
+test("applyCheckinOptimistic: no existía iso → prev=undefined, map tiene el estado nuevo", () => {
+  const map = new Map();
+  const prev = applyCheckinOptimistic(map, "2026-04-17", "seguido");
+  assert.equal(prev, undefined);
+  assert.equal(map.get("2026-04-17"), "seguido");
+});
+
+test("applyCheckinOptimistic: iso ya tenía estado → prev=estado previo, map pasa al nuevo", () => {
+  const map = new Map([["2026-04-17", "parcial"]]);
+  const prev = applyCheckinOptimistic(map, "2026-04-17", "seguido");
+  assert.equal(prev, "parcial");
+  assert.equal(map.get("2026-04-17"), "seguido");
+});
+
+test("revertCheckin: prev=undefined → borra la entrada del map", () => {
+  const map = new Map([["2026-04-17", "seguido"]]);
+  revertCheckin(map, "2026-04-17", undefined);
+  assert.equal(map.has("2026-04-17"), false);
+});
+
+test("revertCheckin: prev definido → restaura el estado anterior", () => {
+  const map = new Map([["2026-04-17", "seguido"]]);
+  revertCheckin(map, "2026-04-17", "parcial");
+  assert.equal(map.get("2026-04-17"), "parcial");
+});
+
+test("applyCheckinOptimistic + revertCheckin: ciclo completo deja el map como estaba", () => {
+  const map = new Map([["2026-04-17", "parcial"]]);
+  const prev = applyCheckinOptimistic(map, "2026-04-17", "seguido");
+  revertCheckin(map, "2026-04-17", prev);
+  assert.equal(map.get("2026-04-17"), "parcial");
+});
+
+test("applyCheckinOptimistic + revertCheckin sobre entrada nueva: revert la borra", () => {
+  const map = new Map();
+  const prev = applyCheckinOptimistic(map, "2026-04-17", "seguido");
+  revertCheckin(map, "2026-04-17", prev);
+  assert.equal(map.has("2026-04-17"), false);
+});
+
+// ---------------------------- buildRevisionCtaCopy ------------------------
+
+test("buildRevisionCtaCopy: fuera de la ventana → hidden:true sin copy", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 10, 14, 0) }; // lejana
+  const r = buildRevisionCtaCopy({ proximaSesion: proxima, revisionEnviada: false, now });
+  assert.equal(r.state, 'hidden');
+  assert.equal(r.hidden, true);
+});
+
+test("buildRevisionCtaCopy: estado urgent → copy con fecha relativa + action 'Enviar revisión mensual'", () => {
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) }; // mañana
+  const r = buildRevisionCtaCopy({ proximaSesion: proxima, revisionEnviada: false, now });
+  assert.equal(r.state, 'urgent');
+  assert.equal(r.hidden, false);
+  assert.match(r.msg, /mañana a las 14:00/);
+  assert.equal(r.action.label, 'Enviar revisión mensual');
+  assert.equal(r.action.href, '/mi-seguimiento/revision/');
+});
+
+test("buildRevisionCtaCopy: estado done → copy '✓ · nos vemos …' SIN botón", () => {
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
+  const r = buildRevisionCtaCopy({ proximaSesion: proxima, revisionEnviada: true, now });
+  assert.equal(r.state, 'done');
+  assert.match(r.msg, /Revisión enviada ✓/);
+  assert.equal(r.action, null);
+});
+
+// ---------------------------- shouldMostrarRevisionModal -----------------
+
+test("shouldMostrarRevisionModal: sin proximaSesion → show:false", () => {
+  assert.deepEqual(shouldMostrarRevisionModal({ proximaSesion: null }), { show: false });
+});
+
+test("shouldMostrarRevisionModal: estado urgent + nunca visto → show:true con lsKey y body", () => {
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
+  const r = shouldMostrarRevisionModal({ proximaSesion: proxima, revisionEnviada: false, now, seenModalIds: [] });
+  assert.equal(r.show, true);
+  assert.equal(r.lsKey, 'rev-modal-shown:s1');
+  assert.match(r.body, /Tenemos sesión mañana a las 14:00/);
+});
+
+test("shouldMostrarRevisionModal: ya visto esa sesión → show:false (one-shot)", () => {
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
+  const r = shouldMostrarRevisionModal({ proximaSesion: proxima, revisionEnviada: false, now, seenModalIds: ['s1'] });
+  assert.equal(r.show, false);
+});
+
+test("shouldMostrarRevisionModal: estado done (ya enviada) → show:false", () => {
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) };
+  const r = shouldMostrarRevisionModal({ proximaSesion: proxima, revisionEnviada: true, now, seenModalIds: [] });
+  assert.equal(r.show, false);
+});
+
+test("shouldMostrarRevisionModal: fuera de la ventana (hidden) → show:false", () => {
+  const now = new Date(2026, 4, 1, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 10, 14, 0) };
+  const r = shouldMostrarRevisionModal({ proximaSesion: proxima, revisionEnviada: false, now, seenModalIds: [] });
+  assert.equal(r.show, false);
+});
+
+// ------------------------------- hydrateDashboard ------------------------
+
+// Driver mockeable que cuenta llamadas y devuelve datos configurables.
+function makeSupaStub({ menu, checkins, proxima, revisionEnviada, onProxima }) {
+  const calls = { loadMenuVigente: 0, loadCheckins: 0, loadProximaSesion: 0, loadRevisionEnviadaParaSesion: 0 };
+  return {
+    calls,
+    async loadMenuVigente(today) { calls.loadMenuVigente++; this.lastToday = today; return menu; },
+    async loadCheckins(from) { calls.loadCheckins++; this.lastFrom = from; return checkins || []; },
+    async loadProximaSesion(pid) {
+      calls.loadProximaSesion++;
+      if (onProxima) return onProxima(pid);
+      return proxima;
+    },
+    async loadRevisionEnviadaParaSesion(sid) { calls.loadRevisionEnviadaParaSesion++; return !!revisionEnviada; }
+  };
+}
+
+test("hydrateDashboard: sin paciente → view:'sin-paciente' y no llama a supa", async () => {
+  const supa = makeSupaStub({});
+  const r = await hydrateDashboard({ supa, paciente: null, now: new Date(2026, 3, 17) });
+  assert.equal(r.view, 'sin-paciente');
+  assert.equal(supa.calls.loadMenuVigente, 0);
+});
+
+test("hydrateDashboard: paciente sin anamnesis_completed_at → view:'redirect-empezar' (y no llama a supa)", async () => {
+  const supa = makeSupaStub({});
+  const r = await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: null },
+    now: new Date(2026, 3, 17)
+  });
+  assert.equal(r.view, 'redirect-empezar');
+  assert.equal(supa.calls.loadMenuVigente, 0);
+  assert.equal(supa.calls.loadCheckins, 0);
+});
+
+test("hydrateDashboard: sin menú vigente → view:'locked', no llama a sesiones/revisiones, revisionCta hidden", async () => {
+  const supa = makeSupaStub({ menu: null, checkins: [] });
+  const r = await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now: new Date(2026, 3, 17)
+  });
+  assert.equal(r.view, 'locked');
+  assert.equal(r.menu, null);
+  assert.equal(r.rota, false);
+  assert.equal(r.revisionCta.state, 'hidden');
+  assert.equal(supa.calls.loadProximaSesion, 0, 'no debe llamar a sesiones si no hay menú');
+  assert.equal(supa.calls.loadRevisionEnviadaParaSesion, 0);
+});
+
+test("hydrateDashboard: menú + racha → view:'normal' con streak correcto y calendario mapeado", async () => {
+  const checkins = [
+    { fecha: '2026-04-16', estado: 'seguido' },
+    { fecha: '2026-04-15', estado: 'seguido' },
+    { fecha: '2026-04-14', estado: 'seguido' },
+  ];
+  const supa = makeSupaStub({ menu: MENU_VIGENTE, checkins, proxima: null });
+  const r = await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now: new Date(2026, 3, 17) // jueves 17 abr
+  });
+  assert.equal(r.view, 'normal');
+  assert.equal(r.streak, 3);
+  assert.equal(r.rota, false);
+  assert.equal(r.checkinsMap.get('2026-04-16'), 'seguido');
+  assert.equal(r.revisionCta.state, 'hidden'); // proxima=null
+  assert.equal(supa.calls.loadMenuVigente, 1);
+  assert.equal(supa.calls.loadCheckins, 1);
+  assert.equal(supa.calls.loadProximaSesion, 1);
+});
+
+test("hydrateDashboard: queries menú+checkins en paralelo (ambas con el mismo reloj)", async () => {
+  const order = [];
+  const supa = {
+    async loadMenuVigente(today) { order.push('menu-start'); await new Promise(r => setTimeout(r, 5)); order.push('menu-end'); return MENU_VIGENTE; },
+    async loadCheckins(from) { order.push('checkins-start'); await new Promise(r => setTimeout(r, 5)); order.push('checkins-end'); return []; },
+    async loadProximaSesion() { return null; },
+    async loadRevisionEnviadaParaSesion() { return false; }
+  };
+  await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now: new Date(2026, 3, 17)
+  });
+  // Ambas deben empezar antes de que termine la otra (paralelas).
+  assert.deepEqual(order.slice(0, 2).sort(), ['checkins-start', 'menu-start']);
+});
+
+test("hydrateDashboard: sesión próxima en ventana + sin revisión → revisionCta.state='urgent'", async () => {
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0).toISOString() };
+  const supa = makeSupaStub({ menu: MENU_VIGENTE, checkins: [], proxima, revisionEnviada: false });
+  const r = await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now,
+    seenModalIds: []
+  });
+  assert.equal(r.revisionCta.state, 'urgent');
+  assert.equal(r.revisionModal.show, true);
+});
+
+test("hydrateDashboard: sesión próxima en ventana + revisión ya enviada → revisionCta.state='done'", async () => {
+  const now = new Date(2026, 4, 4, 10, 0);
+  const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0).toISOString() };
+  const supa = makeSupaStub({ menu: MENU_VIGENTE, checkins: [], proxima, revisionEnviada: true });
+  const r = await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now
+  });
+  assert.equal(r.revisionCta.state, 'done');
+  assert.equal(r.revisionCta.action, null);
+  assert.equal(r.revisionModal.show, false);
+});
+
+test("hydrateDashboard: error en loadProximaSesion → degrada a revisionCta hidden, no rompe hydrate", async () => {
+  const supa = makeSupaStub({ menu: MENU_VIGENTE, checkins: [] });
+  supa.loadProximaSesion = async () => { throw new Error('network'); };
+  const r = await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now: new Date(2026, 3, 17)
+  });
+  assert.equal(r.view, 'normal');
+  assert.equal(r.revisionCta.state, 'hidden');
+  assert.equal(r.revisionModal.show, false);
+});
+
+test("hydrateDashboard: ventana 'from' es hoy-60 días (carga checkins suficientes para calendar+streak)", async () => {
+  const supa = makeSupaStub({ menu: MENU_VIGENTE, checkins: [] });
+  const now = new Date(2026, 3, 17);
+  await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now
+  });
+  assert.equal(supa.lastToday, '2026-04-17');
+  assert.match(supa.lastFrom, /^\d{4}-\d{2}-\d{2}$/);
+  // 60 días fijos en ms; si la ventana cruza un cambio de horario (DST) en la
+  // zona del navegador, la fecha civil puede quedar en "hoy-61" vs "hoy-60".
+  // Aceptamos ambos: lo que importa es cargar ~2 meses de checkins.
+  const diffDays = Math.round((Date.parse(supa.lastToday) - Date.parse(supa.lastFrom)) / 864e5);
+  assert.ok(diffDays === 60 || diffDays === 61, `diff días esperado 60-61 (DST-tolerant), vino ${diffDays}`);
+});
+
+test("hydrateDashboard: racha rota (ayer sin marcar, pero checkin hace 3 días) → rota=true", async () => {
+  const checkins = [
+    { fecha: '2026-04-14', estado: 'seguido' } // hace 3 días
+  ];
+  const supa = makeSupaStub({ menu: MENU_VIGENTE, checkins, proxima: null });
+  const r = await hydrateDashboard({
+    supa,
+    paciente: { id: 'p1', anamnesis_completed_at: '2026-03-01' },
+    now: new Date(2026, 3, 17)
+  });
+  assert.equal(r.rota, true);
 });
