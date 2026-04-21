@@ -39,7 +39,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// Plan button → pre-fill form
+// Plan button → pre-fill form + dispara evento "InitiateCheckout" a Pixel + Amplitude
 document.querySelectorAll('.plan-btn[data-plan]').forEach(function(btn) {
   btn.addEventListener('click', function() {
     var plan = btn.getAttribute('data-plan');
@@ -49,6 +49,11 @@ document.querySelectorAll('.plan-btn[data-plan]').forEach(function(btn) {
     if (textarea && !textarea.value.trim()) {
       textarea.placeholder = 'Me interesa el plan ' + plan + '. Quiero mejorar...';
     }
+    try {
+      if (window.cln && typeof window.cln.trackInitiateCheckout === 'function') {
+        window.cln.trackInitiateCheckout(plan);
+      }
+    } catch (_) { /* telemetría nunca rompe UX */ }
   });
 });
 
