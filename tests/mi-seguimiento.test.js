@@ -12,6 +12,7 @@ const {
   buildCalendarCells,
   getRevisionCtaState,
   formatFechaRelativa,
+  visibleMeals,
 } = require("../src/mi-seguimiento/logic.js");
 
 // ------------------------------- toISO -------------------------------
@@ -398,4 +399,38 @@ test("formatFechaRelativa: acepta strings ISO", () => {
   const now = new Date(2026, 4, 1, 10, 0);
   const sesion = new Date(2026, 4, 2, 15, 0).toISOString();
   assert.equal(formatFechaRelativa(sesion, now), 'mañana a las 15:00');
+});
+
+// ------------------------- visibleMeals ------------------------------
+
+const COMIDAS_5 = [
+  ['desayuno', 'Desayuno'],
+  ['almuerzo', 'Almuerzo'],
+  ['comida',   'Comida'],
+  ['merienda', 'Merienda'],
+  ['cena',     'Cena'],
+];
+
+test("visibleMeals: devuelve las 5 tomas cuando todas tienen contenido", () => {
+  const dia = { desayuno: 'a', almuerzo: 'b', comida: 'c', merienda: 'd', cena: 'e' };
+  const r = visibleMeals(dia, COMIDAS_5);
+  assert.equal(r.length, 5);
+  assert.deepEqual(r.map(x => x.key), ['desayuno','almuerzo','comida','merienda','cena']);
+});
+
+test("visibleMeals: filtra las tomas con string vacío (ej. pacientes de 4 tomas)", () => {
+  const dia = { desayuno: 'a', almuerzo: '', comida: 'c', merienda: 'd', cena: 'e' };
+  const r = visibleMeals(dia, COMIDAS_5);
+  assert.deepEqual(r.map(x => x.key), ['desayuno','comida','merienda','cena']);
+});
+
+test("visibleMeals: filtra también strings solo con espacios y valores nulos", () => {
+  const dia = { desayuno: '   ', almuerzo: null, comida: 'c', merienda: undefined, cena: 'e' };
+  const r = visibleMeals(dia, COMIDAS_5);
+  assert.deepEqual(r.map(x => x.key), ['comida','cena']);
+});
+
+test("visibleMeals: dia nulo o comidas no-array → array vacío", () => {
+  assert.deepEqual(visibleMeals(null, COMIDAS_5), []);
+  assert.deepEqual(visibleMeals({}, null), []);
 });
