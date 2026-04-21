@@ -78,5 +78,16 @@
     });
   </script>
   {% endif %}
+  {% if env.metaPixelId or env.googleAdsId %}
+  <script>
+    window.__CLN_TRACKING__ = {
+      metaPixelId: '{{ env.metaPixelId }}',
+      googleAdsId: '{{ env.googleAdsId }}',
+      googleAdsConversionLabel: '{{ env.googleAdsConversionLabel }}'
+    };
+  </script>
+  {% include "consent-banner.njk" %}
+  <script src="/js/tracking.js" defer></script>
+  {% endif %}
 </body>
 </html>

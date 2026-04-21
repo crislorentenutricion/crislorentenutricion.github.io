@@ -457,6 +457,19 @@
             state.step = 'confirmed';
             render();
             track('booking_confirmed', { date: state.selectedIso, start: state.selectedSlot.start, plan: (data.get('plan') || '').toString() });
+            // Dispara evento Lead a Meta Pixel + Google Ads + Amplitude.
+            // Valor objetivo 15 € = primer mes (el ancla de conversión que mide Fase 1).
+            try {
+              if (window.cln && typeof window.cln.trackLead === 'function') {
+                window.cln.trackLead({
+                  email: (data.get('email') || '').toString(),
+                  phone: (data.get('telefono') || '').toString(),
+                  plan: (data.get('plan') || '').toString(),
+                  value: 15,
+                  eventId: (result && result.eventId) || ''
+                });
+              }
+            } catch (_) { /* telemetría nunca rompe UX */ }
             const h = els.confirmPanel.querySelector('[data-confirm-heading]');
             if (h) setTimeout(function () { h.focus(); }, 80);
             return;

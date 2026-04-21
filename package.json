@@ -8,7 +8,7 @@
     "serve": "eleventy --serve",
     "watch": "eleventy --watch",
     "test": "node --test \"tests/**/*.test.js\"",
-    "test:unit": "node --test tests/eleventy-filters.test.js tests/eleventy-transform.test.js tests/indexnow-ping.test.js tests/blog-data.test.js tests/post-frontmatter.test.js tests/booking-logic.test.js",
+    "test:unit": "node --test tests/eleventy-filters.test.js tests/eleventy-transform.test.js tests/indexnow-ping.test.js tests/blog-data.test.js tests/post-frontmatter.test.js tests/booking-logic.test.js tests/tracking-logic.test.js tests/tracking-integration.test.js",
     "test:build": "node --test tests/build-integrity.test.js"
   },
   "repository": {
