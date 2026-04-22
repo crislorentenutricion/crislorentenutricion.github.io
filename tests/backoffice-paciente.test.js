@@ -307,7 +307,10 @@ test("BoPaciente.renderAcciones: contenedor con data-bo-bloque='acciones'", () =
 // ===================================================================
 
 before(() => {
-  // Rebuilds son baratos. Garantizamos frescura.
+  // Si _site/ ya existe (build previo del workflow CI o de `npm run serve`),
+  // no reconstruimos — evita race con otros ficheros de test que corren en
+  // paralelo y podrían borrar/regenerar passthrough files a mitad de lectura.
+  if (fs.existsSync(path.join(SITE, "backoffice", "index.html"))) return;
   execFileSync("npx", ["eleventy"], { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" });
 });
 

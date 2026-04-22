@@ -16,9 +16,10 @@ const { execFileSync } = require("node:child_process");
 const { ROOT, SITE } = require("./_helpers/paths");
 
 before(() => {
-  // Si build-integrity.test.js corre en la misma invocación ya ejecutó un
-  // build; re-ejecutarlo es rápido (~0.15s) y nos aísla si este fichero se
-  // lanza solo (`node --test tests/backoffice-build.test.js`).
+  // Si _site/ ya existe (build previo del workflow CI o de `npm run serve`),
+  // no reconstruimos — evita race con otros ficheros de test que corren en
+  // paralelo y podrían borrar/regenerar passthrough files a mitad de lectura.
+  if (fs.existsSync(path.join(SITE, "backoffice", "index.html"))) return;
   execFileSync("npx", ["eleventy"], { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" });
 });
 

@@ -255,6 +255,7 @@ test("_manejarClickAccion: Edge Function ok=false también degrada a copy", asyn
 // -------------------------------------------------------------------
 
 before(() => {
+  if (fs.existsSync(path.join(SITE, "backoffice", "index.html"))) return;
   execFileSync("npx", ["eleventy"], { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" });
 });
 
