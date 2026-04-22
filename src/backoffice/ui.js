@@ -164,6 +164,74 @@
   }
 
   // -----------------------------------------------------------------
+  // Puente a Edge Functions (supabase.functions.invoke)
+  //
+  // Devuelve siempre un objeto con la forma { ok, data?, error? } —
+  // el caller no necesita try/catch.
+  //
+  // Convenciones:
+  //   - ok=true solo si `supa.functions.invoke` no lanzó, no devolvió error,
+  //     y el body tiene `ok !== false` (los contratos de las Edge Functions
+  //     siempre devuelven {ok: true|false, ...}).
+  //   - error.type ∈ {'network', 'http', 'app'} para que el caller pueda
+  //     distinguir fallo de red de error controlado.
+  //   - error.message es siempre string no vacío.
+  //
+  // opts (reservado para futuros headers/signal): actualmente no se usa,
+  // pero lo aceptamos para que el call-site no cambie cuando añadamos
+  // cancelación o tracing.
+  // -----------------------------------------------------------------
+
+  async function ejecutarEdgeFunction(supa, nombre, payload, _opts) {
+    if (!supa || !supa.functions || typeof supa.functions.invoke !== 'function') {
+      return {
+        ok: false,
+        error: { type: 'app', message: 'supa.functions.invoke no disponible' }
+      };
+    }
+    if (!nombre || typeof nombre !== 'string') {
+      return {
+        ok: false,
+        error: { type: 'app', message: 'nombre de función requerido' }
+      };
+    }
+    let resp;
+    try {
+      resp = await supa.functions.invoke(nombre, { body: payload || {} });
+    } catch (err) {
+      return {
+        ok: false,
+        error: {
+          type: 'network',
+          message: (err && err.message) ? String(err.message) : 'fallo de red'
+        }
+      };
+    }
+    if (resp && resp.error) {
+      return {
+        ok: false,
+        error: {
+          type: 'http',
+          message: (resp.error.message || String(resp.error)) +
+            (resp.error.status ? ' (' + resp.error.status + ')' : '')
+        }
+      };
+    }
+    const data = resp && resp.data;
+    if (data && data.ok === false) {
+      return {
+        ok: false,
+        data: data,
+        error: {
+          type: 'app',
+          message: data.error || data.message || 'error de aplicación'
+        }
+      };
+    }
+    return { ok: true, data: data || null };
+  }
+
+  // -----------------------------------------------------------------
   // API pública
   // -----------------------------------------------------------------
 
@@ -175,7 +243,8 @@
     escapeHtml,
     copiarAlPortapapeles,
     copiarComando,
-    toast
+    toast,
+    ejecutarEdgeFunction
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

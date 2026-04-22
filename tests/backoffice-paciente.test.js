@@ -213,19 +213,28 @@ function _ctxBase(over) {
   }, over || {});
 }
 
-test("BoPaciente.renderAcciones: siempre muestra /crear-menu y /seguimiento-paciente", () => {
+test("BoPaciente.renderAcciones: siempre muestra /crear-menu y /seguimiento-paciente (copy)", () => {
   const html = BoPaciente.renderAcciones(_ctxBase());
   assert.match(html, /data-bo-comando="\/crear-menu MARTA"/);
   assert.match(html, /data-bo-comando="\/seguimiento-paciente MARTA"/);
 });
 
-test("BoPaciente.renderAcciones: /enviar-menu aparece solo si hay menú con pdf_url", () => {
+test("BoPaciente.renderAcciones: /enviar-menu aparece solo si hay menú con pdf_url (backend)", () => {
   const sin = BoPaciente.renderAcciones(_ctxBase({ menus: [{ id: "m1", numero: 1 }] }));
-  assert.ok(!/\/enviar-menu MARTA/.test(sin), "sin pdf_url no debe aparecer /enviar-menu");
+  assert.ok(!/data-bo-function="enviar-menu"/.test(sin),
+    "sin pdf_url no debe aparecer /enviar-menu");
   const con = BoPaciente.renderAcciones(_ctxBase({
     menus: [{ id: "m1", numero: 1, pdf_url: "https://x.pdf" }]
   }));
+  // Botón backend con payload {paciente_id, menu_numero}.
+  assert.match(con, /data-bo-action="backend"/);
+  assert.match(con, /data-bo-function="enviar-menu"/);
+  assert.match(con, /&quot;paciente_id&quot;:&quot;p1&quot;/);
+  assert.match(con, /&quot;menu_numero&quot;:1/);
+  // Fallback copy sigue en data-bo-comando para cuando el backend falla.
   assert.match(con, /data-bo-comando="\/enviar-menu MARTA"/);
+  // Etiqueta por acción, no por comando.
+  assert.match(con, />Enviar menú</);
 });
 
 test("BoPaciente.renderAcciones: /repescar-paciente oculto si check-in reciente (<3 días)", () => {
@@ -233,50 +242,58 @@ test("BoPaciente.renderAcciones: /repescar-paciente oculto si check-in reciente 
     checkins: [{ paciente_id: "p1", fecha: "2026-04-21" }] // 1 día atrás
   });
   const html = BoPaciente.renderAcciones(ctx);
-  assert.ok(!/\/repescar-paciente/.test(html), "check-in reciente no debe disparar /repescar");
+  assert.ok(!/repescar-paciente/.test(html), "check-in reciente no debe disparar /repescar");
 });
 
-test("BoPaciente.renderAcciones: /repescar-paciente aparece si activa y ≥3 días sin check-in", () => {
+test("BoPaciente.renderAcciones: /repescar-paciente aparece como backend si ≥3 días sin check-in", () => {
   const ctx = _ctxBase({
     checkins: [{ paciente_id: "p1", fecha: "2026-04-15" }] // 7 días atrás
   });
   const html = BoPaciente.renderAcciones(ctx);
-  assert.match(html, /data-bo-comando="\/repescar-paciente MARTA"/);
+  assert.match(html, /data-bo-function="repescar-paciente"/);
+  assert.match(html, /&quot;paciente_id&quot;:&quot;p1&quot;/);
+  assert.match(html, /data-bo-comando="\/repescar-paciente MARTA"/); // fallback
 });
 
 test("BoPaciente.renderAcciones: /repescar-paciente aparece si nunca hubo check-in (activa)", () => {
   const html = BoPaciente.renderAcciones(_ctxBase());
-  assert.match(html, /\/repescar-paciente MARTA/);
+  assert.match(html, /data-bo-function="repescar-paciente"/);
 });
 
-test("BoPaciente.renderAcciones: /reagendar aparece si hay próxima sesión futura", () => {
+test("BoPaciente.renderAcciones: /reagendar aparece como backend si hay próxima sesión futura", () => {
   const html = BoPaciente.renderAcciones(_ctxBase({
-    sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-05-02T09:00:00Z" }]
+    sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-05-02T09:00:00Z", calendar_event_id: "evt-99" }]
   }));
+  assert.match(html, /data-bo-function="reagendar"/);
+  assert.match(html, /&quot;calendar_event_id&quot;:&quot;evt-99&quot;/);
   assert.match(html, /data-bo-comando="\/reagendar MARTA"/);
+  assert.match(html, />Reagendar sesión</);
 });
 
 test("BoPaciente.renderAcciones: /reagendar NO aparece si todas las sesiones son pasadas", () => {
   const html = BoPaciente.renderAcciones(_ctxBase({
     sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-01-01T09:00:00Z" }]
   }));
-  assert.ok(!/\/reagendar/.test(html));
+  assert.ok(!/data-bo-function="reagendar"/.test(html));
 });
 
-test("BoPaciente.renderAcciones: /cerrar-paciente siempre aparece marcado como destructivo", () => {
+test("BoPaciente.renderAcciones: /cerrar-paciente siempre aparece como backend destructivo", () => {
   const html = BoPaciente.renderAcciones(_ctxBase());
-  assert.match(html, /data-bo-comando="\/cerrar-paciente MARTA"/);
+  assert.match(html, /data-bo-function="cerrar-paciente"/);
+  assert.match(html, /&quot;paciente_id&quot;:&quot;p1&quot;/);
+  assert.match(html, /data-bo-comando="\/cerrar-paciente MARTA"/); // fallback
   assert.match(html, /bo-btn-destructivo/);
   // Etiqueta: "Cerrar paciente" (no color)
   assert.match(html, />Cerrar paciente</);
 });
 
-test("BoPaciente.renderAcciones: /alta-paciente aparece solo si estado alta_pendiente", () => {
+test("BoPaciente.renderAcciones: /alta-paciente aparece como copy solo si estado alta_pendiente", () => {
   const normal = BoPaciente.renderAcciones(_ctxBase());
   assert.ok(!/\/alta-paciente/.test(normal));
   const pend = BoPaciente.renderAcciones(_ctxBase({
     paciente: { id: "p1", nombre: "MARTA", estado: "alta_pendiente", email: "marta@x.com" }
   }));
+  // Sigue siendo copy en el detalle (edge case).
   assert.match(pend, /data-bo-comando="\/alta-paciente MARTA marta@x\.com"/);
 });
 

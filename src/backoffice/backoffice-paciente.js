@@ -9,8 +9,13 @@
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
 //
-// Todas las acciones son copy-command en esta rebanada — el Agente 6 (Edge
-// Functions) podrá cablear algunas al backend directamente.
+// Las acciones con Edge Function detrás (/reagendar, /enviar-menu,
+// /repescar-paciente, /cerrar-paciente) se ejecutan directamente contra el
+// backend. /crear-menu y /seguimiento-paciente siguen en copy-command (no
+// hay Edge Function para ellos — requieren a Claude Code).
+//
+// Si una ejecución falla (red caída o endpoint no desplegado), el botón
+// fabrica fallback copy-command para que Cristina lo lance en Claude.
 //
 // Funciones puras exportadas: renderCabecera, renderAnamnesis, renderTimeline,
 // renderAcciones. Reciben los datos ya cargados y devuelven HTML string.
@@ -388,19 +393,45 @@
   // -----------------------------------------------------------------
   // renderAcciones (pura)
   //
-  // Siempre: /crear-menu, /seguimiento-paciente, /cerrar-paciente (destructiva).
-  // Condicionales:
-  //   - /enviar-menu: si hay menú con pdf_url
-  //   - /repescar-paciente: si estado=activo y sin check-in ≥3 días
-  //   - /alta-paciente: si estado=alta_pendiente (u onboarding=false + sin
-  //     anamnesis rellena — lo omitimos si no aplica)
-  //   - /reagendar: si existe próxima sesión (fecha ≥ hoy)
+  // Dos tipos de botones en el detalle:
+  //
+  // 1) Copy-command (data-bo-action="copy" implícito via data-bo-comando):
+  //    - /crear-menu — complejo, requiere Claude Code.
+  //    - /seguimiento-paciente — ídem.
+  //    - /alta-paciente — solo si la paciente está alta_pendiente (raro en
+  //      detalle: lo dejamos como copy por contigüidad con Hoy/Pacientes).
+  //
+  // 2) Backend (data-bo-action="backend"): dispara la Edge Function directa
+  //    con fallback a copy si falla. data-bo-payload lleva los campos del
+  //    contrato JSON stringificados. data-bo-comando también va presente —
+  //    se usa como fallback cuando el backend no responde.
+  //    - /enviar-menu: solo si hay menú con pdf_url.
+  //    - /repescar-paciente: si activa y ≥3 días sin check-in.
+  //    - /reagendar: si hay próxima sesión futura con calendar_event_id.
+  //    - /cerrar-paciente: siempre (marcado destructivo). Abre mini selector
+  //      de motivo (objetivo_cumplido | abandono) antes de invocar.
   // -----------------------------------------------------------------
 
   function _btnCopiar(comando, etiqueta, extra) {
     const clase = 'bo-btn bo-btn-copiar' + (extra ? ' ' + extra : '');
     return '<button type="button" class="' + clase +
-      '" data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
+      '" data-bo-action="copy"' +
+      ' data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
+      BoUi.escapeHtml(etiqueta) + '</button>';
+  }
+
+  // Botón backend: el usuario hace click, confirmamos, llamamos a la Edge
+  // Function. Incluye `data-bo-comando` como fallback copy si falla la red.
+  // `payload` es un objeto que se serializa a JSON en el atributo data-*.
+  function _btnBackend(nombreFn, etiqueta, payload, comandoFallback, extra) {
+    const clase = 'bo-btn bo-btn-accion' + (extra ? ' ' + extra : '');
+    const payloadAttr = BoUi.escapeHtml(JSON.stringify(payload || {}));
+    const comandoAttr = BoUi.escapeHtml(comandoFallback || '');
+    return '<button type="button" class="' + clase + '"' +
+      ' data-bo-action="backend"' +
+      ' data-bo-function="' + BoUi.escapeHtml(nombreFn) + '"' +
+      ' data-bo-payload="' + payloadAttr + '"' +
+      ' data-bo-comando="' + comandoAttr + '">' +
       BoUi.escapeHtml(etiqueta) + '</button>';
   }
 
@@ -434,6 +465,19 @@
     return mejor ? mejor.sesion : null;
   }
 
+  // Menú con mayor `numero` que tenga PDF — es el que "enviar-menu" usa.
+  function _ultimoMenuConPdf(menus) {
+    if (!Array.isArray(menus) || menus.length === 0) return null;
+    let mejor = null;
+    for (const m of menus) {
+      if (!m || !m.pdf_url) continue;
+      const n = typeof m.numero === 'number' ? m.numero : -1;
+      const mn = mejor && typeof mejor.numero === 'number' ? mejor.numero : -1;
+      if (mejor == null || n > mn) mejor = m;
+    }
+    return mejor;
+  }
+
   function renderAcciones(ctx) {
     const paciente = (ctx && ctx.paciente) || {};
     const menus    = (ctx && ctx.menus)    || [];
@@ -454,7 +498,7 @@
 
     const botones = [];
 
-    // Siempre
+    // Siempre copy (complejas: requieren Claude Code).
     botones.push(_btnCopiar(
       BoLogic.generarComando('crear-menu', nombre),
       'Copiar /crear-menu'
@@ -464,45 +508,71 @@
       'Copiar /seguimiento-paciente'
     ));
 
-    // /enviar-menu si hay PDF
-    if (_hayMenuConPdf(menus)) {
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('enviar-menu', nombre),
-        'Copiar /enviar-menu'
+    // /enviar-menu si hay PDF → backend, payload {paciente_id, menu_numero}.
+    const menuListo = _ultimoMenuConPdf(menus);
+    if (menuListo && paciente.id) {
+      botones.push(_btnBackend(
+        'enviar-menu',
+        'Enviar menú',
+        {
+          paciente_id: paciente.id,
+          menu_numero: typeof menuListo.numero === 'number' ? menuListo.numero : 1
+        },
+        BoLogic.generarComando('enviar-menu', nombre)
       ));
     }
 
-    // /repescar-paciente si activa y ≥3 días sin check-in
-    if (activa) {
+    // /repescar-paciente si activa y ≥3 días sin check-in → backend.
+    if (activa && paciente.id) {
       const dias = _diasDesdeUltimoCheckin(checkins, hoy);
       if (dias >= DIAS_REPESCAR) {
-        botones.push(_btnCopiar(
-          BoLogic.generarComando('repescar-paciente', nombre),
-          'Copiar /repescar-paciente'
+        botones.push(_btnBackend(
+          'repescar-paciente',
+          'Repescar paciente',
+          { paciente_id: paciente.id },
+          BoLogic.generarComando('repescar-paciente', nombre)
         ));
       }
     }
 
-    // /alta-paciente si estado = alta_pendiente (anexa el email)
+    // /alta-paciente si estado = alta_pendiente — copy (edge case en detalle).
     if (altaPendiente && paciente.email) {
       const cmdBase = BoLogic.generarComando('alta-paciente', nombre);
       botones.push(_btnCopiar(cmdBase + ' ' + paciente.email, 'Copiar /alta-paciente'));
     }
 
-    // /reagendar si hay próxima sesión futura
-    if (_proximaSesionFutura(sesiones, hoy)) {
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('reagendar', nombre),
-        'Copiar /reagendar'
+    // /reagendar si hay próxima sesión futura → backend con input datetime.
+    const proxSesion = _proximaSesionFutura(sesiones, hoy);
+    if (proxSesion) {
+      botones.push(_btnBackend(
+        'reagendar',
+        'Reagendar sesión',
+        {
+          calendar_event_id: proxSesion.calendar_event_id || '',
+          paciente_id: paciente.id || ''
+          // nueva_fecha se añade en client al abrir el mini-form
+        },
+        BoLogic.generarComando('reagendar', nombre)
       ));
     }
 
-    // /cerrar-paciente — siempre, marcada como destructiva.
-    botones.push(_btnCopiar(
-      BoLogic.generarComando('cerrar-paciente', nombre),
-      'Cerrar paciente',
-      'bo-btn-destructivo'
-    ));
+    // /cerrar-paciente — siempre backend, marcada como destructiva. El click
+    // revela un mini-selector de motivo antes de invocar.
+    if (paciente.id) {
+      botones.push(_btnBackend(
+        'cerrar-paciente',
+        'Cerrar paciente',
+        { paciente_id: paciente.id },
+        BoLogic.generarComando('cerrar-paciente', nombre),
+        'bo-btn-destructivo'
+      ));
+    } else {
+      botones.push(_btnCopiar(
+        BoLogic.generarComando('cerrar-paciente', nombre),
+        'Cerrar paciente',
+        'bo-btn-destructivo'
+      ));
+    }
 
     return '<section class="bo-acciones" data-bo-bloque="acciones">' +
       '<h2>Acciones</h2>' +
@@ -514,15 +584,226 @@
   // Wiring DOM: delegación de clicks + carga de datos
   // -----------------------------------------------------------------
 
-  function conectarClickCopiar(root) {
+  // Mensajes de confirmación y éxito por función. Source-of-truth única
+  // para los textos visibles tras click en una acción backend.
+  const _CONFIRMS = {
+    'reagendar':        '¿Mover la sesión a la nueva fecha?',
+    'enviar-menu':      '¿Crear borrador de correo del menú?',
+    'alta-paciente':    '¿Crear alta en Supabase y borrador de bienvenida?',
+    'repescar-paciente':'¿Crear borrador de repesca?',
+    'cerrar-paciente':  '¿Marcar paciente como cerrado? (esta acción es destructiva)'
+  };
+
+  const _TOAST_OK = {
+    'reagendar':        'Sesión reagendada. Revisa Calendar y Supabase.',
+    'enviar-menu':      'Borrador creado. Revísalo en Gmail antes de enviar.',
+    'alta-paciente':    'Alta creada. Revisa el borrador de bienvenida en Gmail.',
+    'repescar-paciente':'Borrador de repesca creado. Revísalo en Gmail antes de enviar.',
+    'cerrar-paciente':  'Paciente cerrada. Revisa Gmail (si procede) y NOTAS.'
+  };
+
+  // Convierte el botón a modo copy (fallback): cambia data-bo-action, etiqueta
+  // y texto del toast. El siguiente click copiará el comando al portapapeles.
+  function _degradarAFallback(btn) {
+    if (!btn) return;
+    btn.setAttribute('data-bo-action', 'copy');
+    const etiqueta = 'Copiar comando';
+    btn.textContent = etiqueta;
+    btn.disabled = false;
+  }
+
+  function _setEstadoBoton(btn, estado) {
+    if (!btn) return;
+    if (estado === 'enviando') {
+      btn.disabled = true;
+      if (!btn.dataset.boEtiquetaOriginal) {
+        btn.dataset.boEtiquetaOriginal = btn.textContent;
+      }
+      btn.textContent = 'Enviando…';
+    } else if (estado === 'reset') {
+      btn.disabled = false;
+      if (btn.dataset.boEtiquetaOriginal) {
+        btn.textContent = btn.dataset.boEtiquetaOriginal;
+        delete btn.dataset.boEtiquetaOriginal;
+      }
+    }
+  }
+
+  // Despliega un mini-formulario debajo del botón para /reagendar. El botón
+  // queda oculto mientras el formulario está activo. Submit invoca backend.
+  function _abrirFormReagendar(btn, payload, supa) {
+    if (!btn || !btn.parentNode) return;
+    if (btn.nextElementSibling && btn.nextElementSibling.classList &&
+        btn.nextElementSibling.classList.contains('bo-form-reagendar')) {
+      return; // ya abierto
+    }
+    const wrap = document.createElement('form');
+    wrap.className = 'bo-form-reagendar';
+    wrap.setAttribute('data-bo-form', 'reagendar');
+    wrap.innerHTML =
+      '<label class="bo-form-reagendar-label">' +
+        'Nueva fecha y hora ' +
+        '<input type="datetime-local" required data-bo-input="nueva-fecha">' +
+      '</label>' +
+      '<div class="bo-form-reagendar-botones">' +
+        '<button type="submit" class="bo-btn bo-btn-accion" data-bo-form-submit>Confirmar</button>' +
+        '<button type="button" class="bo-btn bo-btn-secundario" data-bo-form-cancel>Cancelar</button>' +
+      '</div>';
+    btn.hidden = true;
+    btn.parentNode.insertBefore(wrap, btn.nextSibling);
+
+    wrap.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      const input = wrap.querySelector('[data-bo-input="nueva-fecha"]');
+      if (!input || !input.value) return;
+      // datetime-local no trae timezone; añadimos el offset local.
+      const iso = _localInputToIso(input.value);
+      const submit = wrap.querySelector('[data-bo-form-submit]');
+      if (submit) {
+        submit.disabled = true;
+        submit.textContent = 'Enviando…';
+      }
+      const full = Object.assign({}, payload, { nueva_fecha: iso });
+      const res = await BoUi.ejecutarEdgeFunction(supa, 'reagendar', full);
+      if (res.ok) {
+        BoUi.toast(_TOAST_OK['reagendar']);
+        wrap.remove();
+        btn.hidden = true; // sesión reagendada: mantenemos oculto
+      } else {
+        BoUi.toast('No he podido ejecutar. Pulsa Copiar comando para hacerlo en Claude Code.');
+        wrap.remove();
+        btn.hidden = false;
+        _degradarAFallback(btn);
+      }
+    });
+    wrap.addEventListener('click', function (ev) {
+      const cancel = ev.target && ev.target.closest && ev.target.closest('[data-bo-form-cancel]');
+      if (!cancel) return;
+      ev.preventDefault();
+      wrap.remove();
+      btn.hidden = false;
+    });
+  }
+
+  // Convierte "2026-05-20T10:00" (datetime-local) a ISO con offset local.
+  // Si entra un ISO ya completo (con zona), se devuelve tal cual.
+  function _localInputToIso(v) {
+    if (!v) return '';
+    if (/[zZ]|[+\-]\d{2}:\d{2}$/.test(v)) return v; // ya trae zona
+    const d = new Date(v);
+    if (isNaN(d.getTime())) return v;
+    const offMin = -d.getTimezoneOffset();
+    const sign = offMin >= 0 ? '+' : '-';
+    const abs = Math.abs(offMin);
+    const off = sign + String(Math.floor(abs / 60)).padStart(2, '0') + ':' +
+                       String(abs % 60).padStart(2, '0');
+    const pad = n => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00' + off;
+  }
+
+  // Despliega dos botones de motivo para /cerrar-paciente antes de invocar.
+  function _abrirFormCerrar(btn, payload, supa) {
+    if (!btn || !btn.parentNode) return;
+    if (btn.nextElementSibling && btn.nextElementSibling.classList &&
+        btn.nextElementSibling.classList.contains('bo-form-cerrar')) {
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'bo-form-cerrar';
+    wrap.setAttribute('data-bo-form', 'cerrar-paciente');
+    wrap.innerHTML =
+      '<span class="bo-form-cerrar-etiqueta">Motivo de cierre:</span>' +
+      '<button type="button" class="bo-btn bo-btn-accion" data-bo-motivo="objetivo_cumplido">Objetivo cumplido</button>' +
+      '<button type="button" class="bo-btn bo-btn-destructivo" data-bo-motivo="abandono">Abandono</button>' +
+      '<button type="button" class="bo-btn bo-btn-secundario" data-bo-form-cancel>Cancelar</button>';
+    btn.hidden = true;
+    btn.parentNode.insertBefore(wrap, btn.nextSibling);
+
+    wrap.addEventListener('click', async function (ev) {
+      const cancel = ev.target && ev.target.closest && ev.target.closest('[data-bo-form-cancel]');
+      if (cancel) {
+        ev.preventDefault();
+        wrap.remove();
+        btn.hidden = false;
+        return;
+      }
+      const motivoBtn = ev.target && ev.target.closest && ev.target.closest('[data-bo-motivo]');
+      if (!motivoBtn) return;
+      ev.preventDefault();
+      if (!window.confirm(_CONFIRMS['cerrar-paciente'])) return;
+      const motivo = motivoBtn.getAttribute('data-bo-motivo');
+      Array.from(wrap.querySelectorAll('button')).forEach(b => { b.disabled = true; });
+      motivoBtn.textContent = 'Enviando…';
+      const full = Object.assign({}, payload, { motivo: motivo });
+      const res = await BoUi.ejecutarEdgeFunction(supa, 'cerrar-paciente', full);
+      if (res.ok) {
+        BoUi.toast(_TOAST_OK['cerrar-paciente']);
+        wrap.remove();
+        btn.hidden = true;
+      } else {
+        BoUi.toast('No he podido ejecutar. Pulsa Copiar comando para hacerlo en Claude Code.');
+        wrap.remove();
+        btn.hidden = false;
+        _degradarAFallback(btn);
+      }
+    });
+  }
+
+  // Handler principal: despacha click a copy o backend según data-bo-action.
+  async function _manejarClickAccion(ev, supa) {
+    const btn = ev.target && ev.target.closest && ev.target.closest('[data-bo-action]');
+    if (!btn) return;
+    ev.preventDefault();
+    const action = btn.getAttribute('data-bo-action') || 'copy';
+    if (action === 'copy') {
+      const comando = btn.getAttribute('data-bo-comando');
+      if (comando) await BoUi.copiarComando(comando, btn);
+      return;
+    }
+    // action === 'backend'
+    const fn = btn.getAttribute('data-bo-function');
+    if (!fn) return;
+    let payload = {};
+    try {
+      payload = JSON.parse(btn.getAttribute('data-bo-payload') || '{}');
+    } catch (_) { payload = {}; }
+
+    // Mini-forms antes de invocar.
+    if (fn === 'reagendar') {
+      _abrirFormReagendar(btn, payload, supa);
+      return;
+    }
+    if (fn === 'cerrar-paciente') {
+      _abrirFormCerrar(btn, payload, supa);
+      return;
+    }
+
+    // Flujo común: confirm → invoke → toast.
+    const confirmMsg = _CONFIRMS[fn] || '¿Ejecutar acción?';
+    if (!window.confirm(confirmMsg)) return;
+    _setEstadoBoton(btn, 'enviando');
+    const res = await BoUi.ejecutarEdgeFunction(supa, fn, payload);
+    if (res.ok) {
+      BoUi.toast(_TOAST_OK[fn] || 'Acción completada.');
+      _setEstadoBoton(btn, 'reset');
+      btn.disabled = true; // evita doble click tras éxito
+      btn.textContent = 'Hecho';
+    } else {
+      BoUi.toast('No he podido ejecutar. Pulsa Copiar comando para hacerlo en Claude Code.');
+      _setEstadoBoton(btn, 'reset');
+      _degradarAFallback(btn);
+    }
+  }
+
+  // Compat: se mantiene el nombre histórico. Acepta `supa` opcional —
+  // sin él, los clicks backend también degradan a fallback copy (útil para
+  // tests puros de DOM sin cliente Supabase).
+  function conectarClickCopiar(root, supa) {
     if (!root || typeof root.addEventListener !== 'function') return;
     if (root.dataset && root.dataset.boBound === '1') return;
     root.addEventListener('click', function (ev) {
-      const btn = ev.target && ev.target.closest && ev.target.closest('[data-bo-comando]');
-      if (!btn) return;
-      ev.preventDefault();
-      const comando = btn.getAttribute('data-bo-comando');
-      BoUi.copiarComando(comando, btn);
+      _manejarClickAccion(ev, supa);
     });
     if (root.dataset) root.dataset.boBound = '1';
   }
@@ -614,7 +895,7 @@
         sesiones: datos.sesiones,
         hoy:      new Date()
       });
-      conectarClickCopiar(acc);
+      conectarClickCopiar(acc, supa);
     }
   }
 
@@ -627,7 +908,10 @@
     renderAnamnesis,
     renderTimeline,
     renderAcciones,
-    arrancar
+    arrancar,
+    // Expuestas para tests (y posibles consumidores futuros del wiring).
+    _manejarClickAccion: _manejarClickAccion,
+    conectarClickCopiar: conectarClickCopiar
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
