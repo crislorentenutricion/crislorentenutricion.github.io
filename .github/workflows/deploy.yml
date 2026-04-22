@@ -38,6 +38,7 @@ jobs:
           META_PIXEL_ID: ${{ secrets.META_PIXEL_ID }}
           GOOGLE_ADS_ID: ${{ secrets.GOOGLE_ADS_ID }}
           GOOGLE_ADS_CONVERSION_LABEL: ${{ secrets.GOOGLE_ADS_CONVERSION_LABEL }}
+          CRISTINA_EMAIL: ${{ secrets.CRISTINA_EMAIL }}
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
