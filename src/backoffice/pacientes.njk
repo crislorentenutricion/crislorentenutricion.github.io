@@ -1,0 +1,19 @@
+---
+layout: layouts/backoffice.njk
+title: "Pacientes"
+permalink: /backoffice/pacientes/
+eleventyExcludeFromCollections: true
+---
+
+<h1>Pacientes</h1>
+<div id="tabla-pacientes"></div>
+
+<script>
+  // Stub inicial del Agente 3. El Agente 4 rellena la tabla con filas
+  // priorizadas (ver BoLogic.priorizarPacientes).
+  window.BoAuth.iniciar({
+    onListo: (supa, session) => {
+      console.log('[backoffice/pacientes] Listo:', session.user.email);
+    }
+  });
+</script>

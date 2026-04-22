@@ -38,6 +38,11 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/apple-touch-icon.png");
   eleventyConfig.addPassthroughCopy("src/mi-seguimiento/manifest.webmanifest");
   eleventyConfig.addPassthroughCopy("src/mi-seguimiento/logic.js");
+  // Backoffice interno — scripts del cliente (lógica pura + auth OTP).
+  // El gate UX vive en auth.js; la barrera real está en las policies RLS
+  // de Supabase (solo `auth.email() = cristinaEmail` puede leer pacientes).
+  eleventyConfig.addPassthroughCopy("src/backoffice/logic.js");
+  eleventyConfig.addPassthroughCopy("src/backoffice/auth.js");
 
   // Filtro para formatear fechas en español
   eleventyConfig.addFilter("fechaEs", function(dateVal) {

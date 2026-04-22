@@ -1,0 +1,22 @@
+---
+layout: layouts/backoffice.njk
+title: "Hoy"
+permalink: /backoffice/
+eleventyExcludeFromCollections: true
+---
+
+<h1>Hoy</h1>
+<div id="bloques"></div>
+<div id="estado-auth"></div>
+
+<script>
+  // Stub inicial del Agente 3. El Agente 4 sustituye este bloque por los
+  // 4 bloques reales (menús vencidos, sin check-in, citas hoy, acciones).
+  window.BoAuth.iniciar({
+    onListo: (supa, session) => {
+      console.log('[backoffice/hoy] Listo:', session.user.email);
+      const el = document.getElementById('estado-auth');
+      if (el) el.textContent = 'Sesión OK: ' + session.user.email;
+    }
+  });
+</script>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{{ title or "Backoffice" }} · CLN</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* =======================================================================
+       Backoffice interno — sobrio, rápido, sin decoración
+       Reusa tokens de /css/style.css (verde #4a7c59, crema #f8f6f0, Manrope).
+       Inlineado a propósito: una sola página en dos vistas, no justifica
+       otro fichero CSS ni cache entry.
+       ======================================================================= */
+    .bo-body {
+      background: var(--color-cream);
+      color: #2d2a24;
+      min-height: 100vh;
+    }
+    .backoffice-nav {
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+    }
+    .backoffice-nav .bo-brand {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      color: var(--color-green);
+      margin-right: auto;
+      font-size: 1rem;
+    }
+    .backoffice-nav a {
+      color: #2d2a24;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 120ms ease;
+    }
+    .backoffice-nav a:hover,
+    .backoffice-nav a.is-active {
+      background: var(--color-green-muted);
+      color: var(--color-green-dark);
+    }
+    .backoffice-nav button {
+      background: transparent;
+      border: 1px solid var(--color-border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #55524a;
+      font: inherit;
+    }
+    .backoffice-nav button:hover {
+      border-color: var(--color-green);
+      color: var(--color-green-dark);
+    }
+    .backoffice-main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px 20px 64px;
+    }
+    .backoffice-main h1 {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: clamp(1.6rem, 4vw, 2.1rem);
+      letter-spacing: -0.01em;
+      margin: 0 0 20px;
+      color: #2d2a24;
+    }
+
+    /* Estados comunes: loading, login, error 403. Inlined para evitar flash
+       sin estilos mientras auth.js decide qué mostrar. */
+    .bo-gate {
+      max-width: 420px;
+      margin: 8vh auto 0;
+      padding: 28px 24px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+    }
+    .bo-gate h2 {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: 1.35rem;
+      margin: 0 0 10px;
+      color: var(--color-green-dark);
+    }
+    .bo-gate p { margin: 0 0 18px; color: #55524a; line-height: 1.55; }
+    .bo-gate label {
+      display: block;
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .bo-gate input[type=email],
+    .bo-gate input[type=text] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font: inherit;
+      background: var(--color-cream);
+    }
+    .bo-gate input:focus {
+      outline: 2px solid var(--color-green-glow);
+      border-color: var(--color-green);
+    }
+    .bo-gate button[type=submit] {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: var(--color-green);
+      color: var(--color-white);
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+    }
+    .bo-gate button[type=submit]:disabled { opacity: 0.6; cursor: wait; }
+    .bo-gate button[type=submit]:hover:not(:disabled) { background: var(--color-green-dark); }
+    .bo-gate .bo-status {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: #55524a;
+      min-height: 1.2em;
+    }
+    .bo-gate .bo-status.is-error { color: #a33; }
+    .bo-gate .bo-status.is-ok    { color: var(--color-green-dark); }
+
+    .bo-hidden { display: none !important; }
+  </style>
+</head>
+<body class="bo-body">
+  <nav class="backoffice-nav" data-bo-nav hidden>
+    <span class="bo-brand">CLN · backoffice</span>
+    <a href="/backoffice/" data-bo-link="hoy">Hoy</a>
+    <a href="/backoffice/pacientes/" data-bo-link="pacientes">Pacientes</a>
+    <button type="button" data-bo-signout>Cerrar sesión</button>
+  </nav>
+
+  <main class="backoffice-main">
+    {{ content | safe }}
+  </main>
+
+  <script>
+    /* Env vars del sitio inyectadas por Eleventy en build. Las RLS de Supabase
+       son la barrera real — este gate es UX. `cristinaEmail` vacío = dev local. */
+    window.__BO_ENV__ = {
+      supabaseUrl: '{{ env.supabaseUrl }}',
+      supabasePublishableKey: '{{ env.supabasePublishableKey }}',
+      cristinaEmail: '{{ env.cristinaEmail }}'
+    };
+  </script>
+  <script src="/backoffice/logic.js"></script>
+  <script src="/backoffice/auth.js"></script>
+  <script type="module">
+    /* Carga el SDK de Supabase (ESM) y se lo pasa a BoAuth. Mismo patrón que
+       /mi-seguimiento/: inline por render, import una sola vez, cliente
+       creado con el helper. */
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    window.BoAuth.registrarSupabase(createClient);
+  </script>
+</body>
+</html>
