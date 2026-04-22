@@ -7,13 +7,15 @@ eleventyExcludeFromCollections: true
 
 <h1>Pacientes</h1>
 <div id="tabla-pacientes"></div>
+<div id="estado-auth" class="bo-estado" role="status" aria-live="polite"></div>
 
+<script src="/backoffice/backoffice-pacientes.js"></script>
 <script>
-  // Stub inicial del Agente 3. El Agente 4 rellena la tabla con filas
-  // priorizadas (ver BoLogic.priorizarPacientes).
+  // Auth → BoPacientes.arrancar(supa). El filtro (Activas/Cerradas/Todas) se
+  // gestiona dentro de BoPacientes; por defecto muestra Activas.
   window.BoAuth.iniciar({
-    onListo: (supa, session) => {
-      console.log('[backoffice/pacientes] Listo:', session.user.email);
+    onListo: function (supa) {
+      window.BoPacientes.arrancar(supa);
     }
   });
 </script>

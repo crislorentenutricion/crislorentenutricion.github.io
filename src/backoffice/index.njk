@@ -7,16 +7,15 @@ eleventyExcludeFromCollections: true
 
 <h1>Hoy</h1>
 <div id="bloques"></div>
-<div id="estado-auth"></div>
+<div id="estado-auth" class="bo-estado" role="status" aria-live="polite"></div>
 
+<script src="/backoffice/backoffice-hoy.js"></script>
 <script>
-  // Stub inicial del Agente 3. El Agente 4 sustituye este bloque por los
-  // 4 bloques reales (menús vencidos, sin check-in, citas hoy, acciones).
+  // Orquestación: auth → BoHoy.arrancar(supa). Si RLS deniega o el SDK falla,
+  // BoHoy.arrancar muestra el error en #estado-auth sin romper la página.
   window.BoAuth.iniciar({
-    onListo: (supa, session) => {
-      console.log('[backoffice/hoy] Listo:', session.user.email);
-      const el = document.getElementById('estado-auth');
-      if (el) el.textContent = 'Sesión OK: ' + session.user.email;
+    onListo: function (supa) {
+      window.BoHoy.arrancar(supa);
     }
   });
 </script>
