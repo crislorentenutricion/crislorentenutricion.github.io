@@ -1513,7 +1513,7 @@ appleTitle: "CLN"
     </section>
 
     <footer class="ms-foot">
-      <a href="#" id="ms-pdf-link" class="ms-pdf-link" target="_blank" rel="noopener" hidden>Descargar el menú en PDF</a>
+      <a href="#" id="ms-pdf-link" class="ms-pdf-link" hidden>Descargar el menú en PDF</a>
       <button type="button" class="ms-signout" id="ms-signout">Cerrar sesión</button>
     </footer>
   </section>
@@ -2121,11 +2121,17 @@ appleTitle: "CLN"
     if (!pdfPathActual) return;
     if (/^https?:\/\//i.test(pdfPathActual)) return; // ya es URL absoluta
     e.preventDefault();
+    const filename = pdfPathActual.split('/').pop() || 'menu.pdf';
     const { data, error } = await supa.storage
       .from('menus-pdf')
-      .createSignedUrl(pdfPathActual, 60);
+      .createSignedUrl(pdfPathActual, 60, { download: filename });
     if (error || !data) { console.error('signed url', error); return; }
-    window.open(data.signedUrl, '_blank', 'noopener');
+    // Supabase responde con Content-Disposition: attachment (gracias a { download }),
+    // así que el navegador convierte la navegación en descarga y la paciente no sale
+    // de la PWA. Usamos location.href en vez de window.open: Safari (iOS y macOS)
+    // bloquea window.open tras un `await` porque la activación de usuario se
+    // considera consumida — silenciosamente no pasa nada.
+    window.location.href = data.signedUrl;
   });
 
   function renderTip() {
