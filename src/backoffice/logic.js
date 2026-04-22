@@ -24,6 +24,12 @@
   const VIGENCIA_DIAS_DEFAULT = 30;
   const DIAS_SIN_CHECKIN_ALERTA = 3;
   const DIAS_AVISO_PROXIMO_MENU = 7;
+  // "Enviar menú" solo destaca menús recientes. Un menú creado hace 3 meses
+  // sin `enviado_at` casi seguro se envió en su día — es ruido en el bloque.
+  // El bloque se piensa para acciones inminentes ("creé el menú hoy, toca
+  // enviarlo"); los históricos se quedan fuera hasta que la Edge Function
+  // enviar-menu se despliegue y rellene `enviado_at` automáticamente.
+  const DIAS_MENU_RECIENTE = 7;
 
   // -----------------------------------------------------------------
   // Helpers de fecha (privados, no exportados salvo diffEnDias)
@@ -210,12 +216,17 @@
     return diasRestantes <= DIAS_AVISO_PROXIMO_MENU;
   }
 
-  // Menú listo para enviar: tiene PDF subido pero no marcador de envío.
-  // `enviado_at` es el campo opt-in (ver nota arriba).
-  function _necesitaEnviar(menuVig) {
+  // Menú listo para enviar: tiene PDF subido, sin marcador de envío, y es
+  // reciente (últimos DIAS_MENU_RECIENTE). `enviado_at` es el campo opt-in
+  // (ver nota arriba). Sin el filtro de antigüedad, cualquier menú histórico
+  // con PDF aparece en el bloque indefinidamente.
+  function _necesitaEnviar(menuVig, hoyMid, diasRecientes) {
     if (!menuVig) return false;
     if (!menuVig.pdf_url) return false;
-    return !menuVig.enviado_at;
+    if (menuVig.enviado_at) return false;
+    const ref = _toMidnight(menuVig.created_at) || _toMidnight(menuVig.vigente_desde);
+    if (!ref || !hoyMid) return true; // sin fecha → preferimos mostrarlo que ocultarlo
+    return diffEnDias(ref, hoyMid) <= diasRecientes;
   }
 
   // Alerta por silencio: paciente activa sin checkins en ≥ N días.
@@ -239,6 +250,7 @@
     const opts      = (datos && datos.opts)      || {};
     const vigenciaDias  = opts.vigenciaDias || VIGENCIA_DIAS_DEFAULT;
     const diasSilencio  = opts.diasSilencio || DIAS_SIN_CHECKIN_ALERTA;
+    const diasRecientes = opts.diasMenuReciente || DIAS_MENU_RECIENTE;
 
     const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
     const menusByPac    = _indexBy(menus, 'paciente_id');
@@ -284,9 +296,11 @@
         });
       }
 
-      // Bloque 3: menús con PDF listo para enviar. Incluye activas Y pausas;
-      // si está "cerrado", no tiene sentido enviar.
-      if (p.estado !== 'cerrado' && menuVig && _necesitaEnviar(menuVig)) {
+      // Bloque 3: menús recientes con PDF listo para enviar. Incluye activas
+      // Y pausas; si está "cerrado", no tiene sentido enviar. Filtra menús
+      // viejos (>DIAS_MENU_RECIENTE) para no arrastrar históricos sin
+      // enviado_at.
+      if (p.estado !== 'cerrado' && menuVig && _necesitaEnviar(menuVig, hoyMid, diasRecientes)) {
         menusEnviar.push({
           pacienteId: p.id,
           nombre: p.nombre,
@@ -573,6 +587,7 @@
     VIGENCIA_DIAS_DEFAULT,
     DIAS_SIN_CHECKIN_ALERTA,
     DIAS_AVISO_PROXIMO_MENU,
+    DIAS_MENU_RECIENTE,
     REPESCA_VENTANA_DIAS,
     GAP_REPESCA_DIAS,
     REPESCA_MIN_DENOMINADOR

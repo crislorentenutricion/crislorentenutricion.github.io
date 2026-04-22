@@ -129,12 +129,6 @@
     return dias + ' ' + (dias === 1 ? 'día' : 'días');
   }
 
-  function _btnCopiar(comando, etiqueta) {
-    return '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
-      'data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
-      BoUi.escapeHtml(etiqueta) + '</button>';
-  }
-
   function construirFila(p) {
     const nombreVisible = BoUi.escapeHtml(BoUi.titleCase(p.nombre));
     const estado  = _estadoLabel(p.estado);
@@ -142,19 +136,9 @@
     const dias    = _formateaDiasSinCheckin(p.diasSinCheckin);
     const menu    = p.tieneMenuVigente ? 'Sí' : 'No';
 
-    // Enlace a la futura vista detalle (Agente 5). El href funciona aunque
-    // la página todavía no exista: devolverá 404 hasta que se cree, sin
-    // romper nada en esta tabla.
     const detalleUrl = '/backoffice/paciente/?id=' + encodeURIComponent(p.id || '');
     const linkDetalle = '<a class="bo-fila-link" href="' + BoUi.escapeHtml(detalleUrl) + '">' +
       nombreVisible + '</a>';
-
-    const cmdCrearMenu   = BoLogic.generarComando('crear-menu', p.nombre);
-    const cmdSeguimiento = BoLogic.generarComando('seguimiento-paciente', p.nombre);
-
-    const acciones =
-      _btnCopiar(cmdCrearMenu,   'Copiar /crear-menu') +
-      _btnCopiar(cmdSeguimiento, 'Copiar /seguimiento-paciente');
 
     return '<tr data-bo-paciente-id="' + BoUi.escapeHtml(p.id || '') + '">' +
       '<td data-col="nombre">' + linkDetalle + '</td>' +
@@ -162,14 +146,13 @@
       '<td data-col="proxima-sesion">' + BoUi.escapeHtml(prox) + '</td>' +
       '<td data-col="dias-sin-checkin">' + BoUi.escapeHtml(dias) + '</td>' +
       '<td data-col="menu-vigente">' + menu + '</td>' +
-      '<td data-col="acciones" class="bo-acciones">' + acciones + '</td>' +
     '</tr>';
   }
 
   function renderTabla(filas) {
     const cuerpo = filas.length
       ? filas.map(construirFila).join('')
-      : '<tr class="bo-fila-vacia"><td colspan="6">No hay pacientes en este filtro.</td></tr>';
+      : '<tr class="bo-fila-vacia"><td colspan="5">No hay pacientes en este filtro.</td></tr>';
     return '<table class="bo-tabla" data-bo-tabla="pacientes">' +
       '<thead><tr>' +
         '<th scope="col">Nombre</th>' +
@@ -177,7 +160,6 @@
         '<th scope="col">Próxima sesión</th>' +
         '<th scope="col">Días desde último check-in</th>' +
         '<th scope="col">Menú vigente</th>' +
-        '<th scope="col">Acciones</th>' +
       '</tr></thead>' +
       '<tbody>' + cuerpo + '</tbody>' +
     '</table>';
@@ -202,19 +184,6 @@
   // -----------------------------------------------------------------
   // Wiring DOM
   // -----------------------------------------------------------------
-
-  function conectarClickCopiar(root) {
-    if (!root || typeof root.addEventListener !== 'function') return;
-    if (root.dataset && root.dataset.boBound === '1') return;
-    root.addEventListener('click', function (ev) {
-      const btn = ev.target && ev.target.closest && ev.target.closest('[data-bo-comando]');
-      if (!btn) return;
-      ev.preventDefault();
-      const comando = btn.getAttribute('data-bo-comando');
-      BoUi.copiarComando(comando, btn);
-    });
-    if (root.dataset) root.dataset.boBound = '1';
-  }
 
   function conectarFiltro(root, onChange) {
     if (!root) return;
@@ -283,7 +252,6 @@
     let estadoSel = 'activas';
     function repintar() {
       root.innerHTML = construirVista(datos, estadoSel);
-      conectarClickCopiar(root);
       conectarFiltro(root, function (nuevo) {
         estadoSel = nuevo;
         repintar();

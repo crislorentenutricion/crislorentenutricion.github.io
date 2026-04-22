@@ -38,24 +38,25 @@
   // Renderers puros (testeables sin DOM)
   // -----------------------------------------------------------------
 
-  function _btnCopiar(comando, extra) {
-    // data-bo-comando lo lee el handler global para evitar encodear el comando
-    // dentro de un onclick (y sus problemas de escape).
-    const clase = 'bo-btn bo-btn-copiar' + (extra ? ' ' + extra : '');
-    return '<button type="button" class="' + clase + '" data-bo-comando="' +
-      BoUi.escapeHtml(comando) + '">Copiar comando</button>';
+  // Cada fila es un enlace al detalle del paciente. Las acciones (copiar
+  // comandos) viven en el detalle — esta vista es un índice de "qué toca".
+  function _filaLink(pacienteId, contenidoHtml, filaKey) {
+    const href = pacienteId
+      ? '/backoffice/paciente/?id=' + BoUi.escapeHtml(String(pacienteId))
+      : '#';
+    return '<li class="bo-fila" data-bo-fila="' + BoUi.escapeHtml(filaKey) + '">' +
+      '<a class="bo-fila-link-row" href="' + href + '">' + contenidoHtml + '</a>' +
+    '</li>';
   }
 
   function renderFilaSesion(item) {
     const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
     const hora   = BoUi.escapeHtml(item.hora || '');
-    return '<li class="bo-fila" data-bo-fila="sesion">' +
-      '<div class="bo-fila-meta">' +
-        '<span class="bo-fila-nombre">' + nombre + '</span>' +
-        '<span class="bo-fila-hora">' + hora + '</span>' +
-      '</div>' +
-      _btnCopiar(item.comando) +
-    '</li>';
+    const meta = '<div class="bo-fila-meta">' +
+      '<span class="bo-fila-nombre">' + nombre + '</span>' +
+      '<span class="bo-fila-hora">' + hora + '</span>' +
+    '</div>';
+    return _filaLink(item.pacienteId, meta, 'sesion');
   }
 
   function renderFilaMenuCrear(item) {
@@ -70,25 +71,21 @@
       detalle = 'Caduca en ' + item.diasParaCaducar + ' ' +
         (item.diasParaCaducar === 1 ? 'día' : 'días');
     }
-    return '<li class="bo-fila" data-bo-fila="menu-crear">' +
-      '<div class="bo-fila-meta">' +
-        '<span class="bo-fila-nombre">' + nombre + '</span>' +
-        '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
-      '</div>' +
-      _btnCopiar(item.comando) +
-    '</li>';
+    const meta = '<div class="bo-fila-meta">' +
+      '<span class="bo-fila-nombre">' + nombre + '</span>' +
+      '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
+    '</div>';
+    return _filaLink(item.pacienteId, meta, 'menu-crear');
   }
 
   function renderFilaMenuEnviar(item) {
     const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
     const num = item.numero != null ? ('Menú ' + item.numero) : 'Menú listo';
-    return '<li class="bo-fila" data-bo-fila="menu-enviar">' +
-      '<div class="bo-fila-meta">' +
-        '<span class="bo-fila-nombre">' + nombre + '</span>' +
-        '<span class="bo-fila-detalle">' + BoUi.escapeHtml(num) + '</span>' +
-      '</div>' +
-      _btnCopiar(item.comando) +
-    '</li>';
+    const meta = '<div class="bo-fila-meta">' +
+      '<span class="bo-fila-nombre">' + nombre + '</span>' +
+      '<span class="bo-fila-detalle">' + BoUi.escapeHtml(num) + '</span>' +
+    '</div>';
+    return _filaLink(item.pacienteId, meta, 'menu-enviar');
   }
 
   function renderFilaAlerta(item) {
@@ -100,13 +97,11 @@
       detalle = item.diasSinCheckin + ' ' +
         (item.diasSinCheckin === 1 ? 'día' : 'días') + ' sin check-in';
     }
-    return '<li class="bo-fila" data-bo-fila="alerta">' +
-      '<div class="bo-fila-meta">' +
-        '<span class="bo-fila-nombre">' + nombre + '</span>' +
-        '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
-      '</div>' +
-      _btnCopiar(item.comando) +
-    '</li>';
+    const meta = '<div class="bo-fila-meta">' +
+      '<span class="bo-fila-nombre">' + nombre + '</span>' +
+      '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
+    '</div>';
+    return _filaLink(item.pacienteId, meta, 'alerta');
   }
 
   function renderBloque(config) {
@@ -193,20 +188,6 @@
   // Wiring DOM (solo se ejecuta en navegador)
   // -----------------------------------------------------------------
 
-  function conectarBotonesCopiar(root) {
-    if (!root || typeof root.addEventListener !== 'function') return;
-    // Delegación en el contenedor: un solo listener soporta re-render.
-    if (root.dataset && root.dataset.boBound === '1') return;
-    root.addEventListener('click', function (ev) {
-      const btn = ev.target && ev.target.closest && ev.target.closest('[data-bo-comando]');
-      if (!btn) return;
-      ev.preventDefault();
-      const comando = btn.getAttribute('data-bo-comando');
-      BoUi.copiarComando(comando, btn);
-    });
-    if (root.dataset) root.dataset.boBound = '1';
-  }
-
   function mostrarError(msg) {
     if (typeof document === 'undefined') return;
     const estado = document.getElementById('estado-auth');
@@ -266,7 +247,8 @@
         if (vivo && vivo.parentNode) vivo.outerHTML = renderMetricas(metricas);
       }
       root.innerHTML = renderTodosLosBloques(agrupado);
-      conectarBotonesCopiar(root);
+      // Sin botones de acción en esta vista: cada fila es un link al detalle
+      // del paciente, y las acciones (copiar comandos, reagendar…) viven ahí.
     } catch (err) {
       console.error('[backoffice/hoy]', err);
       root.innerHTML = '';

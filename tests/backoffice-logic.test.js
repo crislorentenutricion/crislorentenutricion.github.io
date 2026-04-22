@@ -240,6 +240,46 @@ test("agruparHoy: menusEnviar solo con pdf_url presente y sin enviado_at", () =>
   assert.equal(r.menusEnviar[0].comando, "/enviar-menu CARMEN LOPEZ");
 });
 
+test("agruparHoy: menusEnviar excluye menús viejos sin enviado_at (ruido histórico)", () => {
+  // Menú con pdf_url pero vigente_desde hace 30 días y sin enviado_at:
+  // casi seguro se envió hace meses; no es ruido actual para el bloque.
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "ANA", email: "a@x", estado: "activo", alta: "2025-01-01" }
+    ],
+    menus: [
+      { id: "m-viejo", paciente_id: "p1", numero: 1,
+        vigente_desde: "2026-03-23", // hace 30 días respecto a HOY (2026-04-22)
+        pdf_url: "https://drive/m.pdf" /* sin enviado_at */ }
+    ],
+    sesiones: [],
+    checkins: [{ paciente_id: "p1", fecha: "2026-04-21", estado: "seguido" }]
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.menusEnviar.length, 0, "un menú viejo sin enviado_at no debe aparecer");
+});
+
+test("agruparHoy: menusEnviar incluye menú reciente por created_at aunque vigente_desde sea viejo", () => {
+  // Caso: Cristina re-subió el PDF de un menú antiguo (created_at reciente,
+  // vigente_desde viejo). Preferimos created_at para decidir recencia.
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "ANA", email: "a@x", estado: "activo", alta: "2025-01-01" }
+    ],
+    menus: [
+      { id: "m1", paciente_id: "p1", numero: 1,
+        vigente_desde: "2026-03-01", // viejo
+        created_at: "2026-04-20T12:00:00Z", // reciente
+        pdf_url: "https://drive/m.pdf" }
+    ],
+    sesiones: [],
+    checkins: [{ paciente_id: "p1", fecha: "2026-04-21", estado: "seguido" }]
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.menusEnviar.length, 1);
+  assert.equal(r.menusEnviar[0].pacienteId, "p1");
+});
+
 test("agruparHoy: alertas incluye p4 (≥3 días sin checkin), excluye p5 (ayer)", () => {
   const r = agruparHoy(fixtureCompleta(), HOY);
   const ids = r.alertas.map(a => a.pacienteId);

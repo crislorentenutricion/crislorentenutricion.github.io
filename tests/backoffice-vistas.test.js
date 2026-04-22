@@ -91,7 +91,9 @@ test("BoUi.escapeHtml: escapa < > & \" '", () => {
 // BoHoy — renderers puros
 // ===================================================================
 
-test("BoHoy.renderFilaSesion: incluye nombre en Title Case, hora y botón Copiar comando", () => {
+test("BoHoy.renderFilaSesion: incluye nombre en Title Case, hora y link al detalle", () => {
+  // Las acciones viven en el detalle del paciente: la fila de Hoy es un
+  // link al detalle, sin botones de copy en esta vista.
   const html = BoHoy.renderFilaSesion({
     pacienteId: "p1",
     nombre: "MARTA PÉREZ",
@@ -101,18 +103,19 @@ test("BoHoy.renderFilaSesion: incluye nombre en Title Case, hora y botón Copiar
   assert.match(html, /data-bo-fila="sesion"/);
   assert.match(html, />Marta Pérez</);           // Title Case en copy UI
   assert.match(html, />10:30</);
-  assert.match(html, /data-bo-comando="\/seguimiento-paciente MARTA PÉREZ"/);
-  assert.match(html, />Copiar comando</);         // etiqueta, no color
+  assert.match(html, /href="\/backoffice\/paciente\/\?id=p1"/);
+  assert.ok(!/data-bo-comando=/.test(html), "la vista Hoy no debe incluir botones copy");
 });
 
 test("BoHoy.renderFilaMenuCrear: muestra 'Sin menú vigente' cuando diasParaCaducar es null", () => {
   const html = BoHoy.renderFilaMenuCrear({
+    pacienteId: "p2",
     nombre: "ANA",
     diasParaCaducar: null,
     comando: "/crear-menu ANA"
   });
   assert.match(html, /Sin menú vigente/);
-  assert.match(html, /data-bo-comando="\/crear-menu ANA"/);
+  assert.match(html, /href="\/backoffice\/paciente\/\?id=p2"/);
 });
 
 test("BoHoy.renderFilaMenuCrear: diasParaCaducar > 0 dice 'Caduca en N días'", () => {
@@ -138,13 +141,13 @@ test("BoHoy.renderFilaMenuCrear: diasParaCaducar <= 0 dice 'Caducado hace...'", 
   assert.match(html, /Caducado hace 2 días/);
 });
 
-test("BoHoy.renderFilaMenuEnviar: incluye número de menú y botón Copiar comando", () => {
+test("BoHoy.renderFilaMenuEnviar: incluye número de menú y link al detalle", () => {
   const html = BoHoy.renderFilaMenuEnviar({
-    nombre: "LUCÍA", numero: 4, pdfUrl: "https://x", comando: "/enviar-menu LUCÍA"
+    pacienteId: "p3", nombre: "LUCÍA", numero: 4, pdfUrl: "https://x", comando: "/enviar-menu LUCÍA"
   });
   assert.match(html, />Lucía</);
   assert.match(html, /Menú 4/);
-  assert.match(html, /data-bo-comando="\/enviar-menu LUCÍA"/);
+  assert.match(html, /href="\/backoffice\/paciente\/\?id=p3"/);
 });
 
 test("BoHoy.renderFilaAlerta: diasSinCheckin null → 'Sin check-ins aún'", () => {
@@ -267,12 +270,14 @@ function _pacEj(over) {
   }, over || {});
 }
 
-test("BoPacientes.construirFila: devuelve <tr> con 6 columnas y data-bo-paciente-id", () => {
+test("BoPacientes.construirFila: devuelve <tr> con 5 columnas y data-bo-paciente-id", () => {
+  // Sin columna Acciones: las acciones viven en el detalle del paciente.
   const html = BoPacientes.construirFila(_pacEj());
   assert.match(html, /<tr data-bo-paciente-id="p-1"/);
-  for (const col of ["nombre", "estado", "proxima-sesion", "dias-sin-checkin", "menu-vigente", "acciones"]) {
+  for (const col of ["nombre", "estado", "proxima-sesion", "dias-sin-checkin", "menu-vigente"]) {
     assert.match(html, new RegExp(`data-col="${col}"`), `falta columna ${col}`);
   }
+  assert.ok(!/data-col="acciones"/.test(html), "la columna acciones ya no existe");
 });
 
 test("BoPacientes.construirFila: nombre visible en Title Case", () => {
@@ -290,12 +295,9 @@ test("BoPacientes.construirFila: link a /backoffice/paciente/?id=...", () => {
   assert.match(html, /href="\/backoffice\/paciente\/\?id=abc-123"/);
 });
 
-test("BoPacientes.construirFila: 2 botones copy-command (crear-menu + seguimiento-paciente)", () => {
+test("BoPacientes.construirFila: no tiene botones copy (las acciones viven en el detalle)", () => {
   const html = BoPacientes.construirFila(_pacEj());
-  assert.match(html, /data-bo-comando="\/crear-menu MARTA PÉREZ"/);
-  assert.match(html, /data-bo-comando="\/seguimiento-paciente MARTA PÉREZ"/);
-  assert.match(html, />Copiar \/crear-menu</);
-  assert.match(html, />Copiar \/seguimiento-paciente</);
+  assert.ok(!/data-bo-comando=/.test(html), "la fila de la tabla no debe llevar botones copy");
 });
 
 test("BoPacientes.construirFila: estado 'cerrado' → 'Cerrada' (Title Case)", () => {
@@ -338,14 +340,15 @@ test("BoPacientes.construirFila: diasSinCheckin null → '—', 0 → 'Hoy', 1 �
     /<td data-col="dias-sin-checkin">5 días<\/td>/);
 });
 
-test("BoPacientes.renderTabla: tiene las 6 cabeceras esperadas", () => {
+test("BoPacientes.renderTabla: tiene las 5 cabeceras esperadas (sin Acciones)", () => {
   const html = BoPacientes.renderTabla([_pacEj()]);
   for (const h of [
     "Nombre", "Estado", "Próxima sesión",
-    "Días desde último check-in", "Menú vigente", "Acciones"
+    "Días desde último check-in", "Menú vigente"
   ]) {
     assert.match(html, new RegExp(`<th[^>]*>${h}</th>`), `falta cabecera ${h}`);
   }
+  assert.ok(!/<th[^>]*>Acciones<\/th>/.test(html), "la cabecera Acciones ya no existe");
   assert.match(html, /<table class="bo-tabla"/);
   assert.match(html, /data-bo-tabla="pacientes"/);
 });
