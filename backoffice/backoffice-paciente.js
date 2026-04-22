@@ -357,8 +357,14 @@
     }
     if (item.tipo === 'menu') {
       const num = item.data.numero != null ? ('Menú ' + item.data.numero) : 'Menú';
+      // pdf_url guarda la RUTA dentro del bucket privado menus-pdf (ej.
+      // "<paciente_id>/menu-1.pdf"), no una URL absoluta. El href="#" +
+      // data-bo-menu-path dispara createSignedUrl al click (ver
+      // conectarClickPdf y convención mi-seguimiento-auth.md § PDF bucket).
       const pdf = item.data.pdf_url
-        ? ' · <a class="bo-fila-link" href="' + BoUi.escapeHtml(item.data.pdf_url) + '" target="_blank" rel="noopener">Ver PDF</a>'
+        ? ' · <a class="bo-fila-link" href="#" data-bo-menu-path="' +
+            BoUi.escapeHtml(item.data.pdf_url) + '" data-bo-menu-filename="menu-' +
+            BoUi.escapeHtml(String(item.data.numero || 'N')) + '.pdf">Ver PDF</a>'
         : '';
       return '<li class="bo-timeline-item" data-bo-evento="menu">' +
         '<span class="bo-timeline-tipo">Menú</span>' +
@@ -808,6 +814,43 @@
     if (root.dataset) root.dataset.boBound = '1';
   }
 
+  // PDFs del menú viven en el bucket privado `menus-pdf`. Firmamos al click
+  // con createSignedUrl(path, 60, { download: filename }) y navegamos con
+  // location.href — window.open tras await lo bloquea Safari (ver
+  // convención mi-seguimiento-auth.md § PDF bucket + memoria
+  // feedback_safari_window_open_await).
+  function conectarClickPdf(root, supa) {
+    if (!root || typeof root.addEventListener !== 'function') return;
+    if (root.dataset && root.dataset.boBoundPdf === '1') return;
+    root.addEventListener('click', async function (ev) {
+      const a = ev.target && ev.target.closest && ev.target.closest('[data-bo-menu-path]');
+      if (!a) return;
+      ev.preventDefault();
+      if (!supa || !supa.storage) {
+        if (BoUi && BoUi.toast) BoUi.toast('No se pudo abrir el PDF (sin sesión).');
+        return;
+      }
+      const path = a.getAttribute('data-bo-menu-path');
+      const filename = a.getAttribute('data-bo-menu-filename') || 'menu.pdf';
+      try {
+        const { data, error } = await supa.storage
+          .from('menus-pdf')
+          .createSignedUrl(path, 60, { download: filename });
+        if (error || !data || !data.signedUrl) {
+          if (BoUi && BoUi.toast) {
+            BoUi.toast('No se pudo abrir el PDF. ' + ((error && error.message) || ''));
+          }
+          return;
+        }
+        window.location.href = data.signedUrl;
+      } catch (err) {
+        console.error('[backoffice/paciente] PDF', err);
+        if (BoUi && BoUi.toast) BoUi.toast('No se pudo abrir el PDF.');
+      }
+    });
+    if (root.dataset) root.dataset.boBoundPdf = '1';
+  }
+
   // ISO 30 días atrás (para filtrar checkins recientes desde Supabase).
   function _isoHaceNDias(n, hoy) {
     const d = hoy instanceof Date ? new Date(hoy.getTime()) : new Date();
@@ -884,9 +927,12 @@
     const acc = document.getElementById('acciones');
     if (cab) cab.innerHTML = renderCabecera(datos.paciente);
     if (ana) ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
-    if (tim) tim.innerHTML = renderTimeline({
-      menus: datos.menus, sesiones: datos.sesiones, revisiones: datos.revisiones
-    });
+    if (tim) {
+      tim.innerHTML = renderTimeline({
+        menus: datos.menus, sesiones: datos.sesiones, revisiones: datos.revisiones
+      });
+      conectarClickPdf(tim, supa);
+    }
     if (acc) {
       acc.innerHTML = renderAcciones({
         paciente: datos.paciente,
