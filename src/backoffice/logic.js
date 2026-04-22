@@ -84,6 +84,7 @@
   // filesystem en el navegador). El test de sanity parsea .claude/skills/ y
   // valida que este set esté alineado con el disco.
   const SKILLS_VALIDAS = new Set([
+    'agendar',
     'alta-paciente',
     'amplitude-overview',
     'cerrar-paciente',

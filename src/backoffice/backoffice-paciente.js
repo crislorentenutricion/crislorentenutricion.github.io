@@ -547,6 +547,17 @@
       botones.push(_btnCopiar(cmdBase + ' ' + paciente.email, 'Copiar /alta-paciente'));
     }
 
+    // /agendar si activa → copy (requiere Claude Code: resuelve email,
+    // llama a scripts/agendar_sesion.py y sincroniza Calendar + Supabase).
+    // Útil para crear la primera sesión del mes o para sincronizar a
+    // Supabase una cita ya existente en Calendar (idempotente).
+    if (activa) {
+      botones.push(_btnCopiar(
+        BoLogic.generarComando('agendar', nombre),
+        'Copiar /agendar'
+      ));
+    }
+
     // /reagendar si hay próxima sesión futura → backend con input datetime.
     const proxSesion = _proximaSesionFutura(sesiones, hoy);
     if (proxSesion) {

@@ -281,6 +281,19 @@ test("BoPaciente.renderAcciones: /reagendar NO aparece si todas las sesiones son
   assert.ok(!/data-bo-function="reagendar"/.test(html));
 });
 
+test("BoPaciente.renderAcciones: /agendar aparece como copy si paciente activa", () => {
+  const html = BoPaciente.renderAcciones(_ctxBase());
+  assert.match(html, /data-bo-comando="\/agendar MARTA"/);
+  assert.match(html, />Copiar \/agendar</);
+});
+
+test("BoPaciente.renderAcciones: /agendar NO aparece si paciente cerrada", () => {
+  const html = BoPaciente.renderAcciones(_ctxBase({
+    paciente: { id: "p1", nombre: "MARTA", estado: "cerrado" }
+  }));
+  assert.ok(!/data-bo-comando="\/agendar/.test(html));
+});
+
 test("BoPaciente.renderAcciones: /cerrar-paciente siempre aparece como backend destructivo", () => {
   const html = BoPaciente.renderAcciones(_ctxBase());
   assert.match(html, /data-bo-function="cerrar-paciente"/);
