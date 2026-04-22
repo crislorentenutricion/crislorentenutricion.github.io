@@ -176,12 +176,16 @@ test("BoPaciente.renderTimeline: sesión incluye calendar_event_id", () => {
   assert.match(html, /data-bo-evento="sesion"/);
 });
 
-test("BoPaciente.renderTimeline: menú con pdf_url → enlace Ver PDF", () => {
+test("BoPaciente.renderTimeline: menú con pdf_url → enlace Ver PDF con data-bo-menu-path", () => {
+  // pdf_url guarda la RUTA dentro del bucket privado menus-pdf (no URL
+  // absoluta). El <a> lleva data-bo-menu-path, el click dispara
+  // createSignedUrl en conectarClickPdf (ver backoffice-paciente.js).
   const html = BoPaciente.renderTimeline({
-    menus: [{ id: "m1", numero: 3, vigente_desde: "2026-04-01", created_at: "2026-04-01T10:00:00Z", pdf_url: "https://drive/m3.pdf" }]
+    menus: [{ id: "m1", numero: 3, vigente_desde: "2026-04-01", created_at: "2026-04-01T10:00:00Z", pdf_url: "uuid-xyz/menu-3.pdf" }]
   });
   assert.match(html, /Menú 3/);
-  assert.match(html, /href="https:\/\/drive\/m3\.pdf"/);
+  assert.match(html, /data-bo-menu-path="uuid-xyz\/menu-3\.pdf"/);
+  assert.match(html, /data-bo-menu-filename="menu-3\.pdf"/);
   assert.match(html, />Ver PDF</);
 });
 
