@@ -285,6 +285,102 @@
       }
     }
 
+    /* Detalle de paciente — cabecera, anamnesis, timeline, acciones. */
+    .bo-cabecera {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+    }
+    .bo-cabecera h1 { margin: 0 0 10px; }
+    .bo-cabecera-meta {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 14px;
+      row-gap: 4px;
+      margin: 0;
+      font-size: 0.92rem;
+    }
+    .bo-cabecera-meta dt { color: #6b7280; }
+    .bo-cabecera-meta dd { margin: 0; color: #2d2a24; }
+
+    .bo-anamnesis,
+    .bo-bloque-timeline,
+    .bo-acciones {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 22px;
+    }
+    .bo-anamnesis h2,
+    .bo-bloque-timeline h2,
+    .bo-acciones h2 {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: 1.15rem;
+      color: var(--color-green-dark);
+      margin: 0 0 12px;
+    }
+    .bo-anamnesis-grupo { margin-top: 10px; }
+    .bo-anamnesis-grupo h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #2d2a24;
+      margin: 8px 0 6px;
+    }
+    .bo-anamnesis-grupo dl {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 14px;
+      row-gap: 4px;
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+    }
+    .bo-anamnesis-grupo dt { color: #6b7280; }
+    .bo-anamnesis-grupo dd { margin: 0; color: #2d2a24; }
+    .bo-anamnesis-libre { cursor: help; }
+
+    .bo-timeline {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .bo-timeline-item {
+      display: flex;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+      align-items: baseline;
+    }
+    .bo-timeline-item:last-child { border-bottom: 0; }
+    .bo-timeline-tipo {
+      display: inline-block;
+      min-width: 70px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-green-dark);
+    }
+    .bo-timeline-desc { flex: 1; font-size: 0.92rem; color: #2d2a24; }
+    .bo-cal-id { color: #6b7280; font-size: 0.8rem; }
+
+    .bo-acciones-botones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .bo-btn-destructivo {
+      background: var(--color-white);
+      color: #a33;
+      border: 1px solid #e4b0b0;
+    }
+    .bo-btn-destructivo:hover {
+      background: #f9eaea;
+      color: #8a2a2a;
+    }
+
     /* Toast de feedback tras copiar — abajo al centro, fade in/out.
        aria-live="polite" lo anuncian lectores de pantalla. */
     .bo-toast {

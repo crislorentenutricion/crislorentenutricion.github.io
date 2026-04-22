@@ -46,6 +46,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/backoffice/ui.js");
   eleventyConfig.addPassthroughCopy("src/backoffice/backoffice-hoy.js");
   eleventyConfig.addPassthroughCopy("src/backoffice/backoffice-pacientes.js");
+  eleventyConfig.addPassthroughCopy("src/backoffice/backoffice-paciente.js");
 
   // Filtro para formatear fechas en español
   eleventyConfig.addFilter("fechaEs", function(dateVal) {
