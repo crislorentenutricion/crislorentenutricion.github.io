@@ -513,10 +513,15 @@
 <script>
   // Orquestación: auth → BoHoy.arrancar(supa). Si RLS deniega o el SDK falla,
   // BoHoy.arrancar muestra el error en #estado-auth sin romper la página.
-  window.BoAuth.iniciar({
-    onListo: function (supa) {
-      window.BoHoy.arrancar(supa);
-    }
+  // DOMContentLoaded garantiza que logic.js, ui.js y auth.js (cargados al
+  // final del layout) ya se han ejecutado — evita TypeError en prod donde
+  // el timing es distinto al dev serve.
+  document.addEventListener('DOMContentLoaded', function () {
+    window.BoAuth.iniciar({
+      onListo: function (supa) {
+        window.BoHoy.arrancar(supa);
+      }
+    });
   });
 </script>
 

@@ -514,7 +514,8 @@
 <script>
   // Orquestación: leer ?id= de la URL, pedir auth, y pasar el id a BoPaciente.
   // Si no hay id, mostramos un mensaje amable con link a la lista — sin romper.
-  (function () {
+  // DOMContentLoaded espera a que auth.js (cargado al final del layout) exista.
+  document.addEventListener('DOMContentLoaded', function () {
     var params = new URLSearchParams(window.location.search);
     var id = (params.get('id') || '').trim();
     if (!id) {
@@ -531,7 +532,7 @@
         window.BoPaciente.arrancar(supa, id);
       }
     });
-  })();
+  });
 </script>
 
   </main>

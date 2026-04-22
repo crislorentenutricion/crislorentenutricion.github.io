@@ -512,10 +512,13 @@
 <script>
   // Auth → BoPacientes.arrancar(supa). El filtro (Activas/Cerradas/Todas) se
   // gestiona dentro de BoPacientes; por defecto muestra Activas.
-  window.BoAuth.iniciar({
-    onListo: function (supa) {
-      window.BoPacientes.arrancar(supa);
-    }
+  // DOMContentLoaded espera a que auth.js (cargado al final del layout) exista.
+  document.addEventListener('DOMContentLoaded', function () {
+    window.BoAuth.iniciar({
+      onListo: function (supa) {
+        window.BoPacientes.arrancar(supa);
+      }
+    });
   });
 </script>
 
