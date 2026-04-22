@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pacientes · CLN</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* =======================================================================
+       Backoffice interno — sobrio, rápido, sin decoración
+       Reusa tokens de /css/style.css (verde #4a7c59, crema #f8f6f0, Manrope).
+       Inlineado a propósito: una sola página en dos vistas, no justifica
+       otro fichero CSS ni cache entry.
+       ======================================================================= */
+    .bo-body {
+      background: var(--color-cream);
+      color: #2d2a24;
+      min-height: 100vh;
+    }
+    .backoffice-nav {
+      background: var(--color-white);
+      border-bottom: 1px solid var(--color-border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+    }
+    .backoffice-nav .bo-brand {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      color: var(--color-green);
+      margin-right: auto;
+      font-size: 1rem;
+    }
+    .backoffice-nav a {
+      color: #2d2a24;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: background 120ms ease;
+    }
+    .backoffice-nav a:hover,
+    .backoffice-nav a.is-active {
+      background: var(--color-green-muted);
+      color: var(--color-green-dark);
+    }
+    .backoffice-nav button {
+      background: transparent;
+      border: 1px solid var(--color-border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #55524a;
+      font: inherit;
+    }
+    .backoffice-nav button:hover {
+      border-color: var(--color-green);
+      color: var(--color-green-dark);
+    }
+    .backoffice-main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 28px 20px 64px;
+    }
+    .backoffice-main h1 {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: clamp(1.6rem, 4vw, 2.1rem);
+      letter-spacing: -0.01em;
+      margin: 0 0 20px;
+      color: #2d2a24;
+    }
+
+    /* Estados comunes: loading, login, error 403. Inlined para evitar flash
+       sin estilos mientras auth.js decide qué mostrar. */
+    .bo-gate {
+      max-width: 420px;
+      margin: 8vh auto 0;
+      padding: 28px 24px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+    }
+    .bo-gate h2 {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: 1.35rem;
+      margin: 0 0 10px;
+      color: var(--color-green-dark);
+    }
+    .bo-gate p { margin: 0 0 18px; color: #55524a; line-height: 1.55; }
+    .bo-gate label {
+      display: block;
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+    .bo-gate input[type=email],
+    .bo-gate input[type=text] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font: inherit;
+      background: var(--color-cream);
+    }
+    .bo-gate input:focus {
+      outline: 2px solid var(--color-green-glow);
+      border-color: var(--color-green);
+    }
+    .bo-gate button[type=submit] {
+      margin-top: 14px;
+      width: 100%;
+      padding: 10px;
+      background: var(--color-green);
+      color: var(--color-white);
+      border: 0;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 600;
+    }
+    .bo-gate button[type=submit]:disabled { opacity: 0.6; cursor: wait; }
+    .bo-gate button[type=submit]:hover:not(:disabled) { background: var(--color-green-dark); }
+    .bo-gate .bo-status {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: #55524a;
+      min-height: 1.2em;
+    }
+    .bo-gate .bo-status.is-error { color: #a33; }
+    .bo-gate .bo-status.is-ok    { color: var(--color-green-dark); }
+
+    .bo-hidden { display: none !important; }
+
+    /* =======================================================================
+       Bloques de la vista Hoy y tabla de Pacientes. Diseño sobrio —
+       listas separadas por secciones, filas compactas con botón "Copiar
+       comando" a la derecha. El comando es el artefacto real del backoffice:
+       la pestaña está para mapear "qué pacientas tocan" a "qué slash-command
+       ejecutar en Claude Code", y todo el resto es auxiliar.
+       ======================================================================= */
+    .bo-estado {
+      margin-top: 16px;
+      font-size: 0.9rem;
+      color: #55524a;
+      min-height: 1.2em;
+    }
+    .bo-estado.is-error { color: #a33; }
+    .bo-cargando { color: #55524a; font-size: 0.95rem; margin: 12px 0; }
+
+    /* Tarjeta de métricas de la vista Hoy: 3 celdas en fila responsive con
+       número grande y etiqueta descriptiva debajo. Se identifica por las
+       etiquetas (no por color): "Pacientes activas hoy", "Menús creados
+       este mes", "Respuesta a repescas (últimos 90 días)". */
+    .bo-metricas {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .bo-metrica {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .bo-metrica-valor {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: 1.8rem;
+      color: var(--color-green-dark);
+      line-height: 1.1;
+    }
+    .bo-metrica-etiqueta {
+      font-size: 0.82rem;
+      color: #55524a;
+      line-height: 1.35;
+    }
+    @media (max-width: 640px) {
+      .bo-metricas { grid-template-columns: 1fr; }
+    }
+
+    .bo-bloque {
+      margin-bottom: 28px;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .bo-bloque-titulo {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: 1.1rem;
+      color: var(--color-green-dark);
+      margin: 0 0 14px;
+    }
+    .bo-vacio {
+      color: #6b7280;
+      font-size: 0.92rem;
+      margin: 0;
+    }
+    .bo-lista {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .bo-fila {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .bo-fila:last-child { border-bottom: 0; }
+    .bo-fila-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+    .bo-fila-nombre {
+      font-weight: 500;
+      color: #2d2a24;
+    }
+    .bo-fila-hora,
+    .bo-fila-detalle {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    /* Botones copy-command: "pulsa Copiar comando" (no se identifica por
+       color, se identifica por etiqueta — feedback_copy_etiquetas_ui.md). */
+    .bo-btn {
+      font: inherit;
+      cursor: pointer;
+      border: 0;
+      border-radius: 6px;
+      padding: 8px 14px;
+      background: var(--color-green);
+      color: var(--color-white);
+      font-weight: 600;
+      transition: background 120ms ease;
+    }
+    .bo-btn:hover { background: var(--color-green-dark); }
+    .bo-btn:disabled, .bo-btn.is-copiado { background: var(--color-green-dark); }
+    .bo-btn-copiar-sm {
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      margin-right: 6px;
+    }
+    .bo-btn-copiar-sm:last-child { margin-right: 0; }
+
+    /* Tabla de pacientes. Minimalista, sin zebra-stripes, con hover suave.
+       En móvil se desplaza horizontalmente para no cortar columnas. */
+    .bo-filtro {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+      font-size: 0.92rem;
+    }
+    .bo-filtro select {
+      padding: 6px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      background: var(--color-white);
+      font: inherit;
+    }
+    .bo-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      overflow: hidden;
+      font-size: 0.92rem;
+    }
+    .bo-tabla thead th {
+      text-align: left;
+      padding: 10px 12px;
+      background: var(--color-green-muted);
+      color: var(--color-green-dark);
+      font-weight: 600;
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+    .bo-tabla tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+    .bo-tabla tbody tr:last-child td { border-bottom: 0; }
+    .bo-tabla tbody tr:hover td { background: var(--color-cream); }
+    .bo-tabla .bo-acciones { white-space: nowrap; }
+    .bo-fila-link {
+      color: var(--color-green-dark);
+      font-weight: 500;
+      text-decoration: none;
+    }
+    .bo-fila-link:hover { text-decoration: underline; }
+    .bo-fila-vacia td {
+      text-align: center;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    @media (max-width: 640px) {
+      .bo-tabla {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+
+    /* Detalle de paciente — cabecera, anamnesis, timeline, acciones. */
+    .bo-cabecera {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 22px;
+    }
+    .bo-cabecera h1 { margin: 0 0 10px; }
+    .bo-cabecera-meta {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 14px;
+      row-gap: 4px;
+      margin: 0;
+      font-size: 0.92rem;
+    }
+    .bo-cabecera-meta dt { color: #6b7280; }
+    .bo-cabecera-meta dd { margin: 0; color: #2d2a24; }
+
+    .bo-anamnesis,
+    .bo-bloque-timeline,
+    .bo-acciones {
+      background: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin-bottom: 22px;
+    }
+    .bo-anamnesis h2,
+    .bo-bloque-timeline h2,
+    .bo-acciones h2 {
+      font-family: 'Lora', serif;
+      font-weight: 500;
+      font-size: 1.15rem;
+      color: var(--color-green-dark);
+      margin: 0 0 12px;
+    }
+    .bo-anamnesis-grupo { margin-top: 10px; }
+    .bo-anamnesis-grupo h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #2d2a24;
+      margin: 8px 0 6px;
+    }
+    .bo-anamnesis-grupo dl {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 14px;
+      row-gap: 4px;
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+    }
+    .bo-anamnesis-grupo dt { color: #6b7280; }
+    .bo-anamnesis-grupo dd { margin: 0; color: #2d2a24; }
+    .bo-anamnesis-libre { cursor: help; }
+
+    .bo-timeline {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .bo-timeline-item {
+      display: flex;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--color-border);
+      align-items: baseline;
+    }
+    .bo-timeline-item:last-child { border-bottom: 0; }
+    .bo-timeline-tipo {
+      display: inline-block;
+      min-width: 70px;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-green-dark);
+    }
+    .bo-timeline-desc { flex: 1; font-size: 0.92rem; color: #2d2a24; }
+    .bo-cal-id { color: #6b7280; font-size: 0.8rem; }
+
+    .bo-acciones-botones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .bo-btn-destructivo {
+      background: var(--color-white);
+      color: #a33;
+      border: 1px solid #e4b0b0;
+    }
+    .bo-btn-destructivo:hover {
+      background: #f9eaea;
+      color: #8a2a2a;
+    }
+
+    /* Botón secundario (pill outlined verde) — usado en Cancelar de los
+       mini-formularios de acciones backend (ver feedback memoria
+       feedback_botones_secundarios.md). */
+    .bo-btn-secundario {
+      background: transparent;
+      color: var(--color-green-dark);
+      border: 1px solid var(--color-green);
+      font-weight: 500;
+    }
+    .bo-btn-secundario:hover {
+      background: var(--color-green-muted);
+      color: var(--color-green-dark);
+    }
+
+    /* Mini-form inline para /reagendar: datetime-local + acciones. */
+    .bo-form-reagendar,
+    .bo-form-cerrar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--color-cream);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      width: 100%;
+    }
+    .bo-form-reagendar-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+      color: #55524a;
+      flex: 1;
+      min-width: 200px;
+    }
+    .bo-form-reagendar-label input {
+      padding: 8px 10px;
+      border: 1px solid var(--color-border);
+      border-radius: 6px;
+      font: inherit;
+      background: var(--color-white);
+    }
+    .bo-form-reagendar-botones {
+      display: flex;
+      gap: 8px;
+    }
+    .bo-form-cerrar-etiqueta {
+      font-size: 0.9rem;
+      color: #55524a;
+      margin-right: 4px;
+    }
+
+    /* Toast de feedback tras copiar — abajo al centro, fade in/out.
+       aria-live="polite" lo anuncian lectores de pantalla. */
+    .bo-toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(16px);
+      background: #2d2a24;
+      color: var(--color-white);
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      max-width: calc(100vw - 32px);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease, transform 180ms ease;
+      z-index: 9999;
+    }
+    .bo-toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body class="bo-body">
+  <nav class="backoffice-nav" data-bo-nav hidden>
+    <span class="bo-brand">CLN · backoffice</span>
+    <a href="/backoffice/" data-bo-link="hoy">Hoy</a>
+    <a href="/backoffice/pacientes/" data-bo-link="pacientes">Pacientes</a>
+    <button type="button" data-bo-signout>Cerrar sesión</button>
+  </nav>
+
+  <main class="backoffice-main">
+    
+<h1>Pacientes</h1>
+<div id="tabla-pacientes"></div>
+<div id="estado-auth" class="bo-estado" role="status" aria-live="polite"></div>
+
+<script src="/backoffice/backoffice-pacientes.js"></script>
+<script>
+  // Auth → BoPacientes.arrancar(supa). El filtro (Activas/Cerradas/Todas) se
+  // gestiona dentro de BoPacientes; por defecto muestra Activas.
+  window.BoAuth.iniciar({
+    onListo: function (supa) {
+      window.BoPacientes.arrancar(supa);
+    }
+  });
+</script>
+
+  </main>
+
+  <script>
+    /* Env vars del sitio inyectadas por Eleventy en build. Las RLS de Supabase
+       son la barrera real — este gate es UX. `cristinaEmail` vacío = dev local. */
+    window.__BO_ENV__ = {
+      supabaseUrl: 'https://nvjoupgpncprgpemqydg.supabase.co',
+      supabasePublishableKey: 'sb_publishable_kcnv9Us0xUtLaYAvsxT_Qw_YOzv05RS',
+      cristinaEmail: 'cristina@crislorentenutricion.com'
+    };
+  </script>
+  <script src="/backoffice/logic.js"></script>
+  <script src="/backoffice/ui.js"></script>
+  <script src="/backoffice/auth.js"></script>
+  <script type="module">
+    /* Carga el SDK de Supabase (ESM) y se lo pasa a BoAuth. Mismo patrón que
+       /mi-seguimiento/: inline por render, import una sola vez, cliente
+       creado con el helper. */
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    window.BoAuth.registrarSupabase(createClient);
+  </script>
+</body>
+</html>
