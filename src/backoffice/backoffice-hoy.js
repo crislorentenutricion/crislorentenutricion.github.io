@@ -257,8 +257,13 @@
       const hoy = new Date();
       const agrupado  = BoLogic.agruparHoy({ ...datos, opts: {} }, hoy);
       const metricas  = BoLogic.calcularMetricasHoy(datos, hoy);
-      if (metricasRoot) {
+      if (metricasRoot && metricasRoot.parentNode) {
         metricasRoot.outerHTML = renderMetricas(metricas);
+      } else if (metricasRoot) {
+        // Defensa: si por alguna razón ya no tiene parent (arrancar reentrante),
+        // buscamos el sucesor por id en lugar de petar con NoModificationAllowedError.
+        const vivo = document.getElementById('metricas');
+        if (vivo && vivo.parentNode) vivo.outerHTML = renderMetricas(metricas);
       }
       root.innerHTML = renderTodosLosBloques(agrupado);
       conectarBotonesCopiar(root);

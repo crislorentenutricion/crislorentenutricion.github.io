@@ -222,6 +222,13 @@
     evaluar(data.session, opts);
   }
 
+  // Dedup de onListo: Supabase dispara onAuthStateChange(INITIAL_SESSION) y
+  // además llamamos explícitamente getSession → evaluar. Ambas rutas son
+  // legítimas (necesitamos ambas para casos distintos), pero no queremos que
+  // onListo se ejecute 2 veces con la misma sesión — romperá renders
+  // idempotentes (ej. outerHTML de #metricas).
+  let lastListoKey = null;
+
   function evaluar(session, opts) {
     if (!session) {
       mostrarNav(false);
@@ -244,6 +251,9 @@
     resaltarNavActivo();
     mostrarContenidoPagina();
     if (typeof opts.onListo === 'function') {
+      const key = sessionEmail + '|' + (session.access_token || '');
+      if (key === lastListoKey) return;
+      lastListoKey = key;
       try { opts.onListo(supaClient, session); }
       catch (e) { console.error('[BoAuth] onListo lanzó:', e); }
     }
