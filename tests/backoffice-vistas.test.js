@@ -202,6 +202,56 @@ test("BoHoy.renderTodosLosBloques: título 'Menús a crear esta semana' (cadenci
 });
 
 // ===================================================================
+// BoHoy — tarjeta de métricas
+// ===================================================================
+
+test("BoHoy.renderMetricas: 3 celdas con etiquetas de cadencia explícita", () => {
+  const html = BoHoy.renderMetricas({
+    activas: 12,
+    menusEsteMes: 5,
+    repescas: { numerador: 2, denominador: 3, label: "Respuesta a repescas (últimos 90 días)" }
+  });
+  assert.match(html, /<section id="metricas"[^>]*data-bo-block="metricas"/);
+  // Cadencia explícita en etiquetas (feedback_copy_cadencia.md)
+  assert.match(html, /Pacientes activas hoy/);
+  assert.match(html, /Menús creados este mes/);
+  assert.match(html, /Respuesta a repescas \(últimos 90 días\)/);
+  // Valores visibles
+  assert.match(html, /<div class="bo-metrica-valor">12<\/div>/);
+  assert.match(html, /<div class="bo-metrica-valor">5<\/div>/);
+  assert.match(html, /<div class="bo-metrica-valor">2\/3<\/div>/);
+});
+
+test("BoHoy.renderMetricas: repescas 'Sin datos suficientes' → muestra '—' + etiqueta", () => {
+  const html = BoHoy.renderMetricas({
+    activas: 8,
+    menusEsteMes: 3,
+    repescas: { numerador: 0, denominador: 0, label: "Sin datos suficientes" }
+  });
+  assert.match(html, /data-bo-metrica="repescas"/);
+  assert.match(html, /<div class="bo-metrica-valor">—<\/div>/);
+  assert.match(html, /Sin datos suficientes/);
+  // No debe aparecer "0/0" como valor numérico
+  assert.ok(!/0\/0/.test(html), "no mostrar 0/0 cuando faltan datos");
+});
+
+test("BoHoy.renderMetricas: input vacío no rompe (defensivo)", () => {
+  const html = BoHoy.renderMetricas();
+  assert.match(html, /<section id="metricas"/);
+  assert.match(html, /Sin datos suficientes/);
+});
+
+test("BoHoy.renderMetricas: cada celda lleva data-bo-metrica con su clave", () => {
+  const html = BoHoy.renderMetricas({
+    activas: 0, menusEsteMes: 0,
+    repescas: { numerador: 0, denominador: 0, label: "Sin datos suficientes" }
+  });
+  for (const key of ["activas", "menus-mes", "repescas"]) {
+    assert.match(html, new RegExp(`data-bo-metrica="${key}"`), `falta celda ${key}`);
+  }
+});
+
+// ===================================================================
 // BoPacientes — renderers puros
 // ===================================================================
 
@@ -420,6 +470,21 @@ test("build: /backoffice/ contiene contenedor #bloques y #estado-auth", () => {
   const html = fs.readFileSync(path.join(SITE, "backoffice", "index.html"), "utf8");
   assert.match(html, /<div id="bloques"><\/div>/);
   assert.match(html, /id="estado-auth"/);
+});
+
+test("build: /backoffice/ contiene <section id=\"metricas\"> arriba de #bloques", () => {
+  const html = fs.readFileSync(path.join(SITE, "backoffice", "index.html"), "utf8");
+  assert.match(html, /<section id="metricas"[^>]*data-bo-block="metricas"/);
+  // La sección metricas debe preceder al div #bloques en el HTML.
+  const idxMetricas = html.indexOf('id="metricas"');
+  const idxBloques = html.indexOf('id="bloques"');
+  assert.ok(idxMetricas > -1 && idxBloques > -1, "faltan los contenedores");
+  assert.ok(idxMetricas < idxBloques, "metricas debe aparecer antes que #bloques");
+});
+
+test("build: /backoffice/ carga el mismo script backoffice-hoy.js (no regresión)", () => {
+  const html = fs.readFileSync(path.join(SITE, "backoffice", "index.html"), "utf8");
+  assert.match(html, /src="\/backoffice\/backoffice-hoy\.js"/);
 });
 
 test("build: /backoffice/pacientes/ contiene contenedor #tabla-pacientes", () => {

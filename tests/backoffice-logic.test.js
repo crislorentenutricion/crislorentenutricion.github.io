@@ -6,13 +6,17 @@ const path = require("node:path");
 const {
   agruparHoy,
   priorizarPacientes,
+  calcularMetricasHoy,
   generarComando,
   diffEnDias,
   validarEnv,
   SKILLS_VALIDAS,
   VIGENCIA_DIAS_DEFAULT,
   DIAS_SIN_CHECKIN_ALERTA,
-  DIAS_AVISO_PROXIMO_MENU
+  DIAS_AVISO_PROXIMO_MENU,
+  REPESCA_VENTANA_DIAS,
+  GAP_REPESCA_DIAS,
+  REPESCA_MIN_DENOMINADOR
 } = require("../src/backoffice/logic.js");
 
 // ===================================================================
@@ -545,4 +549,240 @@ test("validarEnv: sube al proceso vía child_process con env controlado", () => 
   ], { env: { NODE_ENV: "production" } });
   assert.notEqual(prodFail.status, 0, "esperaba exit != 0 sin CRISTINA_EMAIL en prod");
   assert.match(String(prodFail.stderr), /CRISTINA_EMAIL requerida/);
+});
+
+// ===================================================================
+// calcularMetricasHoy
+// ===================================================================
+//
+// Constantes fijadas en el módulo (no las hardcodeamos en tests para que un
+// cambio razonado en una sola parte no requiera retocar 10 tests):
+//   REPESCA_VENTANA_DIAS=90, GAP_REPESCA_DIAS=21, REPESCA_MIN_DENOMINADOR=3.
+// Las usamos cuando el cálculo depende de ellas.
+
+test("calcularMetricasHoy: expone constantes coherentes", () => {
+  assert.equal(REPESCA_VENTANA_DIAS, 90);
+  assert.equal(GAP_REPESCA_DIAS, 21);
+  assert.equal(REPESCA_MIN_DENOMINADOR, 3);
+});
+
+test("calcularMetricasHoy: cuenta solo pacientes con estado 'activo'", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "A", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "B", estado: "activo", alta: "2026-01-01" },
+      { id: "p3", nombre: "C", estado: "cerrado", alta: "2025-01-01" },
+      { id: "p4", nombre: "D", estado: "pausa",   alta: "2026-01-01" }
+    ],
+    menus: [], sesiones: [], checkins: []
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.activas, 2);
+});
+
+test("calcularMetricasHoy: sin pacientes → 0 activas", () => {
+  const r = calcularMetricasHoy({ pacientes: [], menus: [], sesiones: [], checkins: [] }, HOY);
+  assert.equal(r.activas, 0);
+});
+
+test("calcularMetricasHoy: menusEsteMes cuenta solo menús con created_at en el mes actual", () => {
+  // HOY = 22 abril 2026 → mes natural = abril 2026 [01-abril, 01-mayo)
+  const datos = {
+    pacientes: [],
+    menus: [
+      { id: "m1", paciente_id: "p1", numero: 1, vigente_desde: "2026-04-01", created_at: "2026-04-01T10:00:00Z" },
+      { id: "m2", paciente_id: "p2", numero: 1, vigente_desde: "2026-04-15", created_at: "2026-04-15T08:00:00Z" },
+      // Mes anterior
+      { id: "m3", paciente_id: "p3", numero: 1, vigente_desde: "2026-03-28", created_at: "2026-03-28T10:00:00Z" },
+      // Mes siguiente
+      { id: "m4", paciente_id: "p4", numero: 1, vigente_desde: "2026-05-02", created_at: "2026-05-02T10:00:00Z" }
+    ],
+    sesiones: [], checkins: []
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.menusEsteMes, 2);
+});
+
+test("calcularMetricasHoy: menusEsteMes usa vigente_desde cuando falta created_at (legacy)", () => {
+  const datos = {
+    pacientes: [],
+    menus: [
+      // sin created_at, vigente_desde en mes actual
+      { id: "m1", paciente_id: "p1", numero: 1, vigente_desde: "2026-04-05" },
+      // sin created_at, vigente_desde en otro mes
+      { id: "m2", paciente_id: "p2", numero: 1, vigente_desde: "2026-02-10" }
+    ],
+    sesiones: [], checkins: []
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.menusEsteMes, 1);
+});
+
+test("calcularMetricasHoy: devuelve estructura con las 3 claves esperadas", () => {
+  const r = calcularMetricasHoy({ pacientes: [], menus: [], sesiones: [], checkins: [] }, HOY);
+  assert.ok("activas" in r);
+  assert.ok("menusEsteMes" in r);
+  assert.ok("repescas" in r);
+  assert.ok("numerador" in r.repescas);
+  assert.ok("denominador" in r.repescas);
+  assert.ok("label" in r.repescas);
+});
+
+test("calcularMetricasHoy: sin pacientes con gap suficiente → 'Sin datos suficientes'", () => {
+  // Todas las pacientes tienen checkins recientes → ninguna con gap ≥ 21.
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "A", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "B", estado: "activo", alta: "2026-01-01" },
+      { id: "p3", nombre: "C", estado: "activo", alta: "2026-01-01" }
+    ],
+    menus: [],
+    sesiones: [],
+    checkins: [
+      { paciente_id: "p1", fecha: "2026-04-20", estado: "seguido" },
+      { paciente_id: "p2", fecha: "2026-04-19", estado: "seguido" },
+      { paciente_id: "p3", fecha: "2026-04-18", estado: "seguido" }
+    ]
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.repescas.label, "Sin datos suficientes");
+  assert.equal(r.repescas.numerador, 0);
+  assert.equal(r.repescas.denominador, 0);
+});
+
+test("calcularMetricasHoy: denominador < 3 → 'Sin datos suficientes' aunque haya algún gap", () => {
+  // Solo 1 paciente con gap; REPESCA_MIN_DENOMINADOR=3 → sin datos suficientes.
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "A", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "B", estado: "activo", alta: "2026-01-01" }
+    ],
+    menus: [],
+    sesiones: [],
+    checkins: [
+      // p1: tiene gap de ~25 días y responde después
+      { paciente_id: "p1", fecha: "2026-02-15", estado: "seguido" },
+      { paciente_id: "p1", fecha: "2026-03-15", estado: "seguido" },
+      { paciente_id: "p1", fecha: "2026-04-10", estado: "seguido" },
+      // p2: sin gap (checkins frecuentes)
+      { paciente_id: "p2", fecha: "2026-04-20", estado: "seguido" },
+      { paciente_id: "p2", fecha: "2026-04-15", estado: "seguido" }
+    ]
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.repescas.label, "Sin datos suficientes");
+});
+
+test("calcularMetricasHoy: ≥3 pacientes con gap → calcula tasa X/Y", () => {
+  // 3 pacientes activas con gap ≥ 21 días dentro de la ventana de 90.
+  // p1 y p2 vuelven después del gap (respondio=true).
+  // p3 sigue en silencio (respondio=false).
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "A", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "B", estado: "activo", alta: "2026-01-01" },
+      { id: "p3", nombre: "C", estado: "activo", alta: "2026-01-01" }
+    ],
+    menus: [],
+    sesiones: [],
+    checkins: [
+      // p1: actividad, luego gap de ~30 días, luego vuelve
+      { paciente_id: "p1", fecha: "2026-02-01", estado: "seguido" },
+      { paciente_id: "p1", fecha: "2026-03-05", estado: "seguido" },
+      { paciente_id: "p1", fecha: "2026-04-15", estado: "seguido" }, // respondió
+      // p2: actividad + gap + vuelve
+      { paciente_id: "p2", fecha: "2026-02-10", estado: "seguido" },
+      { paciente_id: "p2", fecha: "2026-03-15", estado: "seguido" },
+      { paciente_id: "p2", fecha: "2026-04-18", estado: "seguido" }, // respondió
+      // p3: un checkin hace mucho, gap abierto hasta hoy → no respondió
+      { paciente_id: "p3", fecha: "2026-02-01", estado: "seguido" },
+      { paciente_id: "p3", fecha: "2026-02-20", estado: "seguido" }
+      // sin actividad después → gap abierto
+    ]
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.repescas.denominador, 3);
+  assert.equal(r.repescas.numerador, 2);
+  assert.equal(r.repescas.label, "Respuesta a repescas (últimos 90 días)");
+});
+
+test("calcularMetricasHoy: pacientes cerrados no entran en denominador de repescas", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "A", estado: "cerrado", alta: "2025-01-01" },
+      { id: "p2", nombre: "B", estado: "cerrado", alta: "2025-01-01" },
+      { id: "p3", nombre: "C", estado: "cerrado", alta: "2025-01-01" }
+    ],
+    menus: [],
+    sesiones: [],
+    checkins: [
+      { paciente_id: "p1", fecha: "2026-02-01", estado: "seguido" },
+      { paciente_id: "p2", fecha: "2026-02-10", estado: "seguido" },
+      { paciente_id: "p3", fecha: "2026-02-15", estado: "seguido" }
+    ]
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  // 0 pacientes activas → 0 denominador → sin datos suficientes.
+  assert.equal(r.activas, 0);
+  assert.equal(r.repescas.label, "Sin datos suficientes");
+});
+
+test("calcularMetricasHoy: usa sesiones Y checkins para detectar actividad", () => {
+  // 3 activas con gap + respondidas vía sesiones (no solo checkins).
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "A", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "B", estado: "activo", alta: "2026-01-01" },
+      { id: "p3", nombre: "C", estado: "activo", alta: "2026-01-01" }
+    ],
+    menus: [],
+    sesiones: [
+      // p1: sesión antes + sesión después del gap
+      { id: "s1", paciente_id: "p1", fecha: "2026-02-01T10:00:00Z" },
+      { id: "s2", paciente_id: "p1", fecha: "2026-03-10T10:00:00Z" },
+      { id: "s3", paciente_id: "p1", fecha: "2026-04-15T10:00:00Z" },
+      // p2: con sesiones espaciadas
+      { id: "s4", paciente_id: "p2", fecha: "2026-02-05T10:00:00Z" },
+      { id: "s5", paciente_id: "p2", fecha: "2026-03-12T10:00:00Z" },
+      { id: "s6", paciente_id: "p2", fecha: "2026-04-18T10:00:00Z" },
+      // p3: gap abierto, sin actividad reciente
+      { id: "s7", paciente_id: "p3", fecha: "2026-02-20T10:00:00Z" }
+    ],
+    checkins: []
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.repescas.denominador, 3);
+  assert.equal(r.repescas.numerador, 2);
+});
+
+test("calcularMetricasHoy: integración — combina 3 métricas en fixture realista", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "A", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "B", estado: "activo", alta: "2026-01-01" },
+      { id: "p3", nombre: "C", estado: "cerrado", alta: "2025-01-01" }
+    ],
+    menus: [
+      { id: "m1", paciente_id: "p1", numero: 2, vigente_desde: "2026-04-05", created_at: "2026-04-05T09:00:00Z" },
+      { id: "m2", paciente_id: "p2", numero: 1, vigente_desde: "2026-04-12", created_at: "2026-04-12T09:00:00Z" },
+      { id: "m3", paciente_id: "p3", numero: 5, vigente_desde: "2025-10-01", created_at: "2025-10-01T09:00:00Z" }
+    ],
+    sesiones: [],
+    checkins: [
+      { paciente_id: "p1", fecha: "2026-04-20", estado: "seguido" },
+      { paciente_id: "p2", fecha: "2026-04-19", estado: "seguido" }
+    ]
+  };
+  const r = calcularMetricasHoy(datos, HOY);
+  assert.equal(r.activas, 2);
+  assert.equal(r.menusEsteMes, 2);
+  // denominador < 3 → sin datos suficientes
+  assert.equal(r.repescas.label, "Sin datos suficientes");
+});
+
+test("calcularMetricasHoy: tolera datos undefined/null sin romper", () => {
+  const r = calcularMetricasHoy({}, HOY);
+  assert.equal(r.activas, 0);
+  assert.equal(r.menusEsteMes, 0);
+  assert.equal(r.repescas.label, "Sin datos suficientes");
 });

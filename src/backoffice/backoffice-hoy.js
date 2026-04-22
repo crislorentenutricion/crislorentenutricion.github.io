@@ -121,6 +121,41 @@
     '</section>';
   }
 
+  // -----------------------------------------------------------------
+  // Tarjeta de métricas (arriba de los bloques)
+  // -----------------------------------------------------------------
+  //
+  // Tres celdas:
+  //   1. Pacientes activas hoy — número.
+  //   2. Menús creados este mes — número.
+  //   3. Respuesta a repescas (últimos 90 días) — X/Y o "Sin datos suficientes".
+  //
+  // Etiquetas explícitas de cadencia (diario, mes, 90 días) siguiendo
+  // feedback_copy_cadencia.md. Se identifican por texto, no por color
+  // (feedback_copy_etiquetas_ui.md).
+
+  function _celdaMetrica(key, valor, etiqueta) {
+    return '<div class="bo-metrica" data-bo-metrica="' + BoUi.escapeHtml(key) + '">' +
+      '<div class="bo-metrica-valor">' + BoUi.escapeHtml(valor) + '</div>' +
+      '<div class="bo-metrica-etiqueta">' + BoUi.escapeHtml(etiqueta) + '</div>' +
+    '</div>';
+  }
+
+  function renderMetricas(metricas) {
+    const m = metricas || { activas: 0, menusEsteMes: 0, repescas: { numerador: 0, denominador: 0, label: 'Sin datos suficientes' } };
+    const r = m.repescas || {};
+    const sinDatos = r.label === 'Sin datos suficientes' || r.denominador === 0;
+    const valorRepescas = sinDatos ? '—' : (r.numerador + '/' + r.denominador);
+    const etiquetaRepescas = sinDatos
+      ? 'Sin datos suficientes'
+      : 'Respuesta a repescas (últimos 90 días)';
+    return '<section id="metricas" class="bo-metricas" data-bo-block="metricas">' +
+      _celdaMetrica('activas', String(m.activas || 0), 'Pacientes activas hoy') +
+      _celdaMetrica('menus-mes', String(m.menusEsteMes || 0), 'Menús creados este mes') +
+      _celdaMetrica('repescas', valorRepescas, etiquetaRepescas) +
+    '</section>';
+  }
+
   function renderTodosLosBloques(agrupado) {
     return [
       renderBloque({
@@ -182,9 +217,11 @@
 
   async function cargarDatos(supa) {
     // 4 SELECT en paralelo. RLS se encarga de filtrar al email de Cristina.
+    // `menus.created_at` lo usa `calcularMetricasHoy` para contar los del mes
+    // natural actual.
     const results = await Promise.all([
       supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding'),
-      supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url'),
+      supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at'),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id'),
       supa.from('checkins').select('paciente_id, fecha, estado')
     ]);
@@ -207,12 +244,22 @@
     const root = document.getElementById('bloques');
     if (!root) return;
     root.innerHTML = '<p class="bo-cargando">Cargando datos…</p>';
+    // Contenedor de métricas (se pinta encima de #bloques). Si no existe, lo
+    // creamos en el DOM justo antes del contenedor de bloques.
+    let metricasRoot = document.getElementById('metricas');
+    if (!metricasRoot && root.parentNode) {
+      metricasRoot = document.createElement('div');
+      metricasRoot.id = 'metricas-wrap';
+      root.parentNode.insertBefore(metricasRoot, root);
+    }
     try {
       const datos = await cargarDatos(supa);
-      const agrupado = BoLogic.agruparHoy(
-        { ...datos, opts: {} },
-        new Date()
-      );
+      const hoy = new Date();
+      const agrupado  = BoLogic.agruparHoy({ ...datos, opts: {} }, hoy);
+      const metricas  = BoLogic.calcularMetricasHoy(datos, hoy);
+      if (metricasRoot) {
+        metricasRoot.outerHTML = renderMetricas(metricas);
+      }
       root.innerHTML = renderTodosLosBloques(agrupado);
       conectarBotonesCopiar(root);
     } catch (err) {
@@ -233,6 +280,7 @@
     renderFilaAlerta,
     renderBloque,
     renderTodosLosBloques,
+    renderMetricas,
     arrancar
   };
 

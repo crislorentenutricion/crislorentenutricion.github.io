@@ -392,6 +392,157 @@
   }
 
   // -----------------------------------------------------------------
+  // calcularMetricasHoy — tarjeta de métricas simples para la vista Hoy
+  // -----------------------------------------------------------------
+  //
+  // Devuelve tres números para pintar en una tarjeta arriba de los bloques:
+  //   { activas, menusEsteMes, repescas: { numerador, denominador, label } }
+  //
+  // - `activas`: pacientes con estado === 'activo'.
+  // - `menusEsteMes`: menús cuyo `created_at` (timestamptz) cae en el mes
+  //   natural de `hoy`. Si un menú no tiene created_at (import legacy) cae
+  //   al `vigente_desde` como proxy. Sumamos único por id.
+  // - `repescas`: proxy de "tasa de respuesta a repescas" en los últimos
+  //   REPESCA_VENTANA_DIAS (90) días. El schema NO tiene un campo explícito
+  //   de "intento de repesca", así que calculamos un proxy honesto:
+  //     - Para cada paciente activa, detectamos si dentro de la ventana tuvo
+  //       una racha de silencio ≥ GAP_REPESCA_DIAS (21) días, medida como
+  //       días consecutivos sin checkin ni sesión (timestamps que aparezcan
+  //       en las tablas respectivas).
+  //     - Denominador: pacientes con tal racha terminada dentro de la
+  //       ventana.
+  //     - Numerador: de esas, las que tuvieron al menos un checkin o sesión
+  //       posterior a la racha dentro de la misma ventana (respuesta).
+  //   Si denominador < REPESCA_MIN_DENOMINADOR (3), devolvemos label
+  //   "Sin datos suficientes" y numerador/denominador = 0. Esto evita
+  //   mostrar una tasa basada en 1-2 casos que no representa nada.
+  //
+  // Si algún día el schema tiene una tabla `repescas` con intento + resultado,
+  // esta función se reemplaza por un cálculo directo. Mientras tanto, el
+  // proxy es la mejor aproximación honesta (ver commit que añadió la tarjeta).
+
+  const REPESCA_VENTANA_DIAS = 90;
+  const GAP_REPESCA_DIAS = 21;
+  const REPESCA_MIN_DENOMINADOR = 3;
+
+  function _mesActualBounds(hoy) {
+    const d = _toMidnight(hoy) || _toMidnight(new Date());
+    const inicio = new Date(d.getFullYear(), d.getMonth(), 1);
+    const finExcl = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+    return { inicio: inicio.getTime(), finExcl: finExcl.getTime() };
+  }
+
+  function _menuEnMesActual(menu, bounds) {
+    const ref = menu.created_at || menu.vigente_desde;
+    if (!ref) return false;
+    const d = new Date(ref);
+    if (isNaN(d.getTime())) return false;
+    const t = d.getTime();
+    return t >= bounds.inicio && t < bounds.finExcl;
+  }
+
+  // Calcula el proxy de repescas para una paciente. Devuelve:
+  //   { tuvoGap: boolean, respondio: boolean }
+  // Si `tuvoGap` es false, la paciente no entra en el denominador.
+  function _evaluarRepesca(paciente, checkinsPac, sesionesPac, hoyMid) {
+    if (paciente.estado !== 'activo') return { tuvoGap: false, respondio: false };
+    const finVentana = hoyMid.getTime();
+    const inicioVentana = finVentana - REPESCA_VENTANA_DIAS * 86400000;
+
+    // Recolectamos timestamps de actividad (checkins + sesiones) dentro de
+    // la ventana + un poco antes (para detectar gap que empieza antes).
+    const actividades = [];
+    for (const c of (checkinsPac || [])) {
+      const d = _toMidnight(c.fecha);
+      if (d) actividades.push(d.getTime());
+    }
+    for (const s of (sesionesPac || [])) {
+      const d = _toMidnight(s.fecha);
+      if (d) actividades.push(d.getTime());
+    }
+    actividades.sort((a, b) => a - b);
+
+    // Buscamos la racha más larga de días sin actividad que **termine**
+    // dentro de la ventana. Si la paciente no tiene actividad ninguna
+    // dentro de la ventana, consideramos el gap como (hoy - último evento).
+    // Si tampoco hay eventos previos, no podemos saber si ha sido repescada
+    // → no cuenta.
+    if (actividades.length === 0) return { tuvoGap: false, respondio: false };
+
+    // Recorremos los eventos y calculamos gaps consecutivos. Añadimos un
+    // evento sintético "hoy" al final, marcado como no-real, para capturar
+    // el gap abierto actual (silencio que continúa hasta hoy).
+    const eventos = actividades.map(t => ({ t, real: true }));
+    eventos.push({ t: finVentana, real: false });
+
+    let gapMax = 0;
+    let finGapMaxReal = false; // true si la racha la cierra una actividad real
+    for (let i = 1; i < eventos.length; i++) {
+      const gap = Math.floor((eventos[i].t - eventos[i - 1].t) / 86400000);
+      if (gap > gapMax && eventos[i].t >= inicioVentana && eventos[i].t <= finVentana) {
+        gapMax = gap;
+        finGapMaxReal = eventos[i].real;
+      }
+    }
+
+    if (gapMax < GAP_REPESCA_DIAS) return { tuvoGap: false, respondio: false };
+
+    // respondio = la racha máxima la cierra una actividad real (checkin o
+    // sesión), no el evento sintético "hoy". Si fuera el sintético,
+    // significa que la paciente sigue en silencio → no respondió.
+    return { tuvoGap: true, respondio: finGapMaxReal };
+  }
+
+  function calcularMetricasHoy(datos, hoy) {
+    const pacientes = (datos && datos.pacientes) || [];
+    const menus     = (datos && datos.menus)     || [];
+    const sesiones  = (datos && datos.sesiones)  || [];
+    const checkins  = (datos && datos.checkins)  || [];
+
+    const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
+    const bounds = _mesActualBounds(hoyMid);
+
+    // 1. Activas
+    let activas = 0;
+    for (const p of pacientes) if (p.estado === 'activo') activas++;
+
+    // 2. Menús este mes (por created_at, fallback vigente_desde)
+    let menusEsteMes = 0;
+    for (const m of menus) if (_menuEnMesActual(m, bounds)) menusEsteMes++;
+
+    // 3. Tasa de respuesta a repescas (proxy)
+    const checkinsByPac = _indexBy(checkins, 'paciente_id');
+    const sesionesByPac = _indexBy(sesiones, 'paciente_id');
+    let numerador = 0;
+    let denominador = 0;
+    for (const p of pacientes) {
+      const { tuvoGap, respondio } = _evaluarRepesca(
+        p,
+        checkinsByPac.get(p.id) || [],
+        sesionesByPac.get(p.id) || [],
+        hoyMid
+      );
+      if (tuvoGap) {
+        denominador++;
+        if (respondio) numerador++;
+      }
+    }
+
+    let repescas;
+    if (denominador < REPESCA_MIN_DENOMINADOR) {
+      repescas = { numerador: 0, denominador: 0, label: 'Sin datos suficientes' };
+    } else {
+      repescas = {
+        numerador,
+        denominador,
+        label: 'Respuesta a repescas (últimos 90 días)'
+      };
+    }
+
+    return { activas, menusEsteMes, repescas };
+  }
+
+  // -----------------------------------------------------------------
   // Gate de entorno: en build de producción exigimos CRISTINA_EMAIL
   // -----------------------------------------------------------------
 
@@ -413,13 +564,17 @@
   const api = {
     agruparHoy,
     priorizarPacientes,
+    calcularMetricasHoy,
     generarComando,
     diffEnDias,
     validarEnv,
     SKILLS_VALIDAS,
     VIGENCIA_DIAS_DEFAULT,
     DIAS_SIN_CHECKIN_ALERTA,
-    DIAS_AVISO_PROXIMO_MENU
+    DIAS_AVISO_PROXIMO_MENU,
+    REPESCA_VENTANA_DIAS,
+    GAP_REPESCA_DIAS,
+    REPESCA_MIN_DENOMINADOR
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
