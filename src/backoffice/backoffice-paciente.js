@@ -485,14 +485,17 @@
 
     const botones = [];
 
-    // Siempre copy (complejas: requieren Claude Code).
+    // Siempre copy (complejas: requieren Claude Code). Etiquetas legibles
+    // por acción (no "Copiar /xxx") — el comando real va en el toast tras
+    // el click, así que la etiqueta describe lo que pasa cuando lo pegas
+    // en Claude, no el comando en sí.
     botones.push(_btnCopiar(
       BoLogic.generarComando('crear-menu', nombre),
-      'Copiar /crear-menu'
+      'Crear menú'
     ));
     botones.push(_btnCopiar(
       BoLogic.generarComando('seguimiento-paciente', nombre),
-      'Copiar /seguimiento-paciente'
+      'Hacer seguimiento'
     ));
 
     // /repescar-paciente si activa y ≥3 días sin check-in → backend.
@@ -511,7 +514,7 @@
     // /alta-paciente si estado = alta_pendiente — copy (edge case en detalle).
     if (altaPendiente && paciente.email) {
       const cmdBase = BoLogic.generarComando('alta-paciente', nombre);
-      botones.push(_btnCopiar(cmdBase + ' ' + paciente.email, 'Copiar /alta-paciente'));
+      botones.push(_btnCopiar(cmdBase + ' ' + paciente.email, 'Dar de alta'));
     }
 
     // /agendar si activa → copy (requiere Claude Code: resuelve email,
@@ -521,7 +524,7 @@
     if (activa) {
       botones.push(_btnCopiar(
         BoLogic.generarComando('agendar', nombre),
-        'Copiar /agendar'
+        'Agendar sesión'
       ));
     }
 

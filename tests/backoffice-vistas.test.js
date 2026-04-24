@@ -141,7 +141,7 @@ test("BoHoy.renderFilaMenuCrear: diasParaCaducar <= 0 dice 'Caducado hace...'", 
   assert.match(html, /Caducado hace 2 días/);
 });
 
-test("BoHoy.renderFilaMenuCrear: anamnesisLista=true → botón 'Crear menú con Claude' con data-bo-comando", () => {
+test("BoHoy.renderFilaMenuCrear: anamnesisLista=true → botón 'Crear menú' con data-bo-comando", () => {
   const html = BoHoy.renderFilaMenuCrear({
     pacienteId: "p1",
     nombre: "ANA",
@@ -150,7 +150,8 @@ test("BoHoy.renderFilaMenuCrear: anamnesisLista=true → botón 'Crear menú con
     comando: "/crear-menu ANA"
   });
   assert.match(html, /<button[^>]+data-bo-comando="\/crear-menu ANA"/);
-  assert.match(html, /Crear menú con Claude/);
+  // Etiqueta legible (verbo de acción), no "Copiar /xxx".
+  assert.match(html, />Crear menú</);
   // Y NO debe pintar el badge de aviso.
   assert.ok(!/data-bo-warning="anamnesis-pendiente"/.test(html));
 });

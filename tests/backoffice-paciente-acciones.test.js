@@ -151,7 +151,7 @@ test("_manejarClickAccion: botón copy copia comando al portapapeles", async () 
   const btn = _fakeBtn({
     "data-bo-action": "copy",
     "data-bo-comando": "/crear-menu MARTA",
-    textContent: "Copiar /crear-menu"
+    textContent: "Crear menú"
   });
   const event = { target: btn, preventDefault: () => {} };
   const calls = [];

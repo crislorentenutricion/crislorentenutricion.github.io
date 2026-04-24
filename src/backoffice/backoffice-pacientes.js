@@ -1,12 +1,12 @@
-// Vista "Pacientes" del backoffice CLN — tabla filtrable con acciones copy-command.
+// Vista "Pacientes" del backoffice CLN — tabla filtrable.
 //
 // Flujo:
 //   1. BoAuth.iniciar resuelve con (supa, session).
 //   2. 4 SELECT simples en paralelo: pacientes, sesiones, checkins, menus.
 //   3. BoLogic.priorizarPacientes(...) ordena (activas → próxima sesión).
 //   4. Render tabla con cabeceras + filtro (Activas por defecto).
-//   5. Cada fila enlaza a /backoffice/paciente/?id=... (vista Agente 5) y
-//      lleva botones "Copiar /crear-menu" y "Copiar /seguimiento-paciente".
+//   5. Cada fila enlaza a /backoffice/paciente/?id=...; las acciones
+//      (Crear menú, Hacer seguimiento, etc.) viven en el detalle, no aquí.
 //
 // Funciones puras exportadas para Node tests: construirFila, renderTabla,
 // decorarPaciente. Reciben datos ya cargados y devuelven HTML string.

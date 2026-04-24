@@ -278,7 +278,8 @@ test("BoPaciente.renderAcciones: /reagendar NO aparece si todas las sesiones son
 test("BoPaciente.renderAcciones: /agendar aparece como copy si paciente activa", () => {
   const html = BoPaciente.renderAcciones(_ctxBase());
   assert.match(html, /data-bo-comando="\/agendar MARTA"/);
-  assert.match(html, />Copiar \/agendar</);
+  // Etiqueta legible: verbo de acción.
+  assert.match(html, />Agendar sesión</);
 });
 
 test("BoPaciente.renderAcciones: /agendar NO aparece si paciente cerrada", () => {
