@@ -189,19 +189,71 @@ test("BoHoy.renderBloque: items vacíos muestran emptyMsg y no pinta <ul>", () =
   assert.ok(!/<ul class="bo-lista">/.test(html));
 });
 
-test("BoHoy.renderTodosLosBloques: contiene los 4 atributos data-bo-block", () => {
-  const agrupado = { sesionesHoy: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
+test("BoHoy.renderTodosLosBloques: contiene los 5 atributos data-bo-block", () => {
+  const agrupado = { sesionesHoy: [], proximos7Dias: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
   const html = BoHoy.renderTodosLosBloques(agrupado);
-  for (const key of ["sesiones-hoy", "menus-crear-semana", "menus-enviar", "alertas"]) {
+  for (const key of ["sesiones-hoy", "proximos-7-dias", "menus-crear-semana", "menus-enviar", "alertas"]) {
     assert.match(html, new RegExp(`data-bo-block="${key}"`), `falta bloque ${key}`);
   }
 });
 
 test("BoHoy.renderTodosLosBloques: título 'Menús a crear esta semana' (cadencia explícita)", () => {
   // feedback_copy_cadencia.md: bloques semanales deben decirlo.
-  const agrupado = { sesionesHoy: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
+  const agrupado = { sesionesHoy: [], proximos7Dias: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.match(html, /Menús a crear esta semana/);
+});
+
+// -------------------------------------------------------------------
+// BoHoy — bloque "Próximos 7 días"
+// -------------------------------------------------------------------
+
+test("BoHoy.renderFilaProximaSesion: nombre Title Case + diaLabel + hora + link al detalle", () => {
+  const html = BoHoy.renderFilaProximaSesion({
+    pacienteId: "px",
+    nombre: "MARTA PÉREZ",
+    fechaISO: "2026-04-25",
+    hora: "10:30",
+    diaLabel: "Sáb 25 abr",
+    comando: "/seguimiento-paciente MARTA PÉREZ"
+  });
+  assert.match(html, /data-bo-fila="proxima-sesion"/);
+  assert.match(html, />Marta Pérez</);
+  assert.match(html, /Sáb 25 abr · 10:30/);
+  assert.match(html, /href="\/backoffice\/paciente\/\?id=px"/);
+  assert.ok(!/data-bo-comando=/.test(html), "la vista Hoy no debe llevar botones copy");
+});
+
+test("BoHoy.renderFilaProximaSesion: diff=1 → 'Mañana · HH:MM'", () => {
+  const html = BoHoy.renderFilaProximaSesion({
+    pacienteId: "px",
+    nombre: "ANA",
+    fechaISO: "2026-04-23",
+    hora: "09:00",
+    diaLabel: "Mañana",
+    comando: "/seguimiento-paciente ANA"
+  });
+  assert.match(html, /Mañana · 09:00/);
+});
+
+test("BoHoy.renderTodosLosBloques: bloque proximos-7-dias va justo después de sesiones-hoy", () => {
+  const agrupado = { sesionesHoy: [], proximos7Dias: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  const idxHoy  = html.indexOf('data-bo-block="sesiones-hoy"');
+  const idxProx = html.indexOf('data-bo-block="proximos-7-dias"');
+  const idxMenu = html.indexOf('data-bo-block="menus-crear-semana"');
+  assert.ok(idxHoy >= 0 && idxProx >= 0 && idxMenu >= 0, "faltan bloques");
+  assert.ok(idxHoy < idxProx, "sesiones-hoy debe ir antes de proximos-7-dias");
+  assert.ok(idxProx < idxMenu, "proximos-7-dias debe ir antes de menus-crear-semana");
+});
+
+test("BoHoy.renderTodosLosBloques: proximos7Dias undefined no rompe (defensa)", () => {
+  // Si por alguna razón un consumidor antiguo pasa el agrupado sin la nueva
+  // clave, no debe petar — debe pintar el bloque vacío con su mensaje.
+  const agrupado = { sesionesHoy: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  assert.match(html, /data-bo-block="proximos-7-dias"/);
+  assert.match(html, /Semana despejada/);
 });
 
 // ===================================================================

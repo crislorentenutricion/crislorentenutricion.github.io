@@ -30,6 +30,31 @@
   // enviarlo"); los históricos se quedan fuera hasta que la Edge Function
   // enviar-menu se despliegue y rellene `enviado_at` automáticamente.
   const DIAS_MENU_RECIENTE = 7;
+  // Ventana del bloque "Próximos 7 días": de mañana (+1) hasta +7 inclusive.
+  // Hoy queda fuera porque ya lo cubre el bloque "Sesiones hoy" — duplicar
+  // sería ruido.
+  const DIAS_VENTANA_PROXIMOS = 7;
+
+  // Etiquetas es-ES con tildes. Usamos arrays propios en lugar de
+  // toLocaleDateString('es-ES') para que el output sea determinista en
+  // Node sin ICU completo y entre runners.
+  const _DIAS_SEMANA_ABREV = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  const _MESES_ABREV       = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+                              'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  function _capFirst(s) {
+    if (!s) return '';
+    return s.charAt(0).toLocaleUpperCase('es-ES') + s.slice(1);
+  }
+  // 'Mañana' si diff=1; si no, 'Vie 24 abr' (día semana abreviado + día +
+  // mes abreviado). El nombre del día va en Title Case para el copy visible.
+  function _diaLabel(fechaMid, hoyMid) {
+    const diff = diffEnDias(hoyMid, fechaMid);
+    if (diff === 1) return 'Mañana';
+    const dia = _capFirst(_DIAS_SEMANA_ABREV[fechaMid.getDay()]);
+    const num = fechaMid.getDate();
+    const mes = _MESES_ABREV[fechaMid.getMonth()];
+    return dia + ' ' + num + ' ' + mes;
+  }
 
   // -----------------------------------------------------------------
   // Helpers de fecha (privados, no exportados salvo diffEnDias)
@@ -239,6 +264,72 @@
   }
 
   // -----------------------------------------------------------------
+  // sesionesProximos7Dias — bloque de agenda de los próximos 7 días
+  // -----------------------------------------------------------------
+  //
+  // Ventana: mañana (+1) hasta +7 inclusive. Hoy queda fuera porque ya lo
+  // cubre el bloque "Sesiones hoy". Excluye pacientes cerradas/pausa (mismo
+  // criterio que `sesionesHoy`: si están cerradas, no debería contactarlas
+  // aunque haya un evento residual en Calendar/Supabase).
+  //
+  // Devuelve items para renderizar:
+  //   { pacienteId, nombre, fechaISO, hora, diaLabel, comando }
+  // Orden: ascendente por timestamp completo (no solo por día). Dos sesiones
+  // el mismo día se ordenan por hora.
+  function sesionesProximos7Dias(datos, hoy) {
+    const pacientes = (datos && datos.pacientes) || [];
+    const sesiones  = (datos && datos.sesiones)  || [];
+    const opts      = (datos && datos.opts)      || {};
+    const ventana   = opts.ventanaProximos || DIAS_VENTANA_PROXIMOS;
+
+    const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
+    const pacienteById = new Map();
+    for (const p of pacientes) {
+      if (!p || p.id == null) continue;
+      pacienteById.set(p.id, p);
+    }
+
+    const items = [];
+    for (const s of sesiones) {
+      const fechaMid = _toMidnight(s.fecha);
+      if (!fechaMid) continue;
+      const diff = diffEnDias(hoyMid, fechaMid);
+      if (diff < 1 || diff > ventana) continue;
+      const p = pacienteById.get(s.paciente_id);
+      if (!p) continue;
+      // Excluir cerradas y pausas — coherente con el resto de la vista Hoy.
+      if (p.estado === 'cerrado' || p.estado === 'pausa') continue;
+      const fechaCompleta = new Date(s.fecha);
+      items.push({
+        pacienteId: p.id,
+        nombre: p.nombre,
+        fechaISO: _toISO(fechaMid),
+        hora: _horaSesion(fechaCompleta),
+        diaLabel: _diaLabel(fechaMid, hoyMid),
+        comando: generarComando('seguimiento-paciente', p.nombre),
+        _ts: fechaCompleta.getTime()
+      });
+    }
+
+    items.sort(function (a, b) {
+      if (a._ts !== b._ts) return a._ts - b._ts;
+      return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es');
+    });
+    // _ts es interno para el sort; no se filtra para no romper consumidores
+    // que ya reciben el objeto completo, pero documentamos que es privado.
+    return items.map(function (it) {
+      return {
+        pacienteId: it.pacienteId,
+        nombre: it.nombre,
+        fechaISO: it.fechaISO,
+        hora: it.hora,
+        diaLabel: it.diaLabel,
+        comando: it.comando
+      };
+    });
+  }
+
+  // -----------------------------------------------------------------
   // agruparHoy — motor principal de la vista "Hoy"
   // -----------------------------------------------------------------
 
@@ -349,7 +440,15 @@
       return a.nombre.localeCompare(b.nombre, 'es');
     });
 
-    return { sesionesHoy, menusCrearSemana, menusEnviar, alertas };
+    // Bloque 5: próximos 7 días (mañana → +7). Reutiliza la función pura
+    // exportada para que tenga su propio set de tests y se pueda invocar
+    // sola. El opts también se le pasa por si se quiere acotar la ventana.
+    const proximos7Dias = sesionesProximos7Dias(
+      { pacientes, sesiones, opts },
+      hoyMid
+    );
+
+    return { sesionesHoy, proximos7Dias, menusCrearSemana, menusEnviar, alertas };
   }
 
   // -----------------------------------------------------------------
@@ -578,6 +677,7 @@
 
   const api = {
     agruparHoy,
+    sesionesProximos7Dias,
     priorizarPacientes,
     calcularMetricasHoy,
     generarComando,
@@ -588,6 +688,7 @@
     DIAS_SIN_CHECKIN_ALERTA,
     DIAS_AVISO_PROXIMO_MENU,
     DIAS_MENU_RECIENTE,
+    DIAS_VENTANA_PROXIMOS,
     REPESCA_VENTANA_DIAS,
     GAP_REPESCA_DIAS,
     REPESCA_MIN_DENOMINADOR

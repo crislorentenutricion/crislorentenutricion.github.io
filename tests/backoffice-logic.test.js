@@ -5,6 +5,7 @@ const path = require("node:path");
 
 const {
   agruparHoy,
+  sesionesProximos7Dias,
   priorizarPacientes,
   calcularMetricasHoy,
   generarComando,
@@ -14,6 +15,7 @@ const {
   VIGENCIA_DIAS_DEFAULT,
   DIAS_SIN_CHECKIN_ALERTA,
   DIAS_AVISO_PROXIMO_MENU,
+  DIAS_VENTANA_PROXIMOS,
   REPESCA_VENTANA_DIAS,
   GAP_REPESCA_DIAS,
   REPESCA_MIN_DENOMINADOR
@@ -401,6 +403,149 @@ test("agruparHoy: vigenciaDias configurable via opts", () => {
   };
   const r = agruparHoy(datos, HOY);
   assert.equal(r.menusCrearSemana.length, 1);
+});
+
+// ===================================================================
+// sesionesProximos7Dias — bloque agenda mañana → +7
+// ===================================================================
+//
+// HOY = miércoles 22 abril 2026 (constante definida arriba en este fichero).
+
+test("sesionesProximos7Dias: incluye sesiones de mañana hasta +7 días", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "BEA", estado: "activo", alta: "2026-01-01" },
+      { id: "p3", nombre: "CAR", estado: "activo", alta: "2026-01-01" }
+    ],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-23T10:00:00" }, // +1 IN
+      { id: "s2", paciente_id: "p2", fecha: "2026-04-29T17:00:00" }, // +7 IN
+      { id: "s3", paciente_id: "p3", fecha: "2026-04-30T17:00:00" }  // +8 OUT
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.deepEqual(r.map(s => s.pacienteId), ["p1", "p2"]);
+});
+
+test("sesionesProximos7Dias: excluye sesiones de hoy (las cubre el bloque sesionesHoy)", () => {
+  const datos = {
+    pacientes: [{ id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" }],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-22T17:00:00" }, // hoy OUT
+      { id: "s2", paciente_id: "p1", fecha: "2026-04-23T10:00:00" }  // +1 IN
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].fechaISO, "2026-04-23");
+});
+
+test("sesionesProximos7Dias: excluye sesiones pasadas", () => {
+  const datos = {
+    pacientes: [{ id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" }],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-10T10:00:00" } // -12 OUT
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 0);
+});
+
+test("sesionesProximos7Dias: excluye pacientes cerradas y en pausa", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "CERRADA", estado: "cerrado", alta: "2025-01-01" },
+      { id: "p2", nombre: "PAUSA",   estado: "pausa",   alta: "2025-01-01" },
+      { id: "p3", nombre: "ANA",     estado: "activo",  alta: "2026-01-01" }
+    ],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-23T10:00:00" },
+      { id: "s2", paciente_id: "p2", fecha: "2026-04-23T11:00:00" },
+      { id: "s3", paciente_id: "p3", fecha: "2026-04-23T12:00:00" }
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].pacienteId, "p3");
+});
+
+test("sesionesProximos7Dias: ordena ascendente por timestamp", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" },
+      { id: "p2", nombre: "BEA", estado: "activo", alta: "2026-01-01" }
+    ],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-27T10:00:00" }, // +5
+      { id: "s2", paciente_id: "p2", fecha: "2026-04-23T17:00:00" }  // +1
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.deepEqual(r.map(s => s.pacienteId), ["p2", "p1"]);
+});
+
+test("sesionesProximos7Dias: cada item lleva pacienteId, nombre, fechaISO, hora, diaLabel, comando", () => {
+  const datos = {
+    pacientes: [{ id: "p1", nombre: "ANA GARCIA", estado: "activo", alta: "2026-01-01" }],
+    sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-04-23T10:30:00" }]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 1);
+  const item = r[0];
+  assert.equal(item.pacienteId, "p1");
+  assert.equal(item.nombre, "ANA GARCIA");
+  assert.equal(item.fechaISO, "2026-04-23");
+  assert.equal(item.hora, "10:30");
+  assert.equal(item.comando, "/seguimiento-paciente ANA GARCIA");
+  assert.ok(typeof item.diaLabel === "string" && item.diaLabel.length > 0);
+});
+
+test("sesionesProximos7Dias: diff=1 → diaLabel empieza por 'Mañana'", () => {
+  const datos = {
+    pacientes: [{ id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" }],
+    sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-04-23T10:00:00" }]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.match(r[0].diaLabel, /^Mañana/);
+});
+
+test("sesionesProximos7Dias: diff>=2 → diaLabel con día semana abrev + número + mes abrev (es-ES)", () => {
+  // 2026-04-25 es sábado; HOY = miércoles 22; diff=3.
+  const datos = {
+    pacientes: [{ id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" }],
+    sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-04-25T10:00:00" }]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  // Sáb 25 abr (con tilde y mayúscula inicial).
+  assert.equal(r[0].diaLabel, "Sáb 25 abr");
+});
+
+test("sesionesProximos7Dias: ventana acotable vía opts.ventanaProximos", () => {
+  const datos = {
+    pacientes: [{ id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" }],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-25T10:00:00" } // +3
+    ],
+    opts: { ventanaProximos: 2 }
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 0, "+3 fuera de ventana de 2 días");
+});
+
+test("agruparHoy: ahora también devuelve proximos7Dias", () => {
+  const r = agruparHoy(fixtureCompleta(), HOY);
+  assert.ok(Array.isArray(r.proximos7Dias));
+  // s2 es de p2 el 2026-04-28 (+6 días) → IN
+  const ids = r.proximos7Dias.map(s => s.pacienteId);
+  assert.ok(ids.includes("p2"), "p2 debería aparecer (sesión a +6 días)");
+  // s1 es hoy → OUT, s6 es de p6 cerrada y hoy → OUT
+  assert.ok(!ids.includes("p1"), "p1 (sesión hoy) NO debe aparecer");
+  assert.ok(!ids.includes("p6"), "p6 (cerrada) NO debe aparecer");
+});
+
+test("DIAS_VENTANA_PROXIMOS exportada vale 7", () => {
+  assert.equal(DIAS_VENTANA_PROXIMOS, 7);
 });
 
 // ===================================================================
