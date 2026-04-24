@@ -167,12 +167,14 @@ test("_manejarClickAccion: botón copy copia comando al portapapeles", async () 
 });
 
 test("_manejarClickAccion: botón backend pide confirm y llama a la Edge Function", async () => {
+  // Usamos /repescar-paciente como fixture (el botón backend más vivo en
+  // el detalle hoy). El botón "Enviar menú" se eliminó en 2026-04-24.
   const btn = _fakeBtn({
     "data-bo-action": "backend",
-    "data-bo-function": "enviar-menu",
-    "data-bo-payload": JSON.stringify({ paciente_id: "p1", menu_numero: 2 }),
-    "data-bo-comando": "/enviar-menu MARTA",
-    textContent: "Enviar menú"
+    "data-bo-function": "repescar-paciente",
+    "data-bo-payload": JSON.stringify({ paciente_id: "p1" }),
+    "data-bo-comando": "/repescar-paciente MARTA",
+    textContent: "Repescar paciente"
   });
   const event = { target: btn, preventDefault: () => {} };
   const supa = _supaMock(() => ({ data: { ok: true, draft_id: "r123" }, error: null }));
@@ -183,10 +185,10 @@ test("_manejarClickAccion: botón backend pide confirm y llama a la Edge Functio
     toastPatch.restore();
   }
   assert.equal(supa.llamadas.length, 1);
-  assert.equal(supa.llamadas[0].nombre, "enviar-menu");
-  assert.deepEqual(supa.llamadas[0].args.body, { paciente_id: "p1", menu_numero: 2 });
-  assert.ok(toastPatch.mensajes.some(m => /Borrador creado/.test(m)),
-    "toast tras éxito debe hablar del borrador");
+  assert.equal(supa.llamadas[0].nombre, "repescar-paciente");
+  assert.deepEqual(supa.llamadas[0].args.body, { paciente_id: "p1" });
+  assert.ok(toastPatch.mensajes.some(m => /Borrador de repesca creado/.test(m)),
+    "toast tras éxito debe confirmar el borrador de repesca");
   // Tras éxito el botón queda bloqueado con texto "Hecho".
   assert.equal(btn.disabled, true);
   assert.equal(btn.textContent, "Hecho");
@@ -233,13 +235,13 @@ test("_manejarClickAccion: fallo de red degrada el botón a modo copy", async ()
 test("_manejarClickAccion: Edge Function ok=false también degrada a copy", async () => {
   const btn = _fakeBtn({
     "data-bo-action": "backend",
-    "data-bo-function": "enviar-menu",
-    "data-bo-payload": JSON.stringify({ paciente_id: "p1", menu_numero: 1 }),
-    "data-bo-comando": "/enviar-menu MARTA",
-    textContent: "Enviar menú"
+    "data-bo-function": "repescar-paciente",
+    "data-bo-payload": JSON.stringify({ paciente_id: "p1" }),
+    "data-bo-comando": "/repescar-paciente MARTA",
+    textContent: "Repescar paciente"
   });
   const event = { target: btn, preventDefault: () => {} };
-  const supa = _supaMock(() => ({ data: { ok: false, error: "menu_sin_pdf_url" }, error: null }));
+  const supa = _supaMock(() => ({ data: { ok: false, error: "paciente_no_existe" }, error: null }));
   const toastPatch = _patchToast();
   try {
     await _withConfirm(true, () => BoPaciente._manejarClickAccion(event, supa));
@@ -272,8 +274,9 @@ test("build: backoffice-paciente.js desplegado incluye lógica de acciones backe
   assert.match(js, /data-bo-action="backend"/);
   assert.match(js, /data-bo-function=/);
   assert.match(js, /ejecutarEdgeFunction/);
-  // Confirmación específica por skill.
-  assert.match(js, /Mover la sesión a la nueva fecha/);
+  // Confirmaciones específicas de las skills backend que siguen vivas:
+  // /repescar-paciente y /cerrar-paciente.
+  assert.match(js, /Crear borrador de repesca/);
   assert.match(js, /Marcar paciente como cerrado/);
 });
 

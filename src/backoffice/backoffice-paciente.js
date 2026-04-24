@@ -9,12 +9,12 @@
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
 //
-// Las acciones con Edge Function detrás (/enviar-menu, /repescar-paciente,
-// /cerrar-paciente) se ejecutan directamente contra el backend. /crear-menu,
-// /seguimiento-paciente, /agendar y /reagendar siguen en copy-command (los
-// dos primeros porque requieren a Claude Code; los dos últimos porque el
-// gesto es trivial y la Edge Function de reagendar no aporta valor mientras
-// no esté desplegada).
+// Las acciones con Edge Function detrás (/repescar-paciente, /cerrar-paciente)
+// se ejecutan directamente contra el backend. /crear-menu, /seguimiento-paciente,
+// /agendar y /reagendar siguen en copy-command (los dos primeros porque
+// requieren a Claude Code; los dos últimos porque el gesto es trivial). El
+// envío del menú se hace al final de /crear-menu en Claude Code, no desde
+// el backoffice — por eso no hay botón "Enviar menú" en el detalle.
 //
 // Si una ejecución falla (red caída o endpoint no desplegado), el botón
 // fabrica fallback copy-command para que Cristina lo lance en Claude.
@@ -413,9 +413,7 @@
   //    con fallback a copy si falla. data-bo-payload lleva los campos del
   //    contrato JSON stringificados. data-bo-comando también va presente —
   //    se usa como fallback cuando el backend no responde.
-  //    - /enviar-menu: solo si hay menú con pdf_url.
   //    - /repescar-paciente: si activa y ≥3 días sin check-in.
-  //    - /reagendar: si hay próxima sesión futura con calendar_event_id.
   //    - /cerrar-paciente: siempre (marcado destructivo). Abre mini selector
   //      de motivo (objetivo_cumplido | abandono) antes de invocar.
   // -----------------------------------------------------------------
@@ -443,11 +441,6 @@
       BoUi.escapeHtml(etiqueta) + '</button>';
   }
 
-  function _hayMenuConPdf(menus) {
-    if (!Array.isArray(menus)) return false;
-    return menus.some(function (m) { return m && m.pdf_url; });
-  }
-
   function _diasDesdeUltimoCheckin(checkins, hoy) {
     if (!Array.isArray(checkins) || checkins.length === 0) return Infinity;
     const hoyT = (hoy instanceof Date ? hoy : new Date()).getTime();
@@ -473,22 +466,8 @@
     return mejor ? mejor.sesion : null;
   }
 
-  // Menú con mayor `numero` que tenga PDF — es el que "enviar-menu" usa.
-  function _ultimoMenuConPdf(menus) {
-    if (!Array.isArray(menus) || menus.length === 0) return null;
-    let mejor = null;
-    for (const m of menus) {
-      if (!m || !m.pdf_url) continue;
-      const n = typeof m.numero === 'number' ? m.numero : -1;
-      const mn = mejor && typeof mejor.numero === 'number' ? mejor.numero : -1;
-      if (mejor == null || n > mn) mejor = m;
-    }
-    return mejor;
-  }
-
   function renderAcciones(ctx) {
     const paciente = (ctx && ctx.paciente) || {};
-    const menus    = (ctx && ctx.menus)    || [];
     const checkins = (ctx && ctx.checkins) || [];
     const sesiones = (ctx && ctx.sesiones) || [];
     const hoy      = (ctx && ctx.hoy)      || new Date();
@@ -515,20 +494,6 @@
       BoLogic.generarComando('seguimiento-paciente', nombre),
       'Copiar /seguimiento-paciente'
     ));
-
-    // /enviar-menu si hay PDF → backend, payload {paciente_id, menu_numero}.
-    const menuListo = _ultimoMenuConPdf(menus);
-    if (menuListo && paciente.id) {
-      botones.push(_btnBackend(
-        'enviar-menu',
-        'Enviar menú',
-        {
-          paciente_id: paciente.id,
-          menu_numero: typeof menuListo.numero === 'number' ? menuListo.numero : 1
-        },
-        BoLogic.generarComando('enviar-menu', nombre)
-      ));
-    }
 
     // /repescar-paciente si activa y ≥3 días sin check-in → backend.
     if (activa && paciente.id) {
@@ -603,14 +568,12 @@
   // Mensajes de confirmación y éxito por función. Source-of-truth única
   // para los textos visibles tras click en una acción backend.
   const _CONFIRMS = {
-    'enviar-menu':      '¿Crear borrador de correo del menú?',
     'alta-paciente':    '¿Crear alta en Supabase y borrador de bienvenida?',
     'repescar-paciente':'¿Crear borrador de repesca?',
     'cerrar-paciente':  '¿Marcar paciente como cerrado? (esta acción es destructiva)'
   };
 
   const _TOAST_OK = {
-    'enviar-menu':      'Borrador creado. Revísalo en Gmail antes de enviar.',
     'alta-paciente':    'Alta creada. Revisa el borrador de bienvenida en Gmail.',
     'repescar-paciente':'Borrador de repesca creado. Revísalo en Gmail antes de enviar.',
     'cerrar-paciente':  'Paciente cerrada. Revisa Gmail (si procede) y NOTAS.'

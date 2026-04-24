@@ -223,22 +223,15 @@ test("BoPaciente.renderAcciones: siempre muestra /crear-menu y /seguimiento-paci
   assert.match(html, /data-bo-comando="\/seguimiento-paciente MARTA"/);
 });
 
-test("BoPaciente.renderAcciones: /enviar-menu aparece solo si hay menú con pdf_url (backend)", () => {
-  const sin = BoPaciente.renderAcciones(_ctxBase({ menus: [{ id: "m1", numero: 1 }] }));
-  assert.ok(!/data-bo-function="enviar-menu"/.test(sin),
-    "sin pdf_url no debe aparecer /enviar-menu");
-  const con = BoPaciente.renderAcciones(_ctxBase({
+test("BoPaciente.renderAcciones: ya no muestra botón 'Enviar menú' (decisión 2026-04-24)", () => {
+  // El envío del menú es la cola natural de /crear-menu en Claude Code; el
+  // botón en el detalle no aportaba.
+  const html = BoPaciente.renderAcciones(_ctxBase({
     menus: [{ id: "m1", numero: 1, pdf_url: "https://x.pdf" }]
   }));
-  // Botón backend con payload {paciente_id, menu_numero}.
-  assert.match(con, /data-bo-action="backend"/);
-  assert.match(con, /data-bo-function="enviar-menu"/);
-  assert.match(con, /&quot;paciente_id&quot;:&quot;p1&quot;/);
-  assert.match(con, /&quot;menu_numero&quot;:1/);
-  // Fallback copy sigue en data-bo-comando para cuando el backend falla.
-  assert.match(con, /data-bo-comando="\/enviar-menu MARTA"/);
-  // Etiqueta por acción, no por comando.
-  assert.match(con, />Enviar menú</);
+  assert.ok(!/data-bo-function="enviar-menu"/.test(html));
+  assert.ok(!/data-bo-comando="\/enviar-menu/.test(html));
+  assert.ok(!/>Enviar menú</.test(html));
 });
 
 test("BoPaciente.renderAcciones: /repescar-paciente oculto si check-in reciente (<3 días)", () => {
