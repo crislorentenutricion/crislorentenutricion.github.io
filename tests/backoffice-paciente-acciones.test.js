@@ -1,12 +1,9 @@
-// Tests de la Rebanada 7 del backoffice (Agente 7):
-//   - ui.ejecutarEdgeFunction: wrapper sobre supa.functions.invoke.
-//   - _manejarClickAccion: handler de click en botones data-bo-action="backend".
-//   - Build: /backoffice/paciente/index.html renderiza botones backend.
+// Tests del wiring de acciones del detalle de paciente.
 //
-// Todas las aserciones son de comportamiento observable: dispatchEvent, texto
-// del botón, llamadas al supa mock, fallback copy cuando la Edge Function
-// falla. Sin jsdom — construimos los nodos que necesitamos con mínimos de la
-// Node DOM stub pattern, reutilizando el approach del resto de la suite.
+// Desde 2026-04-24 todas las acciones del detalle son copy-command: el click
+// copia el prompt al portapapeles. No hay botones backend aquí. El helper
+// BoUi.ejecutarEdgeFunction sigue vivo en ui.js (posibles futuros consumidores)
+// y tiene su suite en backoffice-ui-edge.test.js.
 
 const { test, before } = require("node:test");
 const assert = require("node:assert/strict");
@@ -23,80 +20,13 @@ global.window.BoLogic = BoLogic;
 const BoPaciente = require("../src/backoffice/backoffice-paciente.js");
 
 // -------------------------------------------------------------------
-// ejecutarEdgeFunction — unit
-// -------------------------------------------------------------------
-
-function _supaMock(invokeImpl) {
-  const llamadas = [];
-  return {
-    llamadas: llamadas,
-    functions: {
-      invoke: async function (nombre, args) {
-        llamadas.push({ nombre: nombre, args: args });
-        return invokeImpl(nombre, args);
-      }
-    }
-  };
-}
-
-test("ejecutarEdgeFunction: ok=true cuando supa devuelve data sin error", async () => {
-  const supa = _supaMock(() => ({ data: { ok: true, draft_id: "r123" }, error: null }));
-  const res = await BoUi.ejecutarEdgeFunction(supa, "enviar-menu", { paciente_id: "p1", menu_numero: 1 });
-  assert.equal(res.ok, true);
-  assert.equal(res.data.draft_id, "r123");
-  assert.equal(supa.llamadas.length, 1);
-  assert.equal(supa.llamadas[0].nombre, "enviar-menu");
-  assert.deepEqual(supa.llamadas[0].args.body, { paciente_id: "p1", menu_numero: 1 });
-});
-
-test("ejecutarEdgeFunction: ok=false cuando supa devuelve error HTTP", async () => {
-  const supa = _supaMock(() => ({
-    data: null,
-    error: { message: "FunctionsHttpError: 500", status: 500 }
-  }));
-  const res = await BoUi.ejecutarEdgeFunction(supa, "cerrar-paciente", { paciente_id: "p1", motivo: "abandono" });
-  assert.equal(res.ok, false);
-  assert.equal(res.error.type, "http");
-  assert.match(res.error.message, /FunctionsHttpError/);
-});
-
-test("ejecutarEdgeFunction: ok=false cuando el body trae ok=false (app error)", async () => {
-  const supa = _supaMock(() => ({ data: { ok: false, error: "paciente_no_existe" }, error: null }));
-  const res = await BoUi.ejecutarEdgeFunction(supa, "repescar-paciente", { paciente_id: "p1" });
-  assert.equal(res.ok, false);
-  assert.equal(res.error.type, "app");
-  assert.equal(res.error.message, "paciente_no_existe");
-});
-
-test("ejecutarEdgeFunction: ok=false cuando invoke lanza (red caída)", async () => {
-  const supa = _supaMock(() => { throw new Error("fetch failed"); });
-  const res = await BoUi.ejecutarEdgeFunction(supa, "reagendar", { calendar_event_id: "x" });
-  assert.equal(res.ok, false);
-  assert.equal(res.error.type, "network");
-  assert.match(res.error.message, /fetch failed/);
-});
-
-test("ejecutarEdgeFunction: devuelve error app si falta supa.functions.invoke", async () => {
-  const res = await BoUi.ejecutarEdgeFunction({}, "reagendar", {});
-  assert.equal(res.ok, false);
-  assert.equal(res.error.type, "app");
-});
-
-test("ejecutarEdgeFunction: devuelve error app si falta nombre", async () => {
-  const supa = _supaMock(() => ({ data: { ok: true }, error: null }));
-  const res = await BoUi.ejecutarEdgeFunction(supa, "", {});
-  assert.equal(res.ok, false);
-  assert.equal(res.error.type, "app");
-});
-
-// -------------------------------------------------------------------
 // Handler de click — _manejarClickAccion
 //
 // Simulamos los nodos con una fachada mínima. Node --test no incluye jsdom;
 // esto es suficiente para verificar el flujo.
 // -------------------------------------------------------------------
 
-function _fakeBtn(attrs, parent) {
+function _fakeBtn(attrs) {
   const a = Object.assign({}, attrs || {});
   const btn = {
     _attrs: a,
@@ -105,14 +35,13 @@ function _fakeBtn(attrs, parent) {
     textContent: a.textContent || "",
     disabled: false,
     hidden: false,
-    parentNode: parent || null,
+    parentNode: null,
     nextElementSibling: null,
     tagName: "BUTTON",
     getAttribute: function (k) { return this._attrs[k] != null ? this._attrs[k] : null; },
     setAttribute: function (k, v) { this._attrs[k] = String(v); },
     hasAttribute: function (k) { return this._attrs[k] != null; },
     closest: function (sel) {
-      // Soporte mínimo: sel "[data-bo-action]" o "[data-bo-comando]".
       const m = /^\[([^=\]]+)(?:="([^"]+)")?\]$/.exec(sel);
       if (!m) return null;
       const name = m[1];
@@ -133,20 +62,6 @@ function _fakeBtn(attrs, parent) {
   return btn;
 }
 
-function _withConfirm(answer, fn) {
-  const prev = global.window.confirm;
-  global.window.confirm = () => answer;
-  try { return fn(); }
-  finally { global.window.confirm = prev; }
-}
-
-function _patchToast() {
-  const mensajes = [];
-  const prev = BoUi.toast;
-  BoUi.toast = (m) => { mensajes.push(m); };
-  return { mensajes: mensajes, restore: () => { BoUi.toast = prev; } };
-}
-
 test("_manejarClickAccion: botón copy copia comando al portapapeles", async () => {
   const btn = _fakeBtn({
     "data-bo-action": "copy",
@@ -158,7 +73,7 @@ test("_manejarClickAccion: botón copy copia comando al portapapeles", async () 
   const prev = BoUi.copiarComando;
   BoUi.copiarComando = (cmd, b) => { calls.push({ cmd, b }); return Promise.resolve(true); };
   try {
-    await BoPaciente._manejarClickAccion(event, null);
+    await BoPaciente._manejarClickAccion(event);
   } finally {
     BoUi.copiarComando = prev;
   }
@@ -166,94 +81,38 @@ test("_manejarClickAccion: botón copy copia comando al portapapeles", async () 
   assert.equal(calls[0].cmd, "/crear-menu MARTA");
 });
 
-test("_manejarClickAccion: botón backend pide confirm y llama a la Edge Function", async () => {
-  // Usamos /repescar-paciente como fixture (el botón backend más vivo en
-  // el detalle hoy). El botón "Enviar menú" se eliminó en 2026-04-24.
-  const btn = _fakeBtn({
-    "data-bo-action": "backend",
-    "data-bo-function": "repescar-paciente",
-    "data-bo-payload": JSON.stringify({ paciente_id: "p1" }),
-    "data-bo-comando": "/repescar-paciente MARTA",
-    textContent: "Repescar paciente"
-  });
-  const event = { target: btn, preventDefault: () => {} };
-  const supa = _supaMock(() => ({ data: { ok: true, draft_id: "r123" }, error: null }));
-  const toastPatch = _patchToast();
+test("_manejarClickAccion: click fuera de un botón no hace nada", async () => {
+  const event = {
+    target: { closest: () => null },
+    preventDefault: () => {}
+  };
+  const calls = [];
+  const prev = BoUi.copiarComando;
+  BoUi.copiarComando = (cmd) => { calls.push(cmd); return Promise.resolve(true); };
   try {
-    await _withConfirm(true, () => BoPaciente._manejarClickAccion(event, supa));
+    await BoPaciente._manejarClickAccion(event);
   } finally {
-    toastPatch.restore();
+    BoUi.copiarComando = prev;
   }
-  assert.equal(supa.llamadas.length, 1);
-  assert.equal(supa.llamadas[0].nombre, "repescar-paciente");
-  assert.deepEqual(supa.llamadas[0].args.body, { paciente_id: "p1" });
-  assert.ok(toastPatch.mensajes.some(m => /Borrador de repesca creado/.test(m)),
-    "toast tras éxito debe confirmar el borrador de repesca");
-  // Tras éxito el botón queda bloqueado con texto "Hecho".
-  assert.equal(btn.disabled, true);
-  assert.equal(btn.textContent, "Hecho");
+  assert.equal(calls.length, 0);
 });
 
-test("_manejarClickAccion: cancelar el confirm aborta sin invocar", async () => {
-  const btn = _fakeBtn({
-    "data-bo-action": "backend",
-    "data-bo-function": "repescar-paciente",
-    "data-bo-payload": JSON.stringify({ paciente_id: "p1" }),
-    "data-bo-comando": "/repescar-paciente MARTA",
-    textContent: "Repescar paciente"
-  });
+test("_manejarClickAccion: botón sin data-bo-comando no copia nada", async () => {
+  const btn = _fakeBtn({ "data-bo-action": "copy" });
   const event = { target: btn, preventDefault: () => {} };
-  const supa = _supaMock(() => ({ data: { ok: true }, error: null }));
-  await _withConfirm(false, () => BoPaciente._manejarClickAccion(event, supa));
-  assert.equal(supa.llamadas.length, 0, "no debe invocar si Cristina cancela");
-});
-
-test("_manejarClickAccion: fallo de red degrada el botón a modo copy", async () => {
-  const btn = _fakeBtn({
-    "data-bo-action": "backend",
-    "data-bo-function": "repescar-paciente",
-    "data-bo-payload": JSON.stringify({ paciente_id: "p1" }),
-    "data-bo-comando": "/repescar-paciente MARTA",
-    textContent: "Repescar paciente"
-  });
-  const event = { target: btn, preventDefault: () => {} };
-  const supa = _supaMock(() => { throw new Error("fetch failed"); });
-  const toastPatch = _patchToast();
+  const calls = [];
+  const prev = BoUi.copiarComando;
+  BoUi.copiarComando = (cmd) => { calls.push(cmd); return Promise.resolve(true); };
   try {
-    await _withConfirm(true, () => BoPaciente._manejarClickAccion(event, supa));
+    await BoPaciente._manejarClickAccion(event);
   } finally {
-    toastPatch.restore();
+    BoUi.copiarComando = prev;
   }
-  // Botón flipado: data-bo-action ahora es copy y el texto dice "Copiar comando".
-  assert.equal(btn._attrs["data-bo-action"], "copy");
-  assert.equal(btn.textContent, "Copiar comando");
-  assert.equal(btn.disabled, false);
-  assert.ok(toastPatch.mensajes.some(m => /No he podido/.test(m)),
-    "toast de error debe sugerir Copiar comando");
-});
-
-test("_manejarClickAccion: Edge Function ok=false también degrada a copy", async () => {
-  const btn = _fakeBtn({
-    "data-bo-action": "backend",
-    "data-bo-function": "repescar-paciente",
-    "data-bo-payload": JSON.stringify({ paciente_id: "p1" }),
-    "data-bo-comando": "/repescar-paciente MARTA",
-    textContent: "Repescar paciente"
-  });
-  const event = { target: btn, preventDefault: () => {} };
-  const supa = _supaMock(() => ({ data: { ok: false, error: "paciente_no_existe" }, error: null }));
-  const toastPatch = _patchToast();
-  try {
-    await _withConfirm(true, () => BoPaciente._manejarClickAccion(event, supa));
-  } finally {
-    toastPatch.restore();
-  }
-  assert.equal(btn._attrs["data-bo-action"], "copy");
-  assert.equal(btn.textContent, "Copiar comando");
+  assert.equal(calls.length, 0);
 });
 
 // -------------------------------------------------------------------
-// Build: la vista detalle incluye botones backend con payload válido
+// Build: la vista detalle despliega los scripts esperados
 // -------------------------------------------------------------------
 
 before(() => {
@@ -261,30 +120,21 @@ before(() => {
   execFileSync("npx", ["eleventy"], { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" });
 });
 
-test("build: /backoffice/paciente/ no hardcodea botones backend (se pintan en runtime)", () => {
-  // El HTML servido solo contiene los contenedores vacíos; los botones los
-  // inserta JS tras cargar datos. Lo importante es que el script de cliente
-  // esté desplegado y exponga la API que el wiring necesita.
+test("build: /backoffice/paciente/ no hardcodea botones (se pintan en runtime)", () => {
   const html = fs.readFileSync(path.join(SITE, "backoffice", "paciente", "index.html"), "utf8");
   assert.match(html, /src="\/backoffice\/backoffice-paciente\.js"/);
 });
 
-test("build: backoffice-paciente.js desplegado incluye lógica de acciones backend", () => {
+test("build: backoffice-paciente.js desplegado renderiza acciones como copy-command", () => {
   const js = fs.readFileSync(path.join(SITE, "backoffice", "backoffice-paciente.js"), "utf8");
-  assert.match(js, /data-bo-action="backend"/);
-  assert.match(js, /data-bo-function=/);
-  assert.match(js, /ejecutarEdgeFunction/);
-  // Confirmaciones específicas de las skills backend que siguen vivas:
-  // /repescar-paciente y /cerrar-paciente.
-  assert.match(js, /Crear borrador de repesca/);
-  assert.match(js, /Marcar paciente como cerrada/);
-});
-
-test("build: ui.js desplegado expone ejecutarEdgeFunction", () => {
-  const js = fs.readFileSync(path.join(SITE, "backoffice", "ui.js"), "utf8");
-  assert.match(js, /ejecutarEdgeFunction/);
-  // Debe cubrir los 3 caminos (network, http, app).
-  assert.match(js, /'network'/);
-  assert.match(js, /'http'/);
-  assert.match(js, /'app'/);
+  // Sigue vivo el wiring de copy.
+  assert.match(js, /data-bo-action="copy"/);
+  assert.match(js, /data-bo-comando/);
+  // Ya no hay backend en el detalle.
+  assert.ok(!/data-bo-action="backend"/.test(js),
+    "el detalle ya no debe emitir botones backend");
+  assert.ok(!/data-bo-function=/.test(js),
+    "el detalle ya no debe emitir data-bo-function");
+  assert.ok(!/ejecutarEdgeFunction/.test(js),
+    "el detalle ya no invoca Edge Functions directamente");
 });

@@ -179,7 +179,8 @@ test("BoPaciente.renderTimeline: sesión incluye calendar_event_id", () => {
 test("BoPaciente.renderTimeline: menú con pdf_url → enlace Ver PDF con data-bo-menu-path", () => {
   // pdf_url guarda la RUTA dentro del bucket privado menus-pdf (no URL
   // absoluta). El <a> lleva data-bo-menu-path, el click dispara
-  // createSignedUrl en conectarClickPdf (ver backoffice-paciente.js).
+  // createSignedUrl en conectarClickPdf. Única excepción a la regla
+  // "todo en esta vista es copy-command" — ver `negocio/backoffice.md`.
   const html = BoPaciente.renderTimeline({
     menus: [{ id: "m1", numero: 3, vigente_desde: "2026-04-01", created_at: "2026-04-01T10:00:00Z", pdf_url: "uuid-xyz/menu-3.pdf" }]
   });
@@ -234,27 +235,33 @@ test("BoPaciente.renderAcciones: ya no muestra botón 'Enviar menú' (decisión 
   assert.ok(!/>Enviar menú</.test(html));
 });
 
-test("BoPaciente.renderAcciones: /repescar-paciente oculto si check-in reciente (<3 días)", () => {
-  const ctx = _ctxBase({
-    checkins: [{ paciente_id: "p1", fecha: "2026-04-21" }] // 1 día atrás
-  });
-  const html = BoPaciente.renderAcciones(ctx);
-  assert.ok(!/repescar-paciente/.test(html), "check-in reciente no debe disparar /repescar");
+test("BoPaciente.renderAcciones: /repescar-paciente aparece siempre como copy si activa", () => {
+  // Desde 2026-04-24 todas las acciones del detalle son copy-command y
+  // Repescar se ofrece siempre que la paciente esté activa: Cristina decide
+  // cuándo lanzarla. El bloque "Alertas" de la vista Hoy sigue filtrando por
+  // ≥3 días sin check-in, pero en el detalle no hay condición.
+  const reciente = BoPaciente.renderAcciones(_ctxBase({
+    checkins: [{ paciente_id: "p1", fecha: "2026-04-21" }]
+  }));
+  assert.match(reciente, /data-bo-comando="\/repescar-paciente MARTA"/);
+  const lejano = BoPaciente.renderAcciones(_ctxBase({
+    checkins: [{ paciente_id: "p1", fecha: "2026-04-15" }]
+  }));
+  assert.match(lejano, /data-bo-comando="\/repescar-paciente MARTA"/);
+  const sinCheckin = BoPaciente.renderAcciones(_ctxBase());
+  assert.match(sinCheckin, /data-bo-comando="\/repescar-paciente MARTA"/);
+  // Y nunca como backend.
+  for (const h of [reciente, lejano, sinCheckin]) {
+    assert.ok(!/data-bo-function="repescar-paciente"/.test(h),
+      "/repescar-paciente debe ser copy, no backend");
+  }
 });
 
-test("BoPaciente.renderAcciones: /repescar-paciente aparece como backend si ≥3 días sin check-in", () => {
-  const ctx = _ctxBase({
-    checkins: [{ paciente_id: "p1", fecha: "2026-04-15" }] // 7 días atrás
-  });
-  const html = BoPaciente.renderAcciones(ctx);
-  assert.match(html, /data-bo-function="repescar-paciente"/);
-  assert.match(html, /&quot;paciente_id&quot;:&quot;p1&quot;/);
-  assert.match(html, /data-bo-comando="\/repescar-paciente MARTA"/); // fallback
-});
-
-test("BoPaciente.renderAcciones: /repescar-paciente aparece si nunca hubo check-in (activa)", () => {
-  const html = BoPaciente.renderAcciones(_ctxBase());
-  assert.match(html, /data-bo-function="repescar-paciente"/);
+test("BoPaciente.renderAcciones: /repescar-paciente NO aparece si paciente cerrada", () => {
+  const html = BoPaciente.renderAcciones(_ctxBase({
+    paciente: { id: "p1", nombre: "MARTA", estado: "cerrado" }
+  }));
+  assert.ok(!/\/repescar-paciente/.test(html));
 });
 
 test("BoPaciente.renderAcciones: /reagendar aparece como copy si hay próxima sesión futura", () => {
@@ -289,20 +296,18 @@ test("BoPaciente.renderAcciones: /agendar NO aparece si paciente cerrada", () =>
   assert.ok(!/data-bo-comando="\/agendar/.test(html));
 });
 
-test("BoPaciente.renderAcciones: /cerrar-paciente aparece como backend NO destructivo si activa", () => {
+test("BoPaciente.renderAcciones: /cerrar-paciente aparece como copy NO destructivo si activa", () => {
   // Desde 0014 (modelo binario) el cierre NO es destructivo: marca
   // estado='cerrado' + closed_at + close_reason. La fila se conserva para
   // reactivación. Destructivo (bo-btn-destructivo) queda reservado para
   // /borrar-paciente-rgpd, que solo aparece cuando la paciente ya está
-  // cerrada.
+  // cerrada. Desde 2026-04-24 el detalle usa copy-command, no backend.
   const html = BoPaciente.renderAcciones(_ctxBase());
-  assert.match(html, /data-bo-function="cerrar-paciente"/);
-  assert.match(html, /&quot;paciente_id&quot;:&quot;p1&quot;/);
-  assert.match(html, /data-bo-comando="\/cerrar-paciente MARTA"/); // fallback
-  // NO debe tener clase destructiva — cerrar ya no es irreversible.
-  assert.ok(!/bo-btn-accion[^"]*bo-btn-destructivo/.test(html) &&
-           !/bo-btn-destructivo[^"]*cerrar-paciente/.test(html));
+  assert.match(html, /data-bo-comando="\/cerrar-paciente MARTA"/);
   assert.match(html, />Cerrar paciente</);
+  assert.ok(!/data-bo-function="cerrar-paciente"/.test(html), "ya no es backend");
+  // NO debe tener clase destructiva — cerrar ya no es irreversible.
+  assert.ok(!/bo-btn-destructivo[^"]*cerrar-paciente|cerrar-paciente[^"]*bo-btn-destructivo/.test(html));
 });
 
 test("BoPaciente.renderAcciones: paciente cerrada expone /reactivar-paciente y /borrar-paciente-rgpd", () => {
@@ -324,8 +329,22 @@ test("BoPaciente.renderAcciones: /alta-paciente aparece como copy solo si estado
   const pend = BoPaciente.renderAcciones(_ctxBase({
     paciente: { id: "p1", nombre: "MARTA", estado: "alta_pendiente", email: "marta@x.com" }
   }));
-  // Sigue siendo copy en el detalle (edge case).
   assert.match(pend, /data-bo-comando="\/alta-paciente MARTA marta@x\.com"/);
+});
+
+test("BoPaciente.renderAcciones: todos los botones son copy-command (no backend) en el detalle", () => {
+  // Decisión 2026-04-24: el detalle del paciente es una lanzadera de prompts
+  // para Claude. Backend + fallback desaparecen — cada botón copia el
+  // comando y Cristina lo pega en Claude Code.
+  const activa = BoPaciente.renderAcciones(_ctxBase());
+  const cerrada = BoPaciente.renderAcciones(_ctxBase({
+    paciente: { id: "p1", nombre: "MARTA", estado: "cerrado" }
+  }));
+  for (const html of [activa, cerrada]) {
+    assert.ok(!/data-bo-action="backend"/.test(html), "sin botones backend en el detalle");
+    assert.ok(!/data-bo-function=/.test(html), "sin data-bo-function en el detalle");
+    assert.ok(!/data-bo-payload=/.test(html), "sin data-bo-payload en el detalle");
+  }
 });
 
 test("BoPaciente.renderAcciones: contenedor con data-bo-bloque='acciones'", () => {
