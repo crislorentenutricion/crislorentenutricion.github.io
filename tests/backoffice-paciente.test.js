@@ -264,21 +264,22 @@ test("BoPaciente.renderAcciones: /repescar-paciente aparece si nunca hubo check-
   assert.match(html, /data-bo-function="repescar-paciente"/);
 });
 
-test("BoPaciente.renderAcciones: /reagendar aparece como backend si hay próxima sesión futura", () => {
+test("BoPaciente.renderAcciones: /reagendar aparece como copy si hay próxima sesión futura", () => {
   const html = BoPaciente.renderAcciones(_ctxBase({
     sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-05-02T09:00:00Z", calendar_event_id: "evt-99" }]
   }));
-  assert.match(html, /data-bo-function="reagendar"/);
-  assert.match(html, /&quot;calendar_event_id&quot;:&quot;evt-99&quot;/);
+  // Decisión 2026-04-24: simplificado a copy-command. La Edge Function
+  // existe pero no aporta sin estar desplegada y el copy es trivial.
   assert.match(html, /data-bo-comando="\/reagendar MARTA"/);
   assert.match(html, />Reagendar sesión</);
+  assert.ok(!/data-bo-function="reagendar"/.test(html), "ya no es backend");
 });
 
 test("BoPaciente.renderAcciones: /reagendar NO aparece si todas las sesiones son pasadas", () => {
   const html = BoPaciente.renderAcciones(_ctxBase({
     sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-01-01T09:00:00Z" }]
   }));
-  assert.ok(!/data-bo-function="reagendar"/.test(html));
+  assert.ok(!/data-bo-comando="\/reagendar/.test(html));
 });
 
 test("BoPaciente.renderAcciones: /agendar aparece como copy si paciente activa", () => {

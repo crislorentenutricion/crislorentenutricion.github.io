@@ -9,10 +9,12 @@
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
 //
-// Las acciones con Edge Function detrás (/reagendar, /enviar-menu,
-// /repescar-paciente, /cerrar-paciente) se ejecutan directamente contra el
-// backend. /crear-menu y /seguimiento-paciente siguen en copy-command (no
-// hay Edge Function para ellos — requieren a Claude Code).
+// Las acciones con Edge Function detrás (/enviar-menu, /repescar-paciente,
+// /cerrar-paciente) se ejecutan directamente contra el backend. /crear-menu,
+// /seguimiento-paciente, /agendar y /reagendar siguen en copy-command (los
+// dos primeros porque requieren a Claude Code; los dos últimos porque el
+// gesto es trivial y la Edge Function de reagendar no aporta valor mientras
+// no esté desplegada).
 //
 // Si una ejecución falla (red caída o endpoint no desplegado), el botón
 // fabrica fallback copy-command para que Cristina lo lance en Claude.
@@ -558,18 +560,15 @@
       ));
     }
 
-    // /reagendar si hay próxima sesión futura → backend con input datetime.
+    // /reagendar si hay próxima sesión futura → copy-command. La Edge
+    // Function existe pero no está desplegada y el copy es trivial; un
+    // input datetime-local en mini-form no aporta sobre pegar el comando
+    // y dejar que Claude lo procese.
     const proxSesion = _proximaSesionFutura(sesiones, hoy);
     if (proxSesion) {
-      botones.push(_btnBackend(
-        'reagendar',
-        'Reagendar sesión',
-        {
-          calendar_event_id: proxSesion.calendar_event_id || '',
-          paciente_id: paciente.id || ''
-          // nueva_fecha se añade en client al abrir el mini-form
-        },
-        BoLogic.generarComando('reagendar', nombre)
+      botones.push(_btnCopiar(
+        BoLogic.generarComando('reagendar', nombre),
+        'Reagendar sesión'
       ));
     }
 
@@ -604,7 +603,6 @@
   // Mensajes de confirmación y éxito por función. Source-of-truth única
   // para los textos visibles tras click en una acción backend.
   const _CONFIRMS = {
-    'reagendar':        '¿Mover la sesión a la nueva fecha?',
     'enviar-menu':      '¿Crear borrador de correo del menú?',
     'alta-paciente':    '¿Crear alta en Supabase y borrador de bienvenida?',
     'repescar-paciente':'¿Crear borrador de repesca?',
@@ -612,7 +610,6 @@
   };
 
   const _TOAST_OK = {
-    'reagendar':        'Sesión reagendada. Revisa Calendar y Supabase.',
     'enviar-menu':      'Borrador creado. Revísalo en Gmail antes de enviar.',
     'alta-paciente':    'Alta creada. Revisa el borrador de bienvenida en Gmail.',
     'repescar-paciente':'Borrador de repesca creado. Revísalo en Gmail antes de enviar.',
@@ -644,79 +641,6 @@
         delete btn.dataset.boEtiquetaOriginal;
       }
     }
-  }
-
-  // Despliega un mini-formulario debajo del botón para /reagendar. El botón
-  // queda oculto mientras el formulario está activo. Submit invoca backend.
-  function _abrirFormReagendar(btn, payload, supa) {
-    if (!btn || !btn.parentNode) return;
-    if (btn.nextElementSibling && btn.nextElementSibling.classList &&
-        btn.nextElementSibling.classList.contains('bo-form-reagendar')) {
-      return; // ya abierto
-    }
-    const wrap = document.createElement('form');
-    wrap.className = 'bo-form-reagendar';
-    wrap.setAttribute('data-bo-form', 'reagendar');
-    wrap.innerHTML =
-      '<label class="bo-form-reagendar-label">' +
-        'Nueva fecha y hora ' +
-        '<input type="datetime-local" required data-bo-input="nueva-fecha">' +
-      '</label>' +
-      '<div class="bo-form-reagendar-botones">' +
-        '<button type="submit" class="bo-btn bo-btn-accion" data-bo-form-submit>Confirmar</button>' +
-        '<button type="button" class="bo-btn bo-btn-secundario" data-bo-form-cancel>Cancelar</button>' +
-      '</div>';
-    btn.hidden = true;
-    btn.parentNode.insertBefore(wrap, btn.nextSibling);
-
-    wrap.addEventListener('submit', async function (ev) {
-      ev.preventDefault();
-      const input = wrap.querySelector('[data-bo-input="nueva-fecha"]');
-      if (!input || !input.value) return;
-      // datetime-local no trae timezone; añadimos el offset local.
-      const iso = _localInputToIso(input.value);
-      const submit = wrap.querySelector('[data-bo-form-submit]');
-      if (submit) {
-        submit.disabled = true;
-        submit.textContent = 'Enviando…';
-      }
-      const full = Object.assign({}, payload, { nueva_fecha: iso });
-      const res = await BoUi.ejecutarEdgeFunction(supa, 'reagendar', full);
-      if (res.ok) {
-        BoUi.toast(_TOAST_OK['reagendar']);
-        wrap.remove();
-        btn.hidden = true; // sesión reagendada: mantenemos oculto
-      } else {
-        BoUi.toast('No he podido ejecutar. Pulsa Copiar comando para hacerlo en Claude Code.');
-        wrap.remove();
-        btn.hidden = false;
-        _degradarAFallback(btn);
-      }
-    });
-    wrap.addEventListener('click', function (ev) {
-      const cancel = ev.target && ev.target.closest && ev.target.closest('[data-bo-form-cancel]');
-      if (!cancel) return;
-      ev.preventDefault();
-      wrap.remove();
-      btn.hidden = false;
-    });
-  }
-
-  // Convierte "2026-05-20T10:00" (datetime-local) a ISO con offset local.
-  // Si entra un ISO ya completo (con zona), se devuelve tal cual.
-  function _localInputToIso(v) {
-    if (!v) return '';
-    if (/[zZ]|[+\-]\d{2}:\d{2}$/.test(v)) return v; // ya trae zona
-    const d = new Date(v);
-    if (isNaN(d.getTime())) return v;
-    const offMin = -d.getTimezoneOffset();
-    const sign = offMin >= 0 ? '+' : '-';
-    const abs = Math.abs(offMin);
-    const off = sign + String(Math.floor(abs / 60)).padStart(2, '0') + ':' +
-                       String(abs % 60).padStart(2, '0');
-    const pad = n => String(n).padStart(2, '0');
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
-      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00' + off;
   }
 
   // Despliega dos botones de motivo para /cerrar-paciente antes de invocar.
@@ -786,11 +710,7 @@
       payload = JSON.parse(btn.getAttribute('data-bo-payload') || '{}');
     } catch (_) { payload = {}; }
 
-    // Mini-forms antes de invocar.
-    if (fn === 'reagendar') {
-      _abrirFormReagendar(btn, payload, supa);
-      return;
-    }
+    // Mini-form antes de invocar (cerrar-paciente pide motivo).
     if (fn === 'cerrar-paciente') {
       _abrirFormCerrar(btn, payload, supa);
       return;
