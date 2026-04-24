@@ -85,11 +85,30 @@
       detalle = 'Caduca en ' + item.diasParaCaducar + ' ' +
         (item.diasParaCaducar === 1 ? 'día' : 'días');
     }
-    const meta = '<div class="bo-fila-meta">' +
-      '<span class="bo-fila-nombre">' + nombre + '</span>' +
-      '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
-    '</div>';
-    return _filaLink(item.pacienteId, meta, 'menu-crear');
+    const href = item.pacienteId
+      ? '/backoffice/paciente/?id=' + BoUi.escapeHtml(String(item.pacienteId))
+      : '#';
+    const link = '<a class="bo-fila-link-row" href="' + href + '">' +
+      '<div class="bo-fila-meta">' +
+        '<span class="bo-fila-nombre">' + nombre + '</span>' +
+        '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
+      '</div>' +
+    '</a>';
+    // Acción a la derecha: si la anamnesis está rellena, botón copy-command
+    // para `/crear-menu`; si no, badge de aviso (no se puede crear menú sin
+    // anamnesis). El botón frena la propagación para no navegar al detalle.
+    let accion;
+    if (item.anamnesisLista) {
+      accion = '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
+        'data-bo-comando="' + BoUi.escapeHtml(item.comando || '') + '">' +
+        'Crear menú con Claude</button>';
+    } else {
+      accion = '<span class="bo-fila-warning" data-bo-warning="anamnesis-pendiente" ' +
+        'title="La paciente no ha rellenado el formulario de anamnesis aún. ' +
+        'No se puede crear menú hasta entonces.">' +
+        'Anamnesis pendiente</span>';
+    }
+    return '<li class="bo-fila" data-bo-fila="menu-crear">' + link + accion + '</li>';
   }
 
   function renderFilaAlerta(item) {
@@ -223,12 +242,31 @@
     estado.textContent = msg;
   }
 
+  // Wirea click handler en cualquier [data-bo-comando] dentro de `root`.
+  // Marca el botón con `_boWired` para que un segundo arrancar (no debería
+  // ocurrir, pero defensa) no apile listeners. Frena propagación para no
+  // navegar al link padre cuando el botón vive dentro de una fila.
+  function _conectarBotonesCopiar(root) {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+    const botones = root.querySelectorAll('[data-bo-comando]');
+    botones.forEach(function (btn) {
+      if (btn._boWired) return;
+      btn._boWired = true;
+      btn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        const cmd = btn.getAttribute('data-bo-comando') || '';
+        if (cmd) BoUi.copiarComando(cmd, btn);
+      });
+    });
+  }
+
   async function cargarDatos(supa) {
     // 4 SELECT en paralelo. RLS se encarga de filtrar al email de Cristina.
     // `menus.created_at` lo usa `calcularMetricasHoy` para contar los del mes
     // natural actual.
     const results = await Promise.all([
-      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding'),
+      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis_completed_at'),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at'),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id'),
       supa.from('checkins').select('paciente_id, fecha, estado')
@@ -274,8 +312,11 @@
         if (vivo && vivo.parentNode) vivo.outerHTML = renderMetricas(metricas);
       }
       root.innerHTML = renderTodosLosBloques(agrupado);
-      // Sin botones de acción en esta vista: cada fila es un link al detalle
-      // del paciente, y las acciones (copiar comandos, reagendar…) viven ahí.
+      // Excepción documentada al patrón "fila = link al detalle": el bloque
+      // "Menús a crear esta semana" pinta un botón "Crear menú con Claude"
+      // (copy-command) cuando la anamnesis ya está rellena, para acortar el
+      // gesto más frecuente de Cristina.
+      _conectarBotonesCopiar(root);
     } catch (err) {
       console.error('[backoffice/hoy]', err);
       root.innerHTML = '';

@@ -233,6 +233,29 @@ test("agruparHoy: paciente activa sin menú aparece en menusCrearSemana", () => 
   assert.equal(r.menusCrearSemana[0].comando, "/crear-menu ANA");
 });
 
+test("agruparHoy: menusCrearSemana incluye anamnesisLista=false si no hay anamnesis_completed_at", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "ANA", email: "a@x", estado: "activo", alta: "2026-04-01" }
+    ],
+    menus: [], sesiones: [], checkins: []
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.menusCrearSemana[0].anamnesisLista, false);
+});
+
+test("agruparHoy: menusCrearSemana incluye anamnesisLista=true si hay anamnesis_completed_at", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "ANA", email: "a@x", estado: "activo", alta: "2026-04-01",
+        anamnesis_completed_at: "2026-04-02T10:00:00Z" }
+    ],
+    menus: [], sesiones: [], checkins: []
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.menusCrearSemana[0].anamnesisLista, true);
+});
+
 test("agruparHoy: alertas incluye p4 (≥3 días sin checkin), excluye p5 (ayer)", () => {
   const r = agruparHoy(fixtureCompleta(), HOY);
   const ids = r.alertas.map(a => a.pacienteId);

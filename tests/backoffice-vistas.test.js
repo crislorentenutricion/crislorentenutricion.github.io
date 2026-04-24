@@ -141,6 +141,54 @@ test("BoHoy.renderFilaMenuCrear: diasParaCaducar <= 0 dice 'Caducado hace...'", 
   assert.match(html, /Caducado hace 2 días/);
 });
 
+test("BoHoy.renderFilaMenuCrear: anamnesisLista=true → botón 'Crear menú con Claude' con data-bo-comando", () => {
+  const html = BoHoy.renderFilaMenuCrear({
+    pacienteId: "p1",
+    nombre: "ANA",
+    diasParaCaducar: 3,
+    anamnesisLista: true,
+    comando: "/crear-menu ANA"
+  });
+  assert.match(html, /<button[^>]+data-bo-comando="\/crear-menu ANA"/);
+  assert.match(html, /Crear menú con Claude/);
+  // Y NO debe pintar el badge de aviso.
+  assert.ok(!/data-bo-warning="anamnesis-pendiente"/.test(html));
+});
+
+test("BoHoy.renderFilaMenuCrear: anamnesisLista=false → badge 'Anamnesis pendiente', sin botón", () => {
+  const html = BoHoy.renderFilaMenuCrear({
+    pacienteId: "p1",
+    nombre: "ANA",
+    diasParaCaducar: null,
+    anamnesisLista: false,
+    comando: "/crear-menu ANA"
+  });
+  assert.match(html, /data-bo-warning="anamnesis-pendiente"/);
+  assert.match(html, />Anamnesis pendiente</);
+  assert.ok(!/data-bo-comando=/.test(html), "no debe haber botón copy si la anamnesis no está rellena");
+});
+
+test("BoHoy.renderFilaMenuCrear: anamnesisLista no definida → trata como pendiente (defensivo)", () => {
+  const html = BoHoy.renderFilaMenuCrear({
+    pacienteId: "p1", nombre: "ANA", diasParaCaducar: 3, comando: "/crear-menu ANA"
+  });
+  assert.match(html, /data-bo-warning="anamnesis-pendiente"/);
+});
+
+test("BoHoy.renderFilaMenuCrear: link al detalle convive con la acción a la derecha", () => {
+  const html = BoHoy.renderFilaMenuCrear({
+    pacienteId: "p1", nombre: "ANA", diasParaCaducar: 3,
+    anamnesisLista: true, comando: "/crear-menu ANA"
+  });
+  // El nombre vive dentro del <a> que enlaza al detalle.
+  assert.match(html, /<a class="bo-fila-link-row" href="\/backoffice\/paciente\/\?id=p1"/);
+  // El botón es sibling, NO está dentro del <a> (HTML válido).
+  // Comprobamos que la <a> cierra antes de que aparezca <button>.
+  const cierreA = html.indexOf('</a>');
+  const aperturaBoton = html.indexOf('<button');
+  assert.ok(cierreA > 0 && aperturaBoton > cierreA, "botón debe ir tras cerrar <a>");
+});
+
 test("BoHoy.renderFilaAlerta: diasSinCheckin null → 'Sin check-ins aún'", () => {
   const html = BoHoy.renderFilaAlerta({
     nombre: "NOA", diasSinCheckin: null, comando: "/repescar-paciente NOA"
