@@ -235,10 +235,12 @@
   // -----------------------------------------------------------------
 
   function _estadoLabel(estado) {
+    // Modelo binario desde 0014_paciente_estados.sql: solo 'activo' | 'cerrado'.
+    // Mantenemos 'alta_pendiente' como etiqueta UI (no en DB) para pacientes
+    // creadas sin anamnesis, se deriva por onboarding=false y activo.
     const map = {
-      'activo': 'Activa', 'activa': 'Activa',
-      'cerrado': 'Cerrada', 'cerrada': 'Cerrada',
-      'pausa': 'En pausa', 'pausado': 'En pausa', 'pausada': 'En pausa',
+      'activo': 'Activa',
+      'cerrado': 'Cerrada',
       'alta_pendiente': 'Alta pendiente'
     };
     const k = String(estado || '').toLowerCase();
@@ -414,8 +416,11 @@
   //    contrato JSON stringificados. data-bo-comando también va presente —
   //    se usa como fallback cuando el backend no responde.
   //    - /repescar-paciente: si activa y ≥3 días sin check-in.
-  //    - /cerrar-paciente: siempre (marcado destructivo). Abre mini selector
-  //      de motivo (objetivo_cumplido | abandono) antes de invocar.
+  //    - /cerrar-paciente: si activa. Abre mini selector de motivo
+  //      (objetivo_cumplido | abandono | baja_voluntaria) antes de invocar.
+  //      Cierre NO destructivo desde 0014: marca estado='cerrado'.
+  //    - /reactivar-paciente: si cerrada. Vuelve a estado='activo'.
+  //    - /borrar-paciente-rgpd: si cerrada. Borrado físico (irreversible).
   // -----------------------------------------------------------------
 
   function _btnCopiar(comando, etiqueta, extra) {
@@ -479,7 +484,9 @@
     }
 
     const estado = String(paciente.estado || '').toLowerCase();
-    const activa = estado === 'activo' || estado === 'activa' || estado === '';
+    // Modelo binario: activa si no está cerrada. '' = default legacy → activa.
+    const activa = estado !== 'cerrado';
+    const cerrada = estado === 'cerrado';
     const altaPendiente = estado === 'alta_pendiente' ||
       (paciente.onboarding === false && !paciente.anamnesis_completed_at && !activa);
 
@@ -540,20 +547,32 @@
       ));
     }
 
-    // /cerrar-paciente — siempre backend, marcada como destructiva. El click
-    // revela un mini-selector de motivo antes de invocar.
-    if (paciente.id) {
+    // Cerrar / Reactivar / Borrar RGPD según estado actual.
+    // - Activa  → Cerrar (no destructivo, marca estado='cerrado').
+    // - Cerrada → Reactivar (vuelve a 'activo') + Borrar RGPD (destructivo).
+    if (activa && paciente.id) {
+      // Cerrar abre mini-form con los tres motivos (objetivo_cumplido |
+      // abandono | baja_voluntaria) y luego llama a la Edge Function.
       botones.push(_btnBackend(
         'cerrar-paciente',
         'Cerrar paciente',
         { paciente_id: paciente.id },
-        BoLogic.generarComando('cerrar-paciente', nombre),
-        'bo-btn-destructivo'
+        BoLogic.generarComando('cerrar-paciente', nombre)
       ));
-    } else {
+    } else if (activa) {
       botones.push(_btnCopiar(
         BoLogic.generarComando('cerrar-paciente', nombre),
-        'Cerrar paciente',
+        'Cerrar paciente'
+      ));
+    }
+    if (cerrada) {
+      botones.push(_btnCopiar(
+        BoLogic.generarComando('reactivar-paciente', nombre),
+        'Reactivar paciente'
+      ));
+      botones.push(_btnCopiar(
+        BoLogic.generarComando('borrar-paciente-rgpd', nombre),
+        'Borrar RGPD',
         'bo-btn-destructivo'
       ));
     }
@@ -573,13 +592,13 @@
   const _CONFIRMS = {
     'alta-paciente':    '¿Crear alta en Supabase y borrador de bienvenida?',
     'repescar-paciente':'¿Crear borrador de repesca?',
-    'cerrar-paciente':  '¿Marcar paciente como cerrado? (esta acción es destructiva)'
+    'cerrar-paciente':  '¿Marcar paciente como cerrada? Podrás reactivarla después si vuelve.'
   };
 
   const _TOAST_OK = {
     'alta-paciente':    'Alta creada. Revisa el borrador de bienvenida en Gmail.',
     'repescar-paciente':'Borrador de repesca creado. Revísalo en Gmail antes de enviar.',
-    'cerrar-paciente':  'Paciente cerrada. Revisa Gmail (si procede) y NOTAS.'
+    'cerrar-paciente':  'Paciente cerrada. La fila queda en Supabase para poder reactivarla.'
   };
 
   // Convierte el botón a modo copy (fallback): cambia data-bo-action, etiqueta
@@ -622,6 +641,7 @@
     wrap.innerHTML =
       '<span class="bo-form-cerrar-etiqueta">Motivo de cierre:</span>' +
       '<button type="button" class="bo-btn bo-btn-accion" data-bo-motivo="objetivo_cumplido">Objetivo cumplido</button>' +
+      '<button type="button" class="bo-btn bo-btn-accion" data-bo-motivo="baja_voluntaria">Baja voluntaria</button>' +
       '<button type="button" class="bo-btn bo-btn-destructivo" data-bo-motivo="abandono">Abandono</button>' +
       '<button type="button" class="bo-btn bo-btn-secundario" data-bo-form-cancel>Cancelar</button>';
     btn.hidden = true;
@@ -758,7 +778,7 @@
   async function cargarDatos(supa, idPaciente) {
     const hace30 = _isoHaceNDias(30, new Date());
     const results = await Promise.all([
-      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis, anamnesis_completed_at, created_at').eq('id', idPaciente).maybeSingle(),
+      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis, anamnesis_completed_at, created_at, closed_at, close_reason').eq('id', idPaciente).maybeSingle(),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at').eq('paciente_id', idPaciente),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id, created_at').eq('paciente_id', idPaciente),
       supa.from('revisiones').select('id, paciente_id, sesion_id, contenido, created_at').eq('paciente_id', idPaciente).order('created_at', { ascending: false }),

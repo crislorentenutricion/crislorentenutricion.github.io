@@ -102,15 +102,8 @@
 
   function _estadoLabel(estado) {
     if (!estado) return '';
-    const map = {
-      'activo': 'Activa',
-      'activa': 'Activa',
-      'cerrado': 'Cerrada',
-      'cerrada': 'Cerrada',
-      'pausa':   'En pausa',
-      'pausado': 'En pausa',
-      'pausada': 'En pausa'
-    };
+    // Modelo binario desde 0014_paciente_estados.sql: solo 'activo' | 'cerrado'.
+    const map = { 'activo': 'Activa', 'cerrado': 'Cerrada' };
     const k = String(estado).toLowerCase();
     return map[k] || BoUi.titleCase(estado);
   }

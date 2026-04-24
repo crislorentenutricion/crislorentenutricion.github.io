@@ -6,7 +6,8 @@
 // Node tests: `require('./logic.js')` devuelve la misma API.
 //
 // Convenciones de datos (esquema Supabase, ver supabase/migrations/*):
-//   pacientes: { id, email, nombre (MAYÚSCULAS), estado ('activo'|'cerrado'|...), alta, ... }
+//   pacientes: { id, email, nombre (MAYÚSCULAS), estado ('activo'|'cerrado'), alta, closed_at, close_reason }
+//   Estado binario estricto desde 0014_paciente_estados.sql — sin 'pausa' ni variantes.
 //   menus:     { id, paciente_id, numero, vigente_desde (date YYYY-MM-DD), pdf_url }
 //   sesiones:  { id, paciente_id, fecha (timestamptz ISO), calendar_event_id }
 //   checkins:  { paciente_id, fecha (date YYYY-MM-DD), estado }
@@ -108,6 +109,7 @@
     'agendar',
     'alta-paciente',
     'amplitude-overview',
+    'borrar-paciente-rgpd',
     'cerrar-paciente',
     'crear-imagen',
     'crear-menu',
@@ -115,6 +117,7 @@
     'enviar-menu',
     'publicar-instagram',
     'publicar-post',
+    'reactivar-paciente',
     'reagendar',
     'repescar-paciente',
     'retrospectiva',
@@ -215,6 +218,7 @@
   // Sesiones que caen en la fecha civil de `hoy`. Excluye pacientes cerrados
   // (si hay inconsistencia de datos, no mostramos al paciente cerrado —
   // Cristina no debería contactarlo; decisión 2026-04-22).
+  // Estado binario desde 2026-04-24: solo 'activo' o 'cerrado' (ver 0014).
   function _esSesionHoy(sesion, hoyMid) {
     const d = _toMidnight(sesion.fecha);
     return !!d && d.getTime() === hoyMid.getTime();
@@ -245,7 +249,7 @@
   // -----------------------------------------------------------------
   //
   // Ventana: mañana (+1) hasta +7 inclusive. Hoy queda fuera porque ya lo
-  // cubre el bloque "Sesiones hoy". Excluye pacientes cerradas/pausa (mismo
+  // cubre el bloque "Sesiones hoy". Excluye pacientes cerradas (mismo
   // criterio que `sesionesHoy`: si están cerradas, no debería contactarlas
   // aunque haya un evento residual en Calendar/Supabase).
   //
@@ -274,8 +278,8 @@
       if (diff < 1 || diff > ventana) continue;
       const p = pacienteById.get(s.paciente_id);
       if (!p) continue;
-      // Excluir cerradas y pausas — coherente con el resto de la vista Hoy.
-      if (p.estado === 'cerrado' || p.estado === 'pausa') continue;
+      // Excluir cerradas — coherente con el resto de la vista Hoy.
+      if (p.estado === 'cerrado') continue;
       const fechaCompleta = new Date(s.fecha);
       items.push({
         pacienteId: p.id,
@@ -329,7 +333,7 @@
     const alertas = [];
 
     for (const p of pacientes) {
-      const activa = p.estado !== 'cerrado' && p.estado !== 'pausa';
+      const activa = p.estado !== 'cerrado';
       const misMenus    = menusByPac.get(p.id) || [];
       const misSesiones = sesionesByPac.get(p.id) || [];
       const misCheckins = checkinsByPac.get(p.id) || [];
@@ -434,7 +438,7 @@
     const sesionesByPac = _indexBy(sesiones, 'paciente_id');
 
     const lista = (Array.isArray(pacientes) ? pacientes : []).filter(function (p) {
-      if (estado === 'activas') return p.estado !== 'cerrado' && p.estado !== 'pausa';
+      if (estado === 'activas') return p.estado !== 'cerrado';
       if (estado === 'cerradas') return p.estado === 'cerrado';
       return true;
     });
@@ -452,8 +456,8 @@
     // Orden: activas antes que cerradas; dentro de cada grupo, próxima sesión
     // ascendente (sin sesión = al final).
     decoradas.sort(function (a, b) {
-      const aActiva = a.paciente.estado !== 'cerrado' && a.paciente.estado !== 'pausa';
-      const bActiva = b.paciente.estado !== 'cerrado' && b.paciente.estado !== 'pausa';
+      const aActiva = a.paciente.estado !== 'cerrado';
+      const bActiva = b.paciente.estado !== 'cerrado';
       if (aActiva !== bActiva) return aActiva ? -1 : 1;
       const aTime = a.proximaSesionTime == null ? Infinity : a.proximaSesionTime;
       const bTime = b.proximaSesionTime == null ? Infinity : b.proximaSesionTime;
