@@ -165,44 +165,66 @@
     '</section>';
   }
 
-  function renderTodosLosBloques(agrupado) {
+  // Catálogo declarativo de los 5 bloques de la vista Hoy. Definido fuera
+  // del flujo para que (a) `renderTodosLosBloques` pueda filtrar bloques
+  // vacíos sin duplicar config, y (b) un test pueda inspeccionar el orden
+  // canónico sin ejecutar render.
+  function _bloquesConfig(agrupado) {
     return [
-      renderBloque({
+      {
         key: 'sesiones-hoy',
         titulo: 'Sesiones hoy',
-        items: agrupado.sesionesHoy,
-        renderFila: renderFilaSesion,
-        emptyMsg: 'Hoy no hay sesiones agendadas.'
-      }),
-      renderBloque({
+        items: agrupado.sesionesHoy || [],
+        renderFila: renderFilaSesion
+      },
+      {
         key: 'proximos-7-dias',
         titulo: 'Próximos 7 días',
         items: agrupado.proximos7Dias || [],
-        renderFila: renderFilaProximaSesion,
-        emptyMsg: 'Semana despejada: ninguna sesión en los próximos 7 días.'
-      }),
-      renderBloque({
+        renderFila: renderFilaProximaSesion
+      },
+      {
         key: 'menus-crear-semana',
         titulo: 'Menús a crear esta semana',
-        items: agrupado.menusCrearSemana,
-        renderFila: renderFilaMenuCrear,
-        emptyMsg: 'Ningún menú vence esta semana.'
-      }),
-      renderBloque({
+        items: agrupado.menusCrearSemana || [],
+        renderFila: renderFilaMenuCrear
+      },
+      {
         key: 'menus-enviar',
         titulo: 'Enviar menú',
-        items: agrupado.menusEnviar,
-        renderFila: renderFilaMenuEnviar,
-        emptyMsg: 'No hay menús pendientes de envío.'
-      }),
-      renderBloque({
+        items: agrupado.menusEnviar || [],
+        renderFila: renderFilaMenuEnviar
+      },
+      {
         key: 'alertas',
         titulo: 'Alertas (sin check-in)',
-        items: agrupado.alertas,
-        renderFila: renderFilaAlerta,
-        emptyMsg: 'Sin alertas: todas las pacientes al día.'
-      })
-    ].join('');
+        items: agrupado.alertas || [],
+        renderFila: renderFilaAlerta
+      }
+    ];
+  }
+
+  // Bloques vacíos no se renderizan (UX: panel limpio cuando no hay nada
+  // que hacer en esa categoría). Si TODOS los bloques están vacíos pintamos
+  // un único mensaje global. La tarjeta de métricas vive fuera de este
+  // contenedor, así que sigue visible en cualquier caso.
+  function renderTodosLosBloques(agrupado) {
+    const config = _bloquesConfig(agrupado || {});
+    const conItems = config.filter(function (c) { return c.items.length > 0; });
+    if (conItems.length === 0) {
+      return '<section class="bo-bloque" data-bo-block="vacio">' +
+        '<p class="bo-vacio">Sin tareas pendientes. Día despejado.</p>' +
+      '</section>';
+    }
+    return conItems.map(function (c) {
+      return renderBloque({
+        key: c.key,
+        titulo: c.titulo,
+        items: c.items,
+        renderFila: c.renderFila,
+        emptyMsg: '' // nunca se usa: filtrados antes
+      });
+    }).join('');
   }
 
   // -----------------------------------------------------------------
