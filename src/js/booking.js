@@ -458,14 +458,14 @@
             render();
             track('booking_confirmed', { date: state.selectedIso, start: state.selectedSlot.start, plan: (data.get('plan') || '').toString() });
             // Dispara evento Lead a Meta Pixel + Google Ads + Amplitude.
-            // Valor objetivo 15 € = primer mes (el ancla de conversión que mide Fase 1).
+            // Valor 40 € = precio mensual del servicio (lo que vale un cliente convertido).
             try {
               if (window.cln && typeof window.cln.trackLead === 'function') {
                 window.cln.trackLead({
                   email: (data.get('email') || '').toString(),
                   phone: (data.get('telefono') || '').toString(),
                   plan: (data.get('plan') || '').toString(),
-                  value: 15,
+                  value: 40,
                   eventId: (result && result.eventId) || ''
                 });
               }

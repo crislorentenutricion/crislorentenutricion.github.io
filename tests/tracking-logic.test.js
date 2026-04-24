@@ -86,12 +86,12 @@ test('buildLeadEvent normaliza input y aplica defaults', () => {
     email: ' Foo@BAR.com ',
     phone: '622 279 695',
     plan: 'Asesoría',
-    value: 15
+    value: 40
   });
   assert.equal(ev.email, 'foo@bar.com');
   assert.equal(ev.phone, '+34622279695');
   assert.equal(ev.plan, 'Asesoría');
-  assert.equal(ev.value, 15);
+  assert.equal(ev.value, 40);
   assert.equal(ev.currency, 'EUR');
   assert.equal(ev.eventId, '');
 });
@@ -115,26 +115,26 @@ test('buildLeadEvent ignora value no numérico', () => {
 });
 
 test('buildPixelLeadPayload genera lo que espera fbq track Lead', () => {
-  const ev = t.buildLeadEvent({ email: 'a@b.com', phone: '622279695', plan: 'Pro', value: 15 });
+  const ev = t.buildLeadEvent({ email: 'a@b.com', phone: '622279695', plan: 'Pro', value: 40 });
   const p = t.buildPixelLeadPayload(ev);
   assert.equal(p.currency, 'EUR');
-  assert.equal(p.value, 15);
+  assert.equal(p.value, 40);
   assert.equal(p.content_name, 'Pro');
 });
 
 test('buildGoogleAdsConversionPayload genera lo que espera gtag event conversion', () => {
-  const ev = t.buildLeadEvent({ email: 'a@b.com', phone: '622279695', plan: 'X', value: 15, eventId: 'ev-1' });
+  const ev = t.buildLeadEvent({ email: 'a@b.com', phone: '622279695', plan: 'X', value: 40, eventId: 'ev-1' });
   const p = t.buildGoogleAdsConversionPayload(ev, 'AW-123/abc');
   assert.equal(p.send_to, 'AW-123/abc');
   assert.equal(p.currency, 'EUR');
-  assert.equal(p.value, 15);
+  assert.equal(p.value, 40);
   assert.equal(p.transaction_id, 'ev-1');
   assert.equal(p.user_data.email, 'a@b.com');
   assert.equal(p.user_data.phone_number, '+34622279695');
 });
 
 test('buildCapiLeadPayload mete todo lo que espera Meta Graph API', () => {
-  const ev = t.buildLeadEvent({ email: 'a@b.com', phone: '622279695', plan: 'X', value: 15, eventId: 'ev-1' });
+  const ev = t.buildLeadEvent({ email: 'a@b.com', phone: '622279695', plan: 'X', value: 40, eventId: 'ev-1' });
   const p = t.buildCapiLeadPayload(ev, 'https://www.crislorentenutricion.com/', 'UA/1.0', 'fbp.1', 'fbclid.1');
   assert.equal(p.event_name, 'Lead');
   assert.equal(p.event_id, 'ev-1');
@@ -146,7 +146,7 @@ test('buildCapiLeadPayload mete todo lo que espera Meta Graph API', () => {
   assert.equal(p.user_data.fbp, 'fbp.1');
   assert.equal(p.user_data.fbc, 'fbclid.1');
   assert.equal(p.custom_data.currency, 'EUR');
-  assert.equal(p.custom_data.value, 15);
+  assert.equal(p.custom_data.value, 40);
   assert.equal(p.custom_data.content_name, 'X');
   assert.equal(typeof p.event_time, 'number');
 });
