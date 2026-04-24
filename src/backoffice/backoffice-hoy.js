@@ -92,16 +92,6 @@
     return _filaLink(item.pacienteId, meta, 'menu-crear');
   }
 
-  function renderFilaMenuEnviar(item) {
-    const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
-    const num = item.numero != null ? ('Menú ' + item.numero) : 'Menú listo';
-    const meta = '<div class="bo-fila-meta">' +
-      '<span class="bo-fila-nombre">' + nombre + '</span>' +
-      '<span class="bo-fila-detalle">' + BoUi.escapeHtml(num) + '</span>' +
-    '</div>';
-    return _filaLink(item.pacienteId, meta, 'menu-enviar');
-  }
-
   function renderFilaAlerta(item) {
     const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
     let detalle;
@@ -165,7 +155,7 @@
     '</section>';
   }
 
-  // Catálogo declarativo de los 5 bloques de la vista Hoy. Definido fuera
+  // Catálogo declarativo de los 4 bloques de la vista Hoy. Definido fuera
   // del flujo para que (a) `renderTodosLosBloques` pueda filtrar bloques
   // vacíos sin duplicar config, y (b) un test pueda inspeccionar el orden
   // canónico sin ejecutar render.
@@ -188,12 +178,6 @@
         titulo: 'Menús a crear esta semana',
         items: agrupado.menusCrearSemana || [],
         renderFila: renderFilaMenuCrear
-      },
-      {
-        key: 'menus-enviar',
-        titulo: 'Enviar menú',
-        items: agrupado.menusEnviar || [],
-        renderFila: renderFilaMenuEnviar
       },
       {
         key: 'alertas',
@@ -307,7 +291,6 @@
     renderFilaSesion,
     renderFilaProximaSesion,
     renderFilaMenuCrear,
-    renderFilaMenuEnviar,
     renderFilaAlerta,
     renderBloque,
     renderTodosLosBloques,

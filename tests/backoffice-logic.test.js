@@ -143,7 +143,7 @@ function fixtureCompleta() {
       { id: "p1", nombre: "ANA GARCIA", email: "ana@x.com", estado: "activo", alta: "2026-01-10" },
       // Activa con menú caducando en 5 días (dentro de ventana)
       { id: "p2", nombre: "BEATRIZ RUIZ", email: "bea@x.com", estado: "activo", alta: "2026-01-10" },
-      // Activa con menú PDF listo pero sin enviar
+      // Activa con menú reciente (PDF subido) y check-in al día — no aparece en ningún bloque
       { id: "p3", nombre: "CARMEN LOPEZ", email: "car@x.com", estado: "activo", alta: "2026-01-10" },
       // Activa con 4 días sin check-in → alerta
       { id: "p4", nombre: "DIANA PEREZ", email: "dia@x.com", estado: "activo", alta: "2026-01-10" },
@@ -187,11 +187,10 @@ function fixtureCompleta() {
 // agruparHoy — tests
 // ===================================================================
 
-test("agruparHoy: devuelve 4 bloques con las claves esperadas", () => {
+test("agruparHoy: devuelve los bloques activos como arrays", () => {
   const r = agruparHoy(fixtureCompleta(), HOY);
   assert.ok(Array.isArray(r.sesionesHoy));
   assert.ok(Array.isArray(r.menusCrearSemana));
-  assert.ok(Array.isArray(r.menusEnviar));
   assert.ok(Array.isArray(r.alertas));
 });
 
@@ -232,54 +231,6 @@ test("agruparHoy: paciente activa sin menú aparece en menusCrearSemana", () => 
   assert.equal(r.menusCrearSemana[0].vigenteDesde, null);
   assert.equal(r.menusCrearSemana[0].diasParaCaducar, null);
   assert.equal(r.menusCrearSemana[0].comando, "/crear-menu ANA");
-});
-
-test("agruparHoy: menusEnviar solo con pdf_url presente y sin enviado_at", () => {
-  const r = agruparHoy(fixtureCompleta(), HOY);
-  assert.equal(r.menusEnviar.length, 1);
-  assert.equal(r.menusEnviar[0].pacienteId, "p3");
-  assert.equal(r.menusEnviar[0].menuId, "m3");
-  assert.equal(r.menusEnviar[0].comando, "/enviar-menu CARMEN LOPEZ");
-});
-
-test("agruparHoy: menusEnviar excluye menús viejos sin enviado_at (ruido histórico)", () => {
-  // Menú con pdf_url pero vigente_desde hace 30 días y sin enviado_at:
-  // casi seguro se envió hace meses; no es ruido actual para el bloque.
-  const datos = {
-    pacientes: [
-      { id: "p1", nombre: "ANA", email: "a@x", estado: "activo", alta: "2025-01-01" }
-    ],
-    menus: [
-      { id: "m-viejo", paciente_id: "p1", numero: 1,
-        vigente_desde: "2026-03-23", // hace 30 días respecto a HOY (2026-04-22)
-        pdf_url: "https://drive/m.pdf" /* sin enviado_at */ }
-    ],
-    sesiones: [],
-    checkins: [{ paciente_id: "p1", fecha: "2026-04-21", estado: "seguido" }]
-  };
-  const r = agruparHoy(datos, HOY);
-  assert.equal(r.menusEnviar.length, 0, "un menú viejo sin enviado_at no debe aparecer");
-});
-
-test("agruparHoy: menusEnviar incluye menú reciente por created_at aunque vigente_desde sea viejo", () => {
-  // Caso: Cristina re-subió el PDF de un menú antiguo (created_at reciente,
-  // vigente_desde viejo). Preferimos created_at para decidir recencia.
-  const datos = {
-    pacientes: [
-      { id: "p1", nombre: "ANA", email: "a@x", estado: "activo", alta: "2025-01-01" }
-    ],
-    menus: [
-      { id: "m1", paciente_id: "p1", numero: 1,
-        vigente_desde: "2026-03-01", // viejo
-        created_at: "2026-04-20T12:00:00Z", // reciente
-        pdf_url: "https://drive/m.pdf" }
-    ],
-    sesiones: [],
-    checkins: [{ paciente_id: "p1", fecha: "2026-04-21", estado: "seguido" }]
-  };
-  const r = agruparHoy(datos, HOY);
-  assert.equal(r.menusEnviar.length, 1);
-  assert.equal(r.menusEnviar[0].pacienteId, "p1");
 });
 
 test("agruparHoy: alertas incluye p4 (≥3 días sin checkin), excluye p5 (ayer)", () => {
@@ -342,21 +293,6 @@ test("agruparHoy: menu vigente expirado hace días también entra en crear-seman
   assert.equal(r.menusCrearSemana.length, 1);
   // diasParaCaducar negativo (caducó hace 22 días)
   assert.ok(r.menusCrearSemana[0].diasParaCaducar < 0);
-});
-
-test("agruparHoy: menusEnviar excluye menús de pacientes cerrados", () => {
-  const datos = {
-    pacientes: [
-      { id: "p1", nombre: "CERRADA", email: "c@x", estado: "cerrado", alta: "2025-01-01" }
-    ],
-    menus: [
-      { id: "m1", paciente_id: "p1", numero: 1, vigente_desde: "2026-04-20", pdf_url: "x" }
-    ],
-    sesiones: [],
-    checkins: []
-  };
-  const r = agruparHoy(datos, HOY);
-  assert.equal(r.menusEnviar.length, 0);
 });
 
 test("agruparHoy: orden estable — sesionesHoy por hora asc", () => {
@@ -677,8 +613,8 @@ test("sanity: cada comando generado por agruparHoy apunta a una skill válida", 
   const r = agruparHoy(fixtureCompleta(), HOY);
   const todosComandos = [
     ...r.sesionesHoy.map(x => x.comando),
+    ...r.proximos7Dias.map(x => x.comando),
     ...r.menusCrearSemana.map(x => x.comando),
-    ...r.menusEnviar.map(x => x.comando),
     ...r.alertas.map(x => x.comando)
   ];
   assert.ok(todosComandos.length > 0, "fixture debe generar al menos un comando");

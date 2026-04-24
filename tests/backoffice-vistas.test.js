@@ -141,15 +141,6 @@ test("BoHoy.renderFilaMenuCrear: diasParaCaducar <= 0 dice 'Caducado hace...'", 
   assert.match(html, /Caducado hace 2 días/);
 });
 
-test("BoHoy.renderFilaMenuEnviar: incluye número de menú y link al detalle", () => {
-  const html = BoHoy.renderFilaMenuEnviar({
-    pacienteId: "p3", nombre: "LUCÍA", numero: 4, pdfUrl: "https://x", comando: "/enviar-menu LUCÍA"
-  });
-  assert.match(html, />Lucía</);
-  assert.match(html, /Menú 4/);
-  assert.match(html, /href="\/backoffice\/paciente\/\?id=p3"/);
-});
-
 test("BoHoy.renderFilaAlerta: diasSinCheckin null → 'Sin check-ins aún'", () => {
   const html = BoHoy.renderFilaAlerta({
     nombre: "NOA", diasSinCheckin: null, comando: "/repescar-paciente NOA"
@@ -189,19 +180,20 @@ test("BoHoy.renderBloque: items vacíos muestran emptyMsg y no pinta <ul>", () =
   assert.ok(!/<ul class="bo-lista">/.test(html));
 });
 
-test("BoHoy.renderTodosLosBloques: pinta los 5 bloques cuando todos tienen items", () => {
-  // Item mínimo por bloque para forzar el render de los 5.
+test("BoHoy.renderTodosLosBloques: pinta los 4 bloques cuando todos tienen items", () => {
+  // Item mínimo por bloque para forzar el render de los 4.
   const agrupado = {
     sesionesHoy: [{ pacienteId: "p1", nombre: "ANA", hora: "10:00", comando: "/seguimiento-paciente ANA" }],
     proximos7Dias: [{ pacienteId: "p1", nombre: "ANA", fechaISO: "2026-04-23", hora: "10:00", diaLabel: "Mañana", comando: "/seguimiento-paciente ANA" }],
     menusCrearSemana: [{ pacienteId: "p1", nombre: "ANA", diasParaCaducar: 1, comando: "/crear-menu ANA" }],
-    menusEnviar: [{ pacienteId: "p1", nombre: "ANA", numero: 1, pdfUrl: "x", comando: "/enviar-menu ANA" }],
     alertas: [{ pacienteId: "p1", nombre: "ANA", diasSinCheckin: 5, comando: "/repescar-paciente ANA" }]
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
-  for (const key of ["sesiones-hoy", "proximos-7-dias", "menus-crear-semana", "menus-enviar", "alertas"]) {
+  for (const key of ["sesiones-hoy", "proximos-7-dias", "menus-crear-semana", "alertas"]) {
     assert.match(html, new RegExp(`data-bo-block="${key}"`), `falta bloque ${key}`);
   }
+  // El bloque "Enviar menú" se eliminó de la vista Hoy (vive en el detalle).
+  assert.ok(!/data-bo-block="menus-enviar"/.test(html));
 });
 
 test("BoHoy.renderTodosLosBloques: título 'Menús a crear esta semana' (cadencia explícita)", () => {
@@ -210,7 +202,6 @@ test("BoHoy.renderTodosLosBloques: título 'Menús a crear esta semana' (cadenci
     sesionesHoy: [],
     proximos7Dias: [],
     menusCrearSemana: [{ pacienteId: "p1", nombre: "ANA", diasParaCaducar: 1, comando: "/crear-menu ANA" }],
-    menusEnviar: [],
     alertas: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
@@ -254,7 +245,7 @@ test("BoHoy.renderTodosLosBloques: bloque proximos-7-dias va justo después de s
     sesionesHoy: [{ pacienteId: "p1", nombre: "ANA", hora: "10:00", comando: "/seguimiento-paciente ANA" }],
     proximos7Dias: [{ pacienteId: "p1", nombre: "ANA", fechaISO: "2026-04-23", hora: "10:00", diaLabel: "Mañana", comando: "/seguimiento-paciente ANA" }],
     menusCrearSemana: [{ pacienteId: "p1", nombre: "ANA", diasParaCaducar: 1, comando: "/crear-menu ANA" }],
-    menusEnviar: [], alertas: []
+    alertas: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   const idxHoy  = html.indexOf('data-bo-block="sesiones-hoy"');
@@ -268,7 +259,7 @@ test("BoHoy.renderTodosLosBloques: bloque proximos-7-dias va justo después de s
 test("BoHoy.renderTodosLosBloques: proximos7Dias undefined no rompe (defensa)", () => {
   // Defensa: agrupado sin la clave no debe petar; como está vacío, el
   // bloque ni siquiera se renderiza (UX: panel limpio).
-  const agrupado = { sesionesHoy: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
+  const agrupado = { sesionesHoy: [], menusCrearSemana: [], alertas: [] };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.ok(!/data-bo-block="proximos-7-dias"/.test(html), "bloque vacío no debe renderizarse");
 });
@@ -278,17 +269,16 @@ test("BoHoy.renderTodosLosBloques: proximos7Dias undefined no rompe (defensa)", 
 // -------------------------------------------------------------------
 
 test("BoHoy.renderTodosLosBloques: oculta bloques con items vacíos", () => {
-  // Solo 'alertas' tiene contenido. Los otros 4 no deben renderizarse.
+  // Solo 'alertas' tiene contenido. Los otros 3 no deben renderizarse.
   const agrupado = {
     sesionesHoy: [],
     proximos7Dias: [],
     menusCrearSemana: [],
-    menusEnviar: [],
     alertas: [{ pacienteId: "p1", nombre: "ANA", diasSinCheckin: 5, comando: "/repescar-paciente ANA" }]
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.match(html, /data-bo-block="alertas"/);
-  for (const key of ["sesiones-hoy", "proximos-7-dias", "menus-crear-semana", "menus-enviar"]) {
+  for (const key of ["sesiones-hoy", "proximos-7-dias", "menus-crear-semana"]) {
     assert.ok(
       !new RegExp(`data-bo-block="${key}"`).test(html),
       `bloque vacío ${key} no debería renderizarse`
@@ -299,12 +289,12 @@ test("BoHoy.renderTodosLosBloques: oculta bloques con items vacíos", () => {
 });
 
 test("BoHoy.renderTodosLosBloques: todos vacíos → único mensaje 'Día despejado'", () => {
-  const agrupado = { sesionesHoy: [], proximos7Dias: [], menusCrearSemana: [], menusEnviar: [], alertas: [] };
+  const agrupado = { sesionesHoy: [], proximos7Dias: [], menusCrearSemana: [], alertas: [] };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.match(html, /data-bo-block="vacio"/);
   assert.match(html, /Sin tareas pendientes\. Día despejado\./);
   // Y NINGÚN bloque concreto.
-  for (const key of ["sesiones-hoy", "proximos-7-dias", "menus-crear-semana", "menus-enviar", "alertas"]) {
+  for (const key of ["sesiones-hoy", "proximos-7-dias", "menus-crear-semana", "alertas"]) {
     assert.ok(!new RegExp(`data-bo-block="${key}"`).test(html), `${key} no debería renderizarse`);
   }
 });

@@ -7,11 +7,7 @@
 //
 // Convenciones de datos (esquema Supabase, ver supabase/migrations/*):
 //   pacientes: { id, email, nombre (MAYÚSCULAS), estado ('activo'|'cerrado'|...), alta, ... }
-//   menus:     { id, paciente_id, numero, vigente_desde (date YYYY-MM-DD), pdf_url, enviado_at? }
-//              `enviado_at` NO existe hoy en el schema; lo leemos como opt-in (null
-//              o ausente = no enviado). Si el Agente 3/4 añade la columna, este
-//              módulo ya la respeta. Mientras tanto, el marcador lo mantiene
-//              Cristina en NOTAS de Drive.
+//   menus:     { id, paciente_id, numero, vigente_desde (date YYYY-MM-DD), pdf_url }
 //   sesiones:  { id, paciente_id, fecha (timestamptz ISO), calendar_event_id }
 //   checkins:  { paciente_id, fecha (date YYYY-MM-DD), estado }
 //
@@ -24,12 +20,6 @@
   const VIGENCIA_DIAS_DEFAULT = 30;
   const DIAS_SIN_CHECKIN_ALERTA = 3;
   const DIAS_AVISO_PROXIMO_MENU = 7;
-  // "Enviar menú" solo destaca menús recientes. Un menú creado hace 3 meses
-  // sin `enviado_at` casi seguro se envió en su día — es ruido en el bloque.
-  // El bloque se piensa para acciones inminentes ("creé el menú hoy, toca
-  // enviarlo"); los históricos se quedan fuera hasta que la Edge Function
-  // enviar-menu se despliegue y rellene `enviado_at` automáticamente.
-  const DIAS_MENU_RECIENTE = 7;
   // Ventana del bloque "Próximos 7 días": de mañana (+1) hasta +7 inclusive.
   // Hoy queda fuera porque ya lo cubre el bloque "Sesiones hoy" — duplicar
   // sería ruido.
@@ -241,19 +231,6 @@
     return diasRestantes <= DIAS_AVISO_PROXIMO_MENU;
   }
 
-  // Menú listo para enviar: tiene PDF subido, sin marcador de envío, y es
-  // reciente (últimos DIAS_MENU_RECIENTE). `enviado_at` es el campo opt-in
-  // (ver nota arriba). Sin el filtro de antigüedad, cualquier menú histórico
-  // con PDF aparece en el bloque indefinidamente.
-  function _necesitaEnviar(menuVig, hoyMid, diasRecientes) {
-    if (!menuVig) return false;
-    if (!menuVig.pdf_url) return false;
-    if (menuVig.enviado_at) return false;
-    const ref = _toMidnight(menuVig.created_at) || _toMidnight(menuVig.vigente_desde);
-    if (!ref || !hoyMid) return true; // sin fecha → preferimos mostrarlo que ocultarlo
-    return diffEnDias(ref, hoyMid) <= diasRecientes;
-  }
-
   // Alerta por silencio: paciente activa sin checkins en ≥ N días.
   // Si nunca ha hecho check-in (onboarding), miramos `alta` como fallback.
   function _diasDesdeUltimoCheckin(ultimo, paciente, hoyMid) {
@@ -341,7 +318,6 @@
     const opts      = (datos && datos.opts)      || {};
     const vigenciaDias  = opts.vigenciaDias || VIGENCIA_DIAS_DEFAULT;
     const diasSilencio  = opts.diasSilencio || DIAS_SIN_CHECKIN_ALERTA;
-    const diasRecientes = opts.diasMenuReciente || DIAS_MENU_RECIENTE;
 
     const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
     const menusByPac    = _indexBy(menus, 'paciente_id');
@@ -350,7 +326,6 @@
 
     const sesionesHoy = [];
     const menusCrearSemana = [];
-    const menusEnviar = [];
     const alertas = [];
 
     for (const p of pacientes) {
@@ -387,22 +362,7 @@
         });
       }
 
-      // Bloque 3: menús recientes con PDF listo para enviar. Incluye activas
-      // Y pausas; si está "cerrado", no tiene sentido enviar. Filtra menús
-      // viejos (>DIAS_MENU_RECIENTE) para no arrastrar históricos sin
-      // enviado_at.
-      if (p.estado !== 'cerrado' && menuVig && _necesitaEnviar(menuVig, hoyMid, diasRecientes)) {
-        menusEnviar.push({
-          pacienteId: p.id,
-          nombre: p.nombre,
-          menuId: menuVig.id,
-          numero: menuVig.numero,
-          pdfUrl: menuVig.pdf_url,
-          comando: generarComando('enviar-menu', p.nombre)
-        });
-      }
-
-      // Bloque 4: alertas por silencio. Solo activas.
+      // Bloque 3: alertas por silencio. Solo activas.
       if (activa) {
         const ultimo = _ultimoCheckin(misCheckins);
         const dias = _diasDesdeUltimoCheckin(ultimo, p, hoyMid);
@@ -430,9 +390,6 @@
       if (da !== db) return da - db;
       return a.nombre.localeCompare(b.nombre, 'es');
     });
-    menusEnviar.sort(function (a, b) {
-      return a.nombre.localeCompare(b.nombre, 'es');
-    });
     alertas.sort(function (a, b) {
       const da = a.diasSinCheckin == null ? Infinity : a.diasSinCheckin;
       const db = b.diasSinCheckin == null ? Infinity : b.diasSinCheckin;
@@ -440,7 +397,7 @@
       return a.nombre.localeCompare(b.nombre, 'es');
     });
 
-    // Bloque 5: próximos 7 días (mañana → +7). Reutiliza la función pura
+    // Bloque 4: próximos 7 días (mañana → +7). Reutiliza la función pura
     // exportada para que tenga su propio set de tests y se pueda invocar
     // sola. El opts también se le pasa por si se quiere acotar la ventana.
     const proximos7Dias = sesionesProximos7Dias(
@@ -448,7 +405,7 @@
       hoyMid
     );
 
-    return { sesionesHoy, proximos7Dias, menusCrearSemana, menusEnviar, alertas };
+    return { sesionesHoy, proximos7Dias, menusCrearSemana, alertas };
   }
 
   // -----------------------------------------------------------------
@@ -687,7 +644,6 @@
     VIGENCIA_DIAS_DEFAULT,
     DIAS_SIN_CHECKIN_ALERTA,
     DIAS_AVISO_PROXIMO_MENU,
-    DIAS_MENU_RECIENTE,
     DIAS_VENTANA_PROXIMOS,
     REPESCA_VENTANA_DIAS,
     GAP_REPESCA_DIAS,
