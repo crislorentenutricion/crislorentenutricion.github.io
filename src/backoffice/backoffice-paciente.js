@@ -496,12 +496,17 @@
         BoLogic.generarComando('reactivar-paciente', nombre),
         'Reactivar paciente'
       ));
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('borrar-paciente-rgpd', nombre),
-        'Borrar RGPD',
-        'bo-btn-destructivo'
-      ));
     }
+
+    // El derecho al olvido (RGPD) se puede ejercer en cualquier estado —
+    // el botón aparece siempre (con cualquier nombre válido). Clase
+    // destructiva (rojo outline) porque borra físicamente fila en Supabase,
+    // auth.users, checkins, menús, PDFs del bucket y carpeta Drive.
+    botones.push(_btnCopiar(
+      BoLogic.generarComando('borrar-paciente-rgpd', nombre),
+      'Borrar RGPD',
+      'bo-btn-destructivo'
+    ));
 
     return '<section class="bo-acciones" data-bo-bloque="acciones">' +
       '<h2>Acciones</h2>' +

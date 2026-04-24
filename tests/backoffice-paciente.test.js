@@ -310,17 +310,31 @@ test("BoPaciente.renderAcciones: /cerrar-paciente aparece como copy NO destructi
   assert.ok(!/bo-btn-destructivo[^"]*cerrar-paciente|cerrar-paciente[^"]*bo-btn-destructivo/.test(html));
 });
 
-test("BoPaciente.renderAcciones: paciente cerrada expone /reactivar-paciente y /borrar-paciente-rgpd", () => {
-  // Modelo binario: cuando está cerrada, las acciones disponibles son
-  // reactivar (volver a 'activo') y borrar RGPD (destructivo, solo bajo
-  // petición del titular). El botón Cerrar desaparece.
+test("BoPaciente.renderAcciones: paciente cerrada expone /reactivar-paciente", () => {
+  // Cuando está cerrada el botón Cerrar desaparece y aparece Reactivar.
+  // Borrar RGPD se expone aparte — aparece en cualquier estado (ver test
+  // siguiente): el derecho al olvido se puede ejercer siempre.
   const html = BoPaciente.renderAcciones(_ctxBase({
     paciente: { id: "p1", nombre: "MARTA", estado: "cerrado" }
   }));
   assert.match(html, /data-bo-comando="\/reactivar-paciente MARTA"/);
-  assert.match(html, /data-bo-comando="\/borrar-paciente-rgpd MARTA"/);
-  assert.match(html, /bo-btn-destructivo/); // Borrar RGPD sí es destructivo
   assert.ok(!/\/cerrar-paciente/.test(html));
+});
+
+test("BoPaciente.renderAcciones: /borrar-paciente-rgpd aparece siempre (activa y cerrada) como copy destructivo", () => {
+  // El derecho al olvido RGPD se puede ejercer en cualquier estado. El
+  // botón está siempre visible y lleva la clase destructiva para indicar
+  // que es irreversible (borra físicamente: Supabase, auth.users, checkins,
+  // menús, PDFs, carpeta Drive).
+  for (const estado of ['activo', 'cerrado']) {
+    const html = BoPaciente.renderAcciones(_ctxBase({
+      paciente: { id: "p1", nombre: "MARTA", estado: estado }
+    }));
+    assert.match(html, /data-bo-comando="\/borrar-paciente-rgpd MARTA"/,
+      'falta botón Borrar RGPD en estado ' + estado);
+    assert.match(html, /bo-btn-destructivo/,
+      'falta clase destructiva en Borrar RGPD (' + estado + ')');
+  }
 });
 
 test("BoPaciente.renderAcciones: /alta-paciente aparece como copy solo si estado alta_pendiente", () => {
