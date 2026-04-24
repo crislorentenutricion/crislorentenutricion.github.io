@@ -59,6 +59,20 @@
     return _filaLink(item.pacienteId, meta, 'sesion');
   }
 
+  // Fila del bloque "Próximos 7 días": día + hora juntos como detalle
+  // (`Mañana · 10:30` o `Sáb 25 abr · 10:30`). Mismo enlace al detalle.
+  function renderFilaProximaSesion(item) {
+    const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
+    const dia    = BoUi.escapeHtml(item.diaLabel || '');
+    const hora   = BoUi.escapeHtml(item.hora || '');
+    const detalle = dia && hora ? (dia + ' · ' + hora) : (dia || hora);
+    const meta = '<div class="bo-fila-meta">' +
+      '<span class="bo-fila-nombre">' + nombre + '</span>' +
+      '<span class="bo-fila-detalle">' + detalle + '</span>' +
+    '</div>';
+    return _filaLink(item.pacienteId, meta, 'proxima-sesion');
+  }
+
   function renderFilaMenuCrear(item) {
     const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
     let detalle;
@@ -159,6 +173,13 @@
         items: agrupado.sesionesHoy,
         renderFila: renderFilaSesion,
         emptyMsg: 'Hoy no hay sesiones agendadas.'
+      }),
+      renderBloque({
+        key: 'proximos-7-dias',
+        titulo: 'Próximos 7 días',
+        items: agrupado.proximos7Dias || [],
+        renderFila: renderFilaProximaSesion,
+        emptyMsg: 'Semana despejada: ninguna sesión en los próximos 7 días.'
       }),
       renderBloque({
         key: 'menus-crear-semana',
@@ -262,6 +283,7 @@
 
   const api = {
     renderFilaSesion,
+    renderFilaProximaSesion,
     renderFilaMenuCrear,
     renderFilaMenuEnviar,
     renderFilaAlerta,
