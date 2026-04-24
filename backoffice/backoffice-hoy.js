@@ -101,7 +101,7 @@
     if (item.anamnesisLista) {
       accion = '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
         'data-bo-comando="' + BoUi.escapeHtml(item.comando || '') + '">' +
-        'Crear menú con Claude</button>';
+        'Crear menú</button>';
     } else {
       accion = '<span class="bo-fila-warning" data-bo-warning="anamnesis-pendiente" ' +
         'title="La paciente no ha rellenado el formulario de anamnesis aún. ' +
@@ -313,9 +313,9 @@
       }
       root.innerHTML = renderTodosLosBloques(agrupado);
       // Excepción documentada al patrón "fila = link al detalle": el bloque
-      // "Menús a crear esta semana" pinta un botón "Crear menú con Claude"
-      // (copy-command) cuando la anamnesis ya está rellena, para acortar el
-      // gesto más frecuente de Cristina.
+      // "Menús a crear esta semana" pinta un botón "Crear menú" (copy-command)
+      // cuando la anamnesis ya está rellena, para acortar el gesto más
+      // frecuente de Cristina.
       _conectarBotonesCopiar(root);
     } catch (err) {
       console.error('[backoffice/hoy]', err);
