@@ -9,15 +9,11 @@
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
 //
-// Las acciones con Edge Function detrás (/repescar-paciente, /cerrar-paciente)
-// se ejecutan directamente contra el backend. /crear-menu, /seguimiento-paciente,
-// /agendar y /reagendar siguen en copy-command (los dos primeros porque
-// requieren a Claude Code; los dos últimos porque el gesto es trivial). El
-// envío del menú se hace al final de /crear-menu en Claude Code, no desde
-// el backoffice — por eso no hay botón "Enviar menú" en el detalle.
-//
-// Si una ejecución falla (red caída o endpoint no desplegado), el botón
-// fabrica fallback copy-command para que Cristina lo lance en Claude.
+// Todas las acciones del detalle son copy-command: pegar el prompt en Claude
+// Code y dejar que la skill lo procese. No hay botones backend aquí — las
+// Edge Functions (supabase/functions/*) siguen vivas para invocación manual
+// pero la UI no las llama. El envío del menú es la cola natural de
+// `/crear-menu` en Claude, así que tampoco hay botón "Enviar menú".
 //
 // Funciones puras exportadas: renderCabecera, renderAnamnesis, renderTimeline,
 // renderAcciones. Reciben los datos ya cargados y devuelven HTML string.
@@ -48,9 +44,6 @@
   // No eliminamos el texto — CSS podría mostrar el completo; aquí cortamos a
   // 160 chars con "…" si excede. Simple, sin "ver más" interactivo.
   const MAX_LIBRE = 160;
-
-  // Para decidir si mostramos /repescar → ≥3 días sin check-in.
-  const DIAS_REPESCAR = 3;
 
   // -----------------------------------------------------------------
   // Helpers de formato de anamnesis
@@ -365,6 +358,8 @@
       // "<paciente_id>/menu-1.pdf"), no una URL absoluta. El href="#" +
       // data-bo-menu-path dispara createSignedUrl al click (ver
       // conectarClickPdf y convención mi-seguimiento-auth.md § PDF bucket).
+      // Excepción explícita a la regla "todo en esta vista es copy-command":
+      // abrir el PDF del menú es la única acción no-Claude permitida.
       const pdf = item.data.pdf_url
         ? ' · <a class="bo-fila-link" href="#" data-bo-menu-path="' +
             BoUi.escapeHtml(item.data.pdf_url) + '" data-bo-menu-filename="menu-' +
@@ -403,24 +398,16 @@
   // -----------------------------------------------------------------
   // renderAcciones (pura)
   //
-  // Dos tipos de botones en el detalle:
+  // Todas las acciones del detalle son copy-command: el click copia el prompt
+  // al portapapeles para pegar en Claude Code. No hay botones backend en esta
+  // vista. Visibilidad por estado del paciente:
   //
-  // 1) Copy-command (data-bo-action="copy" implícito via data-bo-comando):
-  //    - /crear-menu — complejo, requiere Claude Code.
-  //    - /seguimiento-paciente — ídem.
-  //    - /alta-paciente — solo si la paciente está alta_pendiente (raro en
-  //      detalle: lo dejamos como copy por contigüidad con Hoy/Pacientes).
-  //
-  // 2) Backend (data-bo-action="backend"): dispara la Edge Function directa
-  //    con fallback a copy si falla. data-bo-payload lleva los campos del
-  //    contrato JSON stringificados. data-bo-comando también va presente —
-  //    se usa como fallback cuando el backend no responde.
-  //    - /repescar-paciente: si activa y ≥3 días sin check-in.
-  //    - /cerrar-paciente: si activa. Abre mini selector de motivo
-  //      (objetivo_cumplido | abandono | baja_voluntaria) antes de invocar.
-  //      Cierre NO destructivo desde 0014: marca estado='cerrado'.
-  //    - /reactivar-paciente: si cerrada. Vuelve a estado='activo'.
-  //    - /borrar-paciente-rgpd: si cerrada. Borrado físico (irreversible).
+  //   activa         → Crear menú, Hacer seguimiento, Agendar sesión,
+  //                    Reagendar (si hay próxima sesión), Repescar,
+  //                    Cerrar paciente.
+  //   cerrada        → Reactivar, Borrar RGPD (destructivo).
+  //   alta_pendiente → Dar de alta (+ las de activa; normalmente no se llega
+  //                    a este detalle sin onboarding, pero no bloqueamos UI).
   // -----------------------------------------------------------------
 
   function _btnCopiar(comando, etiqueta, extra) {
@@ -429,34 +416,6 @@
       '" data-bo-action="copy"' +
       ' data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
       BoUi.escapeHtml(etiqueta) + '</button>';
-  }
-
-  // Botón backend: el usuario hace click, confirmamos, llamamos a la Edge
-  // Function. Incluye `data-bo-comando` como fallback copy si falla la red.
-  // `payload` es un objeto que se serializa a JSON en el atributo data-*.
-  function _btnBackend(nombreFn, etiqueta, payload, comandoFallback, extra) {
-    const clase = 'bo-btn bo-btn-accion' + (extra ? ' ' + extra : '');
-    const payloadAttr = BoUi.escapeHtml(JSON.stringify(payload || {}));
-    const comandoAttr = BoUi.escapeHtml(comandoFallback || '');
-    return '<button type="button" class="' + clase + '"' +
-      ' data-bo-action="backend"' +
-      ' data-bo-function="' + BoUi.escapeHtml(nombreFn) + '"' +
-      ' data-bo-payload="' + payloadAttr + '"' +
-      ' data-bo-comando="' + comandoAttr + '">' +
-      BoUi.escapeHtml(etiqueta) + '</button>';
-  }
-
-  function _diasDesdeUltimoCheckin(checkins, hoy) {
-    if (!Array.isArray(checkins) || checkins.length === 0) return Infinity;
-    const hoyT = (hoy instanceof Date ? hoy : new Date()).getTime();
-    let max = null;
-    for (const c of checkins) {
-      const t = c && c.fecha ? new Date(String(c.fecha)).getTime() : NaN;
-      if (isNaN(t)) continue;
-      if (max == null || t > max) max = t;
-    }
-    if (max == null) return Infinity;
-    return Math.max(0, Math.round((hoyT - max) / 86400000));
   }
 
   function _proximaSesionFutura(sesiones, hoy) {
@@ -473,7 +432,6 @@
 
   function renderAcciones(ctx) {
     const paciente = (ctx && ctx.paciente) || {};
-    const checkins = (ctx && ctx.checkins) || [];
     const sesiones = (ctx && ctx.sesiones) || [];
     const hoy      = (ctx && ctx.hoy)      || new Date();
 
@@ -484,87 +442,55 @@
     }
 
     const estado = String(paciente.estado || '').toLowerCase();
-    // Modelo binario: activa si no está cerrada. '' = default legacy → activa.
+    // Modelo binario (0014): activa si no está cerrada. '' = legacy → activa.
     const activa = estado !== 'cerrado';
     const cerrada = estado === 'cerrado';
     const altaPendiente = estado === 'alta_pendiente' ||
-      (paciente.onboarding === false && !paciente.anamnesis_completed_at && !activa);
+      (activa && paciente.onboarding === false && !paciente.anamnesis_completed_at);
 
     const botones = [];
 
-    // Siempre copy (complejas: requieren Claude Code). Etiquetas legibles
-    // por acción (no "Copiar /xxx") — el comando real va en el toast tras
-    // el click, así que la etiqueta describe lo que pasa cuando lo pegas
-    // en Claude, no el comando en sí.
-    botones.push(_btnCopiar(
-      BoLogic.generarComando('crear-menu', nombre),
-      'Crear menú'
-    ));
-    botones.push(_btnCopiar(
-      BoLogic.generarComando('seguimiento-paciente', nombre),
-      'Hacer seguimiento'
-    ));
-
-    // /repescar-paciente si activa y ≥3 días sin check-in → backend.
-    if (activa && paciente.id) {
-      const dias = _diasDesdeUltimoCheckin(checkins, hoy);
-      if (dias >= DIAS_REPESCAR) {
-        botones.push(_btnBackend(
-          'repescar-paciente',
-          'Repescar paciente',
-          { paciente_id: paciente.id },
-          BoLogic.generarComando('repescar-paciente', nombre)
-        ));
-      }
-    }
-
-    // /alta-paciente si estado = alta_pendiente — copy (edge case en detalle).
-    if (altaPendiente && paciente.email) {
-      const cmdBase = BoLogic.generarComando('alta-paciente', nombre);
-      botones.push(_btnCopiar(cmdBase + ' ' + paciente.email, 'Dar de alta'));
-    }
-
-    // /agendar si activa → copy (requiere Claude Code: resuelve email,
-    // llama a scripts/agendar_sesion.py y sincroniza Calendar + Supabase).
-    // Útil para crear la primera sesión del mes o para sincronizar a
-    // Supabase una cita ya existente en Calendar (idempotente).
     if (activa) {
+      // Alta pendiente: botón antes del resto (el resto apenas aplica hasta
+      // que la paciente rellene anamnesis, pero no bloqueamos la UI).
+      if (altaPendiente && paciente.email) {
+        const cmdAlta = BoLogic.generarComando('alta-paciente', nombre);
+        botones.push(_btnCopiar(cmdAlta + ' ' + paciente.email, 'Dar de alta'));
+      }
+
+      botones.push(_btnCopiar(
+        BoLogic.generarComando('crear-menu', nombre),
+        'Crear menú'
+      ));
+      botones.push(_btnCopiar(
+        BoLogic.generarComando('seguimiento-paciente', nombre),
+        'Hacer seguimiento'
+      ));
       botones.push(_btnCopiar(
         BoLogic.generarComando('agendar', nombre),
         'Agendar sesión'
       ));
-    }
 
-    // /reagendar si hay próxima sesión futura → copy-command. La Edge
-    // Function existe pero no está desplegada y el copy es trivial; un
-    // input datetime-local en mini-form no aporta sobre pegar el comando
-    // y dejar que Claude lo procese.
-    const proxSesion = _proximaSesionFutura(sesiones, hoy);
-    if (proxSesion) {
+      // Reagendar solo si hay sesión futura para mover. Sin próxima sesión
+      // el comando no aplica — mejor no ofrecerlo que forzar a Claude a
+      // responder "no hay nada que reagendar".
+      if (_proximaSesionFutura(sesiones, hoy)) {
+        botones.push(_btnCopiar(
+          BoLogic.generarComando('reagendar', nombre),
+          'Reagendar sesión'
+        ));
+      }
+
       botones.push(_btnCopiar(
-        BoLogic.generarComando('reagendar', nombre),
-        'Reagendar sesión'
+        BoLogic.generarComando('repescar-paciente', nombre),
+        'Repescar paciente'
       ));
-    }
-
-    // Cerrar / Reactivar / Borrar RGPD según estado actual.
-    // - Activa  → Cerrar (no destructivo, marca estado='cerrado').
-    // - Cerrada → Reactivar (vuelve a 'activo') + Borrar RGPD (destructivo).
-    if (activa && paciente.id) {
-      // Cerrar abre mini-form con los tres motivos (objetivo_cumplido |
-      // abandono | baja_voluntaria) y luego llama a la Edge Function.
-      botones.push(_btnBackend(
-        'cerrar-paciente',
-        'Cerrar paciente',
-        { paciente_id: paciente.id },
-        BoLogic.generarComando('cerrar-paciente', nombre)
-      ));
-    } else if (activa) {
       botones.push(_btnCopiar(
         BoLogic.generarComando('cerrar-paciente', nombre),
         'Cerrar paciente'
       ));
     }
+
     if (cerrada) {
       botones.push(_btnCopiar(
         BoLogic.generarComando('reactivar-paciente', nombre),
@@ -587,146 +513,22 @@
   // Wiring DOM: delegación de clicks + carga de datos
   // -----------------------------------------------------------------
 
-  // Mensajes de confirmación y éxito por función. Source-of-truth única
-  // para los textos visibles tras click en una acción backend.
-  const _CONFIRMS = {
-    'alta-paciente':    '¿Crear alta en Supabase y borrador de bienvenida?',
-    'repescar-paciente':'¿Crear borrador de repesca?',
-    'cerrar-paciente':  '¿Marcar paciente como cerrada? Podrás reactivarla después si vuelve.'
-  };
-
-  const _TOAST_OK = {
-    'alta-paciente':    'Alta creada. Revisa el borrador de bienvenida en Gmail.',
-    'repescar-paciente':'Borrador de repesca creado. Revísalo en Gmail antes de enviar.',
-    'cerrar-paciente':  'Paciente cerrada. La fila queda en Supabase para poder reactivarla.'
-  };
-
-  // Convierte el botón a modo copy (fallback): cambia data-bo-action, etiqueta
-  // y texto del toast. El siguiente click copiará el comando al portapapeles.
-  function _degradarAFallback(btn) {
-    if (!btn) return;
-    btn.setAttribute('data-bo-action', 'copy');
-    const etiqueta = 'Copiar comando';
-    btn.textContent = etiqueta;
-    btn.disabled = false;
-  }
-
-  function _setEstadoBoton(btn, estado) {
-    if (!btn) return;
-    if (estado === 'enviando') {
-      btn.disabled = true;
-      if (!btn.dataset.boEtiquetaOriginal) {
-        btn.dataset.boEtiquetaOriginal = btn.textContent;
-      }
-      btn.textContent = 'Enviando…';
-    } else if (estado === 'reset') {
-      btn.disabled = false;
-      if (btn.dataset.boEtiquetaOriginal) {
-        btn.textContent = btn.dataset.boEtiquetaOriginal;
-        delete btn.dataset.boEtiquetaOriginal;
-      }
-    }
-  }
-
-  // Despliega dos botones de motivo para /cerrar-paciente antes de invocar.
-  function _abrirFormCerrar(btn, payload, supa) {
-    if (!btn || !btn.parentNode) return;
-    if (btn.nextElementSibling && btn.nextElementSibling.classList &&
-        btn.nextElementSibling.classList.contains('bo-form-cerrar')) {
-      return;
-    }
-    const wrap = document.createElement('div');
-    wrap.className = 'bo-form-cerrar';
-    wrap.setAttribute('data-bo-form', 'cerrar-paciente');
-    wrap.innerHTML =
-      '<span class="bo-form-cerrar-etiqueta">Motivo de cierre:</span>' +
-      '<button type="button" class="bo-btn bo-btn-accion" data-bo-motivo="objetivo_cumplido">Objetivo cumplido</button>' +
-      '<button type="button" class="bo-btn bo-btn-accion" data-bo-motivo="baja_voluntaria">Baja voluntaria</button>' +
-      '<button type="button" class="bo-btn bo-btn-destructivo" data-bo-motivo="abandono">Abandono</button>' +
-      '<button type="button" class="bo-btn bo-btn-secundario" data-bo-form-cancel>Cancelar</button>';
-    btn.hidden = true;
-    btn.parentNode.insertBefore(wrap, btn.nextSibling);
-
-    wrap.addEventListener('click', async function (ev) {
-      const cancel = ev.target && ev.target.closest && ev.target.closest('[data-bo-form-cancel]');
-      if (cancel) {
-        ev.preventDefault();
-        wrap.remove();
-        btn.hidden = false;
-        return;
-      }
-      const motivoBtn = ev.target && ev.target.closest && ev.target.closest('[data-bo-motivo]');
-      if (!motivoBtn) return;
-      ev.preventDefault();
-      if (!window.confirm(_CONFIRMS['cerrar-paciente'])) return;
-      const motivo = motivoBtn.getAttribute('data-bo-motivo');
-      Array.from(wrap.querySelectorAll('button')).forEach(b => { b.disabled = true; });
-      motivoBtn.textContent = 'Enviando…';
-      const full = Object.assign({}, payload, { motivo: motivo });
-      const res = await BoUi.ejecutarEdgeFunction(supa, 'cerrar-paciente', full);
-      if (res.ok) {
-        BoUi.toast(_TOAST_OK['cerrar-paciente']);
-        wrap.remove();
-        btn.hidden = true;
-      } else {
-        BoUi.toast('No he podido ejecutar. Pulsa Copiar comando para hacerlo en Claude Code.');
-        wrap.remove();
-        btn.hidden = false;
-        _degradarAFallback(btn);
-      }
-    });
-  }
-
-  // Handler principal: despacha click a copy o backend según data-bo-action.
-  async function _manejarClickAccion(ev, supa) {
+  // Handler único: todos los botones del detalle son copy-command. El click
+  // copia `data-bo-comando` al portapapeles vía BoUi.copiarComando (que ya
+  // maneja toast + feedback visual en el botón).
+  async function _manejarClickAccion(ev /*, supa */) {
     const btn = ev.target && ev.target.closest && ev.target.closest('[data-bo-action]');
     if (!btn) return;
     ev.preventDefault();
-    const action = btn.getAttribute('data-bo-action') || 'copy';
-    if (action === 'copy') {
-      const comando = btn.getAttribute('data-bo-comando');
-      if (comando) await BoUi.copiarComando(comando, btn);
-      return;
-    }
-    // action === 'backend'
-    const fn = btn.getAttribute('data-bo-function');
-    if (!fn) return;
-    let payload = {};
-    try {
-      payload = JSON.parse(btn.getAttribute('data-bo-payload') || '{}');
-    } catch (_) { payload = {}; }
-
-    // Mini-form antes de invocar (cerrar-paciente pide motivo).
-    if (fn === 'cerrar-paciente') {
-      _abrirFormCerrar(btn, payload, supa);
-      return;
-    }
-
-    // Flujo común: confirm → invoke → toast.
-    const confirmMsg = _CONFIRMS[fn] || '¿Ejecutar acción?';
-    if (!window.confirm(confirmMsg)) return;
-    _setEstadoBoton(btn, 'enviando');
-    const res = await BoUi.ejecutarEdgeFunction(supa, fn, payload);
-    if (res.ok) {
-      BoUi.toast(_TOAST_OK[fn] || 'Acción completada.');
-      _setEstadoBoton(btn, 'reset');
-      btn.disabled = true; // evita doble click tras éxito
-      btn.textContent = 'Hecho';
-    } else {
-      BoUi.toast('No he podido ejecutar. Pulsa Copiar comando para hacerlo en Claude Code.');
-      _setEstadoBoton(btn, 'reset');
-      _degradarAFallback(btn);
-    }
+    const comando = btn.getAttribute('data-bo-comando');
+    if (comando) await BoUi.copiarComando(comando, btn);
   }
 
-  // Compat: se mantiene el nombre histórico. Acepta `supa` opcional —
-  // sin él, los clicks backend también degradan a fallback copy (útil para
-  // tests puros de DOM sin cliente Supabase).
-  function conectarClickCopiar(root, supa) {
+  function conectarClickCopiar(root /*, supa */) {
     if (!root || typeof root.addEventListener !== 'function') return;
     if (root.dataset && root.dataset.boBound === '1') return;
     root.addEventListener('click', function (ev) {
-      _manejarClickAccion(ev, supa);
+      _manejarClickAccion(ev);
     });
     if (root.dataset) root.dataset.boBound = '1';
   }
@@ -735,7 +537,8 @@
   // con createSignedUrl(path, 60, { download: filename }) y navegamos con
   // location.href — window.open tras await lo bloquea Safari (ver
   // convención mi-seguimiento-auth.md § PDF bucket + memoria
-  // feedback_safari_window_open_await).
+  // feedback_safari_window_open_await). Es la única excepción a la regla
+  // "todo en esta vista es copy-command".
   function conectarClickPdf(root, supa) {
     if (!root || typeof root.addEventListener !== 'function') return;
     if (root.dataset && root.dataset.boBoundPdf === '1') return;
@@ -853,12 +656,10 @@
     if (acc) {
       acc.innerHTML = renderAcciones({
         paciente: datos.paciente,
-        menus:    datos.menus,
-        checkins: datos.checkins,
         sesiones: datos.sesiones,
         hoy:      new Date()
       });
-      conectarClickCopiar(acc, supa);
+      conectarClickCopiar(acc);
     }
   }
 
