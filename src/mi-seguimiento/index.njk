@@ -2208,6 +2208,32 @@ appleTitle: "CLN"
     $('#ms-streak-num').textContent = '0';
   }
 
+  // Paciente cerrada (estado='cerrado' en Supabase): expediente sin acceso.
+  // La fila sigue ahí para poder reactivar si vuelve, pero la PWA no debe
+  // permitirle operar. Mostramos mensaje + botón logout. No cargamos menú
+  // ni checkins — hydrateDashboard corta antes.
+  async function showExpedienteCerrado() {
+    authedView.classList.add('is-cerrado');
+    const nombre = paciente && paciente.nombre ? primerNombre(paciente.nombre) : '';
+    const saludo = nombre ? 'Hola, ' + nombre + '.' : 'Hola.';
+    $('#ms-name').textContent = nombre || 'hola';
+    $('#ms-meals').innerHTML =
+      '<li class="ms-meal is-skeleton">' +
+        '<span class="ms-meal-time">Expediente cerrado</span>' +
+        '<p class="ms-meal-text">' + saludo + ' Tu expediente está cerrado ahora mismo. ' +
+        'Si quieres retomar la asesoría, escríbele a Cristina y te reactiva el acceso.</p>' +
+      '</li>';
+    $$('.ms-check-btn').forEach(b => b.disabled = true);
+    $('#ms-streak-num').textContent = '0';
+    const cta = $('#ms-revision-cta'); if (cta) cta.hidden = true;
+    // Cerramos sesión con un pequeño delay para que la paciente lea el mensaje.
+    try {
+      await new Promise(r => setTimeout(r, 2500));
+      await supa.auth.signOut();
+    } catch (e) { console.warn('signOut cerrado', e); }
+    window.location.replace('/mi-seguimiento/');
+  }
+
   // -------- orchestration --------
   async function hydrate() {
     renderDate();
@@ -2221,6 +2247,10 @@ appleTitle: "CLN"
     const result = await hydrateDashboard({ supa: supaDriver, paciente, now: new Date() });
 
     if (result.view === 'sin-paciente') { showSinPaciente(); return; }
+    // Gate estado cerrado: expediente fuera de servicio. Mostramos mensaje
+    // y hacemos signOut después de unos segundos. La fila sigue en Supabase
+    // (modelo binario desde 0014) para poder reactivar con /reactivar-paciente.
+    if (result.view === 'cerrado') { await showExpedienteCerrado(); return; }
     // Gate M1: sin anamnesis, la paciente no ve /mi-seguimiento/ — completa
     // /mi-seguimiento/empezar/ primero; al enviar, vuelve y pasa el gate.
     if (result.view === 'redirect-empezar') {

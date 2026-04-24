@@ -643,6 +643,10 @@
   //
   // `view` decide el flujo:
   //   - 'sin-paciente'    : showSinPaciente().
+  //   - 'cerrado'         : estado='cerrado' en Supabase → pantalla "expediente
+  //                          cerrado" + logout. La fila sigue existiendo para
+  //                          poder reactivarla, pero la paciente no puede
+  //                          operar. Modelo binario desde 0014.
   //   - 'redirect-empezar': window.location.replace('/mi-seguimiento/empezar/').
   //   - 'locked'          : menú no disponible → .is-locked, oculta interacciones.
   //   - 'normal'          : render completo (meals, streak, calendar, compra, CTA revisión, PDF).
@@ -655,6 +659,9 @@
     const paciente = o.paciente;
     const now = o.now instanceof Date ? o.now : new Date();
     if (!paciente) return { view: 'sin-paciente' };
+    // Cerrada: cortamos aquí antes de decidir nada más. No carga menú, no
+    // carga checkins — nada. El index.njk muestra pantalla de cierre + logout.
+    if (paciente.estado === 'cerrado') return { view: 'cerrado' };
     if (!paciente.anamnesis_completed_at) return { view: 'redirect-empezar' };
 
     const today = toISO(now);

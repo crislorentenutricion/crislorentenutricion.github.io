@@ -277,7 +277,7 @@ test("build: backoffice-paciente.js desplegado incluye lógica de acciones backe
   // Confirmaciones específicas de las skills backend que siguen vivas:
   // /repescar-paciente y /cerrar-paciente.
   assert.match(js, /Crear borrador de repesca/);
-  assert.match(js, /Marcar paciente como cerrado/);
+  assert.match(js, /Marcar paciente como cerrada/);
 });
 
 test("build: ui.js desplegado expone ejecutarEdgeFunction", () => {

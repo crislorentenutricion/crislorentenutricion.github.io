@@ -411,22 +411,23 @@ test("sesionesProximos7Dias: excluye sesiones pasadas", () => {
   assert.equal(r.length, 0);
 });
 
-test("sesionesProximos7Dias: excluye pacientes cerradas y en pausa", () => {
+test("sesionesProximos7Dias: excluye pacientes cerradas", () => {
+  // Modelo binario (migración 0014): solo 'activo' | 'cerrado'.
+  // Ya no existe 'pausa' — si legacy lo tuviera se trata como activo (el
+  // CHECK lo rechazaría igualmente, pero dejamos la defensa implícita).
   const datos = {
     pacientes: [
       { id: "p1", nombre: "CERRADA", estado: "cerrado", alta: "2025-01-01" },
-      { id: "p2", nombre: "PAUSA",   estado: "pausa",   alta: "2025-01-01" },
-      { id: "p3", nombre: "ANA",     estado: "activo",  alta: "2026-01-01" }
+      { id: "p2", nombre: "ANA",     estado: "activo",  alta: "2026-01-01" }
     ],
     sesiones: [
       { id: "s1", paciente_id: "p1", fecha: "2026-04-23T10:00:00" },
-      { id: "s2", paciente_id: "p2", fecha: "2026-04-23T11:00:00" },
-      { id: "s3", paciente_id: "p3", fecha: "2026-04-23T12:00:00" }
+      { id: "s2", paciente_id: "p2", fecha: "2026-04-23T11:00:00" }
     ]
   };
   const r = sesionesProximos7Dias(datos, HOY);
   assert.equal(r.length, 1);
-  assert.equal(r[0].pacienteId, "p3");
+  assert.equal(r[0].pacienteId, "p2");
 });
 
 test("sesionesProximos7Dias: ordena ascendente por timestamp", () => {

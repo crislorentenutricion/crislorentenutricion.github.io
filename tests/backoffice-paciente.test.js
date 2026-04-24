@@ -289,14 +289,33 @@ test("BoPaciente.renderAcciones: /agendar NO aparece si paciente cerrada", () =>
   assert.ok(!/data-bo-comando="\/agendar/.test(html));
 });
 
-test("BoPaciente.renderAcciones: /cerrar-paciente siempre aparece como backend destructivo", () => {
+test("BoPaciente.renderAcciones: /cerrar-paciente aparece como backend NO destructivo si activa", () => {
+  // Desde 0014 (modelo binario) el cierre NO es destructivo: marca
+  // estado='cerrado' + closed_at + close_reason. La fila se conserva para
+  // reactivación. Destructivo (bo-btn-destructivo) queda reservado para
+  // /borrar-paciente-rgpd, que solo aparece cuando la paciente ya está
+  // cerrada.
   const html = BoPaciente.renderAcciones(_ctxBase());
   assert.match(html, /data-bo-function="cerrar-paciente"/);
   assert.match(html, /&quot;paciente_id&quot;:&quot;p1&quot;/);
   assert.match(html, /data-bo-comando="\/cerrar-paciente MARTA"/); // fallback
-  assert.match(html, /bo-btn-destructivo/);
-  // Etiqueta: "Cerrar paciente" (no color)
+  // NO debe tener clase destructiva — cerrar ya no es irreversible.
+  assert.ok(!/bo-btn-accion[^"]*bo-btn-destructivo/.test(html) &&
+           !/bo-btn-destructivo[^"]*cerrar-paciente/.test(html));
   assert.match(html, />Cerrar paciente</);
+});
+
+test("BoPaciente.renderAcciones: paciente cerrada expone /reactivar-paciente y /borrar-paciente-rgpd", () => {
+  // Modelo binario: cuando está cerrada, las acciones disponibles son
+  // reactivar (volver a 'activo') y borrar RGPD (destructivo, solo bajo
+  // petición del titular). El botón Cerrar desaparece.
+  const html = BoPaciente.renderAcciones(_ctxBase({
+    paciente: { id: "p1", nombre: "MARTA", estado: "cerrado" }
+  }));
+  assert.match(html, /data-bo-comando="\/reactivar-paciente MARTA"/);
+  assert.match(html, /data-bo-comando="\/borrar-paciente-rgpd MARTA"/);
+  assert.match(html, /bo-btn-destructivo/); // Borrar RGPD sí es destructivo
+  assert.ok(!/\/cerrar-paciente/.test(html));
 });
 
 test("BoPaciente.renderAcciones: /alta-paciente aparece como copy solo si estado alta_pendiente", () => {
