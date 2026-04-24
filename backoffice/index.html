@@ -235,6 +235,33 @@
       font-size: 0.85rem;
       color: #6b7280;
     }
+    /* Link de la fila ocupa todo el ancho disponible cuando hay un sibling
+       (botón o badge) a la derecha. La fila ya es flex; el <a> hereda el
+       comportamiento de meta y empuja la acción al final. */
+    .bo-fila-link-row {
+      display: flex;
+      flex: 1;
+      min-width: 0;
+      text-decoration: none;
+      color: inherit;
+    }
+    .bo-fila-link-row:hover .bo-fila-nombre { color: var(--color-green-dark); }
+    /* Badge de aviso (p.ej. "Anamnesis pendiente"): no es un botón, solo
+       informa por qué la acción no está disponible. Tono ámbar para que
+       Cristina lo identifique a primera vista sin depender solo del color
+       (el texto explícito + tooltip lo dejan claro). */
+    .bo-fila-warning {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: help;
+      white-space: nowrap;
+    }
 
     /* Botones copy-command: "pulsa Copiar comando" (no se identifica por
        color, se identifica por etiqueta — feedback_copy_etiquetas_ui.md). */

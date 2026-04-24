@@ -350,7 +350,16 @@
       }
 
       // Bloque 2: menús a crear esta semana. Solo activas.
+      // `anamnesisLista` decide si el bloque ofrece botón "Crear menú con
+      // Claude" (anamnesis rellena → se puede crear) o un aviso "Anamnesis
+      // pendiente" (no rellena → bloquea, hay que esperar al onboarding de
+      // la paciente). Fuente de verdad: `anamnesis_completed_at` (timestamp
+      // que se setea cuando la paciente envía el formulario). Si la columna
+      // no se cargó (caller antiguo), asumimos rellena para no bloquear UX.
       if (activa && _necesitaMenuNuevo(menuVig, hoyMid, vigenciaDias)) {
+        const anamnesisLista = p.anamnesis_completed_at == null
+          ? false
+          : true;
         menusCrearSemana.push({
           pacienteId: p.id,
           nombre: p.nombre,
@@ -358,6 +367,7 @@
           diasParaCaducar: menuVig
             ? vigenciaDias - diffEnDias(_toMidnight(menuVig.vigente_desde), hoyMid)
             : null,
+          anamnesisLista: anamnesisLista,
           comando: generarComando('crear-menu', p.nombre)
         });
       }
