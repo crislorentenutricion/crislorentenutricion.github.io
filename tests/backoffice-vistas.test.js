@@ -98,13 +98,54 @@ test("BoHoy.renderFilaSesion: incluye nombre en Title Case, hora y link al detal
     pacienteId: "p1",
     nombre: "MARTA PÉREZ",
     hora: "10:30",
-    comando: "/seguimiento-paciente MARTA PÉREZ"
+    comando: "/seguimiento-paciente MARTA PÉREZ",
+    tipo: "seguimiento"
   });
   assert.match(html, /data-bo-fila="sesion"/);
   assert.match(html, />Marta Pérez</);           // Title Case en copy UI
   assert.match(html, />10:30</);
   assert.match(html, /href="\/backoffice\/paciente\/\?id=p1"/);
   assert.ok(!/data-bo-comando=/.test(html), "la vista Hoy no debe incluir botones copy");
+});
+
+test("BoHoy.renderFilaSesion: tipo='seguimiento' → badge verde 'Seguimiento'", () => {
+  const html = BoHoy.renderFilaSesion({
+    pacienteId: "p1", nombre: "MARTA", hora: "10:30", tipo: "seguimiento"
+  });
+  assert.match(html, /class="bo-fila-tag is-seguimiento"/);
+  assert.match(html, /data-bo-tag="seguimiento"/);
+  assert.match(html, />Seguimiento</);
+});
+
+test("BoHoy.renderFilaSesion: tipo='valoracion' → badge azul 'Primera consulta', sin link al detalle", () => {
+  // Una valoración es un prospecto pre-pago: no hay fila en `pacientes`
+  // todavía, así que la fila no enlaza a /backoffice/paciente/.
+  const html = BoHoy.renderFilaSesion({
+    pacienteId: null, nombre: "JORGE NAVARRO", hora: "11:00", tipo: "valoracion"
+  });
+  assert.match(html, /class="bo-fila-tag is-valoracion"/);
+  assert.match(html, /data-bo-tag="valoracion"/);
+  assert.match(html, />Primera consulta</);
+  assert.match(html, />Jorge Navarro</);
+  assert.ok(!/<a class="bo-fila-link-row"/.test(html), "valoración no debe llevar <a> a paciente");
+  assert.match(html, /<div class="bo-fila-link-row">/);
+});
+
+test("BoHoy.renderFilaProximaSesion: badge según tipo, link solo si hay paciente", () => {
+  const seg = BoHoy.renderFilaProximaSesion({
+    pacienteId: "px", nombre: "MARTA", fechaISO: "2026-04-25",
+    hora: "10:30", diaLabel: "Sáb 25 abr", tipo: "seguimiento"
+  });
+  assert.match(seg, /class="bo-fila-tag is-seguimiento"/);
+  assert.match(seg, /href="\/backoffice\/paciente\/\?id=px"/);
+
+  const val = BoHoy.renderFilaProximaSesion({
+    pacienteId: null, nombre: "ANTONIA MARCO", fechaISO: "2026-04-30",
+    hora: "09:00", diaLabel: "Jue 30 abr", tipo: "valoracion"
+  });
+  assert.match(val, /class="bo-fila-tag is-valoracion"/);
+  assert.match(val, />Primera consulta</);
+  assert.ok(!/<a class="bo-fila-link-row"/.test(val), "valoración sin link");
 });
 
 test("BoHoy.renderFilaMenuCrear: muestra 'Sin menú vigente' cuando diasParaCaducar es null", () => {

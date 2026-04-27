@@ -6,11 +6,14 @@
 // Node tests: `require('./logic.js')` devuelve la misma API.
 //
 // Convenciones de datos (esquema Supabase, ver supabase/migrations/*):
-//   pacientes: { id, email, nombre (MAYÚSCULAS), estado ('activo'|'cerrado'), alta, closed_at, close_reason }
+//   pacientes:    { id, email, nombre (MAYÚSCULAS), estado ('activo'|'cerrado'), alta, closed_at, close_reason }
 //   Estado binario estricto desde 0014_paciente_estados.sql — sin 'pausa' ni variantes.
-//   menus:     { id, paciente_id, numero, vigente_desde (date YYYY-MM-DD), pdf_url }
-//   sesiones:  { id, paciente_id, fecha (timestamptz ISO), calendar_event_id }
-//   checkins:  { paciente_id, fecha (date YYYY-MM-DD), estado }
+//   menus:        { id, paciente_id, numero, vigente_desde (date YYYY-MM-DD), pdf_url }
+//   sesiones:     { id, paciente_id, fecha (timestamptz ISO), calendar_event_id }
+//   checkins:     { paciente_id, fecha (date YYYY-MM-DD), estado }
+//   valoraciones: { id, nombre, email, telefono, fecha (timestamptz), calendar_event_id,
+//                   status ('confirmed'|'cancelled'|'no_show'|'converted') } — primeras
+//   consultas (prospectos pre-pago, ver 0016_valoraciones.sql).
 //
 // Vigencia del menú: el schema solo tiene `vigente_desde`. El menú CLN es
 // mensual (ver convenciones/clinica/plan-nutricional.md), así que asumimos
@@ -253,15 +256,23 @@
   // criterio que `sesionesHoy`: si están cerradas, no debería contactarlas
   // aunque haya un evento residual en Calendar/Supabase).
   //
+  // Mezcla dos fuentes:
+  //   - `sesiones` (seguimiento mensual de pacientes activas) → tipo='seguimiento'
+  //   - `valoraciones` con status='confirmed' (primera consulta de prospectos)
+  //     → tipo='valoracion'
+  //
   // Devuelve items para renderizar:
-  //   { pacienteId, nombre, fechaISO, hora, diaLabel, comando }
-  // Orden: ascendente por timestamp completo (no solo por día). Dos sesiones
-  // el mismo día se ordenan por hora.
+  //   { pacienteId, nombre, fechaISO, hora, diaLabel, comando, tipo }
+  // Las valoraciones llevan pacienteId=null (aún no son pacientes) y comando=''
+  // (la skill /reagendar las mueve solo en Calendar; la fila no expone botón
+  // copy en esta vista).
+  // Orden: ascendente por timestamp completo. Mismo día → orden por hora.
   function sesionesProximos7Dias(datos, hoy) {
-    const pacientes = (datos && datos.pacientes) || [];
-    const sesiones  = (datos && datos.sesiones)  || [];
-    const opts      = (datos && datos.opts)      || {};
-    const ventana   = opts.ventanaProximos || DIAS_VENTANA_PROXIMOS;
+    const pacientes    = (datos && datos.pacientes)    || [];
+    const sesiones     = (datos && datos.sesiones)     || [];
+    const valoraciones = (datos && datos.valoraciones) || [];
+    const opts         = (datos && datos.opts)         || {};
+    const ventana      = opts.ventanaProximos || DIAS_VENTANA_PROXIMOS;
 
     const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
     const pacienteById = new Map();
@@ -271,6 +282,8 @@
     }
 
     const items = [];
+
+    // Seguimientos: solo pacientes activas con sesiones en la ventana.
     for (const s of sesiones) {
       const fechaMid = _toMidnight(s.fecha);
       if (!fechaMid) continue;
@@ -288,6 +301,27 @@
         hora: _horaSesion(fechaCompleta),
         diaLabel: _diaLabel(fechaMid, hoyMid),
         comando: generarComando('seguimiento-paciente', p.nombre),
+        tipo: 'seguimiento',
+        _ts: fechaCompleta.getTime()
+      });
+    }
+
+    // Valoraciones (primera consulta): solo confirmed en la ventana.
+    for (const v of valoraciones) {
+      if (!v || v.status !== 'confirmed') continue;
+      const fechaMid = _toMidnight(v.fecha);
+      if (!fechaMid) continue;
+      const diff = diffEnDias(hoyMid, fechaMid);
+      if (diff < 1 || diff > ventana) continue;
+      const fechaCompleta = new Date(v.fecha);
+      items.push({
+        pacienteId: null,
+        nombre: v.nombre || '',
+        fechaISO: _toISO(fechaMid),
+        hora: _horaSesion(fechaCompleta),
+        diaLabel: _diaLabel(fechaMid, hoyMid),
+        comando: '',
+        tipo: 'valoracion',
         _ts: fechaCompleta.getTime()
       });
     }
@@ -305,7 +339,8 @@
         fechaISO: it.fechaISO,
         hora: it.hora,
         diaLabel: it.diaLabel,
-        comando: it.comando
+        comando: it.comando,
+        tipo: it.tipo
       };
     });
   }
@@ -315,11 +350,12 @@
   // -----------------------------------------------------------------
 
   function agruparHoy(datos, hoy) {
-    const pacientes = (datos && datos.pacientes) || [];
-    const menus     = (datos && datos.menus)     || [];
-    const sesiones  = (datos && datos.sesiones)  || [];
-    const checkins  = (datos && datos.checkins)  || [];
-    const opts      = (datos && datos.opts)      || {};
+    const pacientes    = (datos && datos.pacientes)    || [];
+    const menus        = (datos && datos.menus)        || [];
+    const sesiones     = (datos && datos.sesiones)     || [];
+    const checkins     = (datos && datos.checkins)     || [];
+    const valoraciones = (datos && datos.valoraciones) || [];
+    const opts         = (datos && datos.opts)         || {};
     const vigenciaDias  = opts.vigenciaDias || VIGENCIA_DIAS_DEFAULT;
     const diasSilencio  = opts.diasSilencio || DIAS_SIN_CHECKIN_ALERTA;
 
@@ -347,7 +383,9 @@
               pacienteId: p.id,
               nombre: p.nombre,
               hora: _horaSesion(s.fecha),
-              comando: generarComando('seguimiento-paciente', p.nombre)
+              comando: generarComando('seguimiento-paciente', p.nombre),
+              tipo: 'seguimiento',
+              _ts: new Date(s.fecha).getTime()
             });
           }
         }
@@ -392,11 +430,35 @@
       }
     }
 
-    // Orden estable: sesiones por hora ascendente, resto por nombre.
+    // Bloque 1bis: valoraciones (primera consulta) confirmadas hoy.
+    // No tienen pacienteId (son prospectos pre-pago) ni comando copy en
+    // esta vista. Se mezclan con seguimientos en `sesionesHoy`; el badge en
+    // el render distingue tipo='valoracion' (azul) vs 'seguimiento' (verde).
+    for (const v of valoraciones) {
+      if (!v || v.status !== 'confirmed') continue;
+      const fechaMid = _toMidnight(v.fecha);
+      if (!fechaMid || fechaMid.getTime() !== hoyMid.getTime()) continue;
+      sesionesHoy.push({
+        pacienteId: null,
+        nombre: v.nombre || '',
+        hora: _horaSesion(v.fecha),
+        comando: '',
+        tipo: 'valoracion',
+        _ts: new Date(v.fecha).getTime()
+      });
+    }
+
+    // Orden estable: sesiones por timestamp asc (mantiene sub-orden por hora
+    // dentro del mismo día y mezcla bien seguimientos + valoraciones que
+    // pueden tener idéntica hora pero distinto segundo). Empate → nombre.
     sesionesHoy.sort(function (a, b) {
-      if (a.hora !== b.hora) return a.hora.localeCompare(b.hora);
-      return a.nombre.localeCompare(b.nombre, 'es');
+      const at = a._ts == null ? 0 : a._ts;
+      const bt = b._ts == null ? 0 : b._ts;
+      if (at !== bt) return at - bt;
+      return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es');
     });
+    // _ts es privado del sort; no lo exponemos al render.
+    for (const s of sesionesHoy) delete s._ts;
     menusCrearSemana.sort(function (a, b) {
       // más urgentes primero (diasParaCaducar más bajo; null = sin menú = muy urgente).
       const da = a.diasParaCaducar == null ? -Infinity : a.diasParaCaducar;
@@ -414,8 +476,9 @@
     // Bloque 4: próximos 7 días (mañana → +7). Reutiliza la función pura
     // exportada para que tenga su propio set de tests y se pueda invocar
     // sola. El opts también se le pasa por si se quiere acotar la ventana.
+    // Pasamos también valoraciones para que se mezclen con seguimientos.
     const proximos7Dias = sesionesProximos7Dias(
-      { pacientes, sesiones, opts },
+      { pacientes, sesiones, valoraciones, opts },
       hoyMid
     );
 

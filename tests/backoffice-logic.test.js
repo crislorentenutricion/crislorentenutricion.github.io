@@ -445,7 +445,7 @@ test("sesionesProximos7Dias: ordena ascendente por timestamp", () => {
   assert.deepEqual(r.map(s => s.pacienteId), ["p2", "p1"]);
 });
 
-test("sesionesProximos7Dias: cada item lleva pacienteId, nombre, fechaISO, hora, diaLabel, comando", () => {
+test("sesionesProximos7Dias: cada item lleva pacienteId, nombre, fechaISO, hora, diaLabel, comando, tipo", () => {
   const datos = {
     pacientes: [{ id: "p1", nombre: "ANA GARCIA", estado: "activo", alta: "2026-01-01" }],
     sesiones: [{ id: "s1", paciente_id: "p1", fecha: "2026-04-23T10:30:00" }]
@@ -458,6 +458,7 @@ test("sesionesProximos7Dias: cada item lleva pacienteId, nombre, fechaISO, hora,
   assert.equal(item.fechaISO, "2026-04-23");
   assert.equal(item.hora, "10:30");
   assert.equal(item.comando, "/seguimiento-paciente ANA GARCIA");
+  assert.equal(item.tipo, "seguimiento");
   assert.ok(typeof item.diaLabel === "string" && item.diaLabel.length > 0);
 });
 
@@ -491,6 +492,120 @@ test("sesionesProximos7Dias: ventana acotable vía opts.ventanaProximos", () => 
   };
   const r = sesionesProximos7Dias(datos, HOY);
   assert.equal(r.length, 0, "+3 fuera de ventana de 2 días");
+});
+
+// ===================================================================
+// valoraciones (primera consulta) — mezcla con seguimientos
+// ===================================================================
+
+test("sesionesProximos7Dias: incluye valoraciones confirmed con tipo='valoracion' y pacienteId=null", () => {
+  const datos = {
+    pacientes: [],
+    sesiones: [],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE NAVARRO", email: "j@x", fecha: "2026-04-23T11:00:00", status: "confirmed" }
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].tipo, "valoracion");
+  assert.equal(r[0].pacienteId, null);
+  assert.equal(r[0].nombre, "JORGE NAVARRO");
+  assert.equal(r[0].hora, "11:00");
+  assert.equal(r[0].comando, "");
+});
+
+test("sesionesProximos7Dias: ignora valoraciones con status != confirmed", () => {
+  const datos = {
+    pacientes: [],
+    sesiones: [],
+    valoraciones: [
+      { id: "v1", nombre: "X", email: "x@x", fecha: "2026-04-23T11:00:00", status: "cancelled" },
+      { id: "v2", nombre: "Y", email: "y@x", fecha: "2026-04-23T12:00:00", status: "no_show" },
+      { id: "v3", nombre: "Z", email: "z@x", fecha: "2026-04-23T13:00:00", status: "confirmed" }
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].nombre, "Z");
+});
+
+test("sesionesProximos7Dias: ordena seguimientos y valoraciones mezclados por timestamp", () => {
+  const datos = {
+    pacientes: [{ id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" }],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-23T15:00:00" } // +1 15:00
+    ],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE", email: "j@x", fecha: "2026-04-23T10:00:00", status: "confirmed" }, // +1 10:00
+      { id: "v2", nombre: "ANTONIA", email: "a@x", fecha: "2026-04-24T09:00:00", status: "confirmed" }  // +2 09:00
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.deepEqual(r.map(x => x.nombre), ["JORGE", "ANA", "ANTONIA"]);
+  assert.deepEqual(r.map(x => x.tipo), ["valoracion", "seguimiento", "valoracion"]);
+});
+
+test("sesionesProximos7Dias: respeta la ventana también para valoraciones", () => {
+  const datos = {
+    pacientes: [],
+    sesiones: [],
+    valoraciones: [
+      { id: "v1", nombre: "X", email: "x@x", fecha: "2026-04-22T10:00:00", status: "confirmed" }, // hoy → fuera
+      { id: "v2", nombre: "Y", email: "y@x", fecha: "2026-04-30T10:00:00", status: "confirmed" }  // +8 → fuera
+    ]
+  };
+  const r = sesionesProximos7Dias(datos, HOY);
+  assert.equal(r.length, 0);
+});
+
+test("agruparHoy: sesionesHoy mezcla seguimiento y valoración del día con tipo correspondiente", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "ANA", estado: "activo", alta: "2026-01-01" }
+    ],
+    menus: [],
+    sesiones: [
+      { id: "s1", paciente_id: "p1", fecha: "2026-04-22T17:00:00" }
+    ],
+    checkins: [{ paciente_id: "p1", fecha: "2026-04-21", estado: "seguido" }],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE", email: "j@x", fecha: "2026-04-22T10:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.sesionesHoy.length, 2);
+  // 10:00 antes que 17:00.
+  assert.equal(r.sesionesHoy[0].tipo, "valoracion");
+  assert.equal(r.sesionesHoy[0].nombre, "JORGE");
+  assert.equal(r.sesionesHoy[0].pacienteId, null);
+  assert.equal(r.sesionesHoy[1].tipo, "seguimiento");
+  assert.equal(r.sesionesHoy[1].nombre, "ANA");
+});
+
+test("agruparHoy: valoración cancelled no aparece en sesionesHoy", () => {
+  const datos = {
+    pacientes: [],
+    menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "X", email: "x@x", fecha: "2026-04-22T10:00:00", status: "cancelled" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.sesionesHoy.length, 0);
+});
+
+test("agruparHoy: valoración futura aparece en proximos7Dias y NO en sesionesHoy", () => {
+  const datos = {
+    pacientes: [], menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE NAVARRO", email: "j@x", fecha: "2026-04-23T11:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.sesionesHoy.length, 0);
+  assert.equal(r.proximos7Dias.length, 1);
+  assert.equal(r.proximos7Dias[0].tipo, "valoracion");
 });
 
 test("agruparHoy: ahora también devuelve proximos7Dias", () => {

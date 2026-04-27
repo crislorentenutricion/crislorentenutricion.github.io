@@ -262,6 +262,28 @@
       cursor: help;
       white-space: nowrap;
     }
+    /* Badge de tipo de cita (sesiones hoy + próximos 7 días): identifica si
+       es seguimiento mensual de paciente (verde) o primera consulta de
+       prospecto (azul). Mismo formato pill que .bo-fila-warning, distinto
+       color. El texto explícito ya distingue — el color es refuerzo. */
+    .bo-fila-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .bo-fila-tag.is-seguimiento {
+      background: #e7f3ec;
+      color: #2d5a3d;
+      border: 1px solid #b7d6c1;
+    }
+    .bo-fila-tag.is-valoracion {
+      background: #e0f2fe;
+      color: #075985;
+      border: 1px solid #93c5fd;
+    }
 
     /* Botones copy-command: "pulsa Copiar comando" (no se identifica por
        color, se identifica por etiqueta — feedback_copy_etiquetas_ui.md). */
