@@ -609,12 +609,14 @@ function skillsEnDisco() {
   return null; // ninguna accesible
 }
 
-test("sanity: SKILLS_VALIDAS alineada con .claude/skills/ en disco", () => {
+test("sanity: SKILLS_VALIDAS alineada con .claude/skills/ en disco", (t) => {
   const enDisco = skillsEnDisco();
   if (!enDisco) {
-    // Ambos paths fallan: no podemos validar desde filesystem. No queremos
-    // tirar el test en CI; log y skip suave.
-    console.log("  (skills en disco no accesibles — skip validación FS)");
+    // Ambos paths fallan: no podemos validar desde filesystem (caso típico:
+    // CI público sin acceso al repo principal con `.claude/`). Marcamos como
+    // skipped para que aparezca explícito en el reporter — un "✓ pass" sería
+    // engañoso aquí.
+    t.skip("skills en disco no accesibles (FS lookup vacío)");
     return;
   }
   // Cada skill en disco debe estar en SKILLS_VALIDAS
