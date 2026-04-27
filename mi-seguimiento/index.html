@@ -1467,7 +1467,7 @@
     <header class="ms-hero">
       <div class="ms-hero-text">
         <p class="ms-eyebrow" id="ms-date"><span class="sk-line sk-line--eyebrow" aria-hidden="true"></span></p>
-        <h1 class="ms-greeting">Buenos días, <em id="ms-name"><span class="sk-line sk-line--name" aria-hidden="true"></span></em></h1>
+        <h1 class="ms-greeting"><span id="ms-greeting-word">Buenos días</span>, <em id="ms-name"><span class="sk-line sk-line--name" aria-hidden="true"></span></em></h1>
       </div>
       <div class="ms-streak" aria-label="Racha de días seguidos">
         <svg class="ms-flame" viewBox="0 0 24 24" aria-hidden="true">
@@ -1738,7 +1738,7 @@
     toISO, detectarMilestone, countStreak, detectarRachaRota,
     tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa,
     detectPlatform, detectInAppBrowser, nombreAppEmbebida,
-    esErrorTransitorio, primerNombre, primerNombreDesdeEmail,
+    esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora,
     slugifyItem, compraStorageKey, totalItemsCompra, displayCat,
     validateLoginForm, validateOtpCode, resolveInitialLogin,
     shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone,
@@ -1851,6 +1851,7 @@
     const d = new Date();
     $('#ms-date').textContent  = capitalize(d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }));
     $('#ms-month').textContent = d.toLocaleDateString('es-ES', { month: 'long' });
+    const g = $('#ms-greeting-word'); if (g) g.textContent = saludoPorHora(d.getHours());
   }
 
   // -------- platform + in-app detection (A3/A4) --------
