@@ -415,7 +415,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
   padding: 60px 0;
 }
-.hero-centered { grid-template-columns: 1fr; max-width: 680px; text-align: center; margin: 0 auto; padding: 80px 0; }
+.hero-centered { grid-template-columns: 1fr; max-width: 680px; text-align: center; margin: 0 auto; padding-top: 80px; padding-bottom: 80px; }
 .hero-text h1 { margin-bottom: 24px; }
 .hero-text .hero-label {
   display: inline-block;
@@ -1418,7 +1418,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   .footer-nav { grid-template-columns: 1fr; }
   .article-hero-img img { height: 240px; }
   .hero-home { min-height: auto; padding: 40px 0; }
-  .hero-centered { padding: 48px 0; }
+  .hero-centered { padding-top: 48px; padding-bottom: 48px; }
   h1 { font-size: clamp(1.75rem, 7vw, 2.4rem); hyphens: auto; -webkit-hyphens: auto; }
   h2 { hyphens: auto; -webkit-hyphens: auto; }
   .philosophy-quote { padding: 32px 22px; }
