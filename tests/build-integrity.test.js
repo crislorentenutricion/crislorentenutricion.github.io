@@ -112,6 +112,23 @@ test("stub de redirect /servicios/ mantiene canonical + meta refresh", () => {
   assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
 });
 
+test("header tiene dropdown 'Servicios' con Método, Pérdida de peso y Menú mensual", () => {
+  // Las landings /perdida-peso-sostenible/ y /menu-mensual-personalizado/ son destinos de
+  // tráfico pagado (Google Ads) y SEO, pero estaban huérfanas del menú principal: el visitante
+  // que aterrizaba no podía navegar a las otras. Encajadas como dropdown bajo "Servicios"
+  // (que sustituye a "Método" como ítem plano; Método sigue accesible dentro del dropdown).
+  const file = path.join(SITE, "index.html");
+  const html = fs.readFileSync(file, "utf8");
+  const navMatch = html.match(/<nav class="main-nav"[\s\S]*?<\/nav>/);
+  assert.ok(navMatch, "no se encontró <nav.main-nav> en la home");
+  const nav = navMatch[0];
+  assert.match(nav, /class="dropdown-toggle"[^>]*aria-haspopup="menu"[^>]*aria-expanded="false"/, "falta el toggle del dropdown con aria-haspopup");
+  assert.match(nav, /class="dropdown-toggle"[\s\S]{0,200}?Servicios/, "el toggle no tiene la etiqueta 'Servicios'");
+  assert.match(nav, /<a[^>]+href="\/metodo\/"[^>]*>\s*Método/, "falta enlace Método en el dropdown");
+  assert.match(nav, /<a[^>]+href="\/perdida-peso-sostenible\/"/, "falta enlace a /perdida-peso-sostenible/");
+  assert.match(nav, /<a[^>]+href="\/menu-mensual-personalizado\/"/, "falta enlace a /menu-mensual-personalizado/");
+});
+
 test("ninguna página HTML del site contiene 'asesoría alimentaria' (marca es 'nutricional')", () => {
   // Regla de marca de CLAUDE.md. Scan completo del _site/ — no basta con páginas core,
   // el fallo de marca también puede aparecer en posts de blog o landings.
