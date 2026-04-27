@@ -22,6 +22,7 @@ const {
   slugifyItem,
   compraStorageKey,
   totalItemsCompra,
+  displayCat,
   normalizeEmail,
   validateLoginForm,
   validateOtpCode,
@@ -740,6 +741,27 @@ test("totalItemsCompra: lista vacía → 0", () => {
 test("totalItemsCompra: lista null/undefined → 0 (no revienta)", () => {
   assert.equal(totalItemsCompra(null), 0);
   assert.equal(totalItemsCompra(undefined), 0);
+});
+
+// -------------------------------- displayCat ------------------------------
+
+test("displayCat: categoría toda en MAYÚSCULAS → sentence-case (compat menús viejos)", () => {
+  assert.equal(displayCat('CARNES Y PESCADOS'), 'Carnes y pescados');
+  assert.equal(displayCat('FRUTAS'), 'Frutas');
+  assert.equal(displayCat('FRUTOS SECOS Y VARIOS'), 'Frutos secos y varios');
+});
+
+test("displayCat: categoría en Title Case → tal cual (taxonomía nueva)", () => {
+  assert.equal(displayCat('Fruta y verdura'), 'Fruta y verdura');
+  assert.equal(displayCat('Marisco y pescado'), 'Marisco y pescado');
+  assert.equal(displayCat('Aceite, especias y salsas'), 'Aceite, especias y salsas');
+});
+
+test("displayCat: vacío / no-string → ''", () => {
+  assert.equal(displayCat(''), '');
+  assert.equal(displayCat(null), '');
+  assert.equal(displayCat(undefined), '');
+  assert.equal(displayCat(42), '');
 });
 
 // ------------------------- normalizeEmail / validateLoginForm --------------

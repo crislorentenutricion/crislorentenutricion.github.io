@@ -298,6 +298,18 @@
     return (menu && menu.id) ? ('ms-compra-' + menu.id) : null;
   }
 
+  // Nombre de categoría listo para pintar. Si llega en MAYÚSCULAS (menús
+  // pre-2026-04-27 con la taxonomía vieja) lo normaliza a sentence-case
+  // ('CARNES Y PESCADOS' → 'Carnes y pescados') para que conviva sin chillar
+  // con la taxonomía nueva en Title Case ('Fruta y verdura', que se devuelve
+  // tal cual).
+  function displayCat(cat) {
+    if (typeof cat !== 'string' || !cat) return '';
+    const isAllUpper = cat === cat.toUpperCase() && cat !== cat.toLowerCase();
+    if (!isAllUpper) return cat;
+    return cat[0] + cat.slice(1).toLowerCase();
+  }
+
   // Nº total de items en la lista de compra. Itera las claves del JSON tal cual
   // — la taxonomía la decide la skill /crear-menu, no el cliente.
   function totalItemsCompra(lista) {
@@ -718,7 +730,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, slugifyItem, compraStorageKey, totalItemsCompra, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

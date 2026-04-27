@@ -928,7 +928,7 @@ appleTitle: "CLN"
     outline-offset: -2px;
     border-radius: 16px;
   }
-  .ms-compra-cat-name { flex: 1; text-transform: lowercase; }
+  .ms-compra-cat-name { flex: 1; }
   .ms-compra-cat-count {
     font-family: var(--font-family);
     font-style: normal;
@@ -1610,7 +1610,7 @@ appleTitle: "CLN"
     tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa,
     detectPlatform, detectInAppBrowser, nombreAppEmbebida,
     esErrorTransitorio, primerNombre, primerNombreDesdeEmail,
-    slugifyItem, compraStorageKey, totalItemsCompra,
+    slugifyItem, compraStorageKey, totalItemsCompra, displayCat,
     validateLoginForm, validateOtpCode, resolveInitialLogin,
     shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone,
     computeDayView, computeTodayView,
@@ -2024,7 +2024,7 @@ appleTitle: "CLN"
       ).join('');
       return '<details class="ms-compra-cat" open>'
         + '<summary class="ms-compra-cat-head">'
-        + '<span class="ms-compra-cat-name">' + escapeHtml(c.cat.toLowerCase()) + '</span>'
+        + '<span class="ms-compra-cat-name">' + escapeHtml(displayCat(c.cat)) + '</span>'
         + '<span class="' + countCls + '" data-cat-count>' + c.comprados + '/' + c.total + '</span>'
         + '<span class="ms-compra-cat-chevron" aria-hidden="true">▾</span>'
         + '</summary>'
