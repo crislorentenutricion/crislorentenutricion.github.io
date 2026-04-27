@@ -40,13 +40,38 @@
 
   // Cada fila es un enlace al detalle del paciente. Las acciones (copiar
   // comandos) viven en el detalle — esta vista es un índice de "qué toca".
-  function _filaLink(pacienteId, contenidoHtml, filaKey) {
-    const href = pacienteId
-      ? '/backoffice/paciente/?id=' + BoUi.escapeHtml(String(pacienteId))
-      : '#';
+  // Caso especial: las valoraciones (primera consulta) no tienen paciente
+  // todavía (son prospectos pre-pago) → la fila se renderiza sin <a>: queda
+  // como bloque informativo. El badge a la derecha distingue el tipo.
+  function _filaCuerpo(pacienteId, contenidoHtml, filaKey, badgeHtml) {
+    const tag = badgeHtml || '';
+    if (pacienteId) {
+      const href = '/backoffice/paciente/?id=' + BoUi.escapeHtml(String(pacienteId));
+      return '<li class="bo-fila" data-bo-fila="' + BoUi.escapeHtml(filaKey) + '">' +
+        '<a class="bo-fila-link-row" href="' + href + '">' + contenidoHtml + '</a>' +
+        tag +
+      '</li>';
+    }
     return '<li class="bo-fila" data-bo-fila="' + BoUi.escapeHtml(filaKey) + '">' +
-      '<a class="bo-fila-link-row" href="' + href + '">' + contenidoHtml + '</a>' +
+      '<div class="bo-fila-link-row">' + contenidoHtml + '</div>' +
+      tag +
     '</li>';
+  }
+
+  // Badge a la derecha del nombre/hora: identifica si la cita es seguimiento
+  // mensual de paciente activa (verde) o primera consulta de prospecto (azul).
+  // Pareja de feedback_copy_etiquetas_ui.md: el texto explícito hace el
+  // trabajo, el color es solo refuerzo.
+  function _renderBadgeTipo(tipo) {
+    if (tipo === 'valoracion') {
+      return '<span class="bo-fila-tag is-valoracion" data-bo-tag="valoracion">' +
+        'Primera consulta</span>';
+    }
+    if (tipo === 'seguimiento') {
+      return '<span class="bo-fila-tag is-seguimiento" data-bo-tag="seguimiento">' +
+        'Seguimiento</span>';
+    }
+    return '';
   }
 
   function renderFilaSesion(item) {
@@ -56,11 +81,12 @@
       '<span class="bo-fila-nombre">' + nombre + '</span>' +
       '<span class="bo-fila-hora">' + hora + '</span>' +
     '</div>';
-    return _filaLink(item.pacienteId, meta, 'sesion');
+    return _filaCuerpo(item.pacienteId, meta, 'sesion', _renderBadgeTipo(item.tipo));
   }
 
   // Fila del bloque "Próximos 7 días": día + hora juntos como detalle
-  // (`Mañana · 10:30` o `Sáb 25 abr · 10:30`). Mismo enlace al detalle.
+  // (`Mañana · 10:30` o `Sáb 25 abr · 10:30`). Si hay paciente, enlaza al
+  // detalle; si es valoración, se renderiza sin link.
   function renderFilaProximaSesion(item) {
     const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
     const dia    = BoUi.escapeHtml(item.diaLabel || '');
@@ -70,7 +96,7 @@
       '<span class="bo-fila-nombre">' + nombre + '</span>' +
       '<span class="bo-fila-detalle">' + detalle + '</span>' +
     '</div>';
-    return _filaLink(item.pacienteId, meta, 'proxima-sesion');
+    return _filaCuerpo(item.pacienteId, meta, 'proxima-sesion', _renderBadgeTipo(item.tipo));
   }
 
   function renderFilaMenuCrear(item) {
@@ -124,7 +150,7 @@
       '<span class="bo-fila-nombre">' + nombre + '</span>' +
       '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
     '</div>';
-    return _filaLink(item.pacienteId, meta, 'alerta');
+    return _filaCuerpo(item.pacienteId, meta, 'alerta', '');
   }
 
   function renderBloque(config) {
@@ -262,16 +288,19 @@
   }
 
   async function cargarDatos(supa) {
-    // 4 SELECT en paralelo. RLS se encarga de filtrar al email de Cristina.
+    // 5 SELECT en paralelo. RLS se encarga de filtrar al email de Cristina.
     // `menus.created_at` lo usa `calcularMetricasHoy` para contar los del mes
-    // natural actual.
+    // natural actual. `valoraciones` mezcla primera consulta (prospectos) con
+    // seguimientos en el bloque "Sesiones hoy" y "Próximos 7 días" — se
+    // filtran solo las confirmadas para no listar canceladas/no-show.
     const results = await Promise.all([
       supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis_completed_at'),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at'),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id'),
-      supa.from('checkins').select('paciente_id, fecha, estado')
+      supa.from('checkins').select('paciente_id, fecha, estado'),
+      supa.from('valoraciones').select('id, nombre, email, telefono, fecha, calendar_event_id, status').eq('status', 'confirmed')
     ]);
-    const [pac, menu, ses, ck] = results;
+    const [pac, menu, ses, ck, val] = results;
     const errores = results.map(r => r.error).filter(Boolean);
     if (errores.length) {
       const msg = errores.map(e => e.message || String(e)).join(' · ');
@@ -281,7 +310,8 @@
       pacientes: pac.data || [],
       menus: menu.data || [],
       sesiones: ses.data || [],
-      checkins: ck.data || []
+      checkins: ck.data || [],
+      valoraciones: val.data || []
     };
   }
 
@@ -302,6 +332,8 @@
       const datos = await cargarDatos(supa);
       const hoy = new Date();
       const agrupado  = BoLogic.agruparHoy({ ...datos, opts: {} }, hoy);
+      // calcularMetricasHoy ignora `valoraciones`: las métricas siguen siendo
+      // de pacientes activas, no de prospectos.
       const metricas  = BoLogic.calcularMetricasHoy(datos, hoy);
       if (metricasRoot && metricasRoot.parentNode) {
         metricasRoot.outerHTML = renderMetricas(metricas);
