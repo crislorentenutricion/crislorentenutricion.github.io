@@ -942,6 +942,17 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   background-color: var(--color-green-light);
   padding: 5px 12px; border-radius: 100px;
 }
+/* Color por categoría — diferenciación visual sutil */
+.blog-card-link[data-category="cristifood"] .blog-category,
+.blog-category[data-category="cristifood"] {
+  color: #b86d3d;
+  background-color: rgba(196, 121, 63, 0.10);
+}
+.blog-card-link[data-category="bienestar"] .blog-category,
+.blog-category[data-category="bienestar"] {
+  color: #5a7d79;
+  background-color: rgba(107, 142, 138, 0.12);
+}
 .blog-card h3 {
   font-size: 1.05rem; margin-bottom: 10px; line-height: 1.35;
   transition: color var(--transition-fast);
@@ -1122,6 +1133,75 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 }
 .recipe-info span { font-size: 0.9rem; color: var(--color-gray); }
 .recipe-info strong { color: var(--color-black); font-weight: var(--font-weight-semibold); }
+
+/* ========================
+   ARTICLE AUTHOR CARD (post final)
+   ======================== */
+.article-author {
+  max-width: var(--container-narrow);
+  margin: 64px auto 0;
+  padding-top: 40px;
+  border-top: 1px solid var(--color-border);
+}
+.article-author-link {
+  display: flex; align-items: center; gap: 22px;
+  padding: 22px 26px;
+  background: var(--color-cream);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-card);
+  text-decoration: none;
+  color: var(--color-black);
+  transition: box-shadow var(--transition-medium), transform var(--transition-medium), border-color var(--transition-medium);
+}
+.article-author-link:hover {
+  text-decoration: none;
+  color: var(--color-black);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  border-color: rgba(74,124,89,0.18);
+}
+.article-author-img {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+.article-author-text {
+  display: flex; flex-direction: column; gap: 3px;
+  line-height: 1.4;
+  min-width: 0;
+}
+.article-author-label {
+  font-size: 0.72rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-green);
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+}
+.article-author-name {
+  font-family: var(--font-accent);
+  font-size: 1.2rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-black);
+  letter-spacing: -0.01em;
+}
+.article-author-cred {
+  font-size: 0.88rem;
+  color: var(--color-gray);
+}
+.article-author-cta {
+  font-size: 0.85rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-green);
+  margin-top: 4px;
+}
+@media (max-width: 480px) {
+  .article-author-link { flex-direction: column; text-align: center; gap: 14px; padding: 22px 20px; }
+  .article-author-text { align-items: center; }
+}
+
 /* ========================
    LEGAL
    ======================== */
