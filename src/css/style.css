@@ -37,9 +37,12 @@
   --border-radius-card: 16px;
   --border-radius-lg: 24px;
   --border-radius-btn: 100px;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.04), 0 0 1px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
   --shadow-card: 0 2px 12px rgba(0,0,0,0.04), 0 0 1px rgba(0,0,0,0.06);
   --shadow-card-hover: 0 16px 40px rgba(74,124,89,0.12), 0 4px 12px rgba(0,0,0,0.04);
   --shadow-elevated: 0 24px 48px rgba(0,0,0,0.08);
+  --shadow-portrait: 0 20px 50px -20px rgba(74,124,89,0.22), 0 6px 18px -10px rgba(0,0,0,0.06);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
@@ -66,6 +69,23 @@ img { max-width: 100%; height: auto; display: block; }
 a { color: var(--color-green); text-decoration: none; transition: color var(--transition-fast); }
 a:hover { color: var(--color-green-dark); }
 ul { list-style: none; }
+
+/* Accessible focus ring — applies to keyboard navigation only */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.btn:focus-visible {
+  outline-offset: 4px;
+  box-shadow: 0 0 0 4px rgba(74,124,89,0.18), 0 4px 20px var(--color-green-glow);
+}
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline-offset: 0;
+  outline-width: 2px;
+  border-color: var(--color-green);
+}
 
 /* ========================
    LAYOUT
