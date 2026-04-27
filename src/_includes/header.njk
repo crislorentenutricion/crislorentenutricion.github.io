@@ -23,7 +23,7 @@
         <ul>
           <li><a href="/" {% if navActive == 'inicio' %}class="active" aria-current="page"{% endif %}>Inicio</a></li>
           <li><a href="/sobre-mi/" {% if navActive == 'sobre-mi' %}class="active" aria-current="page"{% endif %}>Sobre mí</a></li>
-          <li class="has-dropdown {% if navActive == 'metodo' or navActive == 'perdida-peso' or navActive == 'menu-mensual' %}is-active-section{% endif %}">
+          <li class="has-dropdown {% if navActive == 'metodo' or navActive == 'perdida-peso' or navActive == 'menu-mensual' or navActive == 'seguimiento' %}is-active-section{% endif %}">
             <button type="button" class="dropdown-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="dropdown-servicios">
               Servicios
               <span class="dropdown-caret" aria-hidden="true"></span>
@@ -32,9 +32,9 @@
               <li role="none"><a role="menuitem" href="/metodo/" {% if navActive == 'metodo' %}class="active" aria-current="page"{% endif %}>Método</a></li>
               <li role="none"><a role="menuitem" href="/perdida-peso-sostenible/" {% if navActive == 'perdida-peso' %}class="active" aria-current="page"{% endif %}>Pérdida de peso sostenible</a></li>
               <li role="none"><a role="menuitem" href="/menu-mensual-personalizado/" {% if navActive == 'menu-mensual' %}class="active" aria-current="page"{% endif %}>Menú mensual personalizado</a></li>
+              <li role="none"><a role="menuitem" href="/seguimiento/" {% if navActive == 'seguimiento' %}class="active" aria-current="page"{% endif %}>Seguimiento</a></li>
             </ul>
           </li>
-          <li><a href="/seguimiento/" {% if navActive == 'seguimiento' %}class="active" aria-current="page"{% endif %}>Seguimiento</a></li>
           <li><a href="/testimonios/" {% if navActive == 'testimonios' %}class="active" aria-current="page"{% endif %}>Testimonios</a></li>
           <li><a href="/blog/" aria-label="Blog de nutrición" {% if navActive == 'blog' %}class="active" aria-current="page"{% endif %}>Aprende</a></li>
           <li class="nav-cta"><a href="/#formulario-contacto" class="btn btn-primary btn-sm">Valoración gratis</a></li>
