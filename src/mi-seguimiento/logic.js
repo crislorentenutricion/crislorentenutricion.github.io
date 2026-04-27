@@ -268,6 +268,18 @@
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   }
 
+  // Saludo según hora local: 6-12 mañana, 12-21 tarde, 21-6 noche.
+  // `hora` es Number 0-23. null/undefined/NaN → "Hola" como fallback neutro.
+  function saludoPorHora(hora) {
+    if (hora === null || hora === undefined) return 'Hola';
+    const h = Number(hora);
+    if (!Number.isFinite(h)) return 'Hola';
+    const n = ((h % 24) + 24) % 24;
+    if (n >= 6 && n < 12) return 'Buenos días';
+    if (n >= 12 && n < 21) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
   // Fallback cuando solo tenemos email: "maria.garcia@…" → "Maria".
   // Si el prefijo está vacío o no hay email → "de nuevo".
   function primerNombreDesdeEmail(email) {
@@ -730,7 +742,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

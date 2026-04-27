@@ -19,6 +19,7 @@ const {
   esErrorTransitorio,
   primerNombre,
   primerNombreDesdeEmail,
+  saludoPorHora,
   slugifyItem,
   compraStorageKey,
   totalItemsCompra,
@@ -630,6 +631,34 @@ test("primerNombre: vacío / null / undefined → ''", () => {
 
 test("primerNombre: solo espacios → ''", () => {
   assert.equal(primerNombre('   '), '');
+});
+
+// ------------------------------- saludoPorHora -----------------------------
+
+test("saludoPorHora: 6-12h → 'Buenos días'", () => {
+  assert.equal(saludoPorHora(6), 'Buenos días');
+  assert.equal(saludoPorHora(9), 'Buenos días');
+  assert.equal(saludoPorHora(11), 'Buenos días');
+});
+
+test("saludoPorHora: 12-21h → 'Buenas tardes'", () => {
+  assert.equal(saludoPorHora(12), 'Buenas tardes');
+  assert.equal(saludoPorHora(15), 'Buenas tardes');
+  assert.equal(saludoPorHora(20), 'Buenas tardes');
+});
+
+test("saludoPorHora: 21-6h → 'Buenas noches'", () => {
+  assert.equal(saludoPorHora(21), 'Buenas noches');
+  assert.equal(saludoPorHora(23), 'Buenas noches');
+  assert.equal(saludoPorHora(0), 'Buenas noches');
+  assert.equal(saludoPorHora(3), 'Buenas noches');
+  assert.equal(saludoPorHora(5), 'Buenas noches');
+});
+
+test("saludoPorHora: hora inválida (NaN, null, undefined) → 'Hola' (fallback neutro)", () => {
+  assert.equal(saludoPorHora(NaN), 'Hola');
+  assert.equal(saludoPorHora(null), 'Hola');
+  assert.equal(saludoPorHora(undefined), 'Hola');
 });
 
 // -------------------------- primerNombreDesdeEmail -------------------------
