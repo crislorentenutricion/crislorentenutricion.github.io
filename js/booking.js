@@ -12,8 +12,34 @@
     DEV_API_URL: 'https://script.google.com/macros/s/AKfycbyRxyJLvzxjdn1NGjVH4Iewk2twA7Ch4KSgCRwOfHtEytutGo_ARFkVfsMu23BZn7vIFQ/exec',
     PROD_API_URL: 'https://script.google.com/macros/s/AKfycbw4l1ok-Oi7_OE5eYbs-Sn-fyR7yUvHuR_Szqs3KjCf9Sda_evRQd4NcSyZcI9LNI9hbQ/exec',
     TIMEOUT_MS: 10000,
-    HCAPTCHA_SITE_KEY: '9a82e394-bf54-4d36-8e8a-ed9e1f94f7fe'
+    HCAPTCHA_SITE_KEY: '9a82e394-bf54-4d36-8e8a-ed9e1f94f7fe',
+    SESSION_CACHE_TTL_MS: 60000
   };
+
+  function storageKeyFor(year, month) {
+    return 'cln-booking-month-' + year + '-' + String(month + 1).padStart(2, '0');
+  }
+  function readMonthFromStorage(year, month) {
+    try {
+      const raw = window.sessionStorage.getItem(storageKeyFor(year, month));
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed.savedAt !== 'number') return null;
+      if (Date.now() - parsed.savedAt > CONFIG.SESSION_CACHE_TTL_MS) return null;
+      return Array.isArray(parsed.availability) ? parsed.availability : null;
+    } catch (_) { return null; }
+  }
+  function writeMonthToStorage(year, month, availability) {
+    try {
+      window.sessionStorage.setItem(
+        storageKeyFor(year, month),
+        JSON.stringify({ savedAt: Date.now(), availability: availability })
+      );
+    } catch (_) { /* quota / disabled storage: noop */ }
+  }
+  function clearMonthFromStorage(year, month) {
+    try { window.sessionStorage.removeItem(storageKeyFor(year, month)); } catch (_) {}
+  }
 
   function currentApiUrl() {
     return apiUrlFor(window.location.hostname, CONFIG.DEV_API_URL, CONFIG.PROD_API_URL);
@@ -172,12 +198,20 @@
       const key = monthKey(year, month);
       if (monthCache.has(key)) return;
       if (monthStatus.get(key) === 'loading') return;
+      // Hit de sessionStorage: hidrata sin enseñar skeleton.
+      const cached = readMonthFromStorage(year, month);
+      if (cached) {
+        monthCache.set(key, indexAvailability(cached));
+        monthStatus.set(key, 'ok');
+        return;
+      }
       monthStatus.set(key, 'loading');
       render();
       try {
         let availability;
         if (CONFIG.USE_REAL_BACKEND) {
           availability = await fetchMonthWithTimeout(year, month);
+          writeMonthToStorage(year, month, availability);
         } else {
           availability = buildMockAvailabilityForMonth(year, month);
         }
@@ -216,12 +250,26 @@
 
       const status = currentMonthStatus();
       if (status === 'loading') {
-        const skel = document.createElement('div');
-        skel.className = 'booking-cal-loading';
-        skel.setAttribute('role', 'status');
-        skel.setAttribute('aria-live', 'polite');
-        skel.textContent = 'Cargando disponibilidad…';
-        els.grid.appendChild(skel);
+        // Cabecera de días + 42 celdas skeleton para mantener el layout
+        // idéntico al del calendario cargado y evitar saltos visuales.
+        DAY_HEADERS.forEach(function (h) {
+          const th = document.createElement('div');
+          th.className = 'booking-cal-header';
+          th.textContent = h;
+          els.grid.appendChild(th);
+        });
+        for (let i = 0; i < 42; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'booking-cal-cell is-skeleton';
+          cell.setAttribute('aria-hidden', 'true');
+          els.grid.appendChild(cell);
+        }
+        const sr = document.createElement('div');
+        sr.className = 'booking-cal-loading';
+        sr.setAttribute('role', 'status');
+        sr.setAttribute('aria-live', 'polite');
+        sr.textContent = 'Cargando disponibilidad…';
+        els.grid.appendChild(sr);
         return;
       }
       if (status === 'error') {
@@ -453,6 +501,9 @@
           const payload = buildBookingPayload(data, state.selectedIso, state.selectedSlot, captchaToken);
           const result = await postBooking(payload);
           if (result.ok) {
+            // Una reserva ocupa un slot: el cache local del mes deja de ser
+            // verdad para la próxima visita.
+            clearMonthFromStorage(state.viewYear, state.viewMonth);
             renderConfirmed(data, result);
             state.step = 'confirmed';
             render();
@@ -478,6 +529,7 @@
             const key = monthKey(state.viewYear, state.viewMonth);
             monthCache.delete(key);
             monthStatus.delete(key);
+            clearMonthFromStorage(state.viewYear, state.viewMonth);
             state.selectedSlot = null;
             state.step = 'picker';
             showFormError(bookingErrorMessage('slot_taken'));
