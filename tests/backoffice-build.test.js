@@ -77,3 +77,16 @@ test("backoffice: auth.js expone API mínima (iniciar, registrarSupabase, cerrar
   assert.match(js, /registrarSupabase/, "auth.js no expone registrarSupabase");
   assert.match(js, /cerrarSesion/, "auth.js no expone cerrarSesion");
 });
+
+test("backoffice: auth.js es fail-closed cuando cristinaEmail está vacío", () => {
+  // Si `env.cristinaEmail` cae (secret de CI no inyectado, build local sin la
+  // var), el gate UX debe bloquear el acceso (render403) en vez de dejar pasar.
+  // RLS sigue siendo la barrera dura, pero el cinturón UX también debe sostener.
+  const js = fs.readFileSync(path.join(SITE, "backoffice", "auth.js"), "utf8");
+  // Patrón: dentro de `if (!permitidoEmail) { ... }` debe haber render403.
+  // Captura el bloque y verifica que llama a render403.
+  const m = js.match(/if\s*\(\s*!permitidoEmail\s*\)\s*\{([\s\S]*?)\}/);
+  assert.ok(m, "auth.js no tiene bloque if(!permitidoEmail)");
+  assert.match(m[1], /render403\s*\(/, "rama !permitidoEmail no llama a render403 (gate abierto si falta el env)");
+  assert.match(m[1], /mostrarNav\s*\(\s*false\s*\)/, "rama !permitidoEmail no oculta la nav");
+});

@@ -7,3 +7,11 @@
 # 11ty output y dependencias
 _site/
 node_modules/
+
+# Backstop contra copia accidental desde el repo padre privado.
+# Si alguien copia mal un fichero, estos paths quedan ignorados aquí
+# aunque aparezcan dentro del directorio del submódulo.
+/convenciones/
+/recursos/
+/.aiplans/
+/CLAUDE.md.backup
