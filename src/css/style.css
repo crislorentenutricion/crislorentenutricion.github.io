@@ -1419,8 +1419,8 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   .article-hero-img img { height: 240px; }
   .hero-home { min-height: auto; padding: 40px 0; }
   .hero-centered { padding-top: 48px; padding-bottom: 48px; }
-  h1 { font-size: clamp(1.75rem, 7vw, 2.4rem); hyphens: auto; -webkit-hyphens: auto; }
-  h2 { hyphens: auto; -webkit-hyphens: auto; }
+  h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
+  h2 { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
   .philosophy-quote { padding: 32px 22px; }
   .philosophy-quote p { font-size: 1.05rem; }
   .trust-bar-inner { flex-direction: column; gap: 16px; text-align: center; }
