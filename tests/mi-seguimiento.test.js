@@ -708,48 +708,38 @@ test("compraStorageKey: ids distintos → keys distintas (cada menú su lista)",
 
 // ----------------------------- totalItemsCompra ----------------------------
 
-const CATEGORIAS_COMPRA = [
-  'CARNES Y PESCADOS',
-  'VERDURAS Y HORTALIZAS',
-  'FRUTAS',
-  'LÁCTEOS Y HUEVOS',
-  'LEGUMBRES Y CEREALES',
-  'FRUTOS SECOS Y VARIOS'
-];
-
-test("totalItemsCompra: suma items de todas las categorías conocidas", () => {
+test("totalItemsCompra: suma items de todas las claves del JSON", () => {
   const lista = {
-    'CARNES Y PESCADOS': ['Pollo', 'Merluza'],
-    'FRUTAS': ['Manzana', 'Pera', 'Kiwi']
+    'Carne': ['Pollo', 'Merluza'],
+    'Fruta y verdura': ['Manzana', 'Pera', 'Kiwi']
   };
-  assert.equal(totalItemsCompra(lista, CATEGORIAS_COMPRA), 5);
+  assert.equal(totalItemsCompra(lista), 5);
 });
 
-test("totalItemsCompra: ignora claves no listadas en 'categorias' (evita contar ruido)", () => {
+test("totalItemsCompra: cuenta cualquier clave del JSON (sin lista cerrada)", () => {
   const lista = {
-    'FRUTAS': ['Manzana'],
-    'OTRO_CAMPO_EXTRA': ['no', 'debería', 'contar']
+    'Fruta y verdura': ['Manzana'],
+    'Categoría inventada': ['x', 'y', 'z']
   };
-  assert.equal(totalItemsCompra(lista, CATEGORIAS_COMPRA), 1);
+  assert.equal(totalItemsCompra(lista), 4);
 });
 
 test("totalItemsCompra: categoría no-array → ignorada (sin crash)", () => {
   const lista = {
-    'FRUTAS': ['Manzana'],
-    'CARNES Y PESCADOS': null,
-    'VERDURAS Y HORTALIZAS': 'string raro'
+    'Fruta y verdura': ['Manzana'],
+    'Carne': null,
+    'Marisco y pescado': 'string raro'
   };
-  assert.equal(totalItemsCompra(lista, CATEGORIAS_COMPRA), 1);
+  assert.equal(totalItemsCompra(lista), 1);
 });
 
 test("totalItemsCompra: lista vacía → 0", () => {
-  assert.equal(totalItemsCompra({}, CATEGORIAS_COMPRA), 0);
+  assert.equal(totalItemsCompra({}), 0);
 });
 
-test("totalItemsCompra: lista o categorias null → 0 (no revienta)", () => {
-  assert.equal(totalItemsCompra(null, CATEGORIAS_COMPRA), 0);
-  assert.equal(totalItemsCompra({ FRUTAS: ['a'] }, null), 0);
-  assert.equal(totalItemsCompra(undefined, undefined), 0);
+test("totalItemsCompra: lista null/undefined → 0 (no revienta)", () => {
+  assert.equal(totalItemsCompra(null), 0);
+  assert.equal(totalItemsCompra(undefined), 0);
 });
 
 // ------------------------- normalizeEmail / validateLoginForm --------------
@@ -1053,63 +1043,66 @@ test("computeTodayView: menu null → meals vacío", () => {
 
 // ---------------------------- buildCompraModel ---------------------------
 
-const CATEGORIAS = [
-  'CARNES Y PESCADOS',
-  'VERDURAS Y HORTALIZAS',
-  'FRUTAS',
-  'LÁCTEOS Y HUEVOS',
-  'LEGUMBRES Y CEREALES',
-  'FRUTOS SECOS Y VARIOS'
-];
-
 const MENU_COMPRA = {
   id: 'm1',
   contenido: {
     lista_compra: {
-      'FRUTAS': ['Manzana', 'Pera'],
-      'CARNES Y PESCADOS': ['Pollo'],
-      'VERDURAS Y HORTALIZAS': []  // vacía → se filtra
+      'Fruta y verdura': ['Manzana', 'Pera'],
+      'Carne': ['Pollo'],
+      'Marisco y pescado': []  // vacía → se filtra
     }
   }
 };
 
 test("buildCompraModel: lista vacía → empty:true", () => {
-  const r = buildCompraModel({ menu: { id: 'x', contenido: { lista_compra: {} } }, estadoSet: new Set(), categorias: CATEGORIAS });
+  const r = buildCompraModel({ menu: { id: 'x', contenido: { lista_compra: {} } }, estadoSet: new Set() });
   assert.equal(r.empty, true);
   assert.equal(r.total, 0);
   assert.equal(r.cats.length, 0);
 });
 
-test("buildCompraModel: filtra categorías sin items y respeta orden de CATEGORIAS", () => {
-  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: new Set(), categorias: CATEGORIAS });
+test("buildCompraModel: filtra categorías sin items y respeta orden del JSON", () => {
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: new Set() });
   assert.equal(r.empty, false);
   assert.equal(r.total, 3);
   assert.equal(r.cats.length, 2);
-  assert.equal(r.cats[0].cat, 'CARNES Y PESCADOS'); // viene primero en CATEGORIAS
+  assert.equal(r.cats[0].cat, 'Fruta y verdura'); // primero en el JSON
+  assert.equal(r.cats[1].cat, 'Carne');
+});
+
+test("buildCompraModel: convive con menús viejos (claves MAYÚSCULAS)", () => {
+  const menuViejo = {
+    id: 'mv',
+    contenido: { lista_compra: { 'CARNES Y PESCADOS': ['Pollo'], 'FRUTAS': ['Pera'] } }
+  };
+  const r = buildCompraModel({ menu: menuViejo, estadoSet: new Set() });
+  assert.equal(r.empty, false);
+  assert.equal(r.cats.length, 2);
+  assert.equal(r.cats[0].cat, 'CARNES Y PESCADOS');
   assert.equal(r.cats[1].cat, 'FRUTAS');
 });
 
 test("buildCompraModel: marca 'done' en items presentes en estadoSet", () => {
-  const set = new Set([slugifyItem('FRUTAS', 'Manzana')]);
-  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: set, categorias: CATEGORIAS });
-  const frutas = r.cats.find(c => c.cat === 'FRUTAS');
-  assert.equal(frutas.items[0].done, true);
-  assert.equal(frutas.items[1].done, false);
-  assert.equal(frutas.comprados, 1);
-  assert.equal(frutas.total, 2);
+  const set = new Set([slugifyItem('Fruta y verdura', 'Manzana')]);
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: set });
+  const fruta = r.cats.find(c => c.cat === 'Fruta y verdura');
+  assert.equal(fruta.items[0].done, true);
+  assert.equal(fruta.items[1].done, false);
+  assert.equal(fruta.comprados, 1);
+  assert.equal(fruta.total, 2);
   assert.equal(r.hechos, 1);
 });
 
 test("buildCompraModel: cada item tiene key estable (slugify)", () => {
-  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: new Set(), categorias: CATEGORIAS });
-  const frutas = r.cats.find(c => c.cat === 'FRUTAS');
-  assert.equal(frutas.items[0].key, slugifyItem('FRUTAS', 'Manzana'));
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: new Set() });
+  const fruta = r.cats.find(c => c.cat === 'Fruta y verdura');
+  assert.equal(fruta.items[0].key, slugifyItem('Fruta y verdura', 'Manzana'));
 });
 
 test("buildCompraModel: estadoSet puede venir como array (convertible)", () => {
-  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: [slugifyItem('FRUTAS', 'Pera')], categorias: CATEGORIAS });
-  const frutas = r.cats.find(c => c.cat === 'FRUTAS');
-  assert.equal(frutas.items.find(i => i.text === 'Pera').done, true);
+  const r = buildCompraModel({ menu: MENU_COMPRA, estadoSet: [slugifyItem('Fruta y verdura', 'Pera')] });
+  const fruta = r.cats.find(c => c.cat === 'Fruta y verdura');
+  assert.equal(fruta.items.find(i => i.text === 'Pera').done, true);
 });
 
 // ---------------------------- computeCompraMeta --------------------------

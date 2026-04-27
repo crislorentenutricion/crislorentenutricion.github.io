@@ -298,12 +298,12 @@
     return (menu && menu.id) ? ('ms-compra-' + menu.id) : null;
   }
 
-  // Nº total de items en la lista de compra, sumando solo las categorías
-  // conocidas (evita contar claves extras que Supabase pudiera guardar).
-  function totalItemsCompra(lista, categorias) {
-    if (!lista || !Array.isArray(categorias)) return 0;
+  // Nº total de items en la lista de compra. Itera las claves del JSON tal cual
+  // — la taxonomía la decide la skill /crear-menu, no el cliente.
+  function totalItemsCompra(lista) {
+    if (!lista || typeof lista !== 'object') return 0;
     let n = 0;
-    for (const cat of categorias) {
+    for (const cat of Object.keys(lista)) {
       if (Array.isArray(lista[cat])) n += lista[cat].length;
     }
     return n;
@@ -493,17 +493,17 @@
   //   - empty: true si no hay items (muestra estado vacío).
   //   - cats: [{cat, comprados, total, items: [{text, key, done}]}]
   //   - total/hechos globales.
+  // Itera las claves del JSON en el orden que vengan (lo decide /crear-menu).
   // Filtra categorías sin items para no emitir <details> vacíos.
   function buildCompraModel(opts) {
     const o = opts || {};
     const lista = (o.menu && o.menu.contenido && o.menu.contenido.lista_compra) || {};
     const estadoSet = o.estadoSet instanceof Set ? o.estadoSet : new Set(o.estadoSet || []);
-    const categorias = Array.isArray(o.categorias) ? o.categorias : [];
-    const total = totalItemsCompra(lista, categorias);
+    const total = totalItemsCompra(lista);
     const hechos = estadoSet.size;
     if (total === 0) return { empty: true, total: 0, hechos: 0, cats: [] };
     const cats = [];
-    for (const cat of categorias) {
+    for (const cat of Object.keys(lista)) {
       const items = Array.isArray(lista[cat]) ? lista[cat] : null;
       if (!items || !items.length) continue;
       const itemsOut = items.map(function (text) {
