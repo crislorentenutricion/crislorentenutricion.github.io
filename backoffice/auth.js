@@ -12,9 +12,10 @@
 // Supabase (`auth.email() = cristinaEmail`). Si alguien salta el gate del
 // cliente, las queries devuelven vacío.
 //
-// Dev local: si `env.cristinaEmail` viene vacío, el gate se relaja con un
-// warning en consola y deja pasar cualquier sesión válida. Sirve para probar
-// UI sin ese env configurado en la máquina.
+// Si `env.cristinaEmail` viene vacío (secret de CI no inyectado, build
+// local sin la var), el gate es fail-closed: render403 con aviso en
+// consola. La barrera dura sigue siendo RLS de Supabase, pero el gate UX
+// tampoco se queda abierto si cae el env.
 //
 // Expone `window.BoAuth`.
 
@@ -240,8 +241,12 @@
     const same = permitidoEmail && sessionEmail.toLowerCase() === permitidoEmail;
 
     if (!permitidoEmail) {
-      console.warn('[BoAuth] env.cristinaEmail vacío — gate relajado (solo dev local).');
-    } else if (!same) {
+      console.warn('[BoAuth] env.cristinaEmail vacío — acceso bloqueado (config faltante).');
+      mostrarNav(false);
+      render403(sessionEmail);
+      return;
+    }
+    if (!same) {
       mostrarNav(false);
       render403(sessionEmail);
       return;
