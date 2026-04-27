@@ -2081,14 +2081,8 @@
   // -------- lista de la compra (localStorage por menú) --------
   // Estado local, sin servidor. Clave `ms-compra-<menu_id>` → al llegar un
   // nuevo menú la clave cambia y la lista vuelve a empezar vacía.
-  const CATEGORIAS_COMPRA = [
-    'CARNES Y PESCADOS',
-    'VERDURAS Y HORTALIZAS',
-    'FRUTAS',
-    'LÁCTEOS Y HUEVOS',
-    'LEGUMBRES Y CEREALES',
-    'FRUTOS SECOS Y VARIOS'
-  ];
+  // Las categorías las decide el JSON del menú (lo compone /crear-menu); aquí
+  // se renderizan en el orden en que vienen.
 
   // slugifyItem / compraStorageKey viven en logic.js (puras, testadas).
 
@@ -2117,9 +2111,9 @@
     return (menu && menu.contenido && menu.contenido.lista_compra) || {};
   }
 
-  // totalItemsCompra vive en logic.js (pura, testada). Curry con CATEGORIAS_COMPRA.
+  // totalItemsCompra vive en logic.js (pura, testada).
   function totalItemsCompraLocal(lista) {
-    return totalItemsCompra(lista, CATEGORIAS_COMPRA);
+    return totalItemsCompra(lista);
   }
 
   function updateCompraMeta() {
@@ -2138,7 +2132,7 @@
     const container = $('#ms-compra-cats');
     if (!container) return;
     compraState = loadCompraState(menu);
-    const model = buildCompraModel({ menu, estadoSet: compraState, categorias: CATEGORIAS_COMPRA });
+    const model = buildCompraModel({ menu, estadoSet: compraState });
     compraTotal = model.total;
 
     if (model.empty) {
