@@ -136,7 +136,17 @@
         <ul>
           <li><a href="/" >Inicio</a></li>
           <li><a href="/sobre-mi/" >Sobre mí</a></li>
-          <li><a href="/metodo/" >Método</a></li>
+          <li class="has-dropdown ">
+            <button type="button" class="dropdown-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="dropdown-servicios">
+              Servicios
+              <span class="dropdown-caret" aria-hidden="true"></span>
+            </button>
+            <ul class="dropdown-menu" id="dropdown-servicios" role="menu">
+              <li role="none"><a role="menuitem" href="/metodo/" >Método</a></li>
+              <li role="none"><a role="menuitem" href="/perdida-peso-sostenible/" >Pérdida de peso sostenible</a></li>
+              <li role="none"><a role="menuitem" href="/menu-mensual-personalizado/" >Menú mensual personalizado</a></li>
+            </ul>
+          </li>
           <li><a href="/seguimiento/" >Seguimiento</a></li>
           <li><a href="/testimonios/" >Testimonios</a></li>
           <li><a href="/blog/" aria-label="Blog de nutrición" class="active" aria-current="page">Aprende</a></li>
