@@ -11,7 +11,10 @@
     USE_REAL_BACKEND: true,
     DEV_API_URL: 'https://script.google.com/macros/s/AKfycbyRxyJLvzxjdn1NGjVH4Iewk2twA7Ch4KSgCRwOfHtEytutGo_ARFkVfsMu23BZn7vIFQ/exec',
     PROD_API_URL: 'https://script.google.com/macros/s/AKfycbw4l1ok-Oi7_OE5eYbs-Sn-fyR7yUvHuR_Szqs3KjCf9Sda_evRQd4NcSyZcI9LNI9hbQ/exec',
-    TIMEOUT_MS: 10000,
+    // Apps Script suele resolver en 1-2 s, pero un cold start tras inactividad
+    // puede tardar 10-15 s. 20 s cubre el cold start sin castigar el caso bueno.
+    TIMEOUT_MS: 20000,
+    SLOTS_RETRY_BACKOFF_MS: 800,
     HCAPTCHA_SITE_KEY: '9a82e394-bf54-4d36-8e8a-ed9e1f94f7fe',
     SESSION_CACHE_TTL_MS: 60000
   };
@@ -210,7 +213,15 @@
       try {
         let availability;
         if (CONFIG.USE_REAL_BACKEND) {
-          availability = await fetchMonthWithTimeout(year, month);
+          // Un solo reintento ante fallo de red/timeout: cubre los hipos
+          // transitorios del segundo salto de Apps Script (script.googleusercontent.com).
+          try {
+            availability = await fetchMonthWithTimeout(year, month);
+          } catch (firstErr) {
+            await new Promise(function (r) { setTimeout(r, CONFIG.SLOTS_RETRY_BACKOFF_MS); });
+            availability = await fetchMonthWithTimeout(year, month);
+            track('booking_slots_retry_succeeded', { month: key });
+          }
           writeMonthToStorage(year, month, availability);
         } else {
           availability = buildMockAvailabilityForMonth(year, month);
@@ -219,6 +230,7 @@
         monthStatus.set(key, 'ok');
       } catch (err) {
         monthStatus.set(key, 'error');
+        track('booking_slots_failed', { month: key });
       }
       render();
     }
