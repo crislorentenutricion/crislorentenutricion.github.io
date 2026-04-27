@@ -1,0 +1,24 @@
+{# Macros para componentizar las reseñas Google de CLN.
+   Fuente única: src/_data/reviews.js (refrescada por la skill /sincronizar-resenas).
+   Consumido por testimonios.njk (grid completo) y por index.njk + perdida-peso-sostenible.njk
+   (las 2 primeras reseñas vía testimonialsHomeGrid). #}
+
+{% macro testimonialCard(review, googleUrl, delay = 1) %}
+<div class="testimonial-card card reveal reveal-delay-{{ delay }}">
+  <div class="testimonial-stars" role="img" aria-label="{{ review.rating }} de 5 estrellas">{% for i in range(0, review.rating) %}★{% endfor %}{% for i in range(0, 5 - review.rating) %}☆{% endfor %}</div>
+  <p class="testimonial-text">"{{ review.displayText }}"</p>
+  <div class="testimonial-author">
+    <div class="testimonial-avatar">{{ review.initial }}</div>
+    <div>
+      <div class="testimonial-name">{{ review.displayName }}</div>
+      <div class="testimonial-detail">Paciente · <a href="{{ googleUrl }}" target="_blank" rel="noopener" class="testimonial-source">Reseña de Google</a></div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro testimonialsGrid(items, googleUrl, gridClass = "testimonials-grid testimonials-grid--col2") %}
+<div class="{{ gridClass }}">
+{% for review in items %}{{ testimonialCard(review, googleUrl, loop.index) }}{% endfor %}
+</div>
+{% endmacro %}

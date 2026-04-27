@@ -5,6 +5,7 @@ description: "Reseñas reales de pacientes de Cris Lorente Nutrición. 5 estrell
 navActive: testimonios
 permalink: /testimonios/
 ---
+{% from "testimonials.njk" import testimonialsGrid %}
 
 <script type="application/ld+json">
 {
@@ -28,36 +29,20 @@ permalink: /testimonios/
   "name": "Cris Lorente Nutrición",
   "aggregateRating": {
     "@type": "AggregateRating",
-    "ratingValue": "5",
-    "reviewCount": "3",
-    "bestRating": "5",
-    "worstRating": "1"
+    "ratingValue": "{{ reviews.aggregateRating.ratingValue }}",
+    "reviewCount": "{{ reviews.aggregateRating.reviewCount }}",
+    "bestRating": "{{ reviews.aggregateRating.bestRating }}",
+    "worstRating": "{{ reviews.aggregateRating.worstRating }}"
   },
-  "review": [
+  "review": [{% for r in reviews.reviews %}
     {
       "@type": "Review",
-      "author": { "@type": "Person", "name": "Valeria Geria Beltran" },
-      "datePublished": "2026-04-23",
-      "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-      "reviewBody": "Super recomendada! Cristina es una gran profesional. Ha estado pendiente en todo momento de la evolución, y se ha mostrado muy flexible a la hora de adaptar los menús a las necesidades de cada persona.",
+      "author": { "@type": "Person", "name": {{ r.name | dump | safe }} },
+      "datePublished": "{{ r.datePublished }}",
+      "reviewRating": { "@type": "Rating", "ratingValue": "{{ r.rating }}", "bestRating": "5" },
+      "reviewBody": {{ r.reviewBody | dump | safe }},
       "itemReviewed": { "@id": "https://www.crislorentenutricion.com/#organization" }
-    },
-    {
-      "@type": "Review",
-      "author": { "@type": "Person", "name": "Azu" },
-      "datePublished": "2026-04-09",
-      "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-      "reviewBody": "Sin lugar a duda es la mejor nutricionista que he podido tener. Me encanta los menús, me gusta mucho las combinaciones que pone o las opciones que da para no tener todas las semanas lo mismo y variar un poco. Para nada es estricta, no te pone restricciones a los alimentos, se adapta a ti y tus necesidades. Sin lugar a duda te recomendaría siempre.",
-      "itemReviewed": { "@id": "https://www.crislorentenutricion.com/#organization" }
-    },
-    {
-      "@type": "Review",
-      "author": { "@type": "Person", "name": "Jose Antonio Navarro Marco" },
-      "datePublished": "2026-04-01",
-      "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5" },
-      "reviewBody": "La mejor nutricionista online a la que he ido. Se adapta a mis preferencias y me ha ayudado a lograr mis objetivos. Normalmente me cuesta mucho perder peso por lo duras que son las dietas, pero con ella todo fue muy fácil. Recomendado 100%.",
-      "itemReviewed": { "@id": "https://www.crislorentenutricion.com/#organization" }
-    }
+    }{% if not loop.last %},{% endif %}{% endfor %}
   ]
 }
 </script>
@@ -87,47 +72,9 @@ permalink: /testimonios/
 {# ── RESEÑAS ── #}
 <section class="section section-white">
   <div class="container">
-    <div class="testimonials-grid testimonials-grid--col2">
+    {{ testimonialsGrid(reviews.reviews, reviews.googleProfileUrl) }}
 
-      <div class="testimonial-card card reveal reveal-delay-1">
-        <div class="testimonial-stars" role="img" aria-label="5 de 5 estrellas">★★★★★</div>
-        <p class="testimonial-text">"Super recomendada! Cristina es una gran profesional. Ha estado pendiente en todo momento de la evolución, y se ha mostrado muy flexible a la hora de adaptar los menús a las necesidades de cada persona."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">V</div>
-          <div>
-            <div class="testimonial-name">Valeria G.</div>
-            <div class="testimonial-detail">Paciente · <a href="https://www.google.com/search?sca_esv=ef5fb46a2a3e8e1b&q=Cris+Lorente+Nutrici%C3%B3n&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOfCiWAAsw_ZH92LMOEtLNJidusS_EHqCeQWwVB-xdd21C9A9SN6Iej5W9VIhgAISrLobKPM%3D" target="_blank" rel="noopener" class="testimonial-source">Reseña de Google</a></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="testimonial-card card reveal reveal-delay-2">
-        <div class="testimonial-stars" role="img" aria-label="5 de 5 estrellas">★★★★★</div>
-        <p class="testimonial-text">"Sin lugar a duda es la mejor nutricionista que he podido tener. Me encanta los menús, las combinaciones que pone y las opciones que da para no tener todas las semanas lo mismo. Me siento tan bien y noto tantas mejorías... para nada es estricta, no te pone restricciones, se adapta a ti y tus necesidades. Sin lugar a duda te recomendaría siempre."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">A</div>
-          <div>
-            <div class="testimonial-name">Azu</div>
-            <div class="testimonial-detail">Paciente · <a href="https://www.google.com/search?sca_esv=ef5fb46a2a3e8e1b&q=Cris+Lorente+Nutrici%C3%B3n&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOfCiWAAsw_ZH92LMOEtLNJidusS_EHqCeQWwVB-xdd21C9A9SN6Iej5W9VIhgAISrLobKPM%3D" target="_blank" rel="noopener" class="testimonial-source">Reseña de Google</a></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="testimonial-card card reveal reveal-delay-3">
-        <div class="testimonial-stars" role="img" aria-label="5 de 5 estrellas">★★★★★</div>
-        <p class="testimonial-text">"La mejor nutricionista online a la que he ido. Se adapta a mis preferencias y me ha ayudado a lograr mis objetivos. Normalmente me cuesta mucho perder peso por lo duras que son las dietas, pero con ella todo fue muy fácil. Recomendado 100%."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">J</div>
-          <div>
-            <div class="testimonial-name">Jose Antonio N.</div>
-            <div class="testimonial-detail">Paciente · <a href="https://www.google.com/search?sca_esv=ef5fb46a2a3e8e1b&q=Cris+Lorente+Nutrici%C3%B3n&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOfCiWAAsw_ZH92LMOEtLNJidusS_EHqCeQWwVB-xdd21C9A9SN6Iej5W9VIhgAISrLobKPM%3D" target="_blank" rel="noopener" class="testimonial-source">Reseña de Google</a></div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <p class="testimonials-note reveal">Reseñas verificadas de Google · <a href="https://www.google.com/search?sca_esv=ef5fb46a2a3e8e1b&q=Cris+Lorente+Nutrici%C3%B3n&si=AL3DRZEsmMGCryMMFSHJ3StBhOdZ2-6yYkXd_doETEE1OR-qOfCiWAAsw_ZH92LMOEtLNJidusS_EHqCeQWwVB-xdd21C9A9SN6Iej5W9VIhgAISrLobKPM%3D" target="_blank" rel="noopener">Ver todas en Google&nbsp;→</a></p>
+    <p class="testimonials-note reveal">Reseñas verificadas de Google · <a href="{{ reviews.googleProfileUrl }}" target="_blank" rel="noopener">Ver todas en Google&nbsp;→</a></p>
   </div>
 </section>
 
