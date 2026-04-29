@@ -656,6 +656,24 @@
     return { show: true, lsKey: 'rev-modal-shown:' + proxima.id, body };
   }
 
+  // Aviso "menú nuevo": se dispara la primera vez que la PWA hidrata con un
+  // `menu.id` que no se haya visto antes en este dispositivo. La clave LS por
+  // id (no por numero) hace que las revisiones del mismo menú —que mantienen
+  // el id porque el script Python hace UPSERT en (paciente_id, numero)— no
+  // vuelvan a disparar el modal. Cambia de menú → cambia de id → modal una vez.
+  function shouldMostrarMenuNuevoModal(opts) {
+    const o = opts || {};
+    const menu = o.menu;
+    if (!menu || !menu.id) return { show: false };
+    const seen = Array.isArray(o.seenMenuIds) ? o.seenMenuIds : [];
+    if (seen.indexOf(menu.id) !== -1) return { show: false };
+    return {
+      show: true,
+      lsKey: 'menu-nuevo-shown:' + menu.id,
+      numero: menu.numero || null
+    };
+  }
+
   // -----------------------------------------------------------------
   // Hydrate del dashboard: orquesta queries → estado renderizable
   // -----------------------------------------------------------------
@@ -742,7 +760,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

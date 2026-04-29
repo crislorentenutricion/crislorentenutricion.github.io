@@ -1151,6 +1151,22 @@
     .ms-milestone-emoji { animation: none; }
   }
 
+  /* ---------- menú nuevo (one-shot por menu_id) ---------- */
+  .ms-menu-nuevo-emoji {
+    font-size: 3.4rem;
+    line-height: 1;
+    margin-bottom: 12px;
+    display: block;
+    animation: msMenuNuevoPop 0.5s ease-out both;
+  }
+  @keyframes msMenuNuevoPop {
+    0%   { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ms-menu-nuevo-emoji { animation: none; }
+  }
+
   /* ---------- toast ---------- */
   .ms-toast {
     position: fixed;
@@ -1715,6 +1731,16 @@
   </div>
 
   
+  <div id="ms-menu-nuevo-modal" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-menu-nuevo-title" hidden>
+    <div class="ms-modal">
+      <span class="ms-menu-nuevo-emoji" aria-hidden="true">✨</span>
+      <h2 id="ms-menu-nuevo-title" class="ms-modal-title">Tu <em>nuevo menú</em> ya está listo</h2>
+      <p id="ms-menu-nuevo-msg" class="ms-modal-intro">Cristina te ha preparado un menú nuevo. Aquí lo tienes para empezar hoy.</p>
+      <button type="button" class="ms-modal-ok" id="ms-menu-nuevo-ok">Ver mi menú</button>
+    </div>
+  </div>
+
+  
   <div id="ms-revision-modal" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-revision-modal-title" hidden>
     <div class="ms-modal">
       <h2 id="ms-revision-modal-title" class="ms-modal-title">¡Nos vemos <em>pronto</em>! 💚</h2>
@@ -1745,7 +1771,7 @@
     computeDayView, computeTodayView,
     buildCompraModel, computeCompraMeta,
     applyCheckinOptimistic, revertCheckin,
-    buildRevisionCtaCopy, shouldMostrarRevisionModal,
+    buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal,
     hydrateDashboard
   } = window.MsLogic;
 
@@ -2409,7 +2435,12 @@
     // normal: renderRevisionCta + maybeMostrarRevisionModal leen su copy/LS
     // por su cuenta (la decisión lógica ya está tomada en hydrateDashboard).
     renderRevisionCta({ proxima: result.proximaSesion, enviada: result.revisionEnviada });
-    maybeMostrarRevisionModal({ proxima: result.proximaSesion, enviada: result.revisionEnviada });
+    // Si el modal de "menú nuevo" se abre, no apilamos el de revisión encima:
+    // ese vuelve la próxima carga si sigue en ventana urgent.
+    const menuNuevoAbierto = maybeMostrarMenuNuevoModal(result.menu);
+    if (!menuNuevoAbierto) {
+      maybeMostrarRevisionModal({ proxima: result.proximaSesion, enviada: result.revisionEnviada });
+    }
 
     return { racha: result.streak, rota: result.rota };
   }
@@ -2441,6 +2472,34 @@
         action.hidden = true;
       }
     }
+  }
+
+  // Modal "menú nuevo": se dispara la primera vez que la PWA hidrata con un
+  // menu.id desconocido en este dispositivo. Devuelve true si lo abrió, para
+  // que el caller no apile el modal de revisión encima.
+  function maybeMostrarMenuNuevoModal(menu) {
+    let seen = [];
+    if (menu && menu.id) {
+      try { if (localStorage.getItem('menu-nuevo-shown:' + menu.id) === '1') seen = [menu.id]; } catch (e) {}
+    }
+    const cfg = shouldMostrarMenuNuevoModal({ menu, seenMenuIds: seen });
+    if (!cfg.show) return false;
+    const modal = $('#ms-menu-nuevo-modal');
+    if (!modal) return false;
+    if (cfg.numero) {
+      const msg = $('#ms-menu-nuevo-msg');
+      if (msg) msg.textContent = 'Cristina te ha preparado el Menú ' + cfg.numero + '. Aquí lo tienes para empezar hoy.';
+    }
+    modal.hidden = false;
+    const ok = $('#ms-menu-nuevo-ok');
+    if (ok) {
+      ok.focus();
+      ok.onclick = () => {
+        try { localStorage.setItem(cfg.lsKey, '1'); } catch (e) {}
+        modal.hidden = true;
+      };
+    }
+    return true;
   }
 
   function maybeMostrarRevisionModal({ proxima, enviada }) {
