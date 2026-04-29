@@ -307,6 +307,30 @@
     }
     .bo-btn-copiar-sm:last-child { margin-right: 0; }
 
+    /* Botón secundario para acciones no destructivas (p.ej. "Descartar" en
+       el bloque "Pendientes de resolver"): tono crema con borde, no rojo
+       como bo-btn-destructivo. La acción es irreversible pero no toca al
+       paciente — solo descarta una valoración pre-pago. */
+    .bo-btn-secundario-sm {
+      padding: 6px 10px;
+      font-size: 0.82rem;
+      background: var(--color-white);
+      color: var(--color-green-dark);
+      border: 1px solid var(--color-border);
+    }
+    .bo-btn-secundario-sm:hover {
+      background: var(--color-cream);
+      color: var(--color-green-dark);
+    }
+
+    /* Bloque "Pendientes de resolver": fila con [Dar de alta] + [Descartar]
+       a la derecha, alineadas en horizontal con un gap reducido. */
+    .bo-fila-pendiente .bo-fila-acciones {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+
     /* Tabla de pacientes. Minimalista, sin zebra-stripes, con hover suave.
        En móvil se desplaza horizontalmente para no cortar columnas. */
     .bo-filtro {

@@ -28,6 +28,10 @@
   // Hoy queda fuera porque ya lo cubre el bloque "Sesiones hoy" — duplicar
   // sería ruido.
   const DIAS_VENTANA_PROXIMOS = 7;
+  // Duración del slot de primera consulta (valoración gratuita). Pasado este
+  // tiempo desde el inicio, la fila migra de "Sesiones hoy" a "Pendientes de
+  // resolver" con botones [Dar de alta] [Descartar].
+  const DURACION_VALORACION_MIN = 30;
 
   // Etiquetas es-ES con tildes. Usamos arrays propios en lugar de
   // toLocaleDateString('es-ES') para que el output sea determinista en
@@ -39,11 +43,17 @@
     if (!s) return '';
     return s.charAt(0).toLocaleUpperCase('es-ES') + s.slice(1);
   }
-  // 'Mañana' si diff=1; si no, 'Vie 24 abr' (día semana abreviado + día +
-  // mes abreviado). El nombre del día va en Title Case para el copy visible.
+  // Etiqueta de día relativa al día actual:
+  //   diff=0 → 'Hoy', diff=1 → 'Mañana', diff=-1 → 'Ayer',
+  //   resto → 'Vie 24 abr' (día semana abreviado + día + mes abreviado).
+  // Cobertura simétrica futuro/pasado para reutilizar la misma función desde
+  // los bloques "Próximos 7 días" (diff>=1) y "Pendientes de resolver" (diff<=0).
+  // El nombre del día va en Title Case para el copy visible.
   function _diaLabel(fechaMid, hoyMid) {
     const diff = diffEnDias(hoyMid, fechaMid);
+    if (diff === 0) return 'Hoy';
     if (diff === 1) return 'Mañana';
+    if (diff === -1) return 'Ayer';
     const dia = _capFirst(_DIAS_SEMANA_ABREV[fechaMid.getDay()]);
     const num = fechaMid.getDate();
     const mes = _MESES_ABREV[fechaMid.getMonth()];
@@ -139,6 +149,17 @@
       throw new Error('nombrePaciente vacío para skill ' + s);
     }
     return '/' + s + ' ' + nombre;
+  }
+
+  // Comando especial para el bloque "Pendientes de resolver": la skill
+  // /alta-paciente recoge nombre + email del mensaje (ver SKILL.md), así que
+  // emitimos el prompt directamente con ambos datos para que Cristina solo
+  // tenga que pegar y pulsar Enter. Email en minúsculas y trim.
+  function _comandoAltaConEmail(nombrePaciente, email) {
+    const nombre = _normalizarNombre(nombrePaciente);
+    const e = String(email == null ? '' : email).trim().toLowerCase();
+    if (!nombre || !e) return '';
+    return '/alta-paciente ' + nombre + ' ' + e;
   }
 
   // -----------------------------------------------------------------
@@ -430,22 +451,79 @@
       }
     }
 
-    // Bloque 1bis: valoraciones (primera consulta) confirmadas hoy.
-    // No tienen pacienteId (son prospectos pre-pago) ni comando copy en
-    // esta vista. Se mezclan con seguimientos en `sesionesHoy`; el badge en
-    // el render distingue tipo='valoracion' (azul) vs 'seguimiento' (verde).
+    // Bloque 1bis + Pendientes: las valoraciones (primera consulta, prospectos
+    // pre-pago) se reparten en dos buckets según si su slot ya terminó:
+    //
+    //   - Slot vigente (now < fecha + 30min) y ES de hoy → `sesionesHoy` con
+    //     badge azul "Primera consulta", sin botones (igual que antes).
+    //   - Slot pasado (now >= fecha + 30min) y SIN resolver → `pendientes`
+    //     con botones [Dar de alta] (copy /alta-paciente) y [Descartar]
+    //     (acción directa con confirm). Persiste hasta que Cristina actúe;
+    //     no se autopurga al día siguiente.
+    //
+    // Resolver = existe paciente con email igual (case-insensitive trim) y
+    //   `alta >= valoracion.fecha` → la valoración ya convirtió. Si la
+    //   paciente es anterior (caso edge: vuelve a hacer otra valoración),
+    //   la fila aparece en pendientes para que Cristina decida (reactivar
+    //   o descartar). Decoupling intencional: ni `/alta-paciente` ni
+    //   `/reactivar-paciente` mutan `valoraciones`; el filtro detective
+    //   evita mover estado en dos sitios.
+    const pendientes = [];
+    const ahora = (hoy instanceof Date && !isNaN(hoy.getTime()))
+      ? hoy.getTime()
+      : Date.now();
+    const altaPorEmail = new Map();
+    for (const p of pacientes) {
+      const email = p && typeof p.email === 'string' ? p.email.trim().toLowerCase() : '';
+      if (!email) continue;
+      const tAlta = p.alta ? new Date(p.alta).getTime() : null;
+      const prev = altaPorEmail.get(email);
+      // Si una paciente tiene varias filas (no debería, pero defensivo), nos
+      // quedamos con el alta más reciente.
+      if (prev == null || (tAlta != null && tAlta > prev)) altaPorEmail.set(email, tAlta);
+    }
+
     for (const v of valoraciones) {
       if (!v || v.status !== 'confirmed') continue;
+      const fechaCompleta = new Date(v.fecha);
+      if (isNaN(fechaCompleta.getTime())) continue;
+      const tIni = fechaCompleta.getTime();
+      const tFin = tIni + DURACION_VALORACION_MIN * 60000;
+      const emailNorm = typeof v.email === 'string' ? v.email.trim().toLowerCase() : '';
+      const tAltaPaciente = emailNorm ? altaPorEmail.get(emailNorm) : undefined;
+      const yaResuelta = tAltaPaciente != null && tAltaPaciente >= tIni;
+      if (yaResuelta) continue;
+
       const fechaMid = _toMidnight(v.fecha);
-      if (!fechaMid || fechaMid.getTime() !== hoyMid.getTime()) continue;
-      sesionesHoy.push({
-        pacienteId: null,
-        nombre: v.nombre || '',
-        hora: _horaSesion(v.fecha),
-        comando: '',
-        tipo: 'valoracion',
-        _ts: new Date(v.fecha).getTime()
-      });
+      const esHoy = !!fechaMid && fechaMid.getTime() === hoyMid.getTime();
+      const slotVigente = ahora < tFin;
+
+      if (esHoy && slotVigente) {
+        // Aún no ha pasado el slot → bloque "Sesiones hoy" como antes.
+        sesionesHoy.push({
+          pacienteId: null,
+          nombre: v.nombre || '',
+          hora: _horaSesion(v.fecha),
+          comando: '',
+          tipo: 'valoracion',
+          _ts: tIni
+        });
+      } else if (!slotVigente) {
+        // Slot pasado y sin resolver → bloque "Pendientes". Cualquier día.
+        pendientes.push({
+          valoracionId: v.id,
+          nombre: v.nombre || '',
+          email: v.email || '',
+          fechaISO: fechaMid ? _toISO(fechaMid) : null,
+          hora: _horaSesion(v.fecha),
+          diaLabel: fechaMid && hoyMid ? _diaLabel(fechaMid, hoyMid) : '',
+          esHoy: esHoy,
+          comandoAlta: _comandoAltaConEmail(v.nombre, v.email),
+          _ts: tIni
+        });
+      }
+      // Caso "valoración futura de otro día" no aplica: para esto está el
+      // bloque "Próximos 7 días", no este bucle.
     }
 
     // Orden estable: sesiones por timestamp asc (mantiene sub-orden por hora
@@ -459,6 +537,15 @@
     });
     // _ts es privado del sort; no lo exponemos al render.
     for (const s of sesionesHoy) delete s._ts;
+    // Pendientes: las más antiguas primero — Cristina debería resolverlas en
+    // orden de llegada para no acumular backlog. Empate → nombre alfabético.
+    pendientes.sort(function (a, b) {
+      const at = a._ts == null ? 0 : a._ts;
+      const bt = b._ts == null ? 0 : b._ts;
+      if (at !== bt) return at - bt;
+      return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es');
+    });
+    for (const p of pendientes) delete p._ts;
     menusCrearSemana.sort(function (a, b) {
       // más urgentes primero (diasParaCaducar más bajo; null = sin menú = muy urgente).
       const da = a.diasParaCaducar == null ? -Infinity : a.diasParaCaducar;
@@ -482,7 +569,7 @@
       hoyMid
     );
 
-    return { sesionesHoy, proximos7Dias, menusCrearSemana, alertas };
+    return { sesionesHoy, pendientes, proximos7Dias, menusCrearSemana, alertas };
   }
 
   // -----------------------------------------------------------------
@@ -722,6 +809,7 @@
     DIAS_SIN_CHECKIN_ALERTA,
     DIAS_AVISO_PROXIMO_MENU,
     DIAS_VENTANA_PROXIMOS,
+    DURACION_VALORACION_MIN,
     REPESCA_VENTANA_DIAS,
     GAP_REPESCA_DIAS,
     REPESCA_MIN_DENOMINADOR
