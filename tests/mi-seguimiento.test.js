@@ -41,6 +41,7 @@ const {
   revertCheckin,
   buildRevisionCtaCopy,
   shouldMostrarRevisionModal,
+  shouldMostrarMenuNuevoModal,
   hydrateDashboard,
 } = require("../src/mi-seguimiento/logic.js");
 
@@ -1322,6 +1323,43 @@ test("shouldMostrarRevisionModal: fuera de la ventana (hidden) → show:false", 
   const proxima = { id: 's1', fecha: new Date(2026, 4, 10, 14, 0) };
   const r = shouldMostrarRevisionModal({ proximaSesion: proxima, revisionEnviada: false, now, seenModalIds: [] });
   assert.equal(r.show, false);
+});
+
+// ---------------------------- shouldMostrarMenuNuevoModal ----------------
+
+test("shouldMostrarMenuNuevoModal: sin menu → show:false", () => {
+  assert.deepEqual(shouldMostrarMenuNuevoModal({ menu: null }), { show: false });
+});
+
+test("shouldMostrarMenuNuevoModal: menú sin id → show:false", () => {
+  assert.deepEqual(shouldMostrarMenuNuevoModal({ menu: { numero: 1 } }), { show: false });
+});
+
+test("shouldMostrarMenuNuevoModal: menú nuevo nunca visto → show:true con lsKey y numero", () => {
+  const r = shouldMostrarMenuNuevoModal({ menu: { id: 'm1', numero: 2 }, seenMenuIds: [] });
+  assert.equal(r.show, true);
+  assert.equal(r.lsKey, 'menu-nuevo-shown:m1');
+  assert.equal(r.numero, 2);
+});
+
+test("shouldMostrarMenuNuevoModal: menú ya visto en este device → show:false (one-shot)", () => {
+  const r = shouldMostrarMenuNuevoModal({ menu: { id: 'm1', numero: 2 }, seenMenuIds: ['m1'] });
+  assert.equal(r.show, false);
+});
+
+test("shouldMostrarMenuNuevoModal: revisión del mismo menú (id estable) no re-dispara", () => {
+  // El UPSERT por (paciente_id, numero) preserva el id en revisiones.
+  // Si el id ya está en seenMenuIds, no abre aunque cambie vigente_desde.
+  const menu = { id: 'm1', numero: 2, vigente_desde: '2026-05-01' };
+  const menuRevisado = { id: 'm1', numero: 2, vigente_desde: '2026-05-08' };
+  assert.equal(shouldMostrarMenuNuevoModal({ menu, seenMenuIds: ['m1'] }).show, false);
+  assert.equal(shouldMostrarMenuNuevoModal({ menu: menuRevisado, seenMenuIds: ['m1'] }).show, false);
+});
+
+test("shouldMostrarMenuNuevoModal: menú con numero distinto → show:true (id distinto)", () => {
+  const r = shouldMostrarMenuNuevoModal({ menu: { id: 'm2', numero: 3 }, seenMenuIds: ['m1'] });
+  assert.equal(r.show, true);
+  assert.equal(r.lsKey, 'menu-nuevo-shown:m2');
 });
 
 // ------------------------------- hydrateDashboard ------------------------
