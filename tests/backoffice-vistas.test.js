@@ -418,20 +418,37 @@ test("BoHoy.renderFilaProximaSesion: diff=1 → 'Mañana · HH:MM'", () => {
   assert.match(html, /Mañana · 09:00/);
 });
 
-test("BoHoy.renderTodosLosBloques: bloque proximos-7-dias va justo después de sesiones-hoy", () => {
+test("BoHoy.renderTodosLosBloques: orden por urgencia (pendientes → sesiones-hoy → menús → alertas → próximos-7-días)", () => {
+  // Orden canónico (de más urgente a más informativo):
+  //   1. pendientes — valoraciones atascadas, exigen decisión
+  //   2. sesiones-hoy — ocurren hoy
+  //   3. menus-crear-semana — deadline semanal
+  //   4. alertas — prevención abandono
+  //   5. proximos-7-dias — vista anticipada
   const agrupado = {
+    pendientes: [{
+      valoracionId: "v1", nombre: "X", email: "x@x", hora: "10:00",
+      esHoy: true, comandoAlta: "/alta-paciente X x@x"
+    }],
     sesionesHoy: [{ pacienteId: "p1", nombre: "ANA", hora: "10:00", comando: "/seguimiento-paciente ANA" }],
-    proximos7Dias: [{ pacienteId: "p1", nombre: "ANA", fechaISO: "2026-04-23", hora: "10:00", diaLabel: "Mañana", comando: "/seguimiento-paciente ANA" }],
     menusCrearSemana: [{ pacienteId: "p1", nombre: "ANA", diasParaCaducar: 1, comando: "/crear-menu ANA" }],
-    alertas: []
+    alertas: [{ pacienteId: "p1", nombre: "ANA", diasSinCheckin: 5, comando: "/repescar-paciente ANA" }],
+    proximos7Dias: [{ pacienteId: "p1", nombre: "ANA", fechaISO: "2026-04-23", hora: "10:00", diaLabel: "Mañana", comando: "/seguimiento-paciente ANA" }]
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
-  const idxHoy  = html.indexOf('data-bo-block="sesiones-hoy"');
-  const idxProx = html.indexOf('data-bo-block="proximos-7-dias"');
-  const idxMenu = html.indexOf('data-bo-block="menus-crear-semana"');
-  assert.ok(idxHoy >= 0 && idxProx >= 0 && idxMenu >= 0, "faltan bloques");
-  assert.ok(idxHoy < idxProx, "sesiones-hoy debe ir antes de proximos-7-dias");
-  assert.ok(idxProx < idxMenu, "proximos-7-dias debe ir antes de menus-crear-semana");
+  const idxPend  = html.indexOf('data-bo-block="pendientes"');
+  const idxHoy   = html.indexOf('data-bo-block="sesiones-hoy"');
+  const idxMenu  = html.indexOf('data-bo-block="menus-crear-semana"');
+  const idxAlert = html.indexOf('data-bo-block="alertas"');
+  const idxProx  = html.indexOf('data-bo-block="proximos-7-dias"');
+  assert.ok(
+    idxPend >= 0 && idxHoy >= 0 && idxMenu >= 0 && idxAlert >= 0 && idxProx >= 0,
+    "faltan bloques"
+  );
+  assert.ok(idxPend < idxHoy, "pendientes debe ir antes de sesiones-hoy");
+  assert.ok(idxHoy < idxMenu, "sesiones-hoy debe ir antes de menus-crear-semana");
+  assert.ok(idxMenu < idxAlert, "menus-crear-semana debe ir antes de alertas");
+  assert.ok(idxAlert < idxProx, "alertas debe ir antes de proximos-7-dias");
 });
 
 test("BoHoy.renderTodosLosBloques: proximos7Dias undefined no rompe (defensa)", () => {
