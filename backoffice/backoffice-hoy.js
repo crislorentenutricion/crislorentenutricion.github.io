@@ -1,4 +1,4 @@
-// Vista "Hoy" del backoffice CLN — orquestación Supabase + render + handlers.
+// Vista "Tareas" del backoffice CLN — orquestación Supabase + render + handlers.
 //
 // Flujo:
 //   1. BoAuth.iniciar resuelve con (supa, session).
@@ -246,18 +246,19 @@
     '</section>';
   }
 
-  // Catálogo declarativo de los 4 bloques de la vista Hoy. Definido fuera
+  // Catálogo declarativo de los bloques de la vista Tareas. Definido fuera
   // del flujo para que (a) `renderTodosLosBloques` pueda filtrar bloques
   // vacíos sin duplicar config, y (b) un test pueda inspeccionar el orden
   // canónico sin ejecutar render.
+  //
+  // Orden por urgencia decreciente:
+  //   1. Pendientes de resolver — valoraciones atascadas, exigen decisión.
+  //   2. Sesiones hoy — pasan en horas, requieren preparación inmediata.
+  //   3. Menús a crear esta semana — deadline semanal con margen.
+  //   4. Alertas (sin check-in) — prevención antes de que la paciente abandone.
+  //   5. Próximos 7 días — vista anticipada, informativa.
   function _bloquesConfig(agrupado) {
     return [
-      {
-        key: 'sesiones-hoy',
-        titulo: 'Sesiones hoy',
-        items: agrupado.sesionesHoy || [],
-        renderFila: renderFilaSesion
-      },
       {
         key: 'pendientes',
         titulo: 'Pendientes de resolver',
@@ -265,10 +266,10 @@
         renderFila: renderFilaPendiente
       },
       {
-        key: 'proximos-7-dias',
-        titulo: 'Próximos 7 días',
-        items: agrupado.proximos7Dias || [],
-        renderFila: renderFilaProximaSesion
+        key: 'sesiones-hoy',
+        titulo: 'Sesiones hoy',
+        items: agrupado.sesionesHoy || [],
+        renderFila: renderFilaSesion
       },
       {
         key: 'menus-crear-semana',
@@ -281,6 +282,12 @@
         titulo: 'Alertas (sin check-in)',
         items: agrupado.alertas || [],
         renderFila: renderFilaAlerta
+      },
+      {
+        key: 'proximos-7-dias',
+        titulo: 'Próximos 7 días',
+        items: agrupado.proximos7Dias || [],
+        renderFila: renderFilaProximaSesion
       }
     ];
   }
