@@ -624,6 +624,173 @@ test("DIAS_VENTANA_PROXIMOS exportada vale 7", () => {
 });
 
 // ===================================================================
+// agruparHoy — bloque "Pendientes de resolver"
+//
+// Una valoración va a `pendientes` cuando:
+//   - status='confirmed' (las cancelled/no_show/converted nunca aparecen)
+//   - now >= fecha + 30 min (el slot ya ha terminado)
+//   - NO existe paciente con ese email (case-insensitive trim) cuyo `alta`
+//     sea posterior a la fecha de la valoración (ya dada de alta posterior)
+//
+// HOY_TARDE = 22 abril 2026 a las 15:00 — usado para los tests de pendientes
+// porque HOY (00:00) deja todas las valoraciones del día con slot vigente.
+// ===================================================================
+
+const HOY_TARDE = new Date(2026, 3, 22, 15, 0);
+
+test("agruparHoy: valoración con slot pasado y sin paciente → bloque pendientes", () => {
+  const datos = {
+    pacientes: [],
+    menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE NAVARRO", email: "jorge@x.com",
+        fecha: "2026-04-22T13:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.sesionesHoy.length, 0, "no debe aparecer en sesionesHoy");
+  assert.equal(r.pendientes.length, 1, "sí debe aparecer en pendientes");
+  const p = r.pendientes[0];
+  assert.equal(p.valoracionId, "v1");
+  assert.equal(p.nombre, "JORGE NAVARRO");
+  assert.equal(p.email, "jorge@x.com");
+  assert.equal(p.hora, "13:00");
+  assert.equal(p.esHoy, true);
+  assert.equal(p.comandoAlta, "/alta-paciente JORGE NAVARRO jorge@x.com");
+});
+
+test("agruparHoy: valoración con slot vigente sigue en sesionesHoy, no en pendientes", () => {
+  // HOY = 00:00; valoración a las 10:00 → slot termina 10:30, todavía no.
+  const datos = {
+    pacientes: [], menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE", email: "j@x", fecha: "2026-04-22T10:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY);
+  assert.equal(r.sesionesHoy.length, 1, "sigue en sesionesHoy");
+  assert.equal(r.pendientes.length, 0, "no debe aparecer en pendientes");
+});
+
+test("agruparHoy: valoración de día anterior con slot pasado → pendientes con diaLabel='Ayer'", () => {
+  const datos = {
+    pacientes: [], menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "ANA", email: "a@x.com", fecha: "2026-04-21T13:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.pendientes.length, 1);
+  assert.equal(r.pendientes[0].diaLabel, "Ayer");
+  assert.equal(r.pendientes[0].esHoy, false);
+});
+
+test("agruparHoy: valoración de hace varios días → diaLabel con fecha abreviada", () => {
+  // 2026-04-19 → diff = -3 → 'Dom 19 abr' (abreviado, sin tilde en Dom).
+  const datos = {
+    pacientes: [], menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "MARTA", email: "m@x", fecha: "2026-04-19T10:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.pendientes.length, 1);
+  assert.equal(r.pendientes[0].diaLabel, "Dom 19 abr");
+  assert.equal(r.pendientes[0].esHoy, false);
+});
+
+test("agruparHoy: valoración con paciente alta posterior → resuelta, NO aparece en pendientes", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "JORGE NAVARRO", email: "jorge@x.com", estado: "activo",
+        alta: "2026-04-22T14:00:00" }
+    ],
+    menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE NAVARRO", email: "jorge@x.com",
+        fecha: "2026-04-22T13:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.pendientes.length, 0, "ya dada de alta → resuelta");
+  assert.equal(r.sesionesHoy.length, 0);
+});
+
+test("agruparHoy: paciente con alta ANTERIOR a la valoración → la valoración sigue pendiente", () => {
+  // Caso "paciente recurrente": cerrada hace meses y vuelve a hacer otra
+  // valoración. El alta antigua no resuelve la valoración nueva.
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "JORGE", email: "jorge@x.com", estado: "cerrado",
+        alta: "2025-10-01T10:00:00" }
+    ],
+    menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE", email: "jorge@x.com",
+        fecha: "2026-04-22T13:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.pendientes.length, 1, "alta antigua no resuelve valoración nueva");
+});
+
+test("agruparHoy: match de email es case-insensitive y con trim", () => {
+  const datos = {
+    pacientes: [
+      { id: "p1", nombre: "JORGE", email: "  Jorge@X.COM  ", estado: "activo",
+        alta: "2026-04-22T14:00:00" }
+    ],
+    menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "JORGE", email: "jorge@x.com",
+        fecha: "2026-04-22T13:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.pendientes.length, 0, "case+trim debe match → resuelta");
+});
+
+test("agruparHoy: status cancelled / no_show / converted nunca aparecen en pendientes", () => {
+  const datos = {
+    pacientes: [], menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "X", email: "x@x", fecha: "2026-04-22T13:00:00", status: "cancelled" },
+      { id: "v2", nombre: "Y", email: "y@x", fecha: "2026-04-22T13:00:00", status: "no_show" },
+      { id: "v3", nombre: "Z", email: "z@x", fecha: "2026-04-22T13:00:00", status: "converted" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.pendientes.length, 0);
+});
+
+test("agruparHoy: pendientes ordenadas por timestamp ascendente (más antiguas primero)", () => {
+  const datos = {
+    pacientes: [], menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v_hoy",  nombre: "HOY",   email: "h@x", fecha: "2026-04-22T10:00:00", status: "confirmed" },
+      { id: "v_ayer", nombre: "AYER",  email: "a@x", fecha: "2026-04-21T10:00:00", status: "confirmed" },
+      { id: "v_lun",  nombre: "LUNES", email: "l@x", fecha: "2026-04-20T10:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.deepEqual(r.pendientes.map(p => p.valoracionId), ["v_lun", "v_ayer", "v_hoy"]);
+});
+
+test("agruparHoy: comandoAlta omite cuando falta nombre o email", () => {
+  const datos = {
+    pacientes: [], menus: [], sesiones: [], checkins: [],
+    valoraciones: [
+      { id: "v1", nombre: "", email: "x@x", fecha: "2026-04-22T13:00:00", status: "confirmed" },
+      { id: "v2", nombre: "ANA", email: "", fecha: "2026-04-22T13:00:00", status: "confirmed" }
+    ]
+  };
+  const r = agruparHoy(datos, HOY_TARDE);
+  assert.equal(r.pendientes.length, 2);
+  assert.equal(r.pendientes[0].comandoAlta, "");
+  assert.equal(r.pendientes[1].comandoAlta, "");
+});
+
+// ===================================================================
 // priorizarPacientes
 // ===================================================================
 

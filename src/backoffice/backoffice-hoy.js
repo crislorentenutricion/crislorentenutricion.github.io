@@ -137,6 +137,52 @@
     return '<li class="bo-fila" data-bo-fila="menu-crear">' + link + accion + '</li>';
   }
 
+  // Fila del bloque "Pendientes de resolver". Surge cuando una valoración
+  // (primera consulta) ya pasó su slot (+30 min desde el inicio) y no se ha
+  // resuelto: ni dada de alta (no existe paciente con ese email + alta
+  // posterior) ni descartada (no se ha borrado). Persiste hasta que Cristina
+  // pulse uno de los dos botones — no se autopurga al día siguiente.
+  //
+  // Layout:
+  //   - Bloque izquierdo (informativo): nombre + hora (con prefijo de día si
+  //     es de un día anterior, p.ej. "Ayer · 13:30" o "Mar 27 abr · 13:30").
+  //     Sin link al detalle: la valoración no tiene paciente todavía.
+  //   - Bloque derecho (acciones): dos botones.
+  //       · "Dar de alta": copy-command `/alta-paciente NOMBRE EMAIL` (mismo
+  //         patrón que el resto de botones del backoffice).
+  //       · "Descartar": acción directa con confirm() → DELETE en valoraciones.
+  //         Excepción documentada al patrón copy-only — ver convenciones/
+  //         negocio/backoffice.md.
+  function renderFilaPendiente(item) {
+    const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
+    const hora   = BoUi.escapeHtml(item.hora || '');
+    const diaLabel = item.esHoy ? '' : BoUi.escapeHtml(item.diaLabel || '');
+    const detalle = diaLabel && hora ? (diaLabel + ' · ' + hora) : (hora || diaLabel);
+    const meta = '<div class="bo-fila-meta">' +
+      '<span class="bo-fila-nombre">' + nombre + '</span>' +
+      '<span class="bo-fila-hora">' + BoUi.escapeHtml(detalle) + '</span>' +
+    '</div>';
+    const cuerpo = '<div class="bo-fila-link-row">' + meta + '</div>';
+
+    const valoracionId    = BoUi.escapeHtml(String(item.valoracionId || ''));
+    const nombreInternoEs = BoUi.escapeHtml(String(item.nombre || ''));
+    const comandoAlta     = BoUi.escapeHtml(String(item.comandoAlta || ''));
+
+    const btnAlta = '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
+      'data-bo-action="copy" ' +
+      'data-bo-comando="' + comandoAlta + '">' +
+      'Dar de alta</button>';
+    const btnDescartar = '<button type="button" class="bo-btn bo-btn-secundario-sm" ' +
+      'data-bo-action="descartar-valoracion" ' +
+      'data-bo-valoracion-id="' + valoracionId + '" ' +
+      'data-bo-valoracion-nombre="' + nombreInternoEs + '">' +
+      'Descartar</button>';
+    const acciones = '<div class="bo-fila-acciones">' + btnAlta + btnDescartar + '</div>';
+
+    return '<li class="bo-fila bo-fila-pendiente" data-bo-fila="pendiente">' +
+      cuerpo + acciones + '</li>';
+  }
+
   function renderFilaAlerta(item) {
     const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
     let detalle;
@@ -213,6 +259,12 @@
         renderFila: renderFilaSesion
       },
       {
+        key: 'pendientes',
+        titulo: 'Pendientes de resolver',
+        items: agrupado.pendientes || [],
+        renderFila: renderFilaPendiente
+      },
+      {
         key: 'proximos-7-dias',
         titulo: 'Próximos 7 días',
         items: agrupado.proximos7Dias || [],
@@ -287,6 +339,81 @@
     });
   }
 
+  // -----------------------------------------------------------------
+  // Descartar valoración — única excepción al patrón copy-only del backoffice
+  //
+  // Por qué excepción aquí: la acción es trivial (DELETE de una fila por id),
+  // no orquesta nada y no merece una skill nueva. La regla dura del backoffice
+  // sigue vigente para todos los demás botones — ver convenciones/negocio/
+  // backoffice.md sección "Acciones del detalle".
+  //
+  // Flujo:
+  //   1. confirm() bloqueante (sin reversibilidad por decisión de producto).
+  //   2. supa.from('valoraciones').delete().eq('id', x). RLS DELETE policy
+  //      (migración 0018) permite a Cristina; cualquier otro email recibe 0
+  //      filas afectadas (RLS silenciosa, no error).
+  //   3. Si OK → recargar el panel (vuelve a calcular bloques sin la fila).
+  //   4. Si error → toast con el mensaje, mantener la fila visible.
+  //
+  // _manejarDescartar es la función testeable. Recibe `opts.confirm` y
+  // `opts.recargar` para inyectar fakes en tests sin DOM ni Supabase real.
+  // -----------------------------------------------------------------
+
+  async function _manejarDescartar(ev, supa, opts) {
+    const t = ev && ev.target;
+    const btn = t && t.closest && t.closest('[data-bo-action="descartar-valoracion"]');
+    if (!btn) return false;
+    if (typeof ev.preventDefault === 'function') ev.preventDefault();
+    if (typeof ev.stopPropagation === 'function') ev.stopPropagation();
+
+    const id = btn.getAttribute('data-bo-valoracion-id') || '';
+    const nombreInterno = btn.getAttribute('data-bo-valoracion-nombre') || '';
+    if (!id) return false;
+
+    const o = opts || {};
+    const confirmar = o.confirm
+      || (typeof window !== 'undefined' && typeof window.confirm === 'function'
+            ? window.confirm.bind(window)
+            : function () { return true; });
+    const nombreUI = BoUi.titleCase(nombreInterno) || 'esta valoración';
+    const ok = confirmar('¿Descartar la valoración de ' + nombreUI +
+      '?\n\nEsta acción es irreversible.');
+    if (!ok) return false;
+
+    if (btn.disabled !== undefined) btn.disabled = true;
+    try {
+      const resp = await supa.from('valoraciones').delete().eq('id', id);
+      if (resp && resp.error) {
+        BoUi.toast('No se pudo descartar: ' + (resp.error.message || 'error'));
+        if (btn.disabled !== undefined) btn.disabled = false;
+        return false;
+      }
+      BoUi.toast('Valoración descartada');
+      const recargar = o.recargar || function () { return arrancar(supa); };
+      await recargar();
+      return true;
+    } catch (err) {
+      BoUi.toast('Error al descartar: ' + ((err && err.message) || String(err)));
+      if (btn.disabled !== undefined) btn.disabled = false;
+      return false;
+    }
+  }
+
+  // Wirea el handler de descartar en cualquier [data-bo-action="descartar-valoracion"]
+  // dentro de `root`. Igual que _conectarBotonesCopiar: marca el botón con
+  // `_boWiredDescartar` para no apilar listeners en re-renders.
+  function _conectarBotonesDescartar(root, supa) {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+    const botones = root.querySelectorAll('[data-bo-action="descartar-valoracion"]');
+    botones.forEach(function (btn) {
+      if (btn._boWiredDescartar) return;
+      btn._boWiredDescartar = true;
+      btn.addEventListener('click', function (ev) {
+        _manejarDescartar(ev, supa);
+      });
+    });
+  }
+
   async function cargarDatos(supa) {
     // 5 SELECT en paralelo. RLS se encarga de filtrar al email de Cristina.
     // `menus.created_at` lo usa `calcularMetricasHoy` para contar los del mes
@@ -347,8 +474,10 @@
       // Excepción documentada al patrón "fila = link al detalle": el bloque
       // "Menús a crear esta semana" pinta un botón "Crear menú" (copy-command)
       // cuando la anamnesis ya está rellena, para acortar el gesto más
-      // frecuente de Cristina.
+      // frecuente de Cristina. El bloque "Pendientes de resolver" añade
+      // [Dar de alta] (copy) y [Descartar] (acción directa con confirm).
       _conectarBotonesCopiar(root);
+      _conectarBotonesDescartar(root, supa);
     } catch (err) {
       console.error('[backoffice/hoy]', err);
       root.innerHTML = '';
@@ -364,11 +493,13 @@
     renderFilaSesion,
     renderFilaProximaSesion,
     renderFilaMenuCrear,
+    renderFilaPendiente,
     renderFilaAlerta,
     renderBloque,
     renderTodosLosBloques,
     renderMetricas,
-    arrancar
+    arrancar,
+    _manejarDescartar: _manejarDescartar
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

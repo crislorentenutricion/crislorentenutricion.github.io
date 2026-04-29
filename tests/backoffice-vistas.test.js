@@ -231,6 +231,94 @@ test("BoHoy.renderFilaMenuCrear: link al detalle convive con la acción a la der
   assert.ok(cierreA > 0 && aperturaBoton > cierreA, "botón debe ir tras cerrar <a>");
 });
 
+// -------------------------------------------------------------------
+// BoHoy — bloque "Pendientes de resolver"
+// -------------------------------------------------------------------
+
+test("BoHoy.renderFilaPendiente: pinta nombre Title Case, hora y dos botones [Dar de alta] [Descartar]", () => {
+  const html = BoHoy.renderFilaPendiente({
+    valoracionId: "v-uuid",
+    nombre: "JORGE NAVARRO",
+    email: "jorge@x.com",
+    hora: "13:00",
+    diaLabel: "Hoy",
+    esHoy: true,
+    comandoAlta: "/alta-paciente JORGE NAVARRO jorge@x.com"
+  });
+  assert.match(html, /data-bo-fila="pendiente"/);
+  assert.match(html, /class="bo-fila bo-fila-pendiente"/);
+  assert.match(html, />Jorge Navarro</);
+  // esHoy=true → no muestra prefijo de día, solo la hora.
+  assert.match(html, />13:00</);
+  assert.ok(!/Hoy · 13:00/.test(html), "esHoy=true debe omitir prefijo de día");
+
+  // Botón "Dar de alta": copy-command estándar.
+  assert.match(html, /data-bo-action="copy"/);
+  assert.match(html, /data-bo-comando="\/alta-paciente JORGE NAVARRO jorge@x\.com"/);
+  assert.match(html, />Dar de alta</);
+
+  // Botón "Descartar": acción directa con id+nombre para el handler.
+  assert.match(html, /data-bo-action="descartar-valoracion"/);
+  assert.match(html, /data-bo-valoracion-id="v-uuid"/);
+  assert.match(html, /data-bo-valoracion-nombre="JORGE NAVARRO"/);
+  assert.match(html, />Descartar</);
+});
+
+test("BoHoy.renderFilaPendiente: esHoy=false → muestra 'Ayer · 13:00' (o etiqueta de día)", () => {
+  const html = BoHoy.renderFilaPendiente({
+    valoracionId: "v-2",
+    nombre: "ANA",
+    email: "a@x.com",
+    hora: "13:00",
+    diaLabel: "Ayer",
+    esHoy: false,
+    comandoAlta: "/alta-paciente ANA a@x.com"
+  });
+  assert.match(html, /Ayer · 13:00/);
+});
+
+test("BoHoy.renderFilaPendiente: escapa caracteres especiales en email/nombre", () => {
+  const html = BoHoy.renderFilaPendiente({
+    valoracionId: "v-x",
+    nombre: 'JOSÉ "CHARO"',
+    email: "x&y@z.com",
+    hora: "10:00",
+    esHoy: true,
+    comandoAlta: '/alta-paciente JOSÉ "CHARO" x&y@z.com'
+  });
+  // El nombre interno en data-bo-valoracion-nombre debe quedar escapado.
+  assert.match(html, /data-bo-valoracion-nombre="JOSÉ &quot;CHARO&quot;"/);
+  // El comando también escapado en data-bo-comando.
+  assert.match(html, /&quot;CHARO&quot;/);
+  assert.match(html, /x&amp;y@z\.com/);
+});
+
+test("BoHoy.renderTodosLosBloques: pinta el bloque 'pendientes' cuando hay items", () => {
+  const agrupado = {
+    sesionesHoy: [],
+    pendientes: [{
+      valoracionId: "v1", nombre: "X", email: "x@x", hora: "10:00",
+      esHoy: true, comandoAlta: "/alta-paciente X x@x"
+    }],
+    proximos7Dias: [],
+    menusCrearSemana: [],
+    alertas: []
+  };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  assert.match(html, /data-bo-block="pendientes"/);
+  assert.match(html, /Pendientes de resolver/);
+});
+
+test("BoHoy.renderTodosLosBloques: bloque 'pendientes' vacío se oculta", () => {
+  const agrupado = {
+    sesionesHoy: [{ pacienteId: "p1", nombre: "A", hora: "10:00", tipo: "seguimiento" }],
+    pendientes: [],
+    proximos7Dias: [], menusCrearSemana: [], alertas: []
+  };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  assert.ok(!/data-bo-block="pendientes"/.test(html));
+});
+
 test("BoHoy.renderFilaAlerta: diasSinCheckin null → 'Sin check-ins aún'", () => {
   const html = BoHoy.renderFilaAlerta({
     nombre: "NOA", diasSinCheckin: null, comando: "/repescar-paciente NOA"
