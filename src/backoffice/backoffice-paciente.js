@@ -424,13 +424,15 @@
       ? (f.fecha ? BoUi.formatearFecha(f.fecha) : 'Inicio')
       : (BoUi.formatearFecha(f.fecha) || '—');
     const etiqueta = f.tipo === 'inicio' ? 'Inicio' : ('#' + f.sesion);
-    const dPeso = primera ? null : _delta(f.peso, primera.peso);
+    // Δ vs inicio (`primera` es la primera fila con peso). Si f es la propia
+    // `primera` el delta es null → "—". Resto, calcula contra el peso inicio.
+    const dPeso = (f === primera) ? null : _delta(f.peso, primera.peso);
 
     const celdas = [
       '<td>' + BoUi.escapeHtml(fechaTxt) + '</td>',
       '<td>' + BoUi.escapeHtml(etiqueta) + '</td>',
       '<td>' + (f.peso != null ? f.peso.toFixed(1) : '—') + '</td>',
-      '<td class="bo-evol-delta">' + (f.tipo === 'inicio' ? '—' : _formatDelta(dPeso)) + '</td>'
+      '<td class="bo-evol-delta">' + _formatDelta(dPeso) + '</td>'
     ];
 
     MEDIDAS.forEach(function (m) {

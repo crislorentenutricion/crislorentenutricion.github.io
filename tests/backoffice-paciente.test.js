@@ -232,6 +232,34 @@ test("BoPaciente.renderEvolucion: medidas mostradas en columnas y celdas vacías
   assert.ok(conteoEm >= 1, "debe haber al menos una celda — para datos no informados");
 });
 
+test("BoPaciente.renderEvolucion: columna Δ vs inicio se rellena para cada revisión", () => {
+  const html = BoPaciente.renderEvolucion(
+    [
+      { created_at: "2026-04-10", contenido: { peso: 73 } },
+      { created_at: "2026-04-20", contenido: { peso: 71.5 } }
+    ],
+    { peso: 75 },
+    "2026-03-12"
+  );
+  // Captura las celdas <td class="bo-evol-delta">…</td> en orden de fila.
+  const celdasDelta = [...html.matchAll(/<td class="bo-evol-delta">([^<]*)<\/td>/g)].map(m => m[1]);
+  // INICIO no tiene Δ (—); las dos revisiones sí.
+  assert.deepEqual(celdasDelta, ['—', '-2', '-3.5']);
+});
+
+test("BoPaciente.renderEvolucion: sin anamnesis, primera revisión es la referencia (Δ '—')", () => {
+  const html = BoPaciente.renderEvolucion(
+    [
+      { created_at: "2026-04-10", contenido: { peso: 73 } },
+      { created_at: "2026-04-20", contenido: { peso: 72 } }
+    ],
+    null,
+    null
+  );
+  const celdasDelta = [...html.matchAll(/<td class="bo-evol-delta">([^<]*)<\/td>/g)].map(m => m[1]);
+  assert.deepEqual(celdasDelta, ['—', '-1']);
+});
+
 test("BoPaciente.renderEvolucion: anamnesis sin peso pero revisiones con peso → sin INICIO", () => {
   const html = BoPaciente.renderEvolucion(
     [
