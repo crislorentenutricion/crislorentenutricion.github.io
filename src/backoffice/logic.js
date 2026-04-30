@@ -132,6 +132,7 @@
     'publicar-post',
     'reactivar-paciente',
     'reagendar',
+    'registrar-pago',
     'repescar-paciente',
     'retrospectiva',
     'seguimiento-paciente',

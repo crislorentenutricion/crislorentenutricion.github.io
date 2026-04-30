@@ -138,6 +138,178 @@ test("BoPaciente.renderAnamnesis: ignora strings vacíos y arrays vacíos", () =
 });
 
 // ===================================================================
+// renderEvolucion — sustituye al SEGUIMIENTO_[NOMBRE].xlsx (deprecado 2026-04-30)
+// ===================================================================
+
+test("BoPaciente.renderEvolucion: sin peso en anamnesis ni revisiones → string vacío", () => {
+  assert.equal(BoPaciente.renderEvolucion([], null, null), "");
+  assert.equal(BoPaciente.renderEvolucion([], { altura: 168 }, "2026-03-01"), "");
+  assert.equal(
+    BoPaciente.renderEvolucion(
+      [{ created_at: "2026-04-01", contenido: { adherencia: "buena" } }],
+      null, null
+    ),
+    ""
+  );
+});
+
+test("BoPaciente.renderEvolucion: solo anamnesis con peso → fila INICIO sin sparkline", () => {
+  const html = BoPaciente.renderEvolucion([], { peso: 75, cintura: 78 }, "2026-03-12");
+  assert.match(html, /data-bo-bloque="evolucion"/);
+  assert.match(html, /data-bo-fila="inicio"/);
+  assert.match(html, />75\.0</);
+  assert.match(html, />78</);
+  assert.ok(!/<svg/.test(html), "no debe haber sparkline con un solo punto");
+  // No mostramos "Actual" / "Δ peso" si solo hay un punto.
+  assert.ok(!/Actual:/.test(html));
+  assert.ok(!/Δ peso/.test(html));
+});
+
+test("BoPaciente.renderEvolucion: anamnesis + 1 revisión → 2 filas, sparkline, Δ correcto", () => {
+  const html = BoPaciente.renderEvolucion(
+    [{ created_at: "2026-04-10T08:00:00Z", contenido: { peso: 73 } }],
+    { peso: 75 },
+    "2026-03-12"
+  );
+  assert.match(html, /data-bo-fila="inicio"/);
+  assert.match(html, /data-bo-fila="revision"/);
+  assert.match(html, /<svg[^>]*class="bo-evol-spark"/);
+  assert.match(html, /<polyline/);
+  // Resumen: Inicio 75.0, Actual 73.0, Δ peso -2
+  assert.match(html, /Inicio:.*75\.0 kg/);
+  assert.match(html, /Actual:.*73\.0 kg/);
+  assert.match(html, /Δ peso:.*-2/);
+});
+
+test("BoPaciente.renderEvolucion: orden ascendente de revisiones (más antigua primero)", () => {
+  const html = BoPaciente.renderEvolucion(
+    [
+      { created_at: "2026-04-20T10:00:00Z", contenido: { peso: 71 } },
+      { created_at: "2026-04-10T10:00:00Z", contenido: { peso: 73 } },
+      { created_at: "2026-04-30T10:00:00Z", contenido: { peso: 70 } }
+    ],
+    { peso: 75 },
+    "2026-03-12"
+  );
+  // Las filas <tr data-bo-fila="..."> deben aparecer en orden ASC.
+  const filas = html.match(/data-bo-fila="(inicio|revision)"/g);
+  assert.deepEqual(filas, [
+    'data-bo-fila="inicio"',
+    'data-bo-fila="revision"',
+    'data-bo-fila="revision"',
+    'data-bo-fila="revision"'
+  ]);
+  // Cabecera resumen toma primera (75) y última (70) por peso.
+  assert.match(html, /Inicio:.*75\.0 kg/);
+  assert.match(html, /Actual:.*70\.0 kg/);
+  assert.match(html, /Δ peso:.*-5/);
+});
+
+test("BoPaciente.renderEvolucion: peso como string con coma decimal se normaliza", () => {
+  const html = BoPaciente.renderEvolucion(
+    [{ created_at: "2026-04-10", contenido: { peso: "72,5" } }],
+    { peso: "75" },
+    "2026-03-12"
+  );
+  assert.match(html, />75\.0</);
+  assert.match(html, />72\.5</);
+});
+
+test("BoPaciente.renderEvolucion: medidas mostradas en columnas y celdas vacías como —", () => {
+  const html = BoPaciente.renderEvolucion(
+    [{ created_at: "2026-04-10", contenido: { peso: 73, cintura: 76 } }],
+    { peso: 75, cintura: 78, cadera: 95 },
+    "2026-03-12"
+  );
+  assert.match(html, /<th>Cintura<\/th>/);
+  assert.match(html, /<th>Cadera<\/th>/);
+  assert.match(html, /<th>Pecho<\/th>/);
+  assert.match(html, />78</);  // cintura inicio
+  assert.match(html, />95</);  // cadera inicio
+  assert.match(html, />76</);  // cintura revisión
+  // Cadera de la revisión no informada → "—"
+  const conteoEm = (html.match(/—/g) || []).length;
+  assert.ok(conteoEm >= 1, "debe haber al menos una celda — para datos no informados");
+});
+
+test("BoPaciente.renderEvolucion: anamnesis sin peso pero revisiones con peso → sin INICIO", () => {
+  const html = BoPaciente.renderEvolucion(
+    [
+      { created_at: "2026-04-10", contenido: { peso: 73 } },
+      { created_at: "2026-04-20", contenido: { peso: 72 } }
+    ],
+    { altura: 168 },
+    "2026-03-12"
+  );
+  assert.ok(!/data-bo-fila="inicio"/.test(html), "sin peso en anamnesis no se incluye fila INICIO");
+  assert.match(html, /data-bo-fila="revision"/);
+  assert.match(html, /<svg/);
+});
+
+// ===================================================================
+// renderPagos — tabla `pagos` de Supabase (migración 0019)
+// ===================================================================
+
+test("BoPaciente.renderPagos: lista vacía → 'Sin pagos registrados todavía'", () => {
+  for (const v of [[], null, undefined]) {
+    const html = BoPaciente.renderPagos(v);
+    assert.match(html, /data-bo-bloque="pagos"/);
+    assert.match(html, /Sin pagos registrados todavía/);
+    assert.ok(!/<table/.test(html));
+  }
+});
+
+test("BoPaciente.renderPagos: un pago → resumen + tabla con fila", () => {
+  const html = BoPaciente.renderPagos([
+    { id: "p1", fecha: "2026-04-10", importe: 40, concepto: "alta", metodo: "Bizum" }
+  ]);
+  assert.match(html, /Total cobrado:.*40 €/);
+  assert.match(html, /1 pago<\/p>/);
+  assert.match(html, /data-bo-pago-id="p1"/);
+  assert.match(html, />Alta</);
+  assert.match(html, />Bizum</);
+});
+
+test("BoPaciente.renderPagos: múltiples pagos → orden DESC y suma correcta", () => {
+  const html = BoPaciente.renderPagos([
+    { id: "p2", fecha: "2026-03-10", importe: 40, concepto: "alta" },
+    { id: "p1", fecha: "2026-04-10", importe: 40, concepto: "renovacion" },
+    { id: "p3", fecha: "2026-05-10", importe: 40, concepto: "renovacion" }
+  ]);
+  // Suma 120
+  assert.match(html, /Total cobrado:.*120 €/);
+  assert.match(html, /3 pagos/);
+  // Orden DESC: p3 antes que p1 antes que p2
+  const ids = html.match(/data-bo-pago-id="(p[123])"/g);
+  assert.deepEqual(ids, ['data-bo-pago-id="p3"', 'data-bo-pago-id="p1"', 'data-bo-pago-id="p2"']);
+});
+
+test("BoPaciente.renderPagos: importe con decimales → formato es-ES con coma", () => {
+  const html = BoPaciente.renderPagos([
+    { id: "p1", fecha: "2026-04-10", importe: 40.5, concepto: "renovacion" }
+  ]);
+  assert.match(html, /40,50 €/);
+});
+
+test("BoPaciente.renderPagos: concepto desconocido → humanizado, no rompe", () => {
+  const html = BoPaciente.renderPagos([
+    { id: "p1", fecha: "2026-04-10", importe: 80, concepto: "otro", metodo: "transferencia", notas: "dos meses" }
+  ]);
+  assert.match(html, />Otro</);
+  assert.match(html, />transferencia</);
+  assert.match(html, />dos meses</);
+});
+
+test("BoPaciente.renderPagos: campos opcionales vacíos → '—' visible, sin undefined", () => {
+  const html = BoPaciente.renderPagos([
+    { id: "p1", fecha: "2026-04-10", importe: 40, concepto: "alta" }
+  ]);
+  assert.ok(!/undefined/.test(html));
+  // Método y notas vacíos → "—" en la celda (notas vacío → string vacío visible).
+  assert.match(html, /<td>—<\/td>/); // método "—"
+});
+
+// ===================================================================
 // renderTimeline
 // ===================================================================
 
