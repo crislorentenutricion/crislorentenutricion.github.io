@@ -415,7 +415,9 @@
 
     .bo-anamnesis,
     .bo-bloque-timeline,
-    .bo-acciones {
+    .bo-acciones,
+    .bo-evolucion,
+    .bo-pagos {
       background: var(--color-white);
       border: 1px solid var(--color-border);
       border-radius: 10px;
@@ -424,12 +426,109 @@
     }
     .bo-anamnesis h2,
     .bo-bloque-timeline h2,
-    .bo-acciones h2 {
+    .bo-acciones h2,
+    .bo-evolucion h2,
+    .bo-pagos h2 {
       font-family: 'Lora', serif;
       font-weight: 500;
       font-size: 1.15rem;
       color: var(--color-green-dark);
       margin: 0 0 12px;
+    }
+
+    /* Evolución del paciente: resumen + sparkline + tabla. Sustituye al
+       SEGUIMIENTO_[NOMBRE].xlsx (deprecado 2026-04-30). Datos directos
+       de Supabase `revisiones` + fila INICIO derivada de la anamnesis. */
+    .bo-evol-resumen {
+      margin: 0 0 12px;
+      font-size: 0.92rem;
+      color: #2d2a24;
+    }
+    .bo-evol-resumen strong { color: var(--color-green-dark); font-weight: 600; }
+    .bo-evol-spark {
+      display: block;
+      width: 100%;
+      max-width: 280px;
+      height: 60px;
+      margin: 0 0 14px;
+    }
+    .bo-evol-line {
+      fill: none;
+      stroke: var(--color-green);
+      stroke-width: 1.5;
+    }
+    .bo-evol-dot {
+      fill: var(--color-green-dark);
+    }
+    .bo-evol-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .bo-evol-tabla thead th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--color-green-muted);
+      color: var(--color-green-dark);
+      font-weight: 600;
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+    .bo-evol-tabla tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+    .bo-evol-tabla tbody tr:last-child td { border-bottom: 0; }
+    .bo-evol-tabla tbody tr[data-bo-fila="inicio"] td {
+      background: var(--color-cream);
+      font-weight: 500;
+    }
+    .bo-evol-delta { color: #6b7280; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+      .bo-evol-tabla {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+
+    /* Pagos del paciente: histórico desde Supabase `pagos` (migración 0019).
+       Patrón visual idéntico a la tabla de evolución. */
+    .bo-pagos-resumen {
+      margin: 0 0 12px;
+      font-size: 0.92rem;
+      color: #2d2a24;
+    }
+    .bo-pagos-resumen strong { color: var(--color-green-dark); font-weight: 600; }
+    .bo-pagos-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .bo-pagos-tabla thead th {
+      text-align: left;
+      padding: 8px 10px;
+      background: var(--color-green-muted);
+      color: var(--color-green-dark);
+      font-weight: 600;
+      border-bottom: 1px solid var(--color-border);
+      white-space: nowrap;
+    }
+    .bo-pagos-tabla tbody td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--color-border);
+      vertical-align: middle;
+    }
+    .bo-pagos-tabla tbody tr:last-child td { border-bottom: 0; }
+    .bo-pagos-importe { white-space: nowrap; font-weight: 500; }
+    .bo-pagos-notas { color: #6b7280; font-size: 0.85rem; }
+    @media (max-width: 640px) {
+      .bo-pagos-tabla {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
     }
     .bo-anamnesis-grupo { margin-top: 10px; }
     .bo-anamnesis-grupo h3 {
@@ -527,6 +626,8 @@
 <div id="estado-paciente" class="bo-estado" role="status" aria-live="polite"></div>
 <div id="cabecera"></div>
 <div id="anamnesis"></div>
+<div id="evolucion"></div>
+<div id="pagos"></div>
 <div id="timeline"></div>
 <div id="acciones"></div>
 

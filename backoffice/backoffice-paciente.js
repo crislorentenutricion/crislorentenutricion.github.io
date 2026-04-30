@@ -298,6 +298,293 @@
   }
 
   // -----------------------------------------------------------------
+  // renderEvolucion (pura) — gráfico de peso + tabla de medidas a partir
+  // de las revisiones (Supabase) y la fila "INICIO" derivada de la
+  // anamnesis. Sustituye al `SEGUIMIENTO_[NOMBRE].xlsx` de Drive
+  // (deprecado 2026-04-30, ver .aiplans/deuda-tecnica/fuente-unica-supabase.md).
+  //
+  // Sparkline SVG sin dependencias externas: simple polyline normalizada al
+  // viewBox + puntos. Si hay <2 puntos no dibujamos línea. Si no hay peso en
+  // ninguna revisión, escondemos toda la sección (no hay nada que graficar).
+  // -----------------------------------------------------------------
+
+  const SPARK_W = 280;
+  const SPARK_H = 60;
+  const SPARK_PAD = 6;
+  const MEDIDAS = [
+    ['cintura', 'Cintura'],
+    ['cadera',  'Cadera'],
+    ['pecho',   'Pecho'],
+    ['brazo',   'Brazo'],
+    ['pierna',  'Pierna']
+  ];
+
+  function _toNum(v) {
+    if (v == null || v === '') return null;
+    const n = Number(String(v).replace(',', '.'));
+    return isNaN(n) ? null : n;
+  }
+
+  function _delta(actual, ref) {
+    if (actual == null || ref == null) return null;
+    const d = Math.round((actual - ref) * 10) / 10;
+    return d;
+  }
+
+  function _formatDelta(d) {
+    if (d == null) return '—';
+    if (d === 0) return '0';
+    const signo = d > 0 ? '+' : '';
+    return signo + d;
+  }
+
+  // Construye filas [{fecha, sesion, peso, cintura, cadera, ...}] orden ASC
+  // (más antiguo primero). Inicio = anamnesis si tiene peso.
+  function _filasEvolucion(revisiones, anamnesis, anamnesisFecha) {
+    const filas = [];
+
+    const pesoIni = anamnesis ? _toNum(anamnesis.peso) : null;
+    if (pesoIni != null) {
+      filas.push({
+        tipo: 'inicio',
+        fecha: anamnesisFecha || null,
+        peso: pesoIni,
+        cintura: anamnesis ? _toNum(anamnesis.cintura) : null,
+        cadera:  anamnesis ? _toNum(anamnesis.cadera)  : null,
+        pecho:   anamnesis ? _toNum(anamnesis.pecho)   : null,
+        brazo:   anamnesis ? _toNum(anamnesis.brazo)   : null,
+        pierna:  anamnesis ? _toNum(anamnesis.pierna)  : null
+      });
+    }
+
+    const revOrdenadas = (revisiones || []).slice().sort(function (a, b) {
+      const ta = new Date(String(a.created_at || '')).getTime();
+      const tb = new Date(String(b.created_at || '')).getTime();
+      if (isNaN(ta) && isNaN(tb)) return 0;
+      if (isNaN(ta)) return -1;
+      if (isNaN(tb)) return 1;
+      return ta - tb;
+    });
+
+    revOrdenadas.forEach(function (r, i) {
+      const c = r.contenido || {};
+      filas.push({
+        tipo: 'revision',
+        fecha: r.created_at,
+        sesion: i + 1,
+        peso:    _toNum(c.peso),
+        cintura: _toNum(c.cintura),
+        cadera:  _toNum(c.cadera),
+        pecho:   _toNum(c.pecho),
+        brazo:   _toNum(c.brazo),
+        pierna:  _toNum(c.pierna)
+      });
+    });
+
+    return filas;
+  }
+
+  // Sparkline SVG del peso (orden ASC). Devuelve '' si <2 puntos con peso.
+  function _sparkline(filas) {
+    const puntos = filas.filter(function (f) { return f.peso != null; });
+    if (puntos.length < 2) return '';
+
+    const pesos = puntos.map(function (p) { return p.peso; });
+    const minP = Math.min.apply(null, pesos);
+    const maxP = Math.max.apply(null, pesos);
+    const rango = maxP - minP || 1;
+    const w = SPARK_W - SPARK_PAD * 2;
+    const h = SPARK_H - SPARK_PAD * 2;
+    const stepX = puntos.length > 1 ? w / (puntos.length - 1) : 0;
+
+    const coords = puntos.map(function (p, i) {
+      const x = SPARK_PAD + i * stepX;
+      const y = SPARK_PAD + h - ((p.peso - minP) / rango) * h;
+      return [x, y];
+    });
+
+    const polyline = coords.map(function (c) {
+      return c[0].toFixed(1) + ',' + c[1].toFixed(1);
+    }).join(' ');
+
+    const dots = coords.map(function (c) {
+      return '<circle cx="' + c[0].toFixed(1) + '" cy="' + c[1].toFixed(1) +
+        '" r="2.5" class="bo-evol-dot" />';
+    }).join('');
+
+    return '<svg class="bo-evol-spark" viewBox="0 0 ' + SPARK_W + ' ' + SPARK_H +
+      '" role="img" aria-label="Evolución del peso">' +
+      '<polyline points="' + polyline + '" class="bo-evol-line" />' +
+      dots +
+    '</svg>';
+  }
+
+  function _filaTabla(f, primera) {
+    const fechaTxt = f.tipo === 'inicio'
+      ? (f.fecha ? BoUi.formatearFecha(f.fecha) : 'Inicio')
+      : (BoUi.formatearFecha(f.fecha) || '—');
+    const etiqueta = f.tipo === 'inicio' ? 'Inicio' : ('#' + f.sesion);
+    const dPeso = primera ? null : _delta(f.peso, primera.peso);
+
+    const celdas = [
+      '<td>' + BoUi.escapeHtml(fechaTxt) + '</td>',
+      '<td>' + BoUi.escapeHtml(etiqueta) + '</td>',
+      '<td>' + (f.peso != null ? f.peso.toFixed(1) : '—') + '</td>',
+      '<td class="bo-evol-delta">' + (f.tipo === 'inicio' ? '—' : _formatDelta(dPeso)) + '</td>'
+    ];
+
+    MEDIDAS.forEach(function (m) {
+      const v = f[m[0]];
+      celdas.push('<td>' + (v != null ? v : '—') + '</td>');
+    });
+
+    return '<tr data-bo-fila="' + f.tipo + '">' + celdas.join('') + '</tr>';
+  }
+
+  function _resumenCabecera(filas) {
+    const conPeso = filas.filter(function (f) { return f.peso != null; });
+    if (conPeso.length === 0) return '';
+    const ini = conPeso[0];
+    const act = conPeso[conPeso.length - 1];
+    const delta = _delta(act.peso, ini.peso);
+    const fechaIni = ini.fecha ? BoUi.formatearFecha(ini.fecha) : '—';
+    const fechaAct = act.fecha ? BoUi.formatearFecha(act.fecha) : '—';
+    const partes = [
+      'Inicio: <strong>' + ini.peso.toFixed(1) + ' kg</strong> · ' + BoUi.escapeHtml(fechaIni)
+    ];
+    if (act !== ini) {
+      partes.push('Actual: <strong>' + act.peso.toFixed(1) + ' kg</strong> · ' + BoUi.escapeHtml(fechaAct));
+      partes.push('Δ peso: <strong>' + _formatDelta(delta) + ' kg</strong>');
+    }
+    return '<p class="bo-evol-resumen">' + partes.join(' · ') + '</p>';
+  }
+
+  function renderEvolucion(revisiones, anamnesis, anamnesisFecha) {
+    const filas = _filasEvolucion(revisiones, anamnesis, anamnesisFecha);
+    const conPeso = filas.filter(function (f) { return f.peso != null; });
+    if (conPeso.length === 0) {
+      // Sin peso ni en anamnesis ni en revisiones: la sección no aporta nada.
+      return '';
+    }
+
+    const cabecera = _resumenCabecera(filas);
+    const spark = _sparkline(filas);
+    const primera = conPeso[0];
+
+    const cabezasMedidas = MEDIDAS.map(function (m) {
+      return '<th>' + BoUi.escapeHtml(m[1]) + '</th>';
+    }).join('');
+
+    const tbody = filas.map(function (f) { return _filaTabla(f, primera); }).join('');
+
+    return '<section class="bo-evolucion" data-bo-bloque="evolucion">' +
+      '<h2>Evolución</h2>' +
+      cabecera +
+      (spark || '') +
+      '<table class="bo-evol-tabla">' +
+        '<thead><tr>' +
+          '<th>Fecha</th><th>Sesión</th><th>Peso</th><th>Δ vs inicio</th>' +
+          cabezasMedidas +
+        '</tr></thead>' +
+        '<tbody>' + tbody + '</tbody>' +
+      '</table>' +
+    '</section>';
+  }
+
+  // -----------------------------------------------------------------
+  // renderPagos (pura) — histórico de cobros por paciente desde Supabase `pagos`
+  // (migración 0019, ver convenciones/clinica/paciente.md § Pagos). Sustituye
+  // al apartado "Pagos" que vivía en NOTAS Drive como texto plano.
+  //
+  // Incluye:
+  //   - Resumen: total cobrado + último pago + nº de pagos.
+  //   - Tabla DESC (más reciente arriba): fecha · concepto · importe · método · notas.
+  //   - Si no hay pagos → "Sin pagos registrados todavía."
+  // -----------------------------------------------------------------
+
+  const CONCEPTO_LABEL = {
+    'alta':       'Alta',
+    'renovacion': 'Renovación',
+    'otro':       'Otro'
+  };
+
+  function _conceptoLabel(c) {
+    const k = String(c || '').toLowerCase();
+    return CONCEPTO_LABEL[k] || _humanizar(c || '—');
+  }
+
+  function _fmtImporte(n) {
+    if (n == null || n === '') return '—';
+    const v = Number(n);
+    if (isNaN(v)) return '—';
+    // Formato es-ES: 40 €, 40,50 €. Sin separador de miles para importes
+    // pequeños del negocio (los planes son 40 €/mes).
+    const decimales = (v % 1 === 0) ? 0 : 2;
+    return v.toFixed(decimales).replace('.', ',') + ' €';
+  }
+
+  function renderPagos(pagos) {
+    const lista = Array.isArray(pagos) ? pagos.slice() : [];
+
+    if (lista.length === 0) {
+      return '<section class="bo-pagos" data-bo-bloque="pagos">' +
+        '<h2>Pagos</h2>' +
+        '<p class="bo-vacio">Sin pagos registrados todavía.</p>' +
+      '</section>';
+    }
+
+    // Orden DESC: más reciente arriba. Empate por created_at desc.
+    lista.sort(function (a, b) {
+      const fa = String(a.fecha || '');
+      const fb = String(b.fecha || '');
+      if (fa !== fb) return fa < fb ? 1 : -1;
+      const ca = String(a.created_at || '');
+      const cb = String(b.created_at || '');
+      return ca < cb ? 1 : (ca > cb ? -1 : 0);
+    });
+
+    const total = lista.reduce(function (acc, p) {
+      const v = Number(p.importe);
+      return acc + (isNaN(v) ? 0 : v);
+    }, 0);
+
+    const ultimo = lista[0];
+    const fechaUlt = ultimo && ultimo.fecha ? BoUi.formatearFecha(ultimo.fecha) : '—';
+
+    const resumen = '<p class="bo-pagos-resumen">' +
+      'Total cobrado: <strong>' + _fmtImporte(total) + '</strong> · ' +
+      'Último pago: <strong>' + BoUi.escapeHtml(fechaUlt) + '</strong> · ' +
+      lista.length + ' ' + (lista.length === 1 ? 'pago' : 'pagos') +
+    '</p>';
+
+    const filas = lista.map(function (p) {
+      const fecha = p.fecha ? BoUi.formatearFecha(p.fecha) : '—';
+      const concepto = _conceptoLabel(p.concepto);
+      const importe = _fmtImporte(p.importe);
+      const metodo = p.metodo ? BoUi.escapeHtml(String(p.metodo)) : '—';
+      const notas = p.notas ? BoUi.escapeHtml(String(p.notas)) : '';
+      return '<tr data-bo-pago-id="' + BoUi.escapeHtml(String(p.id || '')) + '">' +
+        '<td>' + BoUi.escapeHtml(fecha) + '</td>' +
+        '<td>' + BoUi.escapeHtml(concepto) + '</td>' +
+        '<td class="bo-pagos-importe">' + BoUi.escapeHtml(importe) + '</td>' +
+        '<td>' + metodo + '</td>' +
+        '<td class="bo-pagos-notas">' + notas + '</td>' +
+      '</tr>';
+    }).join('');
+
+    return '<section class="bo-pagos" data-bo-bloque="pagos">' +
+      '<h2>Pagos</h2>' +
+      resumen +
+      '<table class="bo-pagos-tabla">' +
+        '<thead><tr>' +
+          '<th>Fecha</th><th>Concepto</th><th>Importe</th><th>Método</th><th>Notas</th>' +
+        '</tr></thead>' +
+        '<tbody>' + filas + '</tbody>' +
+      '</table>' +
+    '</section>';
+  }
+
+  // -----------------------------------------------------------------
   // renderTimeline (pura) — lista cronológica descendente mixta
   // -----------------------------------------------------------------
 
@@ -467,6 +754,10 @@
         'Hacer seguimiento'
       ));
       botones.push(_btnCopiar(
+        BoLogic.generarComando('registrar-pago', nombre),
+        'Registrar pago'
+      ));
+      botones.push(_btnCopiar(
         BoLogic.generarComando('agendar', nombre),
         'Agendar sesión'
       ));
@@ -585,24 +876,37 @@
 
   async function cargarDatos(supa, idPaciente) {
     const hace30 = _isoHaceNDias(30, new Date());
-    const results = await Promise.all([
+    // `pagos` se separa del Promise.all por tolerancia: la tabla la añade la
+    // migración 0019_pagos.sql; mientras no esté aplicada en una rama o entorno
+    // dado, queremos que la página siga funcionando con el bloque "Pagos" vacío.
+    const corePromises = Promise.all([
       supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis, anamnesis_completed_at, created_at, closed_at, close_reason').eq('id', idPaciente).maybeSingle(),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at').eq('paciente_id', idPaciente),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id, created_at').eq('paciente_id', idPaciente),
       supa.from('revisiones').select('id, paciente_id, sesion_id, contenido, created_at').eq('paciente_id', idPaciente).order('created_at', { ascending: false }),
       supa.from('checkins').select('paciente_id, fecha, estado').eq('paciente_id', idPaciente).gte('fecha', hace30)
     ]);
+    const pagosPromise = supa
+      .from('pagos')
+      .select('id, paciente_id, fecha, importe, concepto, metodo, notas, created_at')
+      .eq('paciente_id', idPaciente)
+      .then(r => r, () => ({ data: [], error: null }));
+
+    const [results, pagosRes] = await Promise.all([corePromises, pagosPromise]);
     const [pac, menus, sesiones, revisiones, checkins] = results;
     const errores = results.map(r => r.error).filter(Boolean);
     if (errores.length) {
       throw new Error('Supabase: ' + errores.map(e => e.message || String(e)).join(' · '));
     }
+    // pagosRes.error se ignora: si la tabla aún no existe (404) o las RLS
+    // bloquean, mostramos "Sin pagos registrados" en vez de romper la página.
     return {
       paciente:   pac.data || null,
       menus:      menus.data || [],
       sesiones:   sesiones.data || [],
       revisiones: revisiones.data || [],
-      checkins:   checkins.data || []
+      checkins:   checkins.data || [],
+      pagos:      (pagosRes && pagosRes.data) || []
     };
   }
 
@@ -648,10 +952,20 @@
 
     const cab = document.getElementById('cabecera');
     const ana = document.getElementById('anamnesis');
+    const evo = document.getElementById('evolucion');
+    const pag = document.getElementById('pagos');
     const tim = document.getElementById('timeline');
     const acc = document.getElementById('acciones');
     if (cab) cab.innerHTML = renderCabecera(datos.paciente);
     if (ana) ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
+    if (evo) {
+      evo.innerHTML = renderEvolucion(
+        datos.revisiones,
+        datos.paciente.anamnesis || null,
+        datos.paciente.anamnesis_completed_at || datos.paciente.alta || null
+      );
+    }
+    if (pag) pag.innerHTML = renderPagos(datos.pagos || []);
     if (tim) {
       tim.innerHTML = renderTimeline({
         menus: datos.menus, sesiones: datos.sesiones, revisiones: datos.revisiones
@@ -675,6 +989,8 @@
   const api = {
     renderCabecera,
     renderAnamnesis,
+    renderEvolucion,
+    renderPagos,
     renderTimeline,
     renderAcciones,
     arrancar,
