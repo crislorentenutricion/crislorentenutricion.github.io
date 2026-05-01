@@ -402,6 +402,72 @@ preloadImage: /img/hero/food.jpg
   </div>
 </section>
 
+{# ── LEAD MAGNET — bloque de captación (planificador semanal) ── #}
+{# Mockup base: recursos/lead-magnet/web-mockups/bloque-captacion.html #}
+<link rel="stylesheet" href="/css/lead-magnet.css">
+<section class="lm-block" id="planificador-gratis"
+         data-lead-magnet
+         data-endpoint-url="{{ env.leadMagnetAltaUrl }}"
+         data-hcaptcha-sitekey="9a82e394-bf54-4d36-8e8a-ed9e1f94f7fe">
+  <div class="container">
+    <div class="lm-grid">
+
+      {# IZQUIERDA: foto del mockup con sello "100% gratis" #}
+      <div class="lm-pic-wrap reveal">
+        <div class="lm-pic">
+          <img src="/img/lead-magnet/mockup-2-paginas.jpeg"
+               alt="Planificador semanal y lista de la compra impresos sobre mesa de madera"
+               width="1400" height="1050" loading="lazy" decoding="async">
+        </div>
+        <div class="lm-stamp" aria-hidden="true">
+          <span class="lm-stamp-line1">100%</span>
+          <span class="lm-stamp-line2">gratis</span>
+        </div>
+      </div>
+
+      {# DERECHA: copy + form #}
+      <div class="lm-text reveal reveal-delay-2">
+        <span class="lm-pill">Para ti · Descárgalo y empieza</span>
+        <h2 class="lm-heading">Dos plantillas para dejar de improvisar, <em>gratis al correo</em>.</h2>
+        <p class="lm-lede">
+          Te las mando junto con cuatro emails cortos con consejos prácticos: cómo leer etiquetas, 3 cenas en 15 minutos y cómo organizarte sin agobiarte.
+        </p>
+
+        <ul class="lm-benefits">
+          <li><span class="lm-check" aria-hidden="true">✓</span> <span><strong>Planificador semanal</strong> — 7 días × 5 comidas, para colgar en la nevera.</span></li>
+          <li><span class="lm-check" aria-hidden="true">✓</span> <span><strong>Lista de la compra</strong> — por categorías para no olvidarte de nada.</span></li>
+          <li><span class="lm-check" aria-hidden="true">✓</span> <span>4 emails con consejos que sí aplicas esta semana.</span></li>
+          <li><span class="lm-check" aria-hidden="true">✓</span> <span>Sin spam — te das de baja con un clic.</span></li>
+        </ul>
+
+        <form class="lm-form" data-lead-form novalidate aria-describedby="lm-status">
+          <div class="lm-form-fields">
+            <label class="lm-form-field" for="lm-nombre">
+              <span class="visually-hidden">Tu nombre</span>
+              <input type="text" id="lm-nombre" name="nombre" placeholder="Tu nombre"
+                     autocomplete="given-name" required data-lead-nombre>
+            </label>
+            <label class="lm-form-field" for="lm-email">
+              <span class="visually-hidden">Tu email</span>
+              <input type="email" id="lm-email" name="email" placeholder="tu@correo.com"
+                     autocomplete="email" required data-lead-email>
+            </label>
+          </div>
+          <button type="submit" class="lm-submit" data-lead-submit>Quiero el planificador&nbsp;→</button>
+          <label class="lm-consent" for="lm-consent">
+            <input type="checkbox" id="lm-consent" name="consent" required data-lead-consent>
+            <span>He leído y acepto la <a href="/legal/privacidad/" target="_blank" rel="noopener">política de privacidad</a>.</span>
+          </label>
+          <div class="lm-status" id="lm-status" role="status" aria-live="polite" hidden data-lead-status></div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</section>
+<script src="/js/lead-magnet-logic.js" defer></script>
+<script src="/js/lead-magnet.js" defer></script>
+
 {# ── FAQ ── #}
 <section class="section section-cream">
   <div class="container">
