@@ -1222,34 +1222,46 @@ test("calcularMetricasHoy: tolera datos undefined/null sin romper", () => {
 
 const { _sumarMeses } = require("../src/backoffice/logic.js");
 
+// Helper local para asertar fecha en formato YYYY-MM-DD usando componentes
+// LOCALES (getDate/getMonth/getFullYear). Evita el bug de .toISOString() que
+// interpreta UTC y rompe los tests fuera de TZ=UTC. _sumarMeses devuelve un
+// Date a medianoche local; comparar componentes locales es la única forma
+// estable a través de zonas horarias.
+function _ymdLocal(d) {
+  if (!d) return null;
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return d.getFullYear() + "-" + m + "-" + day;
+}
+
 test("_sumarMeses: caso simple 1 abr + 1 mes → 1 may", () => {
   const r = _sumarMeses("2026-04-01", 1);
-  assert.equal(r.toISOString().slice(0, 10), "2026-05-01");
+  assert.equal(_ymdLocal(r), "2026-05-01");
 });
 
 test("_sumarMeses: caso simple 15 mar + 2 meses → 15 may", () => {
   const r = _sumarMeses("2026-03-15", 2);
-  assert.equal(r.toISOString().slice(0, 10), "2026-05-15");
+  assert.equal(_ymdLocal(r), "2026-05-15");
 });
 
 test("_sumarMeses: 31 ene + 1 mes → 28 feb (año no bisiesto)", () => {
   const r = _sumarMeses("2026-01-31", 1);
-  assert.equal(r.toISOString().slice(0, 10), "2026-02-28");
+  assert.equal(_ymdLocal(r), "2026-02-28");
 });
 
 test("_sumarMeses: 31 ene 2028 + 1 mes → 29 feb (año bisiesto)", () => {
   const r = _sumarMeses("2028-01-31", 1);
-  assert.equal(r.toISOString().slice(0, 10), "2028-02-29");
+  assert.equal(_ymdLocal(r), "2028-02-29");
 });
 
 test("_sumarMeses: 31 mar + 1 mes → 30 abr", () => {
   const r = _sumarMeses("2026-03-31", 1);
-  assert.equal(r.toISOString().slice(0, 10), "2026-04-30");
+  assert.equal(_ymdLocal(r), "2026-04-30");
 });
 
 test("_sumarMeses: cruza año (1 dic + 2 meses → 1 feb siguiente)", () => {
   const r = _sumarMeses("2026-12-01", 2);
-  assert.equal(r.toISOString().slice(0, 10), "2027-02-01");
+  assert.equal(_ymdLocal(r), "2027-02-01");
 });
 
 test("_sumarMeses: acepta Date como entrada", () => {
