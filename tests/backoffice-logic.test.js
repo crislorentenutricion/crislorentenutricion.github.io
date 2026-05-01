@@ -1263,3 +1263,183 @@ test("_sumarMeses: fecha inválida → null", () => {
   assert.equal(_sumarMeses("not-a-date", 1), null);
   assert.equal(_sumarMeses(null, 1), null);
 });
+
+// ===================================================================
+// calcularProximoPago — derivación de la fecha esperada del próximo pago
+// ===================================================================
+
+const { calcularProximoPago, UMBRAL_AVISO_DIAS } = require("../src/backoffice/logic.js");
+
+const HOY_PAGOS = new Date(2026, 4, 1); // 1 may 2026 (mes 4 = mayo)
+
+test("calcularProximoPago: paciente cerrado → null", () => {
+  const r = calcularProximoPago({ id: "p1", estado: "cerrado" }, [], HOY_PAGOS);
+  assert.equal(r, null);
+});
+
+test("calcularProximoPago: paciente activo sin pagos → estado sin_pagos", () => {
+  const r = calcularProximoPago({ id: "p1", estado: "activo" }, [], HOY_PAGOS);
+  assert.equal(r.estado, "sin_pagos");
+  assert.equal(r.fechaEsperada, null);
+  assert.equal(r.diasDiff, null);
+});
+
+test("calcularProximoPago: alta 1 abr, hoy 1 may → aviso (vence hoy, diasDiff=0)", () => {
+  const pagos = [{ id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" }];
+  const r = calcularProximoPago({ id: "p1", estado: "activo" }, pagos, HOY_PAGOS);
+  assert.equal(r.estado, "aviso");
+  assert.equal(r.fechaEsperada, "2026-05-01");
+  assert.equal(r.diasDiff, 0);
+});
+
+test("calcularProximoPago: alta 1 abr, hoy 30 abr → aviso (vence mañana, diasDiff=1)", () => {
+  const pagos = [{ id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" }];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 3, 30) // 30 abr
+  );
+  assert.equal(r.estado, "aviso");
+  assert.equal(r.diasDiff, 1);
+});
+
+test("calcularProximoPago: alta 1 abr, hoy 28 abr → al_dia (3 días vista, fuera ventana aviso)", () => {
+  const pagos = [{ id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" }];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 3, 28) // 28 abr
+  );
+  assert.equal(r.estado, "al_dia");
+  assert.equal(r.diasDiff, 3);
+});
+
+test("calcularProximoPago: alta 1 abr, hoy 5 may → vencido (4 días, diasDiff=-4)", () => {
+  const pagos = [{ id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" }];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 4, 5) // 5 may
+  );
+  assert.equal(r.estado, "vencido");
+  assert.equal(r.diasDiff, -4);
+});
+
+test("calcularProximoPago: caso Cristina — alta 1 abr + renovación 3 may → próximo 1 jun", () => {
+  // Aunque la renovación se registró tarde (3 may en vez de 1 may), el siguiente
+  // recordatorio sigue siendo 1 jun (no 3 jun). Anclaje fijo en el alta + N meses.
+  const pagos = [
+    { id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" },
+    { id: "y", paciente_id: "p1", fecha: "2026-05-03", concepto: "renovacion" }
+  ];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 4, 15) // 15 may
+  );
+  assert.equal(r.fechaEsperada, "2026-06-01");
+  assert.equal(r.estado, "al_dia"); // 17 días vista
+  assert.equal(r.diasDiff, 17);
+});
+
+test("calcularProximoPago: dos pagos al día (alta + renovacion mismo día) → cuenta cada uno", () => {
+  const pagos = [
+    { id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" },
+    { id: "y", paciente_id: "p1", fecha: "2026-04-01", concepto: "renovacion" }
+  ];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 4, 1)
+  );
+  // 2 pagos × 1 mes = ancla 1 abr + 2 meses = 1 jun
+  assert.equal(r.fechaEsperada, "2026-06-01");
+  assert.equal(r.estado, "al_dia");
+});
+
+test("calcularProximoPago: concepto 'otro' no avanza el ciclo", () => {
+  const pagos = [
+    { id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" },
+    { id: "y", paciente_id: "p1", fecha: "2026-04-15", concepto: "otro" } // ajuste/reembolso
+  ];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 4, 1)
+  );
+  // Solo el alta cuenta → ancla 1 abr + 1 mes = 1 may (estado aviso = vence hoy)
+  assert.equal(r.fechaEsperada, "2026-05-01");
+  assert.equal(r.estado, "aviso");
+});
+
+test("calcularProximoPago: reactivación con nueva alta → ancla en alta más reciente", () => {
+  // Ciclo viejo: feb-mar (alta + renovacion), cerrado a finales mar.
+  // Reactivación: 10 jun nueva alta. Pagos viejos NO cuentan.
+  const pagos = [
+    { id: "viejo1", paciente_id: "p1", fecha: "2026-02-01", concepto: "alta" },
+    { id: "viejo2", paciente_id: "p1", fecha: "2026-03-01", concepto: "renovacion" },
+    { id: "nuevo",  paciente_id: "p1", fecha: "2026-06-10", concepto: "alta" }
+  ];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 5, 15) // 15 jun
+  );
+  // Ancla = MAX(fecha) con concepto='alta' = 10 jun.
+  // N = pagos con fecha >= 10 jun y concepto IN (alta,renovacion) = 1.
+  // fechaEsperada = 10 jun + 1 mes = 10 jul.
+  assert.equal(r.fechaEsperada, "2026-07-10");
+  assert.equal(r.estado, "al_dia");
+});
+
+test("calcularProximoPago: solo pagos sin alta (caso histórico) → fallback ancla=primer pago", () => {
+  const pagos = [
+    { id: "h1", paciente_id: "p1", fecha: "2026-02-01", concepto: "renovacion" },
+    { id: "h2", paciente_id: "p1", fecha: "2026-03-01", concepto: "renovacion" }
+  ];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 3, 1) // 1 abr
+  );
+  // Ancla = 1 feb (primer pago). N=2. fechaEsperada = 1 feb + 2 = 1 abr (vence hoy).
+  assert.equal(r.fechaEsperada, "2026-04-01");
+  assert.equal(r.estado, "aviso");
+});
+
+test("calcularProximoPago: pagos de OTROS pacientes se ignoran", () => {
+  const pagos = [
+    { id: "ajeno", paciente_id: "p2", fecha: "2026-04-01", concepto: "alta" },
+    { id: "mio",   paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" }
+  ];
+  const r = calcularProximoPago({ id: "p1", estado: "activo" }, pagos, HOY_PAGOS);
+  assert.equal(r.fechaEsperada, "2026-05-01");
+});
+
+test("calcularProximoPago: pago con fecha malformada se ignora", () => {
+  const pagos = [
+    { id: "ok",  paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" },
+    { id: "mal", paciente_id: "p1", fecha: "not-a-date", concepto: "renovacion" }
+  ];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 4, 1)
+  );
+  // Solo el bueno cuenta: N=1, fechaEsperada = 1 may.
+  assert.equal(r.fechaEsperada, "2026-05-01");
+});
+
+test("calcularProximoPago: alta 31 ene → fechaEsperada 28/29 feb (overflow día)", () => {
+  const pagos = [{ id: "x", paciente_id: "p1", fecha: "2026-01-31", concepto: "alta" }];
+  const r = calcularProximoPago(
+    { id: "p1", estado: "activo" },
+    pagos,
+    new Date(2026, 1, 28) // 28 feb 2026 (no bisiesto)
+  );
+  assert.equal(r.fechaEsperada, "2026-02-28");
+});
+
+test("UMBRAL_AVISO_DIAS exportado como 2", () => {
+  assert.equal(UMBRAL_AVISO_DIAS, 2);
+});

@@ -33,6 +33,12 @@
   // resolver" con botones [Dar de alta] [Descartar].
   const DURACION_VALORACION_MIN = 30;
 
+  // Ventana de aviso anticipado para recordatorio de pago: si la fecha esperada
+  // del próximo pago cae entre hoy (incl.) y hoy + UMBRAL_AVISO_DIAS (incl.),
+  // el paciente entra en estado 'aviso'. Más allá → 'al_dia'. Antes de hoy →
+  // 'vencido'. Decisión: 2 días de aviso (ver spec recordatorio-pago).
+  const UMBRAL_AVISO_DIAS = 2;
+
   // Etiquetas es-ES con tildes. Usamos arrays propios en lugar de
   // toLocaleDateString('es-ES') para que el output sea determinista en
   // Node sin ICU completo y entre runners.
@@ -106,6 +112,84 @@
     objetivo.setDate(Math.min(dia, ultimoDia));
     objetivo.setHours(0, 0, 0, 0);
     return objetivo;
+  }
+
+  // -----------------------------------------------------------------
+  // calcularProximoPago — derivación pura de la fecha esperada
+  // -----------------------------------------------------------------
+  //
+  // Dado un paciente y la lista global de pagos, devuelve el estado del
+  // próximo pago esperado. Anclaje fijo en el pago `concepto='alta'` más
+  // reciente — los retrasos en registrar un pago no desplazan recordatorios
+  // futuros (ver spec recordatorio-pago-backoffice.md).
+  //
+  // Devuelve:
+  //   - null si paciente no activo (no aplica).
+  //   - { estado, fechaEsperada, diasDiff } en otro caso.
+  //     estado ∈ { 'sin_pagos' | 'al_dia' | 'aviso' | 'vencido' }
+  //     fechaEsperada: 'YYYY-MM-DD' o null si sin_pagos
+  //     diasDiff: nº días (positivo = quedan, negativo = vencido) o null
+  //
+  // Convenciones de entrada:
+  //   paciente: { id, estado }
+  //   pagos:    array global (se filtra internamente por paciente_id)
+  //   hoy:      Date (default new Date())
+  function calcularProximoPago(paciente, pagos, hoy) {
+    if (!paciente || paciente.estado !== 'activo') return null;
+    const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
+
+    // Filtrar pagos del paciente con concepto que avanza el ciclo. 'otro' no
+    // cuenta (reembolso/ajuste). Filtrar también fechas malformadas.
+    const propios = (Array.isArray(pagos) ? pagos : []).filter(function (p) {
+      if (!p || p.paciente_id !== paciente.id) return false;
+      if (p.concepto !== 'alta' && p.concepto !== 'renovacion') return false;
+      return _toMidnight(p.fecha) != null;
+    });
+
+    if (propios.length === 0) {
+      return { estado: 'sin_pagos', fechaEsperada: null, diasDiff: null };
+    }
+
+    // Ancla = pago 'alta' más reciente. Si no hay 'alta' (caso histórico raro,
+    // pacientes pre-tabla con solo 'renovacion'), fallback al pago más antiguo.
+    const altas = propios.filter(function (p) { return p.concepto === 'alta'; });
+    let anclaFecha;
+    if (altas.length > 0) {
+      anclaFecha = altas.reduce(function (max, p) {
+        const m = _toMidnight(p.fecha);
+        return (max == null || m.getTime() > max.getTime()) ? m : max;
+      }, null);
+    } else {
+      anclaFecha = propios.reduce(function (min, p) {
+        const m = _toMidnight(p.fecha);
+        return (min == null || m.getTime() < min.getTime()) ? m : min;
+      }, null);
+    }
+
+    // N = pagos del ciclo activo (>= ancla, alta o renovacion).
+    const anclaTime = anclaFecha.getTime();
+    const N = propios.filter(function (p) {
+      const m = _toMidnight(p.fecha);
+      return m && m.getTime() >= anclaTime;
+    }).length;
+
+    const fechaEsperadaDate = _sumarMeses(anclaFecha, N);
+    if (!fechaEsperadaDate) {
+      // No debería ocurrir si el ancla es válida, pero defensivo.
+      return { estado: 'sin_pagos', fechaEsperada: null, diasDiff: null };
+    }
+
+    const diasDiff = diffEnDias(hoyMid, fechaEsperadaDate);
+    let estado;
+    if (diasDiff < 0) estado = 'vencido';
+    else if (diasDiff <= UMBRAL_AVISO_DIAS) estado = 'aviso';
+    else estado = 'al_dia';
+
+    return {
+      estado: estado,
+      fechaEsperada: _toISO(fechaEsperadaDate),
+      diasDiff: diasDiff
+    };
   }
 
   // -----------------------------------------------------------------
@@ -821,6 +905,7 @@
     sesionesProximos7Dias,
     priorizarPacientes,
     calcularMetricasHoy,
+    calcularProximoPago,
     generarComando,
     diffEnDias,
     _sumarMeses,
@@ -831,6 +916,7 @@
     DIAS_AVISO_PROXIMO_MENU,
     DIAS_VENTANA_PROXIMOS,
     DURACION_VALORACION_MIN,
+    UMBRAL_AVISO_DIAS,
     REPESCA_VENTANA_DIAS,
     GAP_REPESCA_DIAS,
     REPESCA_MIN_DENOMINADOR
