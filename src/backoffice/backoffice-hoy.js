@@ -303,6 +303,12 @@
         renderFila: renderFilaSesion
       },
       {
+        key: 'pagos-pendientes',
+        titulo: 'Pagos pendientes',
+        items: agrupado.pagosPendientes || [],
+        renderFila: renderFilaPagoPendiente
+      },
+      {
         key: 'menus-crear-semana',
         titulo: 'Menús a crear esta semana',
         items: agrupado.menusCrearSemana || [],
@@ -453,18 +459,23 @@
   }
 
   async function cargarDatos(supa) {
-    // 5 SELECT en paralelo. RLS se encarga de filtrar al email de Cristina.
-    // `menus.created_at` lo usa `calcularMetricasHoy` para contar los del mes
-    // natural actual. `valoraciones` mezcla primera consulta (prospectos) con
-    // seguimientos en el bloque "Sesiones hoy" y "Próximos 7 días" — se
-    // filtran solo las confirmadas para no listar canceladas/no-show.
-    const results = await Promise.all([
+    // 5 SELECT core + pagos en paralelo. RLS se encarga de filtrar al email
+    // de Cristina. `pagos` se separa con un .then de tolerancia: si la query
+    // falla (RLS, 4xx), tratamos pagos como [] para no romper el resto de
+    // la vista — mismo patrón que la vista Detalle.
+    const corePromise = Promise.all([
       supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis_completed_at'),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at'),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id'),
       supa.from('checkins').select('paciente_id, fecha, estado'),
       supa.from('valoraciones').select('id, nombre, email, telefono, fecha, calendar_event_id, status').eq('status', 'confirmed')
     ]);
+    const pagosPromise = supa
+      .from('pagos')
+      .select('id, paciente_id, fecha, concepto')
+      .then(r => r, () => ({ data: [], error: null }));
+
+    const [results, pagosRes] = await Promise.all([corePromise, pagosPromise]);
     const [pac, menu, ses, ck, val] = results;
     const errores = results.map(r => r.error).filter(Boolean);
     if (errores.length) {
@@ -476,7 +487,8 @@
       menus: menu.data || [],
       sesiones: ses.data || [],
       checkins: ck.data || [],
-      valoraciones: val.data || []
+      valoraciones: val.data || [],
+      pagos: (pagosRes && pagosRes.data) || []
     };
   }
 
@@ -497,6 +509,10 @@
       const datos = await cargarDatos(supa);
       const hoy = new Date();
       const agrupado  = BoLogic.agruparHoy({ ...datos, opts: {} }, hoy);
+      // Recordatorios de pago: bloque autónomo computado fuera de agruparHoy
+      // porque agruparHoy ya tiene 7 responsabilidades; mantenemos el bloque
+      // nuevo desacoplado para no inflar la firma de la función principal.
+      agrupado.pagosPendientes = BoLogic.recordatoriosPago(datos.pacientes, datos.pagos, hoy);
       // calcularMetricasHoy ignora `valoraciones`: las métricas siguen siendo
       // de pacientes activas, no de prospectos.
       const metricas  = BoLogic.calcularMetricasHoy(datos, hoy);

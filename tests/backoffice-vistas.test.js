@@ -861,3 +861,70 @@ test("renderFilaPagoPendiente: HTML escapado (defensa XSS)", () => {
   });
   assert.ok(!/<script>/.test(html));
 });
+
+// ===================================================================
+// Bloque "Pagos pendientes" — integrado en renderTodosLosBloques
+// ===================================================================
+
+test("renderTodosLosBloques: bloque pagos-pendientes aparece tras 'Sesiones hoy' y antes de 'Menús'", () => {
+  // Construimos un agrupado con items en cada bloque relevante.
+  const agrupado = {
+    pendientes: [],
+    sesionesHoy: [{
+      pacienteId: "s1", nombre: "ANA", hora: "10:00", comando: "/seguimiento-paciente ANA", tipo: "seguimiento"
+    }],
+    pagosPendientes: [{
+      pacienteId: "p1", nombre: "NEREA", fechaEsperada: "2026-05-01", estado: "aviso", diasDiff: 0
+    }],
+    menusCrearSemana: [{
+      pacienteId: "m1", nombre: "EVA", diasParaCaducar: 3, anamnesisLista: true, comando: "/crear-menu EVA"
+    }],
+    alertas: [],
+    proximos7Dias: []
+  };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  const ordenSesiones = html.indexOf('data-bo-block="sesiones-hoy"');
+  const ordenPagos    = html.indexOf('data-bo-block="pagos-pendientes"');
+  const ordenMenus    = html.indexOf('data-bo-block="menus-crear-semana"');
+  assert.ok(ordenSesiones >= 0, "bloque sesiones-hoy presente");
+  assert.ok(ordenPagos    >= 0, "bloque pagos-pendientes presente");
+  assert.ok(ordenMenus    >= 0, "bloque menus-crear-semana presente");
+  assert.ok(ordenSesiones < ordenPagos, "pagos-pendientes va DESPUÉS de sesiones-hoy");
+  assert.ok(ordenPagos    < ordenMenus, "pagos-pendientes va ANTES de menus-crear-semana");
+});
+
+test("renderTodosLosBloques: bloque pagos-pendientes vacío → oculto", () => {
+  const agrupado = {
+    pendientes: [],
+    sesionesHoy: [],
+    pagosPendientes: [],
+    menusCrearSemana: [{
+      pacienteId: "m1", nombre: "EVA", diasParaCaducar: 3, anamnesisLista: true, comando: "/crear-menu EVA"
+    }],
+    alertas: [],
+    proximos7Dias: []
+  };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  assert.ok(!/data-bo-block="pagos-pendientes"/.test(html));
+});
+
+test("renderTodosLosBloques: todos los bloques vacíos incluido pagos → mensaje 'Sin tareas pendientes'", () => {
+  const agrupado = {
+    pendientes: [], sesionesHoy: [], pagosPendientes: [],
+    menusCrearSemana: [], alertas: [], proximos7Dias: []
+  };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  assert.match(html, /Sin tareas pendientes/);
+});
+
+test("renderTodosLosBloques: título del bloque es 'Pagos pendientes'", () => {
+  const agrupado = {
+    pendientes: [], sesionesHoy: [],
+    pagosPendientes: [{
+      pacienteId: "p1", nombre: "NEREA", fechaEsperada: "2026-05-01", estado: "aviso", diasDiff: 0
+    }],
+    menusCrearSemana: [], alertas: [], proximos7Dias: []
+  };
+  const html = BoHoy.renderTodosLosBloques(agrupado);
+  assert.match(html, /<h2[^>]*>Pagos pendientes<\/h2>/);
+});
