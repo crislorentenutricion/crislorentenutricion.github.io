@@ -1443,3 +1443,102 @@ test("calcularProximoPago: alta 31 ene → fechaEsperada 28/29 feb (overflow dí
 test("UMBRAL_AVISO_DIAS exportado como 2", () => {
   assert.equal(UMBRAL_AVISO_DIAS, 2);
 });
+
+// ===================================================================
+// recordatoriosPago — agregación para el bloque "Pagos pendientes"
+// ===================================================================
+
+const { recordatoriosPago } = require("../src/backoffice/logic.js");
+
+test("recordatoriosPago: filtra solo activos con estado vencido o aviso", () => {
+  const pacientes = [
+    { id: "p1", nombre: "ANA",   estado: "activo" },   // vencido
+    { id: "p2", nombre: "LAURA", estado: "activo" },   // aviso
+    { id: "p3", nombre: "SARA",  estado: "activo" },   // al_dia (no entra)
+    { id: "p4", nombre: "EVA",   estado: "cerrado" },  // cerrado (no entra)
+    { id: "p5", nombre: "INÉS",  estado: "activo" }    // sin_pagos (no entra)
+  ];
+  const pagos = [
+    { id: "a", paciente_id: "p1", fecha: "2026-03-01", concepto: "alta" }, // próximo 1 abr (vencido)
+    { id: "b", paciente_id: "p2", fecha: "2026-04-01", concepto: "alta" }, // próximo 1 may (aviso)
+    { id: "c", paciente_id: "p3", fecha: "2026-04-15", concepto: "alta" }, // próximo 15 may (al_dia)
+    { id: "d", paciente_id: "p4", fecha: "2026-04-01", concepto: "alta" }
+  ];
+  const r = recordatoriosPago(pacientes, pagos, new Date(2026, 4, 1)); // 1 may
+  const ids = r.map(x => x.pacienteId);
+  assert.deepEqual(ids, ["p1", "p2"]); // ANA primero (vencido), LAURA después (aviso)
+});
+
+test("recordatoriosPago: orden vencidos → avisos; vencidos por fecha más antigua arriba", () => {
+  const pacientes = [
+    { id: "a", nombre: "ANNA",  estado: "activo" },
+    { id: "b", nombre: "BERTA", estado: "activo" },
+    { id: "c", nombre: "CARLA", estado: "activo" },
+    { id: "d", nombre: "DIANA", estado: "activo" }
+  ];
+  const pagos = [
+    // próximo 1 mar (vencido 61 días)
+    { id: "1", paciente_id: "a", fecha: "2026-02-01", concepto: "alta" },
+    // próximo 1 abr (vencido 30 días)
+    { id: "2", paciente_id: "b", fecha: "2026-03-01", concepto: "alta" },
+    // próximo 1 may (aviso, vence hoy)
+    { id: "3", paciente_id: "c", fecha: "2026-04-01", concepto: "alta" },
+    // próximo 2 may (aviso, vence mañana)
+    { id: "4", paciente_id: "d", fecha: "2026-04-02", concepto: "alta" }
+  ];
+  const r = recordatoriosPago(pacientes, pagos, new Date(2026, 4, 1)); // 1 may
+  const ids = r.map(x => x.pacienteId);
+  // ANNA (más vencido), BERTA (vencido), CARLA (aviso hoy), DIANA (aviso mañana)
+  assert.deepEqual(ids, ["a", "b", "c", "d"]);
+});
+
+test("recordatoriosPago: empate de diasDiff → orden alfabético es-ES", () => {
+  const pacientes = [
+    { id: "1", nombre: "ZOE",    estado: "activo" },
+    { id: "2", nombre: "ÁNGELA", estado: "activo" }, // tilde, debe ir antes en es-ES
+    { id: "3", nombre: "BEA",    estado: "activo" }
+  ];
+  const pagos = [
+    { id: "x", paciente_id: "1", fecha: "2026-04-01", concepto: "alta" },
+    { id: "y", paciente_id: "2", fecha: "2026-04-01", concepto: "alta" },
+    { id: "z", paciente_id: "3", fecha: "2026-04-01", concepto: "alta" }
+  ];
+  const r = recordatoriosPago(pacientes, pagos, new Date(2026, 4, 1));
+  assert.deepEqual(r.map(x => x.nombre), ["ÁNGELA", "BEA", "ZOE"]);
+});
+
+test("recordatoriosPago: campos del item — pacienteId, nombre, fechaEsperada, estado, diasDiff", () => {
+  const pacientes = [{ id: "p1", nombre: "ANA", estado: "activo" }];
+  const pagos = [{ id: "x", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" }];
+  const r = recordatoriosPago(pacientes, pagos, new Date(2026, 4, 1));
+  assert.equal(r.length, 1);
+  assert.deepEqual(r[0], {
+    pacienteId: "p1",
+    nombre: "ANA",
+    fechaEsperada: "2026-05-01",
+    estado: "aviso",
+    diasDiff: 0
+  });
+});
+
+test("recordatoriosPago: sin pacientes → array vacío", () => {
+  assert.deepEqual(recordatoriosPago([], [], new Date()), []);
+  assert.deepEqual(recordatoriosPago(null, null, new Date()), []);
+});
+
+test("recordatoriosPago: error en calcularProximoPago de un paciente NO rompe el resto", () => {
+  // Defensa: si un paciente tiene datos raros que provoquen excepción, el
+  // bloque no debe explotar — ese paciente queda fuera y los demás siguen.
+  const pacientes = [
+    { id: "p1", nombre: "ANA", estado: "activo" },
+    null, // entrada basura
+    { id: "p2", nombre: "EVA", estado: "activo" }
+  ];
+  const pagos = [
+    { id: "a", paciente_id: "p1", fecha: "2026-04-01", concepto: "alta" },
+    { id: "b", paciente_id: "p2", fecha: "2026-04-01", concepto: "alta" }
+  ];
+  const r = recordatoriosPago(pacientes, pagos, new Date(2026, 4, 1));
+  assert.equal(r.length, 2);
+  assert.deepEqual(r.map(x => x.pacienteId).sort(), ["p1", "p2"]);
+});

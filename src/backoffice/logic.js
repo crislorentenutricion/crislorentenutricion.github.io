@@ -193,6 +193,57 @@
   }
 
   // -----------------------------------------------------------------
+  // recordatoriosPago — agregación para el bloque "Pagos pendientes"
+  // -----------------------------------------------------------------
+  //
+  // Aplica calcularProximoPago a cada paciente activo y devuelve solo los que
+  // están en estado 'vencido' o 'aviso', ordenados por urgencia decreciente:
+  //   1. Vencidos primero (más vencido arriba: diasDiff más negativo).
+  //   2. Avisos después (más cercano a vencer arriba: diasDiff más bajo).
+  //   3. Empate → alfabético por nombre con locale es-ES.
+  //
+  // Errores en un paciente individual (datos basura, excepción) no rompen el
+  // bloque entero — ese paciente queda fuera silenciosamente. Lo logueamos
+  // como warn para Cristina lo vea si abre devtools, pero el backoffice sigue.
+  function recordatoriosPago(pacientes, pagos, hoy) {
+    const lista = Array.isArray(pacientes) ? pacientes : [];
+    const items = [];
+    for (const p of lista) {
+      if (!p || p.estado !== 'activo') continue;
+      let r;
+      try {
+        r = calcularProximoPago(p, pagos, hoy);
+      } catch (err) {
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[backoffice/recordatoriosPago] error en paciente', p.id, err);
+        }
+        continue;
+      }
+      if (!r) continue;
+      if (r.estado !== 'vencido' && r.estado !== 'aviso') continue;
+      items.push({
+        pacienteId: p.id,
+        nombre: p.nombre,
+        fechaEsperada: r.fechaEsperada,
+        estado: r.estado,
+        diasDiff: r.diasDiff
+      });
+    }
+    items.sort(function (a, b) {
+      // Vencidos antes que avisos.
+      const aVenc = a.estado === 'vencido' ? 0 : 1;
+      const bVenc = b.estado === 'vencido' ? 0 : 1;
+      if (aVenc !== bVenc) return aVenc - bVenc;
+      // Dentro del mismo grupo, diasDiff ascendente (más vencido arriba; más
+      // cercano a vencer arriba — los dos casos son "menor diasDiff primero").
+      if (a.diasDiff !== b.diasDiff) return a.diasDiff - b.diasDiff;
+      // Empate → alfabético es-ES.
+      return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es');
+    });
+    return items;
+  }
+
+  // -----------------------------------------------------------------
   // Normalización de nombres para el comando /skill
   // -----------------------------------------------------------------
 
@@ -906,6 +957,7 @@
     priorizarPacientes,
     calcularMetricasHoy,
     calcularProximoPago,
+    recordatoriosPago,
     generarComando,
     diffEnDias,
     _sumarMeses,
