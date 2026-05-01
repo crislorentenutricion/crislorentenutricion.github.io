@@ -615,3 +615,72 @@ test("build: sitemap.xml no incluye /backoffice/paciente/", () => {
   const xml = fs.readFileSync(path.join(SITE, "sitemap.xml"), "utf8");
   assert.ok(!xml.includes("/backoffice/paciente"), "sitemap.xml incluye detalle por error");
 });
+
+// ===================================================================
+// renderPagos — línea "Próximo pago esperado" (Tarea 7)
+// ===================================================================
+
+test("BoPaciente.renderPagos: paciente activo con pagos → línea próximo pago renderizada", () => {
+  const html = BoPaciente.renderPagos(
+    [{ id: "p1", fecha: "2026-04-01", importe: 40, concepto: "alta" }],
+    { id: "x", estado: "activo" },
+    new Date(2026, 4, 1) // 1 may → vence hoy → estado aviso
+  );
+  assert.match(html, /data-bo-proximo-pago="aviso"/);
+  assert.match(html, /Próximo pago esperado/);
+  assert.match(html, /hoy/);
+});
+
+test("BoPaciente.renderPagos: paciente cerrado → línea NO renderizada", () => {
+  const html = BoPaciente.renderPagos(
+    [{ id: "p1", fecha: "2026-04-01", importe: 40, concepto: "alta" }],
+    { id: "x", estado: "cerrado" },
+    new Date(2026, 4, 1)
+  );
+  assert.ok(!/data-bo-proximo-pago/.test(html));
+  assert.ok(!/Próximo pago esperado/.test(html));
+});
+
+test("BoPaciente.renderPagos: paciente sin pagos → solo 'Sin pagos registrados todavía'", () => {
+  const html = BoPaciente.renderPagos(
+    [],
+    { id: "x", estado: "activo" },
+    new Date(2026, 4, 1)
+  );
+  assert.match(html, /Sin pagos registrados todavía/);
+  assert.ok(!/Próximo pago esperado/.test(html));
+});
+
+test("BoPaciente.renderPagos: estado vencido → clase bo-proximo-pago-vencido", () => {
+  const html = BoPaciente.renderPagos(
+    [{ id: "p1", fecha: "2026-03-01", importe: 40, concepto: "alta" }],
+    { id: "x", estado: "activo" },
+    new Date(2026, 4, 5) // 5 may, próximo era 1 abr → vencido 34 días
+  );
+  assert.match(html, /data-bo-proximo-pago="vencido"/);
+  assert.match(html, /class="[^"]*bo-proximo-pago-vencido/);
+  assert.match(html, /vencido/i);
+});
+
+test("BoPaciente.renderPagos: estado al_dia → línea sin clase de color", () => {
+  const html = BoPaciente.renderPagos(
+    [{ id: "p1", fecha: "2026-04-15", importe: 40, concepto: "alta" }],
+    { id: "x", estado: "activo" },
+    new Date(2026, 4, 1) // 1 may, próximo 15 may → al_dia (14 días)
+  );
+  assert.match(html, /data-bo-proximo-pago="al_dia"/);
+  assert.match(html, /en 14 días/);
+  assert.ok(!/bo-proximo-pago-vencido/.test(html));
+  assert.ok(!/bo-proximo-pago-aviso/.test(html));
+});
+
+test("BoPaciente.renderPagos: backwards-compat — sin paciente/hoy → no rompe (línea ausente)", () => {
+  // Tests existentes pasan paciente=undefined, hoy=undefined. La firma
+  // extendida es opcional: renderPagos(pagos, paciente?, hoy?). Si no se
+  // pasan los argumentos extra, la línea simplemente no se renderiza.
+  const html = BoPaciente.renderPagos([
+    { id: "p1", fecha: "2026-04-10", importe: 40, concepto: "alta" }
+  ]);
+  assert.match(html, /Total cobrado/); // resumen sí
+  assert.ok(!/Próximo pago esperado/.test(html)); // línea NO
+});
