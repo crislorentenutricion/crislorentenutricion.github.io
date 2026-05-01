@@ -41,6 +41,36 @@
     return _pad2(d.getHours()) + ':' + _pad2(d.getMinutes());
   }
 
+  // Texto humano del estado de vencimiento de un pago. Se usa en el bloque
+  // "Pagos pendientes" de la vista Tareas. Empareja con BoLogic.calcularProximoPago.
+  //
+  //   diasDiff =  0 → 'vence hoy (DD mmm)'
+  //   diasDiff =  1 → 'vence mañana (DD mmm)'
+  //   diasDiff >  1 → 'vence en N días (DD mmm)'   (suele ser ≤ UMBRAL_AVISO_DIAS=2)
+  //   diasDiff < -0 → 'vencido hace N días (DD mmm)' / 'hace 1 día' singular
+  //
+  // Si la fecha no parsea, devuelve solo el texto sin paréntesis.
+  // Si diasDiff es null/undefined, devuelve cadena vacía.
+  const _MESES_ABREV_UI = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+                           'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  function _fechaCortaUI(input) {
+    if (!input) return null;
+    const d = input instanceof Date ? input : new Date(String(input));
+    if (isNaN(d.getTime())) return null;
+    return d.getDate() + ' ' + _MESES_ABREV_UI[d.getMonth()];
+  }
+  function formatearVencimiento(diasDiff, fechaEsperada) {
+    if (diasDiff == null) return '';
+    let texto;
+    if (diasDiff === 0) texto = 'vence hoy';
+    else if (diasDiff === 1) texto = 'vence mañana';
+    else if (diasDiff > 1) texto = 'vence en ' + diasDiff + ' días';
+    else if (diasDiff === -1) texto = 'vencido hace 1 día';
+    else texto = 'vencido hace ' + Math.abs(diasDiff) + ' días';
+    const corta = _fechaCortaUI(fechaEsperada);
+    return corta ? (texto + ' (' + corta + ')') : texto;
+  }
+
   // -----------------------------------------------------------------
   // Nombres: Title Case para copy visible (feedback memoria:
   // feedback_copy_saludos_title_case.md). Internamente guardamos MAYÚSCULAS,
@@ -238,6 +268,7 @@
   const api = {
     formatearFecha,
     formatearHora,
+    formatearVencimiento,
     titleCase,
     primerNombre,
     escapeHtml,
