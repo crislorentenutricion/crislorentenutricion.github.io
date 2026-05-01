@@ -33,6 +33,12 @@
   // resolver" con botones [Dar de alta] [Descartar].
   const DURACION_VALORACION_MIN = 30;
 
+  // Ventana de aviso anticipado para recordatorio de pago: si la fecha esperada
+  // del próximo pago cae entre hoy (incl.) y hoy + UMBRAL_AVISO_DIAS (incl.),
+  // el paciente entra en estado 'aviso'. Más allá → 'al_dia'. Antes de hoy →
+  // 'vencido'. Decisión: 2 días de aviso (ver spec recordatorio-pago).
+  const UMBRAL_AVISO_DIAS = 2;
+
   // Etiquetas es-ES con tildes. Usamos arrays propios en lugar de
   // toLocaleDateString('es-ES') para que el output sea determinista en
   // Node sin ICU completo y entre runners.
@@ -87,6 +93,154 @@
     const db = _toMidnight(b);
     if (!da || !db) return NaN;
     return Math.round((db.getTime() - da.getTime()) / 86400000);
+  }
+
+  // Suma N meses a una fecha preservando día-de-mes. Si el día no existe en el
+  // mes destino (31 ene + 1 mes → 31 feb no existe), clampa al último día
+  // del mes destino (28 o 29 feb). Devuelve Date a medianoche local o null
+  // si la entrada no parsea.
+  // Equivalente a `dayjs().add(n, 'month')` pero sin dependencia.
+  function _sumarMeses(input, n) {
+    const d = _toMidnight(input);
+    if (!d) return null;
+    const dia = d.getDate();
+    // Construimos en el día 1 para evitar el overflow nativo de Date
+    // (new Date(2026, 1, 31) → 3 mar 2026, no es lo que queremos).
+    const objetivo = new Date(d.getFullYear(), d.getMonth() + n, 1);
+    // Último día del mes destino: día 0 del mes siguiente.
+    const ultimoDia = new Date(objetivo.getFullYear(), objetivo.getMonth() + 1, 0).getDate();
+    objetivo.setDate(Math.min(dia, ultimoDia));
+    objetivo.setHours(0, 0, 0, 0);
+    return objetivo;
+  }
+
+  // -----------------------------------------------------------------
+  // calcularProximoPago — derivación pura de la fecha esperada
+  // -----------------------------------------------------------------
+  //
+  // Dado un paciente y la lista global de pagos, devuelve el estado del
+  // próximo pago esperado. Anclaje fijo en el pago `concepto='alta'` más
+  // reciente — los retrasos en registrar un pago no desplazan recordatorios
+  // futuros (ver spec recordatorio-pago-backoffice.md).
+  //
+  // Devuelve:
+  //   - null si paciente no activo (no aplica).
+  //   - { estado, fechaEsperada, diasDiff } en otro caso.
+  //     estado ∈ { 'sin_pagos' | 'al_dia' | 'aviso' | 'vencido' }
+  //     fechaEsperada: 'YYYY-MM-DD' o null si sin_pagos
+  //     diasDiff: nº días (positivo = quedan, negativo = vencido) o null
+  //
+  // Convenciones de entrada:
+  //   paciente: { id, estado }
+  //   pagos:    array global (se filtra internamente por paciente_id)
+  //   hoy:      Date (default new Date())
+  function calcularProximoPago(paciente, pagos, hoy) {
+    if (!paciente || paciente.estado !== 'activo') return null;
+    const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
+
+    // Filtrar pagos del paciente con concepto que avanza el ciclo. 'otro' no
+    // cuenta (reembolso/ajuste). Filtrar también fechas malformadas.
+    const propios = (Array.isArray(pagos) ? pagos : []).filter(function (p) {
+      if (!p || p.paciente_id !== paciente.id) return false;
+      if (p.concepto !== 'alta' && p.concepto !== 'renovacion') return false;
+      return _toMidnight(p.fecha) != null;
+    });
+
+    if (propios.length === 0) {
+      return { estado: 'sin_pagos', fechaEsperada: null, diasDiff: null };
+    }
+
+    // Ancla = pago 'alta' más reciente. Si no hay 'alta' (caso histórico raro,
+    // pacientes pre-tabla con solo 'renovacion'), fallback al pago más antiguo.
+    const altas = propios.filter(function (p) { return p.concepto === 'alta'; });
+    let anclaFecha;
+    if (altas.length > 0) {
+      anclaFecha = altas.reduce(function (max, p) {
+        const m = _toMidnight(p.fecha);
+        return (max == null || m.getTime() > max.getTime()) ? m : max;
+      }, null);
+    } else {
+      anclaFecha = propios.reduce(function (min, p) {
+        const m = _toMidnight(p.fecha);
+        return (min == null || m.getTime() < min.getTime()) ? m : min;
+      }, null);
+    }
+
+    // N = pagos del ciclo activo (>= ancla, alta o renovacion).
+    const anclaTime = anclaFecha.getTime();
+    const N = propios.filter(function (p) {
+      const m = _toMidnight(p.fecha);
+      return m && m.getTime() >= anclaTime;
+    }).length;
+
+    const fechaEsperadaDate = _sumarMeses(anclaFecha, N);
+    if (!fechaEsperadaDate) {
+      // No debería ocurrir si el ancla es válida, pero defensivo.
+      return { estado: 'sin_pagos', fechaEsperada: null, diasDiff: null };
+    }
+
+    const diasDiff = diffEnDias(hoyMid, fechaEsperadaDate);
+    let estado;
+    if (diasDiff < 0) estado = 'vencido';
+    else if (diasDiff <= UMBRAL_AVISO_DIAS) estado = 'aviso';
+    else estado = 'al_dia';
+
+    return {
+      estado: estado,
+      fechaEsperada: _toISO(fechaEsperadaDate),
+      diasDiff: diasDiff
+    };
+  }
+
+  // -----------------------------------------------------------------
+  // recordatoriosPago — agregación para el bloque "Pagos pendientes"
+  // -----------------------------------------------------------------
+  //
+  // Aplica calcularProximoPago a cada paciente activo y devuelve solo los que
+  // están en estado 'vencido' o 'aviso', ordenados por urgencia decreciente:
+  //   1. Vencidos primero (más vencido arriba: diasDiff más negativo).
+  //   2. Avisos después (más cercano a vencer arriba: diasDiff más bajo).
+  //   3. Empate → alfabético por nombre con locale es-ES.
+  //
+  // Errores en un paciente individual (datos basura, excepción) no rompen el
+  // bloque entero — ese paciente queda fuera silenciosamente. Lo logueamos
+  // como warn para Cristina lo vea si abre devtools, pero el backoffice sigue.
+  function recordatoriosPago(pacientes, pagos, hoy) {
+    const lista = Array.isArray(pacientes) ? pacientes : [];
+    const items = [];
+    for (const p of lista) {
+      if (!p || p.estado !== 'activo') continue;
+      let r;
+      try {
+        r = calcularProximoPago(p, pagos, hoy);
+      } catch (err) {
+        if (typeof console !== 'undefined' && console.warn) {
+          console.warn('[backoffice/recordatoriosPago] error en paciente', p.id, err);
+        }
+        continue;
+      }
+      if (!r) continue;
+      if (r.estado !== 'vencido' && r.estado !== 'aviso') continue;
+      items.push({
+        pacienteId: p.id,
+        nombre: p.nombre,
+        fechaEsperada: r.fechaEsperada,
+        estado: r.estado,
+        diasDiff: r.diasDiff
+      });
+    }
+    items.sort(function (a, b) {
+      // Vencidos antes que avisos.
+      const aVenc = a.estado === 'vencido' ? 0 : 1;
+      const bVenc = b.estado === 'vencido' ? 0 : 1;
+      if (aVenc !== bVenc) return aVenc - bVenc;
+      // Dentro del mismo grupo, diasDiff ascendente (más vencido arriba; más
+      // cercano a vencer arriba — los dos casos son "menor diasDiff primero").
+      if (a.diasDiff !== b.diasDiff) return a.diasDiff - b.diasDiff;
+      // Empate → alfabético es-ES.
+      return String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es');
+    });
+    return items;
   }
 
   // -----------------------------------------------------------------
@@ -802,8 +956,11 @@
     sesionesProximos7Dias,
     priorizarPacientes,
     calcularMetricasHoy,
+    calcularProximoPago,
+    recordatoriosPago,
     generarComando,
     diffEnDias,
+    _sumarMeses,
     validarEnv,
     SKILLS_VALIDAS,
     VIGENCIA_DIAS_DEFAULT,
@@ -811,6 +968,7 @@
     DIAS_AVISO_PROXIMO_MENU,
     DIAS_VENTANA_PROXIMOS,
     DURACION_VALORACION_MIN,
+    UMBRAL_AVISO_DIAS,
     REPESCA_VENTANA_DIAS,
     GAP_REPESCA_DIAS,
     REPESCA_MIN_DENOMINADOR

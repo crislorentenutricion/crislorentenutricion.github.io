@@ -525,7 +525,12 @@
     return v.toFixed(decimales).replace('.', ',') + ' €';
   }
 
-  function renderPagos(pagos) {
+  // Renderiza la sección "Pagos" del detalle. Argumentos extra opcionales:
+  //   paciente: { id, estado } — necesario para la línea "Próximo pago esperado".
+  //   hoy:      Date            — fecha de referencia (default new Date()).
+  // Si no se pasan, la línea de próximo pago se omite (compat con tests
+  // antiguos y llamadas que no la quieren).
+  function renderPagos(pagos, paciente, hoy) {
     const lista = Array.isArray(pagos) ? pagos.slice() : [];
 
     if (lista.length === 0) {
@@ -559,6 +564,44 @@
       lista.length + ' ' + (lista.length === 1 ? 'pago' : 'pagos') +
     '</p>';
 
+    // Línea "Próximo pago esperado". Solo si tenemos paciente activo y al
+    // menos un pago — calcularProximoPago devuelve null para cerrados y
+    // 'sin_pagos' para listas vacías (que ya hemos rechazado arriba).
+    // calcularProximoPago filtra por paciente_id; en este contexto la lista
+    // ya pertenece al paciente, así que la enriquecemos con paciente_id.
+    let lineaProximoPago = '';
+    if (paciente) {
+      const pagosParaCalc = lista.map(function (p) {
+        return p && p.paciente_id ? p : Object.assign({}, p, { paciente_id: paciente.id });
+      });
+      const r = BoLogic.calcularProximoPago(paciente, pagosParaCalc, hoy || new Date());
+      if (r && r.estado !== 'sin_pagos') {
+        const fechaLarga = BoUi.formatearFecha(r.fechaEsperada);
+        let texto, clase = '';
+        if (r.estado === 'vencido') {
+          const dias = Math.abs(r.diasDiff);
+          texto = '🔴 Pago vencido desde hace ' + dias + ' ' +
+            (dias === 1 ? 'día' : 'días') +
+            ' (esperado el ' + fechaLarga + ')';
+          clase = 'bo-proximo-pago-vencido';
+        } else if (r.estado === 'aviso') {
+          let cuando;
+          if (r.diasDiff === 0) cuando = 'hoy';
+          else if (r.diasDiff === 1) cuando = 'mañana';
+          else cuando = 'pasado mañana';
+          texto = '🟡 Próximo pago esperado: ' + cuando + ' (' + fechaLarga + ')';
+          clase = 'bo-proximo-pago-aviso';
+        } else {
+          // al_dia
+          texto = 'Próximo pago esperado: ' + fechaLarga +
+            ' (en ' + r.diasDiff + ' ' + (r.diasDiff === 1 ? 'día' : 'días') + ')';
+        }
+        const claseAttr = clase ? ' class="' + clase + '"' : '';
+        lineaProximoPago = '<p data-bo-proximo-pago="' + r.estado + '"' + claseAttr + '>' +
+          BoUi.escapeHtml(texto) + '</p>';
+      }
+    }
+
     const filas = lista.map(function (p) {
       const fecha = p.fecha ? BoUi.formatearFecha(p.fecha) : '—';
       const concepto = _conceptoLabel(p.concepto);
@@ -577,6 +620,7 @@
     return '<section class="bo-pagos" data-bo-bloque="pagos">' +
       '<h2>Pagos</h2>' +
       resumen +
+      lineaProximoPago +
       '<table class="bo-pagos-tabla">' +
         '<thead><tr>' +
           '<th>Fecha</th><th>Concepto</th><th>Importe</th><th>Método</th><th>Notas</th>' +
@@ -967,7 +1011,7 @@
         datos.paciente.anamnesis_completed_at || datos.paciente.alta || null
       );
     }
-    if (pag) pag.innerHTML = renderPagos(datos.pagos || []);
+    if (pag) pag.innerHTML = renderPagos(datos.pagos || [], datos.paciente, new Date());
     if (tim) {
       tim.innerHTML = renderTimeline({
         menus: datos.menus, sesiones: datos.sesiones, revisiones: datos.revisiones

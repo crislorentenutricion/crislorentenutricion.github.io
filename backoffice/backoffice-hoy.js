@@ -199,6 +199,37 @@
     return _filaCuerpo(item.pacienteId, meta, 'alerta', '');
   }
 
+  // Fila del bloque "Pagos pendientes": indica un paciente cuyo próximo pago
+  // está vencido o a punto de vencer (≤ UMBRAL_AVISO_DIAS días). Patrón
+  // idéntico a renderFilaMenuCrear: link al detalle a la izquierda + botón
+  // copy-command "Registrar pago" a la derecha. La clase del badge codifica
+  // el estado (vencido o aviso) para que el CSS coloree el indicador.
+  //
+  // Item esperado: { pacienteId, nombre, fechaEsperada, estado, diasDiff }.
+  function renderFilaPagoPendiente(item) {
+    const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
+    const claseEstado = item.estado === 'vencido' ? 'bo-pago-vencido' : 'bo-pago-aviso';
+    const detalleTexto = BoUi.formatearVencimiento(item.diasDiff, item.fechaEsperada);
+    const href = item.pacienteId
+      ? '/backoffice/paciente/?id=' + BoUi.escapeHtml(String(item.pacienteId))
+      : '#';
+    const link = '<a class="bo-fila-link-row" href="' + href + '">' +
+      '<div class="bo-fila-meta">' +
+        '<span class="bo-fila-nombre">' + nombre + '</span>' +
+        '<span class="bo-fila-detalle ' + claseEstado + '">' +
+          BoUi.escapeHtml(detalleTexto) +
+        '</span>' +
+      '</div>' +
+    '</a>';
+    const comando = BoLogic.generarComando('registrar-pago', item.nombre);
+    const accion = '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
+      'data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
+      'Registrar pago</button>';
+    return '<li class="bo-fila" data-bo-fila="pago-pendiente">' +
+      link + accion +
+    '</li>';
+  }
+
   function renderBloque(config) {
     // config = { key, titulo, items, renderFila, emptyMsg }
     const filas = config.items.map(config.renderFila).join('');
@@ -270,6 +301,12 @@
         titulo: 'Sesiones hoy',
         items: agrupado.sesionesHoy || [],
         renderFila: renderFilaSesion
+      },
+      {
+        key: 'pagos-pendientes',
+        titulo: 'Pagos pendientes',
+        items: agrupado.pagosPendientes || [],
+        renderFila: renderFilaPagoPendiente
       },
       {
         key: 'menus-crear-semana',
@@ -422,18 +459,23 @@
   }
 
   async function cargarDatos(supa) {
-    // 5 SELECT en paralelo. RLS se encarga de filtrar al email de Cristina.
-    // `menus.created_at` lo usa `calcularMetricasHoy` para contar los del mes
-    // natural actual. `valoraciones` mezcla primera consulta (prospectos) con
-    // seguimientos en el bloque "Sesiones hoy" y "Próximos 7 días" — se
-    // filtran solo las confirmadas para no listar canceladas/no-show.
-    const results = await Promise.all([
+    // 5 SELECT core + pagos en paralelo. RLS se encarga de filtrar al email
+    // de Cristina. `pagos` se separa con un .then de tolerancia: si la query
+    // falla (RLS, 4xx), tratamos pagos como [] para no romper el resto de
+    // la vista — mismo patrón que la vista Detalle.
+    const corePromise = Promise.all([
       supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis_completed_at'),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at'),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id'),
       supa.from('checkins').select('paciente_id, fecha, estado'),
       supa.from('valoraciones').select('id, nombre, email, telefono, fecha, calendar_event_id, status').eq('status', 'confirmed')
     ]);
+    const pagosPromise = supa
+      .from('pagos')
+      .select('id, paciente_id, fecha, concepto')
+      .then(r => r, () => ({ data: [], error: null }));
+
+    const [results, pagosRes] = await Promise.all([corePromise, pagosPromise]);
     const [pac, menu, ses, ck, val] = results;
     const errores = results.map(r => r.error).filter(Boolean);
     if (errores.length) {
@@ -445,7 +487,8 @@
       menus: menu.data || [],
       sesiones: ses.data || [],
       checkins: ck.data || [],
-      valoraciones: val.data || []
+      valoraciones: val.data || [],
+      pagos: (pagosRes && pagosRes.data) || []
     };
   }
 
@@ -466,6 +509,10 @@
       const datos = await cargarDatos(supa);
       const hoy = new Date();
       const agrupado  = BoLogic.agruparHoy({ ...datos, opts: {} }, hoy);
+      // Recordatorios de pago: bloque autónomo computado fuera de agruparHoy
+      // porque agruparHoy ya tiene 7 responsabilidades; mantenemos el bloque
+      // nuevo desacoplado para no inflar la firma de la función principal.
+      agrupado.pagosPendientes = BoLogic.recordatoriosPago(datos.pacientes, datos.pagos, hoy);
       // calcularMetricasHoy ignora `valoraciones`: las métricas siguen siendo
       // de pacientes activas, no de prospectos.
       const metricas  = BoLogic.calcularMetricasHoy(datos, hoy);
@@ -502,6 +549,7 @@
     renderFilaMenuCrear,
     renderFilaPendiente,
     renderFilaAlerta,
+    renderFilaPagoPendiente,
     renderBloque,
     renderTodosLosBloques,
     renderMetricas,

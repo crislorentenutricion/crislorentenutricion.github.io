@@ -262,6 +262,40 @@
       cursor: help;
       white-space: nowrap;
     }
+    /* Indicador de pago en bloque "Pagos pendientes" (vista Tareas) y línea
+       "Próximo pago esperado" del detalle. Mismos tokens de color que
+       .bo-fila-warning (ámbar) para aviso, y rojo suave para vencido — el
+       icono 🟡/🔴 hace el trabajo y el color es refuerzo. */
+    .bo-pago-aviso {
+      color: #92400e;
+      font-weight: 600;
+    }
+    .bo-pago-vencido {
+      color: #991b1b;
+      font-weight: 600;
+    }
+    /* Línea "Próximo pago esperado" dentro de la sección Pagos del detalle.
+       Va como párrafo con su propio fondo pill, no inline span — está en
+       posición prominente (justo bajo el resumen). */
+    .bo-proximo-pago-aviso,
+    .bo-proximo-pago-vencido {
+      display: block;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-weight: 500;
+      margin: 8px 0 16px;
+    }
+    .bo-proximo-pago-aviso {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+    }
+    .bo-proximo-pago-vencido {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
     /* Badge de tipo de cita (sesiones hoy + próximos 7 días): identifica si
        es seguimiento mensual de paciente (verde) o primera consulta de
        prospecto (azul). Mismo formato pill que .bo-fila-warning, distinto
