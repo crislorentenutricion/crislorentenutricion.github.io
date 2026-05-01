@@ -199,6 +199,37 @@
     return _filaCuerpo(item.pacienteId, meta, 'alerta', '');
   }
 
+  // Fila del bloque "Pagos pendientes": indica un paciente cuyo próximo pago
+  // está vencido o a punto de vencer (≤ UMBRAL_AVISO_DIAS días). Patrón
+  // idéntico a renderFilaMenuCrear: link al detalle a la izquierda + botón
+  // copy-command "Registrar pago" a la derecha. La clase del badge codifica
+  // el estado (vencido o aviso) para que el CSS coloree el indicador.
+  //
+  // Item esperado: { pacienteId, nombre, fechaEsperada, estado, diasDiff }.
+  function renderFilaPagoPendiente(item) {
+    const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
+    const claseEstado = item.estado === 'vencido' ? 'bo-pago-vencido' : 'bo-pago-aviso';
+    const detalleTexto = BoUi.formatearVencimiento(item.diasDiff, item.fechaEsperada);
+    const href = item.pacienteId
+      ? '/backoffice/paciente/?id=' + BoUi.escapeHtml(String(item.pacienteId))
+      : '#';
+    const link = '<a class="bo-fila-link-row" href="' + href + '">' +
+      '<div class="bo-fila-meta">' +
+        '<span class="bo-fila-nombre">' + nombre + '</span>' +
+        '<span class="bo-fila-detalle ' + claseEstado + '">' +
+          BoUi.escapeHtml(detalleTexto) +
+        '</span>' +
+      '</div>' +
+    '</a>';
+    const comando = BoLogic.generarComando('registrar-pago', item.nombre);
+    const accion = '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
+      'data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
+      'Registrar pago</button>';
+    return '<li class="bo-fila" data-bo-fila="pago-pendiente">' +
+      link + accion +
+    '</li>';
+  }
+
   function renderBloque(config) {
     // config = { key, titulo, items, renderFila, emptyMsg }
     const filas = config.items.map(config.renderFila).join('');
@@ -502,6 +533,7 @@
     renderFilaMenuCrear,
     renderFilaPendiente,
     renderFilaAlerta,
+    renderFilaPagoPendiente,
     renderBloque,
     renderTodosLosBloques,
     renderMetricas,

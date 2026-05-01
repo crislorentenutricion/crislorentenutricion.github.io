@@ -799,3 +799,65 @@ test("build: las invocaciones de BoAuth usan onListo que dispara el arrancar cor
   const pac = fs.readFileSync(path.join(SITE, "backoffice", "pacientes", "index.html"), "utf8");
   assert.match(pac, /window\.BoPacientes\.arrancar\(supa\)/);
 });
+
+// ===================================================================
+// renderFilaPagoPendiente — bloque "Pagos pendientes"
+// ===================================================================
+
+test("renderFilaPagoPendiente: vencido → badge 🔴 con clase bo-pago-vencido", () => {
+  const html = BoHoy.renderFilaPagoPendiente({
+    pacienteId: "p1",
+    nombre: "NEREA",
+    fechaEsperada: "2026-04-28",
+    estado: "vencido",
+    diasDiff: -3
+  });
+  assert.match(html, /data-bo-fila="pago-pendiente"/);
+  assert.match(html, /Nerea/); // titleCase
+  assert.match(html, /vencido hace 3 días/);
+  assert.match(html, /28 abr/);
+  assert.match(html, /class="[^"]*bo-pago-vencido/);
+  assert.match(html, /data-bo-comando="\/registrar-pago NEREA"/);
+  assert.match(html, /Registrar pago/);
+  assert.match(html, /href="\/backoffice\/paciente\/\?id=p1"/);
+});
+
+test("renderFilaPagoPendiente: aviso → badge 🟡 con clase bo-pago-aviso", () => {
+  const html = BoHoy.renderFilaPagoPendiente({
+    pacienteId: "p2",
+    nombre: "SARA",
+    fechaEsperada: "2026-05-01",
+    estado: "aviso",
+    diasDiff: 0
+  });
+  assert.match(html, /Sara/);
+  assert.match(html, /vence hoy/);
+  assert.match(html, /1 may/);
+  assert.match(html, /class="[^"]*bo-pago-aviso/);
+  assert.ok(!/bo-pago-vencido/.test(html));
+});
+
+test("renderFilaPagoPendiente: nombre va a comando en MAYÚSCULAS, visible en Title Case", () => {
+  const html = BoHoy.renderFilaPagoPendiente({
+    pacienteId: "p1",
+    nombre: "MARÍA JOSÉ",
+    fechaEsperada: "2026-05-02",
+    estado: "aviso",
+    diasDiff: 1
+  });
+  assert.match(html, /data-bo-comando="\/registrar-pago MARÍA JOSÉ"/);
+  // En el cuerpo visible aparece en Title Case (no MAYÚSCULAS)
+  const visible = html.replace(/<[^>]+>/g, " ").replace(/data-bo-comando="[^"]*"/g, "");
+  assert.match(visible, /María José/);
+});
+
+test("renderFilaPagoPendiente: HTML escapado (defensa XSS)", () => {
+  const html = BoHoy.renderFilaPagoPendiente({
+    pacienteId: 'p<script>alert(1)</script>',
+    nombre: 'MAL"<script>',
+    fechaEsperada: "2026-05-01",
+    estado: "aviso",
+    diasDiff: 0
+  });
+  assert.ok(!/<script>/.test(html));
+});
