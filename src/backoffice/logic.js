@@ -89,6 +89,25 @@
     return Math.round((db.getTime() - da.getTime()) / 86400000);
   }
 
+  // Suma N meses a una fecha preservando día-de-mes. Si el día no existe en el
+  // mes destino (31 ene + 1 mes → 31 feb no existe), clampa al último día
+  // del mes destino (28 o 29 feb). Devuelve Date a medianoche local o null
+  // si la entrada no parsea.
+  // Equivalente a `dayjs().add(n, 'month')` pero sin dependencia.
+  function _sumarMeses(input, n) {
+    const d = _toMidnight(input);
+    if (!d) return null;
+    const dia = d.getDate();
+    // Construimos en el día 1 para evitar el overflow nativo de Date
+    // (new Date(2026, 1, 31) → 3 mar 2026, no es lo que queremos).
+    const objetivo = new Date(d.getFullYear(), d.getMonth() + n, 1);
+    // Último día del mes destino: día 0 del mes siguiente.
+    const ultimoDia = new Date(objetivo.getFullYear(), objetivo.getMonth() + 1, 0).getDate();
+    objetivo.setDate(Math.min(dia, ultimoDia));
+    objetivo.setHours(0, 0, 0, 0);
+    return objetivo;
+  }
+
   // -----------------------------------------------------------------
   // Normalización de nombres para el comando /skill
   // -----------------------------------------------------------------
@@ -804,6 +823,7 @@
     calcularMetricasHoy,
     generarComando,
     diffEnDias,
+    _sumarMeses,
     validarEnv,
     SKILLS_VALIDAS,
     VIGENCIA_DIAS_DEFAULT,

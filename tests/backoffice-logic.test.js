@@ -1215,3 +1215,51 @@ test("calcularMetricasHoy: tolera datos undefined/null sin romper", () => {
   assert.equal(r.menusEsteMes, 0);
   assert.equal(r.repescas.label, "Sin datos suficientes");
 });
+
+// ===================================================================
+// _sumarMeses — helper público para añadir N meses a una fecha
+// ===================================================================
+
+const { _sumarMeses } = require("../src/backoffice/logic.js");
+
+test("_sumarMeses: caso simple 1 abr + 1 mes → 1 may", () => {
+  const r = _sumarMeses("2026-04-01", 1);
+  assert.equal(r.toISOString().slice(0, 10), "2026-05-01");
+});
+
+test("_sumarMeses: caso simple 15 mar + 2 meses → 15 may", () => {
+  const r = _sumarMeses("2026-03-15", 2);
+  assert.equal(r.toISOString().slice(0, 10), "2026-05-15");
+});
+
+test("_sumarMeses: 31 ene + 1 mes → 28 feb (año no bisiesto)", () => {
+  const r = _sumarMeses("2026-01-31", 1);
+  assert.equal(r.toISOString().slice(0, 10), "2026-02-28");
+});
+
+test("_sumarMeses: 31 ene 2028 + 1 mes → 29 feb (año bisiesto)", () => {
+  const r = _sumarMeses("2028-01-31", 1);
+  assert.equal(r.toISOString().slice(0, 10), "2028-02-29");
+});
+
+test("_sumarMeses: 31 mar + 1 mes → 30 abr", () => {
+  const r = _sumarMeses("2026-03-31", 1);
+  assert.equal(r.toISOString().slice(0, 10), "2026-04-30");
+});
+
+test("_sumarMeses: cruza año (1 dic + 2 meses → 1 feb siguiente)", () => {
+  const r = _sumarMeses("2026-12-01", 2);
+  assert.equal(r.toISOString().slice(0, 10), "2027-02-01");
+});
+
+test("_sumarMeses: acepta Date como entrada", () => {
+  const r = _sumarMeses(new Date(2026, 3, 1), 1); // 1 abr 2026 (mes 3 es abril)
+  assert.equal(r.getFullYear(), 2026);
+  assert.equal(r.getMonth(), 4); // mayo
+  assert.equal(r.getDate(), 1);
+});
+
+test("_sumarMeses: fecha inválida → null", () => {
+  assert.equal(_sumarMeses("not-a-date", 1), null);
+  assert.equal(_sumarMeses(null, 1), null);
+});
