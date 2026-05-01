@@ -1,0 +1,277 @@
+/* ============================================================
+ * Bloque de captación del lead magnet (home, entre testimonios y FAQ).
+ * Mockup base: recursos/lead-magnet/web-mockups/bloque-captacion.html
+ * Tipografías de la marca (Manrope + Lora) ya cargadas globalmente.
+ * ============================================================ */
+
+.lm-block {
+  background-color: var(--color-cream);
+  padding: var(--section-padding) 0;
+}
+
+@media (max-width: 768px) {
+  .lm-block { padding: var(--section-padding-mobile) 0; }
+}
+
+.lm-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .lm-grid { grid-template-columns: 1fr; gap: 40px; }
+}
+
+/* ── IZQUIERDA: foto del mockup con sello ─────────────────── */
+.lm-pic-wrap {
+  position: relative;
+}
+
+.lm-pic {
+  border-radius: var(--border-radius-card);
+  overflow: hidden;
+  box-shadow: 0 30px 50px rgba(74, 124, 89, 0.18), 0 6px 14px rgba(0, 0, 0, 0.06);
+  transform: rotate(-1.5deg);
+  transition: transform var(--transition-medium);
+}
+
+.lm-pic:hover { transform: rotate(-0.5deg) scale(1.01); }
+
+.lm-pic img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .lm-pic-wrap { max-width: 480px; margin: 0 auto; }
+  .lm-pic { transform: rotate(-1deg); }
+}
+
+@media (max-width: 540px) {
+  .lm-pic { transform: none; }
+}
+
+/* Sello "100% gratis" estilo magazine */
+.lm-stamp {
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  width: 98px;
+  height: 98px;
+  background: var(--color-green);
+  color: var(--color-white);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-accent);
+  font-style: italic;
+  transform: rotate(8deg);
+  box-shadow: 0 8px 20px rgba(74, 124, 89, 0.30);
+  pointer-events: none;
+}
+
+.lm-stamp-line1 {
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-style: normal;
+  opacity: 0.9;
+}
+
+.lm-stamp-line2 {
+  font-size: 28px;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .lm-stamp { width: 84px; height: 84px; top: -12px; right: -12px; }
+  .lm-stamp-line2 { font-size: 24px; }
+}
+
+/* ── DERECHA: copy + form ─────────────────────────────────── */
+.lm-pill {
+  display: inline-block;
+  padding: 7px 16px;
+  background: var(--color-white);
+  border-radius: var(--border-radius-btn);
+  font-size: 11px;
+  color: var(--color-green);
+  letter-spacing: var(--letter-spacing-wide);
+  text-transform: uppercase;
+  font-weight: var(--font-weight-bold);
+  margin-bottom: 20px;
+}
+
+.lm-heading {
+  font-family: var(--font-accent);
+  font-size: clamp(1.8rem, 3.2vw, 2.6rem);
+  line-height: var(--line-height-heading);
+  letter-spacing: var(--letter-spacing-tight);
+  margin: 0 0 20px;
+  color: var(--color-black);
+  text-wrap: balance;
+}
+
+.lm-heading em {
+  color: var(--color-green);
+  font-style: italic;
+}
+
+.lm-lede {
+  color: var(--color-gray);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin: 0 0 28px;
+}
+
+.lm-benefits {
+  list-style: none;
+  margin: 0 0 32px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.lm-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--color-black);
+  line-height: 1.5;
+}
+
+.lm-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--color-green-tint);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-green);
+  font-weight: var(--font-weight-bold);
+  font-size: 13px;
+  margin-top: 1px;
+}
+
+/* ── Form ─────────────────────────────────────────────────── */
+.lm-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.lm-form-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 540px) {
+  .lm-form-fields { grid-template-columns: 1fr; }
+}
+
+.lm-form-field { display: block; }
+
+/* Etiqueta accesible para lectores; oculta visualmente. */
+.lm-form-field .visually-hidden,
+.lm-block .visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.lm-form-field input {
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: var(--color-white);
+  font-family: inherit;
+  color: var(--color-black);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.lm-form-field input::placeholder { color: var(--color-gray-light); }
+
+.lm-form-field input:focus {
+  outline: none;
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.18);
+}
+
+.lm-submit {
+  display: block;
+  width: 100%;
+  padding: 18px 28px;
+  background: var(--color-green);
+  color: var(--color-white);
+  border: none;
+  border-radius: var(--border-radius-btn);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform 0.1s;
+}
+
+.lm-submit:hover:not(:disabled) { background: var(--color-green-dark); }
+.lm-submit:active:not(:disabled) { transform: translateY(1px); }
+.lm-submit:disabled { opacity: 0.7; cursor: default; }
+
+.lm-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--color-gray);
+  line-height: 1.5;
+}
+
+.lm-consent input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  accent-color: var(--color-green);
+}
+
+.lm-consent a {
+  color: var(--color-green);
+  text-decoration: underline;
+}
+
+/* Status (success / error) */
+.lm-status {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--border-radius-sm);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.lm-status.is-success {
+  background: var(--color-green-muted);
+  color: var(--color-green-dark);
+  border: 1px solid var(--color-green);
+}
+
+.lm-status.is-error {
+  background: #fdecec;
+  color: #8c2a2a;
+  border: 1px solid #d59292;
+}
