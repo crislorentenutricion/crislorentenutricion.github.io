@@ -951,6 +951,35 @@
     if (root.dataset) root.dataset.boBoundLibre = '1';
   }
 
+  // Auto-expand al buscar (Ctrl+F): cuando el navegador resalta un match
+  // dentro de un span clamped, la selección cae en zona oculta. Detectamos
+  // selección con texto, miramos el ancestro `.bo-anamnesis-valor` y si está
+  // truncado lo expandimos (sincronizando aria + texto del botón hermano).
+  // Listener global a `document`: idempotente vía variable module-level.
+  let _selectionListenerBound = false;
+  function _conectarSelectionAutoExpand() {
+    if (typeof document === 'undefined') return;
+    if (_selectionListenerBound) return;
+    _selectionListenerBound = true;
+    document.addEventListener('selectionchange', function () {
+      const sel = document.getSelection && document.getSelection();
+      if (!sel || !String(sel).length) return;
+      const node = sel.anchorNode;
+      if (!node) return;
+      const el = node.nodeType === 1 ? node : node.parentElement;
+      if (!el || typeof el.closest !== 'function') return;
+      const span = el.closest('.bo-anamnesis-valor[data-bo-libre="truncado"]');
+      if (!span) return;
+      span.setAttribute('data-bo-libre', 'expandido');
+      const dd = span.parentElement;
+      const toggle = dd && dd.querySelector('.bo-libre-toggle');
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.textContent = 'Ver menos';
+      }
+    });
+  }
+
   // PDFs del menú viven en el bucket privado `menus-pdf`. Firmamos al click
   // con createSignedUrl(path, 60, { download: filename }) y navegamos con
   // location.href — window.open tras await lo bloquea Safari (ver
@@ -1079,6 +1108,7 @@
     const tim = document.getElementById('timeline');
     const acc = document.getElementById('acciones');
     if (cab) cab.innerHTML = renderCabecera(datos.paciente);
+    _conectarSelectionAutoExpand();
     if (ana) {
       ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
       _marcarDesbordados(ana);
