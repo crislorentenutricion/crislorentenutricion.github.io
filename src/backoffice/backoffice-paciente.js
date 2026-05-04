@@ -340,14 +340,61 @@
       ? Math.round((diasConCheckin / totalDias) * 100)
       : null;
 
+    // Rachas — reglas idénticas a la PWA: 'seguido' suma, 'parcial' mantiene
+    // (no suma pero no rompe), 'no' o ausencia rompe.
+    //
+    // rachaActual: desde AYER hacia atrás. No penaliza al paciente por no
+    // haber hecho aún el check-in del día en curso.
+    // rachaMaxima: recorre TODO el rango [fechaAlta, hoy] (incluido hoy).
+    function _siguienteRacha(estado, racha) {
+      // Devuelve [nuevaRacha, rota?]
+      if (estado === 'seguido') return [racha + 1, false];
+      if (estado === 'parcial') return [racha, false];
+      return [racha, true];  // 'no', null o undefined
+    }
+
+    let rachaActual = 0;
+    if (totalDias > 0) {
+      const ayer = new Date(hoyMid.getTime() - MS_DIA);
+      const limite = altaDate.getTime();
+      const d = new Date(ayer.getTime());
+      while (d.getTime() >= limite) {
+        const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const estado = checkinsMap.get(iso) || null;
+        const [next, rota] = _siguienteRacha(estado, rachaActual);
+        if (rota) break;
+        rachaActual = next;
+        d.setDate(d.getDate() - 1);
+      }
+    }
+
+    let rachaMaxima = 0;
+    if (totalDias > 0) {
+      let actual = 0;
+      const d = new Date(altaDate.getTime());
+      for (let i = 0; i < totalDias; i++) {
+        const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const estado = checkinsMap.get(iso) || null;
+        const [next, rota] = _siguienteRacha(estado, actual);
+        if (rota) {
+          if (actual > rachaMaxima) rachaMaxima = actual;
+          actual = 0;
+        } else {
+          actual = next;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+      if (actual > rachaMaxima) rachaMaxima = actual;
+    }
+
     return {
       meses,
       resumen: {
         diasConCheckin,
         totalDias,
         adherenciaPct,
-        rachaActual: 0,    // se rellena en la siguiente tarea
-        rachaMaxima: 0,    // se rellena en la siguiente tarea
+        rachaActual,
+        rachaMaxima,
         primerDia: altaStr
       }
     };
