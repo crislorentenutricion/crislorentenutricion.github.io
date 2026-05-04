@@ -731,3 +731,66 @@ test('slugTabValido: rechaza slugs con tilde y otros inválidos', () => {
   assert.equal(BoPaciente.slugTabValido(undefined), null);
   assert.equal(BoPaciente.slugTabValido(42), null);
 });
+
+// ===================================================================
+// urlConTab (puro)
+// ===================================================================
+
+test('urlConTab: añade tab cuando no estaba', () => {
+  assert.equal(BoPaciente.urlConTab('pagos', '?id=abc'), '?id=abc&tab=pagos');
+});
+
+test('urlConTab: reemplaza tab existente sin duplicar', () => {
+  assert.equal(BoPaciente.urlConTab('pagos', '?id=abc&tab=anamnesis'), '?id=abc&tab=pagos');
+});
+
+test('urlConTab: con search vacío inicia el querystring', () => {
+  assert.equal(BoPaciente.urlConTab('anamnesis', ''), '?tab=anamnesis');
+});
+
+test('urlConTab: preserva otros parámetros', () => {
+  const r = BoPaciente.urlConTab('timeline', '?id=abc&foo=bar');
+  // URLSearchParams puede reordenar, pero ambos params deben aparecer.
+  // El prefijo es '?' (siempre que la salida no esté vacía), así que el
+  // separador antes del primer param es `?`; luego `&` entre ellos.
+  assert.match(r, /[?&]id=abc(&|$)/);
+  assert.match(r, /[?&]foo=bar(&|$)/);
+  assert.match(r, /[?&]tab=timeline(&|$)/);
+});
+
+test('urlConTab: tolera search sin "?" inicial', () => {
+  assert.equal(BoPaciente.urlConTab('pagos', 'id=abc'), '?id=abc&tab=pagos');
+});
+
+// ===================================================================
+// siguienteTab (puro)
+// ===================================================================
+
+test('siguienteTab: next avanza una posición', () => {
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'a', 'next'), 'b');
+});
+
+test('siguienteTab: prev retrocede una posición', () => {
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'b', 'prev'), 'a');
+});
+
+test('siguienteTab: next desde el último envuelve al primero', () => {
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'c', 'next'), 'a');
+});
+
+test('siguienteTab: prev desde el primero envuelve al último', () => {
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'a', 'prev'), 'c');
+});
+
+test('siguienteTab: first y last saltan al extremo', () => {
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'b', 'first'), 'a');
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'b', 'last'), 'c');
+});
+
+test('siguienteTab: slug actual desconocido cae en el primero', () => {
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'fantasma', 'next'), 'a');
+});
+
+test('siguienteTab: dirección desconocida devuelve el actual', () => {
+  assert.equal(BoPaciente.siguienteTab(['a', 'b', 'c'], 'b', 'no-existe'), 'b');
+});

@@ -62,6 +62,31 @@
     return TAB_SLUGS.indexOf(s) >= 0 ? s : null;
   }
 
+  // Construye el querystring resultante de fijar tab=<slug> sin tocar el
+  // resto. Recibe el `currentSearch` como argumento para mantenerla pura
+  // (los tests no necesitan tocar window.location).
+  function urlConTab(slug, currentSearch) {
+    const raw = currentSearch == null ? '' : String(currentSearch);
+    const norm = raw.charAt(0) === '?' ? raw.slice(1) : raw;
+    const params = new URLSearchParams(norm);
+    params.set('tab', slug);
+    return '?' + params.toString();
+  }
+
+  // Calcula el slug vecino dado un array ordenado, el slug actual y la
+  // dirección. next/prev envuelven los extremos. Si actual no está en el
+  // array, devuelve el primero. Dirección desconocida → actual.
+  function siguienteTab(slugs, actual, dir) {
+    if (!Array.isArray(slugs) || slugs.length === 0) return actual;
+    if (dir === 'first') return slugs[0];
+    if (dir === 'last')  return slugs[slugs.length - 1];
+    const idx = slugs.indexOf(actual);
+    if (idx < 0) return slugs[0];
+    if (dir === 'next') return slugs[(idx + 1) % slugs.length];
+    if (dir === 'prev') return slugs[(idx - 1 + slugs.length) % slugs.length];
+    return actual;
+  }
+
   // -----------------------------------------------------------------
   // Helpers de formato de anamnesis
   // -----------------------------------------------------------------
@@ -1522,7 +1547,9 @@
     conectarSwitcherCheckins: conectarSwitcherCheckins,
     // Tabs de la ficha
     _TAB_SLUGS: TAB_SLUGS,
-    slugTabValido: slugTabValido
+    slugTabValido: slugTabValido,
+    urlConTab: urlConTab,
+    siguienteTab: siguienteTab
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
