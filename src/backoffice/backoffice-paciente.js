@@ -4,7 +4,7 @@
 // Flujo:
 //   1. La página lee `?id=` de la URL y llama `BoAuth.iniciar`.
 //   2. BoPaciente.arrancar(supa, id) hace SELECTs en paralelo:
-//      pacientes (por id), menus, sesiones, revisiones, checkins (30d).
+//      pacientes (por id), menus, sesiones, revisiones, checkins (~2 años).
 //   3. Si no existe el paciente → mensaje en #estado-paciente.
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
@@ -355,9 +355,11 @@
 
     let rachaActual = 0;
     if (totalDias > 0) {
-      const ayer = new Date(hoyMid.getTime() - MS_DIA);
+      // Calendar arithmetic (setDate ±1) — coherente con el resto del fichero
+      // y DST-safe sin depender de Math.round (cf. M1 review Task 4).
+      const d = new Date(hoyMid.getTime());
+      d.setDate(d.getDate() - 1);
       const limite = altaDate.getTime();
-      const d = new Date(ayer.getTime());
       while (d.getTime() >= limite) {
         const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const estado = checkinsMap.get(iso) || null;

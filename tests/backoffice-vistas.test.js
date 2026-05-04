@@ -301,8 +301,7 @@ test("BoHoy.renderTodosLosBloques: pinta el bloque 'pendientes' cuando hay items
       esHoy: true, comandoAlta: "/alta-paciente X x@x"
     }],
     proximos7Dias: [],
-    menusCrearSemana: [],
-    alertas: []
+    menusCrearSemana: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.match(html, /data-bo-block="pendientes"/);
@@ -313,7 +312,7 @@ test("BoHoy.renderTodosLosBloques: bloque 'pendientes' vacío se oculta", () => 
   const agrupado = {
     sesionesHoy: [{ pacienteId: "p1", nombre: "A", hora: "10:00", tipo: "seguimiento" }],
     pendientes: [],
-    proximos7Dias: [], menusCrearSemana: [], alertas: []
+    proximos7Dias: [], menusCrearSemana: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.ok(!/data-bo-block="pendientes"/.test(html));
@@ -366,8 +365,7 @@ test("BoHoy.renderTodosLosBloques: título 'Menús a crear esta semana' (cadenci
   const agrupado = {
     sesionesHoy: [],
     proximos7Dias: [],
-    menusCrearSemana: [{ pacienteId: "p1", nombre: "ANA", diasParaCaducar: 1, comando: "/crear-menu ANA" }],
-    alertas: []
+    menusCrearSemana: [{ pacienteId: "p1", nombre: "ANA", diasParaCaducar: 1, comando: "/crear-menu ANA" }]
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.match(html, /Menús a crear esta semana/);
@@ -861,7 +859,6 @@ test("renderTodosLosBloques: bloque pagos-pendientes aparece tras 'Sesiones hoy'
     menusCrearSemana: [{
       pacienteId: "m1", nombre: "EVA", diasParaCaducar: 3, anamnesisLista: true, comando: "/crear-menu EVA"
     }],
-    alertas: [],
     proximos7Dias: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
@@ -883,7 +880,6 @@ test("renderTodosLosBloques: bloque pagos-pendientes vacío → oculto", () => {
     menusCrearSemana: [{
       pacienteId: "m1", nombre: "EVA", diasParaCaducar: 3, anamnesisLista: true, comando: "/crear-menu EVA"
     }],
-    alertas: [],
     proximos7Dias: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
@@ -893,7 +889,7 @@ test("renderTodosLosBloques: bloque pagos-pendientes vacío → oculto", () => {
 test("renderTodosLosBloques: todos los bloques vacíos incluido pagos → mensaje 'Sin tareas pendientes'", () => {
   const agrupado = {
     pendientes: [], sesionesHoy: [], pagosPendientes: [],
-    menusCrearSemana: [], alertas: [], proximos7Dias: []
+    menusCrearSemana: [], proximos7Dias: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.match(html, /Sin tareas pendientes/);
@@ -905,7 +901,7 @@ test("renderTodosLosBloques: título del bloque es 'Pagos pendientes'", () => {
     pagosPendientes: [{
       pacienteId: "p1", nombre: "NEREA", fechaEsperada: "2026-05-01", estado: "aviso", diasDiff: 0
     }],
-    menusCrearSemana: [], alertas: [], proximos7Dias: []
+    menusCrearSemana: [], proximos7Dias: []
   };
   const html = BoHoy.renderTodosLosBloques(agrupado);
   assert.match(html, /<h2[^>]*>Pagos pendientes<\/h2>/);
