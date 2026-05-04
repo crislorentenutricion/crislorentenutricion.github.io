@@ -1924,9 +1924,7 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   display: grid;
   grid-template-columns: 1fr;
   gap: 24px;
-}
-@media (min-width: 768px) {
-  .bo-checkins-meses { grid-template-columns: 1fr 1fr; }
+  max-width: 480px;
 }
 .bo-checkins-mes h3 {
   margin: 0 0 12px;
