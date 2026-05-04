@@ -423,16 +423,18 @@
   // -----------------------------------------------------------------
 
   // Decide qué vista mostrar al hidratar (boot inicial o re-hidratación tras
-  // visibilitychange cuando el móvil se desbloquea). Usamos location.hash como
-  // fuente de verdad porque sobrevive al ciclo de vida de la PWA: bfcache,
-  // recarga real cuando iOS/Android matan la pestaña, y vuelta del lock screen.
-  // isLocked=true (sin menú vigente) fuerza 'today' aunque el hash diga otra
-  // cosa: la vista compra está oculta sin menú y no la podemos restaurar.
+  // visibilitychange cuando el móvil se desbloquea). Doble fuente:
+  //   1) location.hash — sobrevive a bfcache, recarga normal y resume.
+  //   2) lastView (localStorage) — sobrevive al "kill+relaunch" de iOS, donde
+  //      la PWA se relanza desde el start_url del manifest y el hash se pierde.
+  // isLocked=true (sin menú vigente) fuerza 'today' aunque las fuentes digan
+  // otra cosa: la vista compra está oculta sin menú y no la podemos restaurar.
   function resolveInitialView(opts) {
     const o = opts || {};
     if (o.isLocked) return 'today';
     const hash = (o.hash || '').replace(/^#/, '');
     if (hash === 'compra') return 'compra';
+    if (o.lastView === 'compra') return 'compra';
     return 'today';
   }
 

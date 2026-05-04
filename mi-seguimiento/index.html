@@ -2216,17 +2216,25 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Persistimos la vista activa en location.hash sólo cuando el cambio lo
-  // dispara una acción del usuario (clics en los botones). Mantenemos las
-  // funciones mostrarHoy/mostrarCompra como renderers puros: hydrate() las
-  // llama internamente sin tocar el hash, así puede leerlo después para
-  // restaurar la vista que la paciente tenía al bloquear el móvil. replaceState
-  // (no pushState) para no apilar entradas de historial en cada toggle.
+  // Persistimos la vista activa en dos sitios — sólo cuando el cambio lo
+  // dispara una acción del usuario (clics en los botones):
+  //   1) location.hash — para bfcache, recargas normales y resumes "blandos".
+  //   2) localStorage 'ms-active-view' — backup imprescindible: iOS mata la
+  //      PWA standalone tras un rato bloqueada y la relanza desde start_url,
+  //      perdiendo el hash. localStorage sobrevive al relanzamiento.
+  // Mantenemos mostrarHoy/mostrarCompra como renderers puros: hydrate() las
+  // llama internamente sin tocar el hash ni el storage, así puede leerlos
+  // después para restaurar la vista que la paciente tenía al bloquear.
   function setViewHash(viewName) {
     const target = viewName === 'compra' ? '#compra' : '';
-    if ((location.hash || '') === target) return;
+    if ((location.hash || '') !== target) {
+      try {
+        history.replaceState(null, '', location.pathname + location.search + target);
+      } catch (e) { /* noop */ }
+    }
     try {
-      history.replaceState(null, '', location.pathname + location.search + target);
+      if (target === '#compra') localStorage.setItem('ms-active-view', 'compra');
+      else localStorage.removeItem('ms-active-view');
     } catch (e) { /* noop */ }
   }
 
@@ -2440,12 +2448,23 @@
     renderCalendar(checkinsMap);
 
     // Restaura la vista que la paciente tenía activa antes del lock/unlock o
-    // recarga del WebView (la fuente de verdad es location.hash, que sobrevive
-    // al ciclo de vida de la PWA en Android e iOS). Si el expediente está
-    // 'locked' (sin menú vigente), forzamos 'today': la vista compra está
-    // oculta por CSS y restaurarla dejaría la pantalla en blanco.
-    if (resolveInitialView({ hash: location.hash, isLocked: result.view === 'locked' }) === 'compra') {
+    // recarga del WebView. Doble fuente: location.hash (resumes "blandos") y
+    // localStorage 'ms-active-view' (kill+relaunch de iOS, que pierde el hash).
+    // Si el expediente está 'locked' (sin menú vigente), forzamos 'today': la
+    // vista compra está oculta por CSS y restaurarla dejaría la pantalla en blanco.
+    let lastViewLS = null;
+    try { lastViewLS = localStorage.getItem('ms-active-view'); } catch (e) { /* noop */ }
+    if (resolveInitialView({
+      hash: location.hash,
+      lastView: lastViewLS,
+      isLocked: result.view === 'locked'
+    }) === 'compra') {
       $('#ms-authed').dataset.view = 'compra';
+      // Si el hash se perdió (iOS relaunch), lo re-sincronizamos para que
+      // bfcache y enlaces internos vean la vista correcta.
+      if (location.hash !== '#compra') {
+        try { history.replaceState(null, '', location.pathname + location.search + '#compra'); } catch (e) { /* noop */ }
+      }
     }
 
     if (result.view === 'locked') {
@@ -2618,12 +2637,7 @@
   // primerNombreDesdeEmail vive en logic.js (pura, testada).
 
   // -------- auth wiring --------
-  // event: nombre del auth event de Supabase ('INITIAL_SESSION' al cargar la
-  // PWA, 'SIGNED_IN' tras OTP, 'TOKEN_REFRESHED' al desbloquear el móvil…).
-  // Los avisos "una vez por entrada" (toast de racha rota, onboarding,
-  // milestone) sólo se disparan en eventos frescos; TOKEN_REFRESHED y
-  // similares re-corren render() pero no deben re-mostrar el banner.
-  async function render(session, event) {
+  async function render(session) {
     firstRenderDone = true;
     loadingView.hidden = true;
     stopBootMessages();
@@ -2641,14 +2655,25 @@
       loginTitle.hidden  = false;
       loginIntro.hidden  = false;
       const result = await hydrate();
-      const isFreshLogin = event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
-      if (isFreshLogin && result && result.rota) {
-        showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
+      // Toast de racha rota: una vez por día. iOS mata la PWA en cada bloqueo
+      // y relanza disparando INITIAL_SESSION en cada desbloqueo, así que un
+      // gate por evento auth no basta. La key incluye la fecha local para que
+      // el aviso vuelva a salir si el día siguiente sigue sin checkin.
+      if (result && result.rota) {
+        const todayKey = 'ms-toast-rota:' + toISO(new Date());
+        let yaMostrado = false;
+        try { yaMostrado = localStorage.getItem(todayKey) === '1'; } catch (e) {}
+        if (!yaMostrado) {
+          showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
+          try { localStorage.setItem(todayKey, '1'); } catch (e) {}
+        }
       }
-      if (isFreshLogin) maybeShowOnboarding();
-      // shouldCelebrarMilestone (en logic.js) ya gatea sobre paciente.onboarding
-      // para no apilar el modal del milestone encima del onboarding.
-      if (isFreshLogin && result && typeof result.racha === 'number') {
+      // Onboarding y milestone se auto-gatean: el primero contra
+      // paciente.onboarding (DB), el segundo contra paciente.milestones_vistos
+      // (DB). Una vez disparados, la propia llamada los desactiva — no hace
+      // falta gate por evento aquí.
+      maybeShowOnboarding();
+      if (result && typeof result.racha === 'number') {
         maybeCelebrarMilestone(result.racha);
       }
     } else {
@@ -2951,6 +2976,9 @@
   $('#ms-signout').addEventListener('click', async () => {
     // Cierre explícito: también olvidamos el "paciente conocido" local.
     olvidarPaciente();
+    // Limpiamos la vista activa para que el próximo login (posiblemente otra
+    // paciente en el mismo navegador) arranque en 'today', no en compra.
+    try { localStorage.removeItem('ms-active-view'); } catch (e) {}
     await supa.auth.signOut();
   });
 
@@ -2971,7 +2999,7 @@
         if (data.session) session = data.session;
       } catch (e) { console.warn('refresh on boot', e); }
     }
-    render(session, event);
+    render(session);
   });
 
   // Al volver del bloqueo del móvil o cambio de pestaña: re-valida la sesión
