@@ -30,6 +30,7 @@ const {
   resolveInitialLogin,
   shouldShowInstallHint,
   shouldRehydrateOnVisibility,
+  resolveInitialView,
   shouldCelebrarMilestone,
   WEEKDAY_KEYS_JSON,
   computeDayView,
@@ -944,6 +945,38 @@ test("shouldRehydrateOnVisibility: sesión OK pero no estamos en la vista authed
     shouldRehydrateOnVisibility({ visibilityState: "visible", now: 10_000, lastRefreshAt: 0, hasSession: true, authedVisible: false, hasPaciente: true }),
     "noop"
   );
+});
+
+// ---------------------------- resolveInitialView -------------------------
+// Decide qué vista mostrar al hidratar (boot o re-hidratación tras desbloqueo
+// del móvil). El hash en la URL persiste la vista activa, así la PWA "recuerda"
+// dónde estaba la paciente cuando la pantalla del móvil se bloquea/desbloquea
+// o cuando iOS/Android matan la pestaña en background.
+
+test("resolveInitialView: hash vacío → 'today' (vista por defecto)", () => {
+  assert.equal(resolveInitialView({ hash: "", isLocked: false }), "today");
+  assert.equal(resolveInitialView({ hash: null, isLocked: false }), "today");
+  assert.equal(resolveInitialView({ hash: undefined, isLocked: false }), "today");
+});
+
+test("resolveInitialView: hash '#compra' → 'compra' (paciente estaba en la lista)", () => {
+  assert.equal(resolveInitialView({ hash: "#compra", isLocked: false }), "compra");
+});
+
+test("resolveInitialView: hash sin '#' inicial también vale (tolerante)", () => {
+  // Algunos entornos devuelven el hash sin el '#'; aceptamos ambos.
+  assert.equal(resolveInitialView({ hash: "compra", isLocked: false }), "compra");
+});
+
+test("resolveInitialView: hash desconocido → 'today' (no abrimos vista que no existe)", () => {
+  assert.equal(resolveInitialView({ hash: "#dia=2026-05-04", isLocked: false }), "today");
+  assert.equal(resolveInitialView({ hash: "#cualquier-cosa", isLocked: false }), "today");
+});
+
+test("resolveInitialView: isLocked=true ignora el hash y fuerza 'today'", () => {
+  // Sin menú vigente la vista compra está oculta; no podemos restaurarla
+  // aunque el hash diga lo contrario.
+  assert.equal(resolveInitialView({ hash: "#compra", isLocked: true }), "today");
 });
 
 // ---------------------------- shouldCelebrarMilestone --------------------
