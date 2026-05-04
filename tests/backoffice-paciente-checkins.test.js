@@ -291,10 +291,67 @@ test('renderCheckins: resumen contiene las 4 métricas + "desde el …"', () => 
   assert.match(html, /<span class="bo-checkins-desde">desde el /);
 });
 
-test('renderCheckins: un <article class="bo-checkins-mes"> por mes', () => {
+test('renderCheckins: un <article class="bo-checkins-mes"> por mes (clase incluye is-active en el activo)', () => {
   const html = BoPaciente.renderCheckins(_historialEjemplo());
-  const matches = html.match(/<article class="bo-checkins-mes"/g) || [];
+  const matches = html.match(/<article class="bo-checkins-mes\b[^"]*"/g) || [];
   assert.equal(matches.length, 1); // solo mayo (alta=05-01, hoy=05-04)
+  assert.match(html, /<article class="bo-checkins-mes is-active"/);
+});
+
+test('renderCheckins: nav con flechas prev/next y label del mes activo', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  assert.match(html, /<div class="bo-checkins-nav">/);
+  assert.match(html, /data-bo-cal-dir="prev"[^>]*aria-label="Mes anterior"/);
+  assert.match(html, /data-bo-cal-dir="next"[^>]*aria-label="Mes siguiente"/);
+  assert.match(html, /<h3 class="bo-checkins-mes-label">Mayo 2026<\/h3>/);
+});
+
+test('renderCheckins: con 1 solo mes ambos botones disabled', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  assert.match(html, /data-bo-cal-dir="prev"[^>]*disabled/);
+  assert.match(html, /data-bo-cal-dir="next"[^>]*disabled/);
+});
+
+test('renderCheckins: con varios meses, idx=0 → next disabled, prev no', () => {
+  // alta=2026-01-01, hoy=2026-04-04 → 4 meses (abr, mar, feb, ene)
+  const historial = BoPaciente.construirHistorialCheckins([], '2026-01-01', new Date(2026, 3, 4));
+  const html = BoPaciente.renderCheckins(historial); // idxActivo default 0
+  assert.match(html, /data-bo-mes-idx="0"/);
+  assert.match(html, /data-bo-cal-dir="next"[^>]*disabled/);
+  // prev habilitado (no incluye " disabled" inmediatamente antes del cierre)
+  const prevMatch = html.match(/<button[^>]*data-bo-cal-dir="prev"[^>]*>‹<\/button>/);
+  assert.ok(prevMatch && !/disabled/.test(prevMatch[0]), 'prev debe estar habilitado en idx=0');
+});
+
+test('renderCheckins: idx=lastIdx → prev disabled, next no', () => {
+  const historial = BoPaciente.construirHistorialCheckins([], '2026-01-01', new Date(2026, 3, 4));
+  const lastIdx = historial.meses.length - 1;
+  const html = BoPaciente.renderCheckins(historial, lastIdx);
+  assert.match(html, new RegExp('data-bo-mes-idx="' + lastIdx + '"'));
+  assert.match(html, /data-bo-cal-dir="prev"[^>]*disabled/);
+  const nextMatch = html.match(/<button[^>]*data-bo-cal-dir="next"[^>]*>›<\/button>/);
+  assert.ok(nextMatch && !/disabled/.test(nextMatch[0]), 'next debe estar habilitado en lastIdx');
+  assert.match(html, /<h3 class="bo-checkins-mes-label">Enero 2026<\/h3>/);
+});
+
+test('renderCheckins: idxActivo controla qué article tiene is-active', () => {
+  const historial = BoPaciente.construirHistorialCheckins([], '2026-01-01', new Date(2026, 3, 4));
+  const html2 = BoPaciente.renderCheckins(historial, 2); // febrero
+  // Solo un is-active
+  const activeMatches = html2.match(/class="bo-checkins-mes is-active"/g) || [];
+  assert.equal(activeMatches.length, 1);
+  // El activo es febrero (data-bo-mes="2026-02")
+  assert.match(html2, /<article class="bo-checkins-mes is-active" data-bo-mes="2026-02"/);
+  assert.match(html2, /<h3 class="bo-checkins-mes-label">Febrero 2026<\/h3>/);
+});
+
+test('renderCheckins: idxActivo fuera de rango se acota', () => {
+  const historial = BoPaciente.construirHistorialCheckins([], '2026-01-01', new Date(2026, 3, 4));
+  const lastIdx = historial.meses.length - 1;
+  // Negativo → 0
+  assert.match(BoPaciente.renderCheckins(historial, -5), /data-bo-mes-idx="0"/);
+  // Mayor que lastIdx → lastIdx
+  assert.match(BoPaciente.renderCheckins(historial, 999), new RegExp('data-bo-mes-idx="' + lastIdx + '"'));
 });
 
 test('renderCheckins: leyenda con 3 entradas y prefijo bo-cal-cell', () => {

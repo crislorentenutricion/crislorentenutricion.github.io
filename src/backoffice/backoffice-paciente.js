@@ -405,21 +405,32 @@
   // -----------------------------------------------------------------
   // renderCheckins — pinta el bloque "Adherencia" a partir de un historial.
   //
-  // Forma del DOM (ver spec § Render):
-  //   <section class="bo-checkins" data-bo-bloque="checkins">
+  // Forma del DOM:
+  //   <section class="bo-checkins" data-bo-bloque="checkins" data-bo-mes-idx="N">
   //     <h2>Adherencia (check-ins diarios)</h2>
-  //     <p class="bo-checkins-resumen">… métricas …</p>
+  //     <p class="bo-checkins-resumen">… métricas globales …</p>
+  //     <div class="bo-checkins-nav">
+  //       <button data-bo-cal-dir="prev">‹</button>
+  //       <h3 class="bo-checkins-mes-label">Mayo 2026</h3>
+  //       <button data-bo-cal-dir="next">›</button>
+  //     </div>
   //     <div class="bo-checkins-meses">
+  //       <article class="bo-checkins-mes is-active" data-bo-mes="YYYY-MM">…</article>
   //       <article class="bo-checkins-mes" data-bo-mes="YYYY-MM">…</article>
+  //       …  (todos los articles renderizados, CSS oculta los que no son is-active)
   //     </div>
   //     <p class="bo-checkins-leyenda">…</p>
   //   </section>
   //
+  // Navegación: índice 0 = mes más reciente (default al entrar), índice
+  // máximo = mes del alta. La flecha "‹" (prev) avanza hacia atrás (idx++);
+  // "›" (next) avanza hacia adelante (idx--). Botones disabled en los extremos.
+  //
   // Estado vacío:
   //   - historial null o meses vacíos → ''. La sección desaparece de la UI.
   //   - historial con totalDias=0 (caso degradado): el resumen muestra
-  //     adherencia '—' y todas las métricas a 0; los meses con calendario
-  //     vacío. La sección sigue visible para detectar la anomalía.
+  //     adherencia '—' y todas las métricas a 0; el calendario del mes
+  //     activo se ve con celdas neutras. La sección sigue visible.
   // -----------------------------------------------------------------
 
   function _formatPctOrDash(pct) {
@@ -430,8 +441,13 @@
     return n + ' ' + (n === 1 ? 'día' : 'días');
   }
 
-  function renderCheckins(historial) {
+  function renderCheckins(historial, idxActivo) {
     if (!historial || !Array.isArray(historial.meses) || historial.meses.length === 0) return '';
+    const numMeses = historial.meses.length;
+    let idx = idxActivo == null ? 0 : Number(idxActivo);
+    if (isNaN(idx) || idx < 0) idx = 0;
+    if (idx > numMeses - 1) idx = numMeses - 1;
+
     const r = historial.resumen || {
       diasConCheckin: 0, totalDias: 0, adherenciaPct: null,
       rachaActual: 0, rachaMaxima: 0, primerDia: ''
@@ -447,18 +463,29 @@
       '<span class="bo-checkins-desde">desde el ' + BoUi.escapeHtml(fechaDesde) + '</span>' +
     '</p>';
 
-    const meses = historial.meses.map(function (mes) {
+    const mesActivo = historial.meses[idx];
+    const labelActivo = BoUi.escapeHtml(mesActivo.label);
+    const prevDisabled = idx >= numMeses - 1 ? ' disabled' : '';
+    const nextDisabled = idx <= 0 ? ' disabled' : '';
+
+    const nav = '<div class="bo-checkins-nav">' +
+      '<button type="button" class="bo-checkins-nav-btn" data-bo-cal-dir="prev" aria-label="Mes anterior"' + prevDisabled + '>‹</button>' +
+      '<h3 class="bo-checkins-mes-label">' + labelActivo + '</h3>' +
+      '<button type="button" class="bo-checkins-nav-btn" data-bo-cal-dir="next" aria-label="Mes siguiente"' + nextDisabled + '>›</button>' +
+    '</div>';
+
+    const meses = historial.meses.map(function (mes, i) {
       const idMes = mes.year + '-' + String(mes.month + 1).padStart(2, '0');
+      const cls = 'bo-checkins-mes' + (i === idx ? ' is-active' : '');
       const cellsHtml = mes.cells.map(function (c) {
         if (c.type === 'empty') return '<span class="bo-cal-cell is-empty"></span>';
-        let cls = 'bo-cal-cell';
-        if (c.estado === 'seguido') cls += ' is-ok';
-        else if (c.estado === 'parcial') cls += ' is-mid';
-        else if (c.estado === 'no') cls += ' is-no';
-        return '<span class="' + cls + '" data-iso="' + c.iso + '">' + c.day + '</span>';
+        let estadoCls = 'bo-cal-cell';
+        if (c.estado === 'seguido') estadoCls += ' is-ok';
+        else if (c.estado === 'parcial') estadoCls += ' is-mid';
+        else if (c.estado === 'no') estadoCls += ' is-no';
+        return '<span class="' + estadoCls + '" data-iso="' + c.iso + '">' + c.day + '</span>';
       }).join('');
-      return '<article class="bo-checkins-mes" data-bo-mes="' + idMes + '">' +
-        '<h3>' + BoUi.escapeHtml(mes.label) + '</h3>' +
+      return '<article class="' + cls + '" data-bo-mes="' + idMes + '">' +
         '<div class="bo-cal-weekdays" aria-hidden="true">' +
           '<span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>' +
         '</div>' +
@@ -474,12 +501,35 @@
       '<span class="bo-cal-cell is-no" aria-hidden="true"></span> No seguido' +
     '</p>';
 
-    return '<section class="bo-checkins" data-bo-bloque="checkins">' +
+    return '<section class="bo-checkins" data-bo-bloque="checkins" data-bo-mes-idx="' + idx + '">' +
       '<h2>Adherencia (check-ins diarios)</h2>' +
       resumen +
+      nav +
       '<div class="bo-checkins-meses">' + meses + '</div>' +
       leyenda +
     '</section>';
+  }
+
+  // Wiring del switcher de mes: delega click en el container del bloque
+  // (#checkins). Cada click en una flecha lee el idx actual del atributo
+  // `data-bo-mes-idx` de la `<section>`, calcula el nuevo, y reemplaza el
+  // innerHTML con un re-render. Idempotente vía data-bo-bound-checkins en
+  // el container.
+  function conectarSwitcherCheckins(container, historial) {
+    if (!container || typeof container.addEventListener !== 'function') return;
+    if (container.dataset && container.dataset.boBoundCheckins === '1') return;
+    container.addEventListener('click', function (ev) {
+      const btn = ev.target && ev.target.closest && ev.target.closest('[data-bo-cal-dir]');
+      if (!btn || !container.contains(btn)) return;
+      if (btn.disabled) return;
+      const dir = btn.getAttribute('data-bo-cal-dir');
+      const section = container.querySelector('.bo-checkins');
+      if (!section) return;
+      const idxActual = parseInt(section.getAttribute('data-bo-mes-idx') || '0', 10);
+      const newIdx = dir === 'prev' ? idxActual + 1 : idxActual - 1;
+      container.innerHTML = renderCheckins(historial, newIdx);
+    });
+    if (container.dataset) container.dataset.boBoundCheckins = '1';
   }
 
   // -----------------------------------------------------------------
@@ -1412,6 +1462,7 @@
       const fechaAlta = _resolverFechaAlta(datos.paciente, new Date());
       const historial = construirHistorialCheckins(datos.checkins || [], fechaAlta, new Date());
       chk.innerHTML = renderCheckins(historial);
+      conectarSwitcherCheckins(chk, historial);
     }
     if (pag) pag.innerHTML = renderPagos(datos.pagos || [], datos.paciente, new Date());
     if (tim) {
@@ -1451,7 +1502,8 @@
     _observarResize: _observarResize,
     _resolverFechaAlta: _resolverFechaAlta,
     construirHistorialCheckins: construirHistorialCheckins,
-    renderCheckins: renderCheckins
+    renderCheckins: renderCheckins,
+    conectarSwitcherCheckins: conectarSwitcherCheckins
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
