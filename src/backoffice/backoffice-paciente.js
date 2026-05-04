@@ -928,6 +928,29 @@
     if (root.dataset) root.dataset.boBound = '1';
   }
 
+  // Delegación de clicks en `.bo-libre-toggle` dentro de `root`. Idempotente
+  // vía data-bo-bound-libre. Cada click alterna data-bo-libre del span
+  // controlado (truncado ↔ expandido), aria-expanded del botón y el texto
+  // del botón ("Ver más" ↔ "Ver menos"). El span destino se localiza por
+  // aria-controls; si el id no resuelve (DOM mutó), no rompemos.
+  function conectarToggleLibre(root) {
+    if (!root || typeof root.addEventListener !== 'function') return;
+    if (root.dataset && root.dataset.boBoundLibre === '1') return;
+    root.addEventListener('click', function (ev) {
+      const btn = ev.target && ev.target.closest && ev.target.closest('.bo-libre-toggle');
+      if (!btn || !root.contains(btn)) return;
+      const id = btn.getAttribute('aria-controls');
+      if (!id) return;
+      const span = root.querySelector('#' + (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id));
+      if (!span) return;
+      const expandido = span.getAttribute('data-bo-libre') === 'expandido';
+      span.setAttribute('data-bo-libre', expandido ? 'truncado' : 'expandido');
+      btn.setAttribute('aria-expanded', expandido ? 'false' : 'true');
+      btn.textContent = expandido ? 'Ver más' : 'Ver menos';
+    });
+    if (root.dataset) root.dataset.boBoundLibre = '1';
+  }
+
   // PDFs del menú viven en el bucket privado `menus-pdf`. Firmamos al click
   // con createSignedUrl(path, 60, { download: filename }) y navegamos con
   // location.href — window.open tras await lo bloquea Safari (ver
@@ -1059,6 +1082,7 @@
     if (ana) {
       ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
       _marcarDesbordados(ana);
+      conectarToggleLibre(ana);
     }
     if (evo) {
       evo.innerHTML = renderEvolucion(
@@ -1099,7 +1123,8 @@
     // Expuestas para tests (y posibles consumidores futuros del wiring).
     _manejarClickAccion: _manejarClickAccion,
     _marcarDesbordados: _marcarDesbordados,
-    conectarClickCopiar: conectarClickCopiar
+    conectarClickCopiar: conectarClickCopiar,
+    conectarToggleLibre: conectarToggleLibre
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
