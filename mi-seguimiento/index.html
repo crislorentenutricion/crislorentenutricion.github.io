@@ -1855,6 +1855,20 @@
   });
   window.supa = supa;
 
+  // Marker de sesión-tab: sessionStorage sobrevive a lock/unlock-resume y a
+  // recargas, pero MUERE cuando iOS/Android matan la PWA (kill+relaunch) y
+  // cuando la paciente cierra la pestaña/app. Si no existe al arrancar, este
+  // es un arranque "frío" → limpiamos la vista activa persistida para que la
+  // PWA aterrice en 'today', no en la lista de la compra. En cambio, en un
+  // resume (visibility change sin kill) este script no se vuelve a ejecutar,
+  // así que el marker permanece y conservamos la vista.
+  try {
+    if (!sessionStorage.getItem('ms-tab-session')) {
+      sessionStorage.setItem('ms-tab-session', String(Date.now()));
+      localStorage.removeItem('ms-active-view');
+    }
+  } catch (e) { /* noop: storage bloqueado en modo privado */ }
+
   const DIAS_JS = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
   const COMIDAS = [['desayuno','Desayuno'],['almuerzo','Almuerzo'],['comida','Comida'],['merienda','Merienda'],['cena','Cena']];
 
@@ -2345,7 +2359,13 @@
       vistos: paciente.milestones_vistos || [],
       onboarding: !!paciente.onboarding
     });
-    if (m) showMilestone(m);
+    if (!m) return;
+    // Mismo gate diario que onboarding: evita reaperturas en kill+relaunch
+    // de iOS si la paciente aún no ha pulsado OK (el self-gate de BD se
+    // actualiza al cerrar el modal, no al abrirlo).
+    if (shownToday('ms-milestone-shown:' + m)) return;
+    showMilestone(m);
+    markShownToday('ms-milestone-shown:' + m);
   }
 
   let toastTimer = null;
@@ -2357,10 +2377,24 @@
     toastTimer = setTimeout(() => { t.hidden = true; }, 4200);
   }
 
+  // Gate adicional "1/día" sobre el self-gate vía DB (paciente.onboarding):
+  // si iOS mata la PWA mientras el modal está abierto, al desbloquear se
+  // relanza y el modal volvería a aparecer hasta que la paciente lo cierre.
+  // Mostrarlo una vez al día evita el bombardeo; mañana vuelve si sigue sin
+  // marcar onboarding=true en BD.
+  function shownToday(key) {
+    try { return localStorage.getItem(key + ':' + toISO(new Date())) === '1'; } catch (e) { return false; }
+  }
+  function markShownToday(key) {
+    try { localStorage.setItem(key + ':' + toISO(new Date()), '1'); } catch (e) { /* noop */ }
+  }
+
   async function maybeShowOnboarding() {
     if (!paciente || paciente.onboarding) return;
+    if (shownToday('ms-onboarding-shown')) return;
     const modal = $('#ms-onboarding');
     modal.hidden = false;
+    markShownToday('ms-onboarding-shown');
     $('#ms-modal-ok').addEventListener('click', async () => {
       modal.hidden = true;
       const { error } = await supa.from('pacientes')
@@ -2526,8 +2560,13 @@
     }
     const cfg = shouldMostrarMenuNuevoModal({ menu, seenMenuIds: seen });
     if (!cfg.show) return false;
+    // Gate diario adicional al self-gate (que se marca al cerrar): evita que
+    // un kill+relaunch de iOS reabra el modal antes de que la paciente le
+    // dé OK. Mañana vuelve si no ha llegado a cerrarlo.
+    if (menu && menu.id && shownToday('ms-menu-nuevo-shown:' + menu.id)) return false;
     const modal = $('#ms-menu-nuevo-modal');
     if (!modal) return false;
+    if (menu && menu.id) markShownToday('ms-menu-nuevo-shown:' + menu.id);
     if (cfg.numero) {
       const msg = $('#ms-menu-nuevo-msg');
       if (msg) msg.textContent = 'Cristina te ha preparado el Menú ' + cfg.numero + '. Aquí lo tienes para empezar hoy.';
