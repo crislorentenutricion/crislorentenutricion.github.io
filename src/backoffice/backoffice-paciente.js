@@ -302,6 +302,46 @@
   }
 
   // -----------------------------------------------------------------
+  // Post-render: marca campos libres que desbordan e inyecta botón
+  // "Ver más / Ver menos". Idempotente: re-ejecutable tras resize sin
+  // duplicar botones; respeta el estado "expandido" del usuario.
+  //
+  // Estrategia: para medir overflow real necesitamos que el clamp esté
+  // activo (CSS aplica clamp cuando NO hay data-bo-libre). Si el usuario
+  // ya expandió un span lo dejamos en paz. Si está marcado como truncado
+  // o sin marcar, lo limpiamos, medimos y decidimos.
+  // -----------------------------------------------------------------
+
+  function _marcarDesbordados(root) {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+    if (typeof document === 'undefined') return;
+    const spans = root.querySelectorAll('.bo-anamnesis-valor');
+    for (const span of spans) {
+      const estado = span.getAttribute('data-bo-libre');
+      if (estado === 'expandido') continue;
+      span.removeAttribute('data-bo-libre');
+      const desborda = span.scrollHeight > span.clientHeight + 1;
+      const dd = span.parentElement;
+      if (!dd) continue;
+      let toggle = dd.querySelector('.bo-libre-toggle');
+      if (desborda) {
+        span.setAttribute('data-bo-libre', 'truncado');
+        if (!toggle) {
+          toggle = document.createElement('button');
+          toggle.type = 'button';
+          toggle.className = 'bo-libre-toggle';
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-controls', span.id);
+          toggle.textContent = 'Ver más';
+          dd.appendChild(toggle);
+        }
+      } else if (toggle) {
+        toggle.remove();
+      }
+    }
+  }
+
+  // -----------------------------------------------------------------
   // renderEvolucion (pura) — gráfico de peso + tabla de medidas a partir
   // de las revisiones (Supabase) y la fila "INICIO" derivada de la
   // anamnesis. Sustituye al `SEGUIMIENTO_[NOMBRE].xlsx` de Drive
@@ -1007,7 +1047,10 @@
     const tim = document.getElementById('timeline');
     const acc = document.getElementById('acciones');
     if (cab) cab.innerHTML = renderCabecera(datos.paciente);
-    if (ana) ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
+    if (ana) {
+      ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
+      _marcarDesbordados(ana);
+    }
     if (evo) {
       evo.innerHTML = renderEvolucion(
         datos.revisiones,
@@ -1046,6 +1089,7 @@
     arrancar,
     // Expuestas para tests (y posibles consumidores futuros del wiring).
     _manejarClickAccion: _manejarClickAccion,
+    _marcarDesbordados: _marcarDesbordados,
     conectarClickCopiar: conectarClickCopiar
   };
 
