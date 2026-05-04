@@ -4,7 +4,7 @@
 // Flujo:
 //   1. La página lee `?id=` de la URL y llama `BoAuth.iniciar`.
 //   2. BoPaciente.arrancar(supa, id) hace SELECTs en paralelo:
-//      pacientes (por id), menus, sesiones, revisiones, checkins (30d).
+//      pacientes (por id), menus, sesiones, revisiones, checkins (~2 años).
 //   3. Si no existe el paciente → mensaje en #estado-paciente.
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
@@ -225,6 +225,262 @@
       ]
     }
   ];
+
+  // -----------------------------------------------------------------
+  // Resolución de la fecha del alta para el bloque "Adherencia"
+  //
+  // Cascada con fallback: paciente.alta es el campo canónico desde la
+  // migración 0009 (ver convenciones/clinica/paciente.md). Para pacientes
+  // legacy con alta=NULL caemos a anamnesis_completed_at (timestamp ISO con
+  // hora — truncamos los 10 primeros chars), y de ahí a created_at. La
+  // última red de seguridad (hoy - 30 días) cubre el caso teórico de fila
+  // sin ninguno de los 3 campos; ningún paciente real debería caer ahí.
+  // -----------------------------------------------------------------
+
+  function _resolverFechaAlta(paciente, hoy) {
+    const p = paciente || {};
+    if (typeof p.alta === 'string' && p.alta.trim()) return p.alta.slice(0, 10);
+    if (typeof p.anamnesis_completed_at === 'string' && p.anamnesis_completed_at.trim()) {
+      return p.anamnesis_completed_at.slice(0, 10);
+    }
+    if (typeof p.created_at === 'string' && p.created_at.trim()) return p.created_at.slice(0, 10);
+    const d = hoy instanceof Date ? new Date(hoy.getTime()) : new Date();
+    d.setDate(d.getDate() - 30);
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return yy + '-' + mm + '-' + dd;
+  }
+
+  // -----------------------------------------------------------------
+  // construirHistorialCheckins — datos para el bloque "Adherencia"
+  //
+  // Genera un array de meses desde el mes de `hoy` hacia atrás hasta el mes
+  // de `fechaAlta` (orden DESC, mes actual primero) e incluye meses sin
+  // actividad como meses en blanco. Cada mes tiene `cells` con la misma
+  // forma que el calendario de la PWA (lunes=0, leading + days + trailing
+  // empties), y un `estado` por día tomado del Map indexado por ISO.
+  //
+  // Sin highlight de "hoy": en backoffice no aplica.
+  //
+  // Ver docs/superpowers/specs/2026-05-04-calendario-checkins-backoffice-design.md
+  // -----------------------------------------------------------------
+
+  const _MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                        'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  function _cellsDeMes(year, month, checkinsMap) {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    // Mon=0..Sun=6. JS getDay() devuelve Sun=0..Sat=6, por eso el +6 mod 7.
+    const offset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = lastDay.getDate();
+    const trailing = (7 - ((offset + daysInMonth) % 7)) % 7;
+    const cells = [];
+    for (let i = 0; i < offset; i++) cells.push({ type: 'empty' });
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      const estado = checkinsMap.get(iso) || null;
+      cells.push({ type: 'day', day, iso, estado });
+    }
+    for (let i = 0; i < trailing; i++) cells.push({ type: 'empty' });
+    return cells;
+  }
+
+  function construirHistorialCheckins(checkins, fechaAlta, hoy) {
+    const lista = Array.isArray(checkins) ? checkins : [];
+    const checkinsMap = new Map();
+    for (const c of lista) {
+      if (c && c.fecha && c.estado) checkinsMap.set(String(c.fecha), c.estado);
+    }
+
+    const hoyDate = hoy instanceof Date ? hoy : new Date();
+    const altaStr = String(fechaAlta || '').slice(0, 10);
+    const altaParts = altaStr.split('-').map(Number);
+    const altaYear = altaParts[0];
+    const altaMonth = (altaParts[1] || 1) - 1;
+
+    const meses = [];
+    let y = hoyDate.getFullYear();
+    let m = hoyDate.getMonth();
+    // Iteramos del mes actual hacia atrás hasta el mes del alta (incl.).
+    // Guardia defensiva: máximo 36 meses (3 años) para evitar bucles si los
+    // datos están corruptos. Ningún paciente CLN debería superarlos.
+    for (let i = 0; i < 36; i++) {
+      meses.push({
+        year: y,
+        month: m,
+        label: _MESES_LARGO[m] + ' ' + y,
+        cells: _cellsDeMes(y, m, checkinsMap)
+      });
+      if (y === altaYear && m === altaMonth) break;
+      m -= 1;
+      if (m < 0) { m = 11; y -= 1; }
+    }
+
+    // Resumen agregado: cómputo sobre el rango [fechaAlta, hoy] inclusivo.
+    const altaDate = new Date(altaYear, altaMonth, altaParts[2] || 1);
+    altaDate.setHours(0, 0, 0, 0);
+    const hoyMid = new Date(hoyDate.getFullYear(), hoyDate.getMonth(), hoyDate.getDate());
+
+    const MS_DIA = 86400000;
+    const totalDias = Math.max(0, Math.round((hoyMid.getTime() - altaDate.getTime()) / MS_DIA) + 1);
+
+    let diasConCheckin = 0;
+    if (totalDias > 0) {
+      const d = new Date(altaDate.getTime());
+      for (let i = 0; i < totalDias; i++) {
+        const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (checkinsMap.has(iso)) diasConCheckin += 1;
+        d.setDate(d.getDate() + 1);
+      }
+    }
+
+    const adherenciaPct = totalDias > 0
+      ? Math.round((diasConCheckin / totalDias) * 100)
+      : null;
+
+    // Rachas — reglas idénticas a la PWA: 'seguido' suma, 'parcial' mantiene
+    // (no suma pero no rompe), 'no' o ausencia rompe.
+    //
+    // rachaActual: desde AYER hacia atrás. No penaliza al paciente por no
+    // haber hecho aún el check-in del día en curso.
+    // rachaMaxima: recorre TODO el rango [fechaAlta, hoy] (incluido hoy).
+    function _siguienteRacha(estado, racha) {
+      // Devuelve [nuevaRacha, rota?]
+      if (estado === 'seguido') return [racha + 1, false];
+      if (estado === 'parcial') return [racha, false];
+      return [racha, true];  // 'no', null o undefined
+    }
+
+    let rachaActual = 0;
+    if (totalDias > 0) {
+      // Calendar arithmetic (setDate ±1) — coherente con el resto del fichero
+      // y DST-safe sin depender de Math.round (cf. M1 review Task 4).
+      const d = new Date(hoyMid.getTime());
+      d.setDate(d.getDate() - 1);
+      const limite = altaDate.getTime();
+      while (d.getTime() >= limite) {
+        const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const estado = checkinsMap.get(iso) || null;
+        const [next, rota] = _siguienteRacha(estado, rachaActual);
+        if (rota) break;
+        rachaActual = next;
+        d.setDate(d.getDate() - 1);
+      }
+    }
+
+    let rachaMaxima = 0;
+    if (totalDias > 0) {
+      let actual = 0;
+      const d = new Date(altaDate.getTime());
+      for (let i = 0; i < totalDias; i++) {
+        const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const estado = checkinsMap.get(iso) || null;
+        const [next, rota] = _siguienteRacha(estado, actual);
+        if (rota) {
+          if (actual > rachaMaxima) rachaMaxima = actual;
+          actual = 0;
+        } else {
+          actual = next;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+      if (actual > rachaMaxima) rachaMaxima = actual;
+    }
+
+    return {
+      meses,
+      resumen: {
+        diasConCheckin,
+        totalDias,
+        adherenciaPct,
+        rachaActual,
+        rachaMaxima,
+        primerDia: altaStr
+      }
+    };
+  }
+
+  // -----------------------------------------------------------------
+  // renderCheckins — pinta el bloque "Adherencia" a partir de un historial.
+  //
+  // Forma del DOM (ver spec § Render):
+  //   <section class="bo-checkins" data-bo-bloque="checkins">
+  //     <h2>Adherencia (check-ins diarios)</h2>
+  //     <p class="bo-checkins-resumen">… métricas …</p>
+  //     <div class="bo-checkins-meses">
+  //       <article class="bo-checkins-mes" data-bo-mes="YYYY-MM">…</article>
+  //     </div>
+  //     <p class="bo-checkins-leyenda">…</p>
+  //   </section>
+  //
+  // Estado vacío:
+  //   - historial null o meses vacíos → ''. La sección desaparece de la UI.
+  //   - historial con totalDias=0 (caso degradado): el resumen muestra
+  //     adherencia '—' y todas las métricas a 0; los meses con calendario
+  //     vacío. La sección sigue visible para detectar la anomalía.
+  // -----------------------------------------------------------------
+
+  function _formatPctOrDash(pct) {
+    return pct == null ? '—' : (pct + '%');
+  }
+
+  function _formatRacha(n) {
+    return n + ' ' + (n === 1 ? 'día' : 'días');
+  }
+
+  function renderCheckins(historial) {
+    if (!historial || !Array.isArray(historial.meses) || historial.meses.length === 0) return '';
+    const r = historial.resumen || {
+      diasConCheckin: 0, totalDias: 0, adherenciaPct: null,
+      rachaActual: 0, rachaMaxima: 0, primerDia: ''
+    };
+
+    const fechaDesde = r.primerDia ? BoUi.formatearFecha(r.primerDia) : '—';
+
+    const resumen = '<p class="bo-checkins-resumen">' +
+      'Adherencia global: <strong>' + _formatPctOrDash(r.adherenciaPct) + '</strong> · ' +
+      'Días con check-in: <strong>' + r.diasConCheckin + ' / ' + r.totalDias + '</strong> · ' +
+      'Racha actual: <strong>' + _formatRacha(r.rachaActual) + '</strong> · ' +
+      'Racha máxima: <strong>' + _formatRacha(r.rachaMaxima) + '</strong>' +
+      '<span class="bo-checkins-desde">desde el ' + BoUi.escapeHtml(fechaDesde) + '</span>' +
+    '</p>';
+
+    const meses = historial.meses.map(function (mes) {
+      const idMes = mes.year + '-' + String(mes.month + 1).padStart(2, '0');
+      const cellsHtml = mes.cells.map(function (c) {
+        if (c.type === 'empty') return '<span class="bo-cal-cell is-empty"></span>';
+        let cls = 'bo-cal-cell';
+        if (c.estado === 'seguido') cls += ' is-ok';
+        else if (c.estado === 'parcial') cls += ' is-mid';
+        else if (c.estado === 'no') cls += ' is-no';
+        return '<span class="' + cls + '" data-iso="' + c.iso + '">' + c.day + '</span>';
+      }).join('');
+      return '<article class="bo-checkins-mes" data-bo-mes="' + idMes + '">' +
+        '<h3>' + BoUi.escapeHtml(mes.label) + '</h3>' +
+        '<div class="bo-cal-weekdays" aria-hidden="true">' +
+          '<span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>' +
+        '</div>' +
+        '<div class="bo-cal-grid" aria-label="Check-ins de ' + BoUi.escapeHtml(mes.label) + '">' +
+          cellsHtml +
+        '</div>' +
+      '</article>';
+    }).join('');
+
+    const leyenda = '<p class="bo-checkins-leyenda">' +
+      '<span class="bo-cal-cell is-ok" aria-hidden="true"></span> Seguido' +
+      '<span class="bo-cal-cell is-mid" aria-hidden="true"></span> A medias' +
+      '<span class="bo-cal-cell is-no" aria-hidden="true"></span> No seguido' +
+    '</p>';
+
+    return '<section class="bo-checkins" data-bo-bloque="checkins">' +
+      '<h2>Adherencia (check-ins diarios)</h2>' +
+      resumen +
+      '<div class="bo-checkins-meses">' + meses + '</div>' +
+      leyenda +
+    '</section>';
+  }
 
   // -----------------------------------------------------------------
   // renderCabecera (pura)
@@ -1041,15 +1297,21 @@
     if (root.dataset) root.dataset.boBoundPdf = '1';
   }
 
-  // ISO 30 días atrás (para filtrar checkins recientes desde Supabase).
+  // ISO N días atrás (para filtrar checkins históricos desde Supabase).
   function _isoHaceNDias(n, hoy) {
     const d = hoy instanceof Date ? new Date(hoy.getTime()) : new Date();
     d.setDate(d.getDate() - n);
     return d.toISOString().slice(0, 10);
   }
 
+  // Ventana de carga del histórico de check-ins. Cubre ~2 años con margen
+  // — el filtrado fino al rango [fechaAlta, hoy] se hace en cliente dentro
+  // de `construirHistorialCheckins`. Si una paciente legacy lleva más de
+  // 2 años, los checkins anteriores no se muestran (caso edge aceptado).
+  const DIAS_HISTORICO_CHECKINS = 730;
+
   async function cargarDatos(supa, idPaciente) {
-    const hace30 = _isoHaceNDias(30, new Date());
+    const desdeCheckins = _isoHaceNDias(DIAS_HISTORICO_CHECKINS, new Date());
     // `pagos` se separa del Promise.all por tolerancia: la tabla la añade la
     // migración 0019_pagos.sql; mientras no esté aplicada en una rama o entorno
     // dado, queremos que la página siga funcionando con el bloque "Pagos" vacío.
@@ -1058,7 +1320,7 @@
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at').eq('paciente_id', idPaciente),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id, created_at').eq('paciente_id', idPaciente),
       supa.from('revisiones').select('id, paciente_id, sesion_id, contenido, created_at').eq('paciente_id', idPaciente).order('created_at', { ascending: false }),
-      supa.from('checkins').select('paciente_id, fecha, estado').eq('paciente_id', idPaciente).gte('fecha', hace30)
+      supa.from('checkins').select('paciente_id, fecha, estado').eq('paciente_id', idPaciente).gte('fecha', desdeCheckins).order('fecha', { ascending: true })
     ]);
     const pagosPromise = supa
       .from('pagos')
@@ -1090,7 +1352,7 @@
     est.className = 'bo-estado is-error';
     est.innerHTML = 'Paciente no encontrado. ' +
       '<a class="bo-fila-link" href="/backoffice/pacientes/">Volver a Pacientes</a>.';
-    for (const id of ['cabecera', 'anamnesis', 'timeline', 'acciones']) {
+    for (const id of ['cabecera', 'anamnesis', 'evolucion', 'checkins', 'pagos', 'timeline', 'acciones']) {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     }
@@ -1127,6 +1389,7 @@
     const cab = document.getElementById('cabecera');
     const ana = document.getElementById('anamnesis');
     const evo = document.getElementById('evolucion');
+    const chk = document.getElementById('checkins');
     const pag = document.getElementById('pagos');
     const tim = document.getElementById('timeline');
     const acc = document.getElementById('acciones');
@@ -1144,6 +1407,11 @@
         datos.paciente.anamnesis || null,
         datos.paciente.anamnesis_completed_at || datos.paciente.alta || null
       );
+    }
+    if (chk) {
+      const fechaAlta = _resolverFechaAlta(datos.paciente, new Date());
+      const historial = construirHistorialCheckins(datos.checkins || [], fechaAlta, new Date());
+      chk.innerHTML = renderCheckins(historial);
     }
     if (pag) pag.innerHTML = renderPagos(datos.pagos || [], datos.paciente, new Date());
     if (tim) {
@@ -1180,7 +1448,10 @@
     conectarClickCopiar: conectarClickCopiar,
     conectarToggleLibre: conectarToggleLibre,
     _conectarSelectionAutoExpand: _conectarSelectionAutoExpand,
-    _observarResize: _observarResize
+    _observarResize: _observarResize,
+    _resolverFechaAlta: _resolverFechaAlta,
+    construirHistorialCheckins: construirHistorialCheckins,
+    renderCheckins: renderCheckins
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
