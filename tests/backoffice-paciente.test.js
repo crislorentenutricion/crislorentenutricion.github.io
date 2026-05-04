@@ -702,3 +702,32 @@ test("BoPaciente.renderPagos: backwards-compat — sin paciente/hoy → no rompe
   assert.match(html, /Total cobrado/); // resumen sí
   assert.ok(!/Próximo pago esperado/.test(html)); // línea NO
 });
+
+// ===================================================================
+// slugTabValido (puro)
+// ===================================================================
+
+test('slugTabValido: slugs válidos pasan tal cual', () => {
+  for (const s of ['anamnesis', 'evolucion', 'adherencia', 'pagos', 'timeline']) {
+    assert.equal(BoPaciente.slugTabValido(s), s);
+  }
+});
+
+test('slugTabValido: trim previo', () => {
+  assert.equal(BoPaciente.slugTabValido('  pagos  '), 'pagos');
+  assert.equal(BoPaciente.slugTabValido('\tanamnesis\n'), 'anamnesis');
+});
+
+test('slugTabValido: case-sensitive (canónicos minúsculas)', () => {
+  assert.equal(BoPaciente.slugTabValido('Anamnesis'), null);
+  assert.equal(BoPaciente.slugTabValido('PAGOS'), null);
+});
+
+test('slugTabValido: rechaza slugs con tilde y otros inválidos', () => {
+  assert.equal(BoPaciente.slugTabValido('evolución'), null);
+  assert.equal(BoPaciente.slugTabValido('foo'), null);
+  assert.equal(BoPaciente.slugTabValido(''), null);
+  assert.equal(BoPaciente.slugTabValido(null), null);
+  assert.equal(BoPaciente.slugTabValido(undefined), null);
+  assert.equal(BoPaciente.slugTabValido(42), null);
+});

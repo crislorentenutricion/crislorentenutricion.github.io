@@ -47,6 +47,22 @@
   let _libreCounter = 0;
 
   // -----------------------------------------------------------------
+  // Tabs de la ficha (slug helpers + activación)
+  // -----------------------------------------------------------------
+
+  // Slugs canónicos en orden vertical (= orden histórico de los bloques).
+  // Pegar al orden visible facilita aprender muscle memory.
+  const TAB_SLUGS = ['anamnesis', 'evolucion', 'adherencia', 'pagos', 'timeline'];
+
+  // Devuelve el slug si pertenece al catálogo (case-sensitive, ASCII), o null.
+  // Trim previo para tolerar URLs copiadas con espacios.
+  function slugTabValido(slug) {
+    if (typeof slug !== 'string') return null;
+    const s = slug.trim();
+    return TAB_SLUGS.indexOf(s) >= 0 ? s : null;
+  }
+
+  // -----------------------------------------------------------------
   // Helpers de formato de anamnesis
   // -----------------------------------------------------------------
 
@@ -1503,7 +1519,10 @@
     _resolverFechaAlta: _resolverFechaAlta,
     construirHistorialCheckins: construirHistorialCheckins,
     renderCheckins: renderCheckins,
-    conectarSwitcherCheckins: conectarSwitcherCheckins
+    conectarSwitcherCheckins: conectarSwitcherCheckins,
+    // Tabs de la ficha
+    _TAB_SLUGS: TAB_SLUGS,
+    slugTabValido: slugTabValido
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
