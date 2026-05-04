@@ -980,6 +980,29 @@
     });
   }
 
+  // Re-medir overflow cuando cambie el ancho del contenedor de anamnesis
+  // (resize de ventana, sidebar abierto/cerrado en el futuro). Debounced
+  // con requestAnimationFrame para no machacar al usuario al arrastrar.
+  // _marcarDesbordados es idempotente y respeta data-bo-libre=expandido,
+  // así que la re-evaluación nunca colapsa lo que el usuario abrió.
+  function _observarResize(root) {
+    if (!root || typeof ResizeObserver === 'undefined') return;
+    if (root.dataset && root.dataset.boResizeObserved === '1') return;
+    let pending = null;
+    const observer = new ResizeObserver(function () {
+      if (pending) return;
+      const raf = (typeof requestAnimationFrame === 'function')
+        ? requestAnimationFrame
+        : function (cb) { return setTimeout(cb, 16); };
+      pending = raf(function () {
+        pending = null;
+        _marcarDesbordados(root);
+      });
+    });
+    observer.observe(root);
+    if (root.dataset) root.dataset.boResizeObserved = '1';
+  }
+
   // PDFs del menú viven en el bucket privado `menus-pdf`. Firmamos al click
   // con createSignedUrl(path, 60, { download: filename }) y navegamos con
   // location.href — window.open tras await lo bloquea Safari (ver
@@ -1113,6 +1136,7 @@
       ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
       _marcarDesbordados(ana);
       conectarToggleLibre(ana);
+      _observarResize(ana);
     }
     if (evo) {
       evo.innerHTML = renderEvolucion(
@@ -1154,7 +1178,9 @@
     _manejarClickAccion: _manejarClickAccion,
     _marcarDesbordados: _marcarDesbordados,
     conectarClickCopiar: conectarClickCopiar,
-    conectarToggleLibre: conectarToggleLibre
+    conectarToggleLibre: conectarToggleLibre,
+    _conectarSelectionAutoExpand: _conectarSelectionAutoExpand,
+    _observarResize: _observarResize
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
