@@ -13,7 +13,6 @@ const {
   validarEnv,
   SKILLS_VALIDAS,
   VIGENCIA_DIAS_DEFAULT,
-  DIAS_SIN_CHECKIN_ALERTA,
   DIAS_AVISO_PROXIMO_MENU,
   DIAS_VENTANA_PROXIMOS,
   REPESCA_VENTANA_DIAS,
@@ -191,7 +190,6 @@ test("agruparHoy: devuelve los bloques activos como arrays", () => {
   const r = agruparHoy(fixtureCompleta(), HOY);
   assert.ok(Array.isArray(r.sesionesHoy));
   assert.ok(Array.isArray(r.menusCrearSemana));
-  assert.ok(Array.isArray(r.alertas));
 });
 
 test("agruparHoy: sesionesHoy contiene solo sesiones de hoy de pacientes activas", () => {
@@ -256,31 +254,6 @@ test("agruparHoy: menusCrearSemana incluye anamnesisLista=true si hay anamnesis_
   assert.equal(r.menusCrearSemana[0].anamnesisLista, true);
 });
 
-test("agruparHoy: alertas incluye p4 (≥3 días sin checkin), excluye p5 (ayer)", () => {
-  const r = agruparHoy(fixtureCompleta(), HOY);
-  const ids = r.alertas.map(a => a.pacienteId);
-  assert.ok(ids.includes("p4"));
-  assert.ok(!ids.includes("p5"));
-  const p4 = r.alertas.find(a => a.pacienteId === "p4");
-  assert.equal(p4.diasSinCheckin, 4);
-  assert.equal(p4.comando, "/repescar-paciente DIANA PEREZ");
-});
-
-test("agruparHoy: check-in reciente → NO aparece en alertas", () => {
-  const datos = {
-    pacientes: [
-      { id: "p1", nombre: "ANA", email: "a@x", estado: "activo", alta: "2026-01-01" }
-    ],
-    menus: [{ id: "m1", paciente_id: "p1", numero: 1, vigente_desde: "2026-04-10", pdf_url: "x", enviado_at: "2026-04-10T10:00Z" }],
-    sesiones: [],
-    checkins: [
-      { paciente_id: "p1", fecha: "2026-04-21", estado: "seguido" } // ayer
-    ]
-  };
-  const r = agruparHoy(datos, HOY);
-  assert.equal(r.alertas.length, 0);
-});
-
 test("agruparHoy: paciente cerrado con sesión hoy NO aparece en sesionesHoy (decisión)", () => {
   // Decisión 2026-04-22: si un paciente cerrado tiene una sesión residual
   // en Calendar/Supabase, no debería contactarse. El cierre manda sobre el
@@ -298,7 +271,6 @@ test("agruparHoy: paciente cerrado con sesión hoy NO aparece en sesionesHoy (de
   const r = agruparHoy(datos, HOY);
   assert.equal(r.sesionesHoy.length, 0);
   assert.equal(r.menusCrearSemana.length, 0);
-  assert.equal(r.alertas.length, 0);
 });
 
 test("agruparHoy: menu vigente expirado hace días también entra en crear-semana", () => {
@@ -342,7 +314,6 @@ test("agruparHoy: orden estable — sesionesHoy por hora asc", () => {
 
 test("agruparHoy: constantes exportadas coherentes", () => {
   assert.equal(VIGENCIA_DIAS_DEFAULT, 30);
-  assert.equal(DIAS_SIN_CHECKIN_ALERTA, 3);
   assert.equal(DIAS_AVISO_PROXIMO_MENU, 7);
 });
 
@@ -922,8 +893,7 @@ test("sanity: cada comando generado por agruparHoy apunta a una skill válida", 
   const todosComandos = [
     ...r.sesionesHoy.map(x => x.comando),
     ...r.proximos7Dias.map(x => x.comando),
-    ...r.menusCrearSemana.map(x => x.comando),
-    ...r.alertas.map(x => x.comando)
+    ...r.menusCrearSemana.map(x => x.comando)
   ];
   assert.ok(todosComandos.length > 0, "fixture debe generar al menos un comando");
   for (const cmd of todosComandos) {

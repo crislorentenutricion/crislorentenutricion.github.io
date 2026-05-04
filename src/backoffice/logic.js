@@ -22,7 +22,6 @@
   'use strict';
 
   const VIGENCIA_DIAS_DEFAULT = 30;
-  const DIAS_SIN_CHECKIN_ALERTA = 3;
   const DIAS_AVISO_PROXIMO_MENU = 7;
   // Ventana del bloque "Próximos 7 días": de mañana (+1) hasta +7 inclusive.
   // Hoy queda fuera porque ya lo cubre el bloque "Sesiones hoy" — duplicar
@@ -350,18 +349,6 @@
     return candidato;
   }
 
-  // Última fecha de checkin del paciente. Devuelve Date midnight local o null.
-  function _ultimoCheckin(checkinsPaciente) {
-    if (!Array.isArray(checkinsPaciente) || checkinsPaciente.length === 0) return null;
-    let max = null;
-    for (const c of checkinsPaciente) {
-      const d = _toMidnight(c.fecha);
-      if (!d) continue;
-      if (!max || d.getTime() > max.getTime()) max = d;
-    }
-    return max;
-  }
-
   // Próxima sesión futura (o del día de hoy) para un paciente. Devuelve la
   // sesión con `fecha` más cercana ≥ hoy. Null si no hay.
   function _proximaSesion(sesionesPaciente, hoyMid) {
@@ -412,15 +399,6 @@
     if (!d) return true;
     const diasRestantes = vigenciaDias - diffEnDias(d, hoyMid);
     return diasRestantes <= DIAS_AVISO_PROXIMO_MENU;
-  }
-
-  // Alerta por silencio: paciente activa sin checkins en ≥ N días.
-  // Si nunca ha hecho check-in (onboarding), miramos `alta` como fallback.
-  function _diasDesdeUltimoCheckin(ultimo, paciente, hoyMid) {
-    if (ultimo) return diffEnDias(ultimo, hoyMid);
-    const alta = _toMidnight(paciente.alta);
-    if (!alta) return Infinity;
-    return diffEnDias(alta, hoyMid);
   }
 
   // -----------------------------------------------------------------
@@ -529,26 +507,21 @@
     const pacientes    = (datos && datos.pacientes)    || [];
     const menus        = (datos && datos.menus)        || [];
     const sesiones     = (datos && datos.sesiones)     || [];
-    const checkins     = (datos && datos.checkins)     || [];
     const valoraciones = (datos && datos.valoraciones) || [];
     const opts         = (datos && datos.opts)         || {};
     const vigenciaDias  = opts.vigenciaDias || VIGENCIA_DIAS_DEFAULT;
-    const diasSilencio  = opts.diasSilencio || DIAS_SIN_CHECKIN_ALERTA;
 
     const hoyMid = _toMidnight(hoy) || _toMidnight(new Date());
     const menusByPac    = _indexBy(menus, 'paciente_id');
     const sesionesByPac = _indexBy(sesiones, 'paciente_id');
-    const checkinsByPac = _indexBy(checkins, 'paciente_id');
 
     const sesionesHoy = [];
     const menusCrearSemana = [];
-    const alertas = [];
 
     for (const p of pacientes) {
       const activa = p.estado !== 'cerrado';
       const misMenus    = menusByPac.get(p.id) || [];
       const misSesiones = sesionesByPac.get(p.id) || [];
-      const misCheckins = checkinsByPac.get(p.id) || [];
       const menuVig = _menuVigente(misMenus, hoyMid);
 
       // Bloque 1: sesiones de hoy. Solo pacientes activas.
@@ -590,20 +563,6 @@
         });
       }
 
-      // Bloque 3: alertas por silencio. Solo activas.
-      if (activa) {
-        const ultimo = _ultimoCheckin(misCheckins);
-        const dias = _diasDesdeUltimoCheckin(ultimo, p, hoyMid);
-        if (dias >= diasSilencio) {
-          alertas.push({
-            pacienteId: p.id,
-            nombre: p.nombre,
-            diasSinCheckin: dias === Infinity ? null : dias,
-            ultimoCheckin: ultimo ? _toISO(ultimo) : null,
-            comando: generarComando('repescar-paciente', p.nombre)
-          });
-        }
-      }
     }
 
     // Bloque 1bis + Pendientes: las valoraciones (primera consulta, prospectos
@@ -708,13 +667,6 @@
       if (da !== db) return da - db;
       return a.nombre.localeCompare(b.nombre, 'es');
     });
-    alertas.sort(function (a, b) {
-      const da = a.diasSinCheckin == null ? Infinity : a.diasSinCheckin;
-      const db = b.diasSinCheckin == null ? Infinity : b.diasSinCheckin;
-      if (da !== db) return db - da; // más días de silencio primero
-      return a.nombre.localeCompare(b.nombre, 'es');
-    });
-
     // Bloque 4: próximos 7 días (mañana → +7). Reutiliza la función pura
     // exportada para que tenga su propio set de tests y se pueda invocar
     // sola. El opts también se le pasa por si se quiere acotar la ventana.
@@ -724,7 +676,7 @@
       hoyMid
     );
 
-    return { sesionesHoy, pendientes, proximos7Dias, menusCrearSemana, alertas };
+    return { sesionesHoy, pendientes, proximos7Dias, menusCrearSemana };
   }
 
   // -----------------------------------------------------------------
@@ -964,7 +916,6 @@
     validarEnv,
     SKILLS_VALIDAS,
     VIGENCIA_DIAS_DEFAULT,
-    DIAS_SIN_CHECKIN_ALERTA,
     DIAS_AVISO_PROXIMO_MENU,
     DIAS_VENTANA_PROXIMOS,
     DURACION_VALORACION_MIN,
