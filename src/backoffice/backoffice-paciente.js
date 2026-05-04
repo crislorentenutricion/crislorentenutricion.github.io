@@ -253,6 +253,75 @@
   }
 
   // -----------------------------------------------------------------
+  // construirHistorialCheckins — datos para el bloque "Adherencia"
+  //
+  // Genera un array de meses desde el mes de `hoy` hacia atrás hasta el mes
+  // de `fechaAlta` (orden DESC, mes actual primero) e incluye meses sin
+  // actividad como meses en blanco. Cada mes tiene `cells` con la misma
+  // forma que el calendario de la PWA (lunes=0, leading + days + trailing
+  // empties), y un `estado` por día tomado del Map indexado por ISO.
+  //
+  // Sin highlight de "hoy": en backoffice no aplica.
+  //
+  // Ver docs/superpowers/specs/2026-05-04-calendario-checkins-backoffice-design.md
+  // -----------------------------------------------------------------
+
+  const _MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                        'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+  function _cellsDeMes(year, month, checkinsMap) {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    // Mon=0..Sun=6. JS getDay() devuelve Sun=0..Sat=6, por eso el +6 mod 7.
+    const offset = (firstDay.getDay() + 6) % 7;
+    const daysInMonth = lastDay.getDate();
+    const trailing = (7 - ((offset + daysInMonth) % 7)) % 7;
+    const cells = [];
+    for (let i = 0; i < offset; i++) cells.push({ type: 'empty' });
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      const estado = checkinsMap.get(iso) || null;
+      cells.push({ type: 'day', day, iso, estado });
+    }
+    for (let i = 0; i < trailing; i++) cells.push({ type: 'empty' });
+    return cells;
+  }
+
+  function construirHistorialCheckins(checkins, fechaAlta, hoy) {
+    const lista = Array.isArray(checkins) ? checkins : [];
+    const checkinsMap = new Map();
+    for (const c of lista) {
+      if (c && c.fecha && c.estado) checkinsMap.set(String(c.fecha), c.estado);
+    }
+
+    const hoyDate = hoy instanceof Date ? hoy : new Date();
+    const altaStr = String(fechaAlta || '').slice(0, 10);
+    const altaParts = altaStr.split('-').map(Number);
+    const altaYear = altaParts[0];
+    const altaMonth = (altaParts[1] || 1) - 1;
+
+    const meses = [];
+    let y = hoyDate.getFullYear();
+    let m = hoyDate.getMonth();
+    // Iteramos del mes actual hacia atrás hasta el mes del alta (incl.).
+    // Guardia defensiva: máximo 36 meses (3 años) para evitar bucles si los
+    // datos están corruptos. Ningún paciente CLN debería superarlos.
+    for (let i = 0; i < 36; i++) {
+      meses.push({
+        year: y,
+        month: m,
+        label: _MESES_LARGO[m] + ' ' + y,
+        cells: _cellsDeMes(y, m, checkinsMap)
+      });
+      if (y === altaYear && m === altaMonth) break;
+      m -= 1;
+      if (m < 0) { m = 11; y -= 1; }
+    }
+
+    return { meses, resumen: null };  // resumen se rellena en la siguiente tarea
+  }
+
+  // -----------------------------------------------------------------
   // renderCabecera (pura)
   // -----------------------------------------------------------------
 
@@ -1207,7 +1276,8 @@
     conectarToggleLibre: conectarToggleLibre,
     _conectarSelectionAutoExpand: _conectarSelectionAutoExpand,
     _observarResize: _observarResize,
-    _resolverFechaAlta: _resolverFechaAlta
+    _resolverFechaAlta: _resolverFechaAlta,
+    construirHistorialCheckins: construirHistorialCheckins
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
