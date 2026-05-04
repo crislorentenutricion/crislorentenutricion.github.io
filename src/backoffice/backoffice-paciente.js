@@ -227,6 +227,32 @@
   ];
 
   // -----------------------------------------------------------------
+  // Resolución de la fecha del alta para el bloque "Adherencia"
+  //
+  // Cascada con fallback: paciente.alta es el campo canónico desde la
+  // migración 0009 (ver convenciones/clinica/paciente.md). Para pacientes
+  // legacy con alta=NULL caemos a anamnesis_completed_at (timestamp ISO con
+  // hora — truncamos los 10 primeros chars), y de ahí a created_at. La
+  // última red de seguridad (hoy - 30 días) cubre el caso teórico de fila
+  // sin ninguno de los 3 campos; ningún paciente real debería caer ahí.
+  // -----------------------------------------------------------------
+
+  function _resolverFechaAlta(paciente, hoy) {
+    const p = paciente || {};
+    if (typeof p.alta === 'string' && p.alta.trim()) return p.alta.slice(0, 10);
+    if (typeof p.anamnesis_completed_at === 'string' && p.anamnesis_completed_at.trim()) {
+      return p.anamnesis_completed_at.slice(0, 10);
+    }
+    if (typeof p.created_at === 'string' && p.created_at.trim()) return p.created_at.slice(0, 10);
+    const d = hoy instanceof Date ? new Date(hoy.getTime()) : new Date();
+    d.setDate(d.getDate() - 30);
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return yy + '-' + mm + '-' + dd;
+  }
+
+  // -----------------------------------------------------------------
   // renderCabecera (pura)
   // -----------------------------------------------------------------
 
@@ -1180,7 +1206,8 @@
     conectarClickCopiar: conectarClickCopiar,
     conectarToggleLibre: conectarToggleLibre,
     _conectarSelectionAutoExpand: _conectarSelectionAutoExpand,
-    _observarResize: _observarResize
+    _observarResize: _observarResize,
+    _resolverFechaAlta: _resolverFechaAlta
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
