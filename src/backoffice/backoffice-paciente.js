@@ -87,6 +87,70 @@
     return actual;
   }
 
+  // Aplica el slug activo al DOM: aria-selected, tabindex, hidden de paneles,
+  // history.replaceState con la URL nueva, y scrollIntoView del tab activo.
+  // Slug inválido → no-op (defensivo, evita corrupción si llega ?tab=foo).
+  function _activarTab(slug) {
+    if (typeof document === 'undefined') return;
+    if (!slugTabValido(slug)) return;
+    const tabs = document.querySelectorAll('[role="tab"]');
+    const panels = document.querySelectorAll('[role="tabpanel"]');
+    let activeBtn = null;
+    for (const tab of tabs) {
+      const isActive = tab.dataset && tab.dataset.boTab === slug;
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      tab.setAttribute('tabindex', isActive ? '0' : '-1');
+      if (isActive) activeBtn = tab;
+    }
+    for (const panel of panels) {
+      panel.hidden = !(panel.dataset && panel.dataset.boPanel === slug);
+    }
+    if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
+      const search = (typeof location !== 'undefined' && location.search) || '';
+      history.replaceState({}, '', urlConTab(slug, search));
+    }
+    if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+      activeBtn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  // Wiring delegado del tablist. Idempotente vía data-bo-tabs-bound. Click
+  // sobre un [role="tab"] activa su pestaña; teclado en el tablist navega
+  // con flechas/Home/End usando siguienteTab.
+  function _conectarTabs(root) {
+    if (!root || typeof root.getElementById !== 'function') return;
+    const tablist = root.getElementById('tabs');
+    if (!tablist) return;
+    if (tablist.dataset && tablist.dataset.boTabsBound === '1') return;
+
+    tablist.addEventListener('click', function (ev) {
+      const btn = ev.target && ev.target.closest && ev.target.closest('[role="tab"]');
+      if (!btn || !tablist.contains(btn)) return;
+      const slug = slugTabValido(btn.dataset && btn.dataset.boTab);
+      if (slug) _activarTab(slug);
+    });
+
+    tablist.addEventListener('keydown', function (ev) {
+      let dir = null;
+      if (ev.key === 'ArrowRight')      dir = 'next';
+      else if (ev.key === 'ArrowLeft')  dir = 'prev';
+      else if (ev.key === 'Home')       dir = 'first';
+      else if (ev.key === 'End')        dir = 'last';
+      if (!dir) return;
+      const activo = tablist.querySelector('[role="tab"][aria-selected="true"]');
+      const slugActual = activo && activo.dataset ? activo.dataset.boTab : TAB_SLUGS[0];
+      const nuevo = siguienteTab(TAB_SLUGS, slugActual, dir);
+      if (nuevo && nuevo !== slugActual) {
+        _activarTab(nuevo);
+        const nuevoBtn = tablist.querySelector('[data-bo-tab="' + nuevo + '"]');
+        if (nuevoBtn && typeof nuevoBtn.focus === 'function') nuevoBtn.focus();
+      }
+      ev.preventDefault();
+    });
+
+    if (tablist.dataset) tablist.dataset.boTabsBound = '1';
+  }
+
   // -----------------------------------------------------------------
   // Helpers de formato de anamnesis
   // -----------------------------------------------------------------
@@ -1549,7 +1613,9 @@
     _TAB_SLUGS: TAB_SLUGS,
     slugTabValido: slugTabValido,
     urlConTab: urlConTab,
-    siguienteTab: siguienteTab
+    siguienteTab: siguienteTab,
+    _activarTab: _activarTab,
+    _conectarTabs: _conectarTabs
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
