@@ -401,6 +401,86 @@
   }
 
   // -----------------------------------------------------------------
+  // renderCheckins — pinta el bloque "Adherencia" a partir de un historial.
+  //
+  // Forma del DOM (ver spec § Render):
+  //   <section class="bo-checkins" data-bo-bloque="checkins">
+  //     <h2>Adherencia (check-ins diarios)</h2>
+  //     <p class="bo-checkins-resumen">… métricas …</p>
+  //     <div class="bo-checkins-meses">
+  //       <article class="bo-checkins-mes" data-bo-mes="YYYY-MM">…</article>
+  //     </div>
+  //     <p class="bo-checkins-leyenda">…</p>
+  //   </section>
+  //
+  // Estado vacío:
+  //   - historial null o meses vacíos → ''. La sección desaparece de la UI.
+  //   - historial con totalDias=0 (caso degradado): el resumen muestra
+  //     adherencia '—' y todas las métricas a 0; los meses con calendario
+  //     vacío. La sección sigue visible para detectar la anomalía.
+  // -----------------------------------------------------------------
+
+  function _formatPctOrDash(pct) {
+    return pct == null ? '—' : (pct + '%');
+  }
+
+  function _formatRacha(n) {
+    return n + ' ' + (n === 1 ? 'día' : 'días');
+  }
+
+  function renderCheckins(historial) {
+    if (!historial || !Array.isArray(historial.meses) || historial.meses.length === 0) return '';
+    const r = historial.resumen || {
+      diasConCheckin: 0, totalDias: 0, adherenciaPct: null,
+      rachaActual: 0, rachaMaxima: 0, primerDia: ''
+    };
+
+    const fechaDesde = r.primerDia ? BoUi.formatearFecha(r.primerDia) : '—';
+
+    const resumen = '<p class="bo-checkins-resumen">' +
+      'Adherencia global: <strong>' + _formatPctOrDash(r.adherenciaPct) + '</strong> · ' +
+      'Días con check-in: <strong>' + r.diasConCheckin + ' / ' + r.totalDias + '</strong> · ' +
+      'Racha actual: <strong>' + _formatRacha(r.rachaActual) + '</strong> · ' +
+      'Racha máxima: <strong>' + _formatRacha(r.rachaMaxima) + '</strong>' +
+      '<span class="bo-checkins-desde">desde el ' + BoUi.escapeHtml(fechaDesde) + '</span>' +
+    '</p>';
+
+    const meses = historial.meses.map(function (mes) {
+      const idMes = mes.year + '-' + String(mes.month + 1).padStart(2, '0');
+      const cellsHtml = mes.cells.map(function (c) {
+        if (c.type === 'empty') return '<span class="bo-cal-cell is-empty"></span>';
+        let cls = 'bo-cal-cell';
+        if (c.estado === 'seguido') cls += ' is-ok';
+        else if (c.estado === 'parcial') cls += ' is-mid';
+        else if (c.estado === 'no') cls += ' is-no';
+        return '<span class="' + cls + '" data-iso="' + c.iso + '">' + c.day + '</span>';
+      }).join('');
+      return '<article class="bo-checkins-mes" data-bo-mes="' + idMes + '">' +
+        '<h3>' + BoUi.escapeHtml(mes.label) + '</h3>' +
+        '<div class="bo-cal-weekdays" aria-hidden="true">' +
+          '<span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>' +
+        '</div>' +
+        '<div class="bo-cal-grid" aria-label="Check-ins de ' + BoUi.escapeHtml(mes.label) + '">' +
+          cellsHtml +
+        '</div>' +
+      '</article>';
+    }).join('');
+
+    const leyenda = '<p class="bo-checkins-leyenda">' +
+      '<span class="bo-cal-cell is-ok" aria-hidden="true"></span> Seguido' +
+      '<span class="bo-cal-cell is-mid" aria-hidden="true"></span> A medias' +
+      '<span class="bo-cal-cell is-no" aria-hidden="true"></span> No seguido' +
+    '</p>';
+
+    return '<section class="bo-checkins" data-bo-bloque="checkins">' +
+      '<h2>Adherencia (check-ins diarios)</h2>' +
+      resumen +
+      '<div class="bo-checkins-meses">' + meses + '</div>' +
+      leyenda +
+    '</section>';
+  }
+
+  // -----------------------------------------------------------------
   // renderCabecera (pura)
   // -----------------------------------------------------------------
 
@@ -1356,7 +1436,8 @@
     _conectarSelectionAutoExpand: _conectarSelectionAutoExpand,
     _observarResize: _observarResize,
     _resolverFechaAlta: _resolverFechaAlta,
-    construirHistorialCheckins: construirHistorialCheckins
+    construirHistorialCheckins: construirHistorialCheckins,
+    renderCheckins: renderCheckins
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

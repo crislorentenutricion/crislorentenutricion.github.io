@@ -251,3 +251,77 @@ test('construirHistorialCheckins: paciente con seguido todos los días → racha
   // rachaMaxima incluye el día de hoy también (recorre TODOS los días) → 30
   assert.equal(r.resumen.rachaMaxima, 30);
 });
+
+// ===================================================================
+// renderCheckins — DOM string
+// ===================================================================
+
+function _historialEjemplo() {
+  return BoPaciente.construirHistorialCheckins(
+    [
+      { paciente_id: 'p1', fecha: '2026-05-01', estado: 'seguido' },
+      { paciente_id: 'p1', fecha: '2026-05-02', estado: 'parcial' },
+      { paciente_id: 'p1', fecha: '2026-05-03', estado: 'no' }
+    ],
+    '2026-05-01',
+    new Date(2026, 4, 4)
+  );
+}
+
+test('renderCheckins: devuelve "" si historial es null', () => {
+  assert.equal(BoPaciente.renderCheckins(null), '');
+});
+
+test('renderCheckins: devuelve "" si historial.meses es vacío', () => {
+  assert.equal(BoPaciente.renderCheckins({ meses: [], resumen: null }), '');
+});
+
+test('renderCheckins: incluye <section data-bo-bloque="checkins">', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  assert.match(html, /<section[^>]+data-bo-bloque="checkins"/);
+  assert.match(html, /<h2>Adherencia \(check-ins diarios\)<\/h2>/);
+});
+
+test('renderCheckins: resumen contiene las 4 métricas + "desde el …"', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  assert.match(html, /Adherencia global:\s*<strong>\d+%<\/strong>/);
+  assert.match(html, /Días con check-in:\s*<strong>\d+ \/ \d+<\/strong>/);
+  assert.match(html, /Racha actual:\s*<strong>\d+ d/);
+  assert.match(html, /Racha máxima:\s*<strong>\d+ d/);
+  assert.match(html, /<span class="bo-checkins-desde">desde el /);
+});
+
+test('renderCheckins: un <article class="bo-checkins-mes"> por mes', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  const matches = html.match(/<article class="bo-checkins-mes"/g) || [];
+  assert.equal(matches.length, 1); // solo mayo (alta=05-01, hoy=05-04)
+});
+
+test('renderCheckins: leyenda con 3 entradas y prefijo bo-cal-cell', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  assert.match(html, /class="bo-checkins-leyenda"/);
+  assert.match(html, /<span class="bo-cal-cell is-ok"/);
+  assert.match(html, /<span class="bo-cal-cell is-mid"/);
+  assert.match(html, /<span class="bo-cal-cell is-no"/);
+  // No usa el prefijo .ms-cal-* (decisión: namespace separado)
+  assert.ok(!html.includes('class="ms-cal-cell'));
+});
+
+test('renderCheckins: cells con estado mapean a clases is-ok|is-mid|is-no', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  assert.match(html, /class="bo-cal-cell is-ok"\s+data-iso="2026-05-01"/);
+  assert.match(html, /class="bo-cal-cell is-mid"\s+data-iso="2026-05-02"/);
+  assert.match(html, /class="bo-cal-cell is-no"\s+data-iso="2026-05-03"/);
+});
+
+test('renderCheckins: cells sin estado caen al estilo base sin clase de estado', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  // 2026-05-04 es hoy, sin checkin → cell sin is-* pero con data-iso
+  assert.match(html, /<span class="bo-cal-cell"\s+data-iso="2026-05-04">4<\/span>/);
+});
+
+test('renderCheckins: weekdays del mes con iniciales L M X J V S D', () => {
+  const html = BoPaciente.renderCheckins(_historialEjemplo());
+  assert.match(html, /<div class="bo-cal-weekdays" aria-hidden="true">/);
+  assert.match(html, /<span>L<\/span><span>M<\/span><span>X<\/span><span>J<\/span><span>V<\/span><span>S<\/span><span>D<\/span>/);
+});
