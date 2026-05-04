@@ -419,6 +419,24 @@
   }
 
   // -----------------------------------------------------------------
+  // Vista inicial al hidratar: persistencia entre lock/unlock del móvil
+  // -----------------------------------------------------------------
+
+  // Decide qué vista mostrar al hidratar (boot inicial o re-hidratación tras
+  // visibilitychange cuando el móvil se desbloquea). Usamos location.hash como
+  // fuente de verdad porque sobrevive al ciclo de vida de la PWA: bfcache,
+  // recarga real cuando iOS/Android matan la pestaña, y vuelta del lock screen.
+  // isLocked=true (sin menú vigente) fuerza 'today' aunque el hash diga otra
+  // cosa: la vista compra está oculta sin menú y no la podemos restaurar.
+  function resolveInitialView(opts) {
+    const o = opts || {};
+    if (o.isLocked) return 'today';
+    const hash = (o.hash || '').replace(/^#/, '');
+    if (hash === 'compra') return 'compra';
+    return 'today';
+  }
+
+  // -----------------------------------------------------------------
   // Milestone celebration: detectarMilestone + gate de onboarding
   // -----------------------------------------------------------------
 
@@ -760,7 +778,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

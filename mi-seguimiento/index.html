@@ -1767,7 +1767,7 @@
     esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora,
     slugifyItem, compraStorageKey, totalItemsCompra, displayCat,
     validateLoginForm, validateOtpCode, resolveInitialLogin,
-    shouldShowInstallHint, shouldRehydrateOnVisibility, shouldCelebrarMilestone,
+    shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone,
     computeDayView, computeTodayView,
     buildCompraModel, computeCompraMeta,
     applyCheckinOptimistic, revertCheckin,
@@ -2101,6 +2101,11 @@
     $('#ms-check-label').textContent = '¿cómo ha ido hoy?';
     renderMeals(menuVigente);
     $('#ms-authed').dataset.view = 'today';
+    // Salimos de la vista compra: limpiamos el hash para que un futuro
+    // lock/unlock o recarga vuelva a 'today' por defecto.
+    if (location.hash === '#compra') {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* noop */ }
+    }
     const v = computeTodayView({ menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS });
     setActiveCheck(v.activeCheck);
   }
@@ -2213,6 +2218,13 @@
 
   function mostrarCompra() {
     $('#ms-authed').dataset.view = 'compra';
+    // Persistimos la vista activa en el hash. Si el móvil se bloquea o iOS
+    // mata la pestaña, al volver leemos el hash y restauramos esta vista en
+    // vez de caer al 'today' por defecto. replaceState para no apilar
+    // entradas de historial en cada toggle.
+    if (location.hash !== '#compra') {
+      try { history.replaceState(null, '', location.pathname + location.search + '#compra'); } catch (e) { /* noop */ }
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -2424,6 +2436,15 @@
     renderTip();
     renderStreak(checkinsMap);
     renderCalendar(checkinsMap);
+
+    // Restaura la vista que la paciente tenía activa antes del lock/unlock o
+    // recarga del WebView (la fuente de verdad es location.hash, que sobrevive
+    // al ciclo de vida de la PWA en Android e iOS). Si el expediente está
+    // 'locked' (sin menú vigente), forzamos 'today': la vista compra está
+    // oculta por CSS y restaurarla dejaría la pantalla en blanco.
+    if (resolveInitialView({ hash: location.hash, isLocked: result.view === 'locked' }) === 'compra') {
+      $('#ms-authed').dataset.view = 'compra';
+    }
 
     if (result.view === 'locked') {
       // Ocultar también el CTA de revisión por si venía visible de un render previo.
