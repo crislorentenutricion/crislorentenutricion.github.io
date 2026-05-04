@@ -306,10 +306,11 @@
   // "Ver más / Ver menos". Idempotente: re-ejecutable tras resize sin
   // duplicar botones; respeta el estado "expandido" del usuario.
   //
-  // Estrategia: para medir overflow real necesitamos que el clamp esté
-  // activo (CSS aplica clamp cuando NO hay data-bo-libre). Si el usuario
-  // ya expandió un span lo dejamos en paz. Si está marcado como truncado
-  // o sin marcar, lo limpiamos, medimos y decidimos.
+  // Estrategia: el CSS aplica el clamp salvo cuando data-bo-libre es
+  // "expandido". Eliminamos data-bo-libre antes de medir para limpiar
+  // un posible "truncado" obsoleto: si el span ya no desborda (resize a
+  // mayor ancho), el atributo se quedaría rancio. La medición es válida
+  // tanto sin atributo como con "truncado" porque el clamp sigue activo.
   // -----------------------------------------------------------------
 
   function _marcarDesbordados(root) {
@@ -318,11 +319,19 @@
     const spans = root.querySelectorAll('.bo-anamnesis-valor');
     for (const span of spans) {
       const estado = span.getAttribute('data-bo-libre');
+      // Política de "respeto al usuario": si ya lo abrió, no lo cerramos
+      // automáticamente, ni siquiera si tras un resize el texto cabría sin
+      // clamp. Trade-off conocido: queda un botón "Ver menos" colgado en un
+      // span que no desbordaría — funcionalmente inocuo (clamp release =
+      // "unset" da el mismo render que ausencia de clamp en texto que cabe)
+      // y cuando el usuario lo cierre, _marcarDesbordados eliminará el botón
+      // en la siguiente pasada al ver que ya no desborda.
       if (estado === 'expandido') continue;
       span.removeAttribute('data-bo-libre');
       const desborda = span.scrollHeight > span.clientHeight + 1;
       const dd = span.parentElement;
       if (!dd) continue;
+      if (!span.id) continue; // sin id no podemos referenciarlo desde aria-controls; saltamos
       let toggle = dd.querySelector('.bo-libre-toggle');
       if (desborda) {
         span.setAttribute('data-bo-libre', 'truncado');
