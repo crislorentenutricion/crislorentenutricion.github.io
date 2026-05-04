@@ -581,7 +581,36 @@
     }
     .bo-anamnesis-grupo dt { color: #6b7280; }
     .bo-anamnesis-grupo dd { margin: 0; color: #2d2a24; }
-    .bo-anamnesis-libre { cursor: help; }
+    /* Campos libres de anamnesis: clamp visual a 3 líneas; el texto completo
+       sigue en el DOM para a11y, copy-paste y Ctrl+F. data-bo-libre="expandido"
+       lo libera al click del botón "Ver más". */
+    .bo-anamnesis-valor {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .bo-anamnesis-valor[data-bo-libre="expandido"] {
+      -webkit-line-clamp: unset;
+      overflow: visible;
+    }
+    button.bo-libre-toggle {
+      display: block;
+      margin-top: 4px;
+      background: none;
+      border: 0;
+      padding: 0;
+      color: #4a7c59;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-decoration: underline;
+      font-family: inherit;
+    }
+    button.bo-libre-toggle:hover { text-decoration: none; }
+    button.bo-libre-toggle:focus-visible {
+      outline: 2px solid #4a7c59;
+      outline-offset: 2px;
+    }
 
     .bo-timeline {
       list-style: none;
