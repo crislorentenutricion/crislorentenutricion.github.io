@@ -1295,15 +1295,21 @@
     if (root.dataset) root.dataset.boBoundPdf = '1';
   }
 
-  // ISO 30 días atrás (para filtrar checkins recientes desde Supabase).
+  // ISO N días atrás (para filtrar checkins históricos desde Supabase).
   function _isoHaceNDias(n, hoy) {
     const d = hoy instanceof Date ? new Date(hoy.getTime()) : new Date();
     d.setDate(d.getDate() - n);
     return d.toISOString().slice(0, 10);
   }
 
+  // Ventana de carga del histórico de check-ins. Cubre ~2 años con margen
+  // — el filtrado fino al rango [fechaAlta, hoy] se hace en cliente dentro
+  // de `construirHistorialCheckins`. Si una paciente legacy lleva más de
+  // 2 años, los checkins anteriores no se muestran (caso edge aceptado).
+  const DIAS_HISTORICO_CHECKINS = 730;
+
   async function cargarDatos(supa, idPaciente) {
-    const hace30 = _isoHaceNDias(30, new Date());
+    const desdeCheckins = _isoHaceNDias(DIAS_HISTORICO_CHECKINS, new Date());
     // `pagos` se separa del Promise.all por tolerancia: la tabla la añade la
     // migración 0019_pagos.sql; mientras no esté aplicada en una rama o entorno
     // dado, queremos que la página siga funcionando con el bloque "Pagos" vacío.
@@ -1312,7 +1318,7 @@
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at').eq('paciente_id', idPaciente),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id, created_at').eq('paciente_id', idPaciente),
       supa.from('revisiones').select('id, paciente_id, sesion_id, contenido, created_at').eq('paciente_id', idPaciente).order('created_at', { ascending: false }),
-      supa.from('checkins').select('paciente_id, fecha, estado').eq('paciente_id', idPaciente).gte('fecha', hace30)
+      supa.from('checkins').select('paciente_id, fecha, estado').eq('paciente_id', idPaciente).gte('fecha', desdeCheckins).order('fecha', { ascending: true })
     ]);
     const pagosPromise = supa
       .from('pagos')
