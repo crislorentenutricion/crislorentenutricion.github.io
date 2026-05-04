@@ -115,14 +115,32 @@ test("BoPaciente.renderAnamnesis: arrays se formatean con comas y humanización"
   assert.match(html, /Gluten, Frutos secos/);
 });
 
-test("BoPaciente.renderAnamnesis: texto largo se trunca a 160 chars con …", () => {
+test("BoPaciente.renderAnamnesis: texto largo NO se trunca en HTML", () => {
   const largo = "a".repeat(200);
   const html = BoPaciente.renderAnamnesis({ motivacion: largo });
-  // Aparece el texto truncado con puntos suspensivos
-  assert.match(html, /…/);
-  // El texto completo queda en title (no se pierde del DOM)
-  assert.match(html, /title="a{200}"/);
-  assert.match(html, /class="bo-anamnesis-libre"/);
+  // El texto completo aparece en el DOM, sin '…' ni 'title='
+  assert.match(html, /a{200}/);
+  assert.ok(!/…/.test(html), "no debe truncar con '…'");
+  assert.ok(!/title="a+/.test(html), "no debe usar atributo title");
+});
+
+test("BoPaciente.renderAnamnesis: valores no vacíos se envuelven en span con clase + id único", () => {
+  const html = BoPaciente.renderAnamnesis({
+    objetivo: "perder_grasa",
+    motivacion: "Texto de motivación"
+  });
+  const matches = html.match(/<span class="bo-anamnesis-valor" id="bo-libre-\d+">/g) || [];
+  assert.ok(matches.length >= 2, "esperaba al menos 2 spans con clase bo-anamnesis-valor");
+  const ids = matches.map(s => s.match(/id="(bo-libre-\d+)"/)[1]);
+  assert.equal(new Set(ids).size, ids.length, "los ids deben ser únicos en cada render");
+});
+
+test("BoPaciente.renderAnamnesis: contador de ids se reinicia entre llamadas", () => {
+  const html1 = BoPaciente.renderAnamnesis({ motivacion: "A" });
+  const html2 = BoPaciente.renderAnamnesis({ motivacion: "B" });
+  // Cada llamada arranca en bo-libre-1
+  assert.match(html1, /id="bo-libre-1"/);
+  assert.match(html2, /id="bo-libre-1"/);
 });
 
 test("BoPaciente.renderAnamnesis: ignora strings vacíos y arrays vacíos", () => {

@@ -37,13 +37,14 @@
   const BoLogic = new Proxy({}, { get: (_t, prop) => _BoLogic()[prop] });
 
   // -----------------------------------------------------------------
-  // Constantes de render
+  // Constantes / estado de render
   // -----------------------------------------------------------------
 
-  // Truncado visual para campos libres (motivación, dieta_habitual, notas…).
-  // No eliminamos el texto — CSS podría mostrar el completo; aquí cortamos a
-  // 160 chars con "…" si excede. Simple, sin "ver más" interactivo.
-  const MAX_LIBRE = 160;
+  // Contador de ids únicos para los <span class="bo-anamnesis-valor">.
+  // Se reinicia al inicio de cada renderAnamnesis para que los ids sean
+  // estables y predecibles dentro de un mismo render. _marcarDesbordados
+  // (post-render) los usa como aria-controls del botón "Ver más".
+  let _libreCounter = 0;
 
   // -----------------------------------------------------------------
   // Helpers de formato de anamnesis
@@ -105,16 +106,18 @@
     return String(v);
   }
 
-  // Construye un <dd> con la cadena ya formateada. Si el texto supera
-  // MAX_LIBRE caracteres, añade atributo title con el original y una clase
-  // para poder poner "ver más" vía CSS si se desea más adelante.
+  // Construye un <dd> con el texto ya formateado, envuelto en un <span> con
+  // clase + id único. CSS aplica line-clamp:3; _marcarDesbordados (post-render)
+  // detecta overflow real e inyecta el botón "Ver más" como hermano del span
+  // dentro del propio <dd>. Si el valor está vacío, devolvemos '<dd>—</dd>'
+  // sin span — no entra en el flujo de clamp.
   function _dd(valor) {
     const raw = _formatValor(valor);
     if (!raw) return '<dd>—</dd>';
-    const { text, trunc } = _truncar(raw, MAX_LIBRE);
-    if (!trunc) return '<dd>' + BoUi.escapeHtml(text) + '</dd>';
-    return '<dd class="bo-anamnesis-libre" title="' + BoUi.escapeHtml(raw) +
-      '">' + BoUi.escapeHtml(text) + '</dd>';
+    _libreCounter += 1;
+    const id = 'bo-libre-' + _libreCounter;
+    return '<dd><span class="bo-anamnesis-valor" id="' + id + '">' +
+      BoUi.escapeHtml(raw) + '</span></dd>';
   }
 
   function _par(label, valor) {
@@ -268,6 +271,7 @@
   // -----------------------------------------------------------------
 
   function renderAnamnesis(anamnesis) {
+    _libreCounter = 0;
     if (_esVacio(anamnesis)) {
       return '<section class="bo-anamnesis" data-bo-bloque="anamnesis">' +
         '<h2>Anamnesis</h2>' +
