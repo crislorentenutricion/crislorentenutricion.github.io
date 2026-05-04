@@ -8,7 +8,7 @@
 //   5. Los botones "Copiar comando" delegan en BoUi.copiarComando.
 //
 // Funciones puras exportadas para Node tests: renderFilaSesion,
-// renderFilaMenuCrear, renderFilaMenuEnviar, renderFilaAlerta, renderBloque.
+// renderFilaMenuCrear, renderFilaMenuEnviar, renderBloque.
 // Devuelven HTML string — un render funcional simple, sin dependencias del
 // DOM. El wiring (listeners) vive en `conectarBotonesCopiar`.
 
@@ -183,22 +183,6 @@
       cuerpo + acciones + '</li>';
   }
 
-  function renderFilaAlerta(item) {
-    const nombre = BoUi.escapeHtml(BoUi.titleCase(item.nombre));
-    let detalle;
-    if (item.diasSinCheckin == null) {
-      detalle = 'Sin check-ins aún';
-    } else {
-      detalle = item.diasSinCheckin + ' ' +
-        (item.diasSinCheckin === 1 ? 'día' : 'días') + ' sin check-in';
-    }
-    const meta = '<div class="bo-fila-meta">' +
-      '<span class="bo-fila-nombre">' + nombre + '</span>' +
-      '<span class="bo-fila-detalle">' + BoUi.escapeHtml(detalle) + '</span>' +
-    '</div>';
-    return _filaCuerpo(item.pacienteId, meta, 'alerta', '');
-  }
-
   // Fila del bloque "Pagos pendientes": indica un paciente cuyo próximo pago
   // está vencido o a punto de vencer (≤ UMBRAL_AVISO_DIAS días). Patrón
   // idéntico a renderFilaMenuCrear: link al detalle a la izquierda + botón
@@ -286,8 +270,7 @@
   //   1. Pendientes de resolver — valoraciones atascadas, exigen decisión.
   //   2. Sesiones hoy — pasan en horas, requieren preparación inmediata.
   //   3. Menús a crear esta semana — deadline semanal con margen.
-  //   4. Alertas (sin check-in) — prevención antes de que la paciente abandone.
-  //   5. Próximos 7 días — vista anticipada, informativa.
+  //   4. Próximos 7 días — vista anticipada, informativa.
   function _bloquesConfig(agrupado) {
     return [
       {
@@ -313,12 +296,6 @@
         titulo: 'Menús a crear esta semana',
         items: agrupado.menusCrearSemana || [],
         renderFila: renderFilaMenuCrear
-      },
-      {
-        key: 'alertas',
-        titulo: 'Alertas (sin check-in)',
-        items: agrupado.alertas || [],
-        renderFila: renderFilaAlerta
       },
       {
         key: 'proximos-7-dias',
@@ -548,7 +525,6 @@
     renderFilaProximaSesion,
     renderFilaMenuCrear,
     renderFilaPendiente,
-    renderFilaAlerta,
     renderFilaPagoPendiente,
     renderBloque,
     renderTodosLosBloques,
