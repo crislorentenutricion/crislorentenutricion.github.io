@@ -1350,7 +1350,7 @@
     est.className = 'bo-estado is-error';
     est.innerHTML = 'Paciente no encontrado. ' +
       '<a class="bo-fila-link" href="/backoffice/pacientes/">Volver a Pacientes</a>.';
-    for (const id of ['cabecera', 'anamnesis', 'timeline', 'acciones']) {
+    for (const id of ['cabecera', 'anamnesis', 'evolucion', 'checkins', 'pagos', 'timeline', 'acciones']) {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     }
@@ -1387,6 +1387,7 @@
     const cab = document.getElementById('cabecera');
     const ana = document.getElementById('anamnesis');
     const evo = document.getElementById('evolucion');
+    const chk = document.getElementById('checkins');
     const pag = document.getElementById('pagos');
     const tim = document.getElementById('timeline');
     const acc = document.getElementById('acciones');
@@ -1404,6 +1405,11 @@
         datos.paciente.anamnesis || null,
         datos.paciente.anamnesis_completed_at || datos.paciente.alta || null
       );
+    }
+    if (chk) {
+      const fechaAlta = _resolverFechaAlta(datos.paciente, new Date());
+      const historial = construirHistorialCheckins(datos.checkins || [], fechaAlta, new Date());
+      chk.innerHTML = renderCheckins(historial);
     }
     if (pag) pag.innerHTML = renderPagos(datos.pagos || [], datos.paciente, new Date());
     if (tim) {
