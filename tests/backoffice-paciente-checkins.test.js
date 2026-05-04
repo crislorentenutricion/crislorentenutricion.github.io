@@ -118,3 +118,50 @@ test('construirHistorialCheckins: trailing empties al final del mes', () => {
   assert.equal(feb.cells.length, 35);
   assert.equal(feb.cells[feb.cells.length - 1].type, 'empty');
 });
+
+// ===================================================================
+// construirHistorialCheckins — resumen agregado
+// ===================================================================
+
+test('construirHistorialCheckins: diasConCheckin cuenta los 3 estados', () => {
+  const checkins = [
+    { paciente_id: 'p1', fecha: '2026-05-01', estado: 'seguido' },
+    { paciente_id: 'p1', fecha: '2026-05-02', estado: 'parcial' },
+    { paciente_id: 'p1', fecha: '2026-05-03', estado: 'no' }
+  ];
+  const r = BoPaciente.construirHistorialCheckins(checkins, '2026-05-01', new Date(2026, 4, 4));
+  assert.equal(r.resumen.diasConCheckin, 3);
+});
+
+test('construirHistorialCheckins: totalDias incluye fechaAlta y hoy', () => {
+  // 2026-05-01 a 2026-05-04 incl. = 4 días
+  const r = BoPaciente.construirHistorialCheckins([], '2026-05-01', new Date(2026, 4, 4));
+  assert.equal(r.resumen.totalDias, 4);
+});
+
+test('construirHistorialCheckins: adherenciaPct redondeado correctamente', () => {
+  // 92 días con check-in / 118 totales = 77.97% → 78
+  const checkins = [];
+  for (let i = 0; i < 92; i++) {
+    const d = new Date(2026, 0, 1 + i);
+    const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    checkins.push({ paciente_id: 'p1', fecha: iso, estado: 'seguido' });
+  }
+  // fechaAlta=2026-01-01, hoy=2026-04-28 → 118 días
+  const r = BoPaciente.construirHistorialCheckins(checkins, '2026-01-01', new Date(2026, 3, 28));
+  assert.equal(r.resumen.totalDias, 118);
+  assert.equal(r.resumen.diasConCheckin, 92);
+  assert.equal(r.resumen.adherenciaPct, 78);
+});
+
+test('construirHistorialCheckins: adherenciaPct null si totalDias=0', () => {
+  // Caso degradado: fechaAlta posterior a hoy
+  const r = BoPaciente.construirHistorialCheckins([], '2026-05-10', new Date(2026, 4, 4));
+  assert.equal(r.resumen.totalDias, 0);
+  assert.equal(r.resumen.adherenciaPct, null);
+});
+
+test('construirHistorialCheckins: primerDia = fechaAlta', () => {
+  const r = BoPaciente.construirHistorialCheckins([], '2026-01-15', new Date(2026, 4, 4));
+  assert.equal(r.resumen.primerDia, '2026-01-15');
+});

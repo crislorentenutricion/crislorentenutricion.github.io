@@ -318,7 +318,39 @@
       if (m < 0) { m = 11; y -= 1; }
     }
 
-    return { meses, resumen: null };  // resumen se rellena en la siguiente tarea
+    // Resumen agregado: cómputo sobre el rango [fechaAlta, hoy] inclusivo.
+    const altaDate = new Date(altaYear, altaMonth, altaParts[2] || 1);
+    altaDate.setHours(0, 0, 0, 0);
+    const hoyMid = new Date(hoyDate.getFullYear(), hoyDate.getMonth(), hoyDate.getDate());
+
+    const MS_DIA = 86400000;
+    const totalDias = Math.max(0, Math.round((hoyMid.getTime() - altaDate.getTime()) / MS_DIA) + 1);
+
+    let diasConCheckin = 0;
+    if (totalDias > 0) {
+      const d = new Date(altaDate.getTime());
+      for (let i = 0; i < totalDias; i++) {
+        const iso = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        if (checkinsMap.has(iso)) diasConCheckin += 1;
+        d.setDate(d.getDate() + 1);
+      }
+    }
+
+    const adherenciaPct = totalDias > 0
+      ? Math.round((diasConCheckin / totalDias) * 100)
+      : null;
+
+    return {
+      meses,
+      resumen: {
+        diasConCheckin,
+        totalDias,
+        adherenciaPct,
+        rachaActual: 0,    // se rellena en la siguiente tarea
+        rachaMaxima: 0,    // se rellena en la siguiente tarea
+        primerDia: altaStr
+      }
+    };
   }
 
   // -----------------------------------------------------------------
