@@ -2101,11 +2101,6 @@
     $('#ms-check-label').textContent = '¿cómo ha ido hoy?';
     renderMeals(menuVigente);
     $('#ms-authed').dataset.view = 'today';
-    // Salimos de la vista compra: limpiamos el hash para que un futuro
-    // lock/unlock o recarga vuelva a 'today' por defecto.
-    if (location.hash === '#compra') {
-      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* noop */ }
-    }
     const v = computeTodayView({ menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS });
     setActiveCheck(v.activeCheck);
   }
@@ -2218,14 +2213,21 @@
 
   function mostrarCompra() {
     $('#ms-authed').dataset.view = 'compra';
-    // Persistimos la vista activa en el hash. Si el móvil se bloquea o iOS
-    // mata la pestaña, al volver leemos el hash y restauramos esta vista en
-    // vez de caer al 'today' por defecto. replaceState para no apilar
-    // entradas de historial en cada toggle.
-    if (location.hash !== '#compra') {
-      try { history.replaceState(null, '', location.pathname + location.search + '#compra'); } catch (e) { /* noop */ }
-    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Persistimos la vista activa en location.hash sólo cuando el cambio lo
+  // dispara una acción del usuario (clics en los botones). Mantenemos las
+  // funciones mostrarHoy/mostrarCompra como renderers puros: hydrate() las
+  // llama internamente sin tocar el hash, así puede leerlo después para
+  // restaurar la vista que la paciente tenía al bloquear el móvil. replaceState
+  // (no pushState) para no apilar entradas de historial en cada toggle.
+  function setViewHash(viewName) {
+    const target = viewName === 'compra' ? '#compra' : '';
+    if ((location.hash || '') === target) return;
+    try {
+      history.replaceState(null, '', location.pathname + location.search + target);
+    } catch (e) { /* noop */ }
   }
 
   function reiniciarCompra() {
@@ -2616,7 +2618,12 @@
   // primerNombreDesdeEmail vive en logic.js (pura, testada).
 
   // -------- auth wiring --------
-  async function render(session) {
+  // event: nombre del auth event de Supabase ('INITIAL_SESSION' al cargar la
+  // PWA, 'SIGNED_IN' tras OTP, 'TOKEN_REFRESHED' al desbloquear el móvil…).
+  // Los avisos "una vez por entrada" (toast de racha rota, onboarding,
+  // milestone) sólo se disparan en eventos frescos; TOKEN_REFRESHED y
+  // similares re-corren render() pero no deben re-mostrar el banner.
+  async function render(session, event) {
     firstRenderDone = true;
     loadingView.hidden = true;
     stopBootMessages();
@@ -2634,13 +2641,14 @@
       loginTitle.hidden  = false;
       loginIntro.hidden  = false;
       const result = await hydrate();
-      if (result && result.rota) {
+      const isFreshLogin = event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
+      if (isFreshLogin && result && result.rota) {
         showToast('Has perdido la racha. Empezamos de nuevo mañana 💪');
       }
-      maybeShowOnboarding();
+      if (isFreshLogin) maybeShowOnboarding();
       // shouldCelebrarMilestone (en logic.js) ya gatea sobre paciente.onboarding
       // para no apilar el modal del milestone encima del onboarding.
-      if (result && typeof result.racha === 'number') {
+      if (isFreshLogin && result && typeof result.racha === 'number') {
         maybeCelebrarMilestone(result.racha);
       }
     } else {
@@ -2928,9 +2936,9 @@
     const iso = e.target.closest('.ms-cal-cell')?.dataset.iso;
     if (iso) mostrarDia(iso);
   });
-  $('#ms-back-today').addEventListener('click', mostrarHoy);
-  $('#ms-compra-open').addEventListener('click', mostrarCompra);
-  $('#ms-compra-back').addEventListener('click', mostrarHoy);
+  $('#ms-back-today').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
+  $('#ms-compra-open').addEventListener('click', () => { mostrarCompra(); setViewHash('compra'); });
+  $('#ms-compra-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
   $('#ms-compra-reset').addEventListener('click', reiniciarCompra);
   // El <label> nativo envuelve checkbox + texto, así que cualquier clic
   // (ratón o teclado) togglea el checkbox y dispara 'change'. Un único handler.
@@ -2963,7 +2971,7 @@
         if (data.session) session = data.session;
       } catch (e) { console.warn('refresh on boot', e); }
     }
-    render(session);
+    render(session, event);
   });
 
   // Al volver del bloqueo del móvil o cambio de pestaña: re-valida la sesión
