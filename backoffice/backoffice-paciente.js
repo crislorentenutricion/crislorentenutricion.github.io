@@ -37,13 +37,14 @@
   const BoLogic = new Proxy({}, { get: (_t, prop) => _BoLogic()[prop] });
 
   // -----------------------------------------------------------------
-  // Constantes de render
+  // Constantes / estado de render
   // -----------------------------------------------------------------
 
-  // Truncado visual para campos libres (motivación, dieta_habitual, notas…).
-  // No eliminamos el texto — CSS podría mostrar el completo; aquí cortamos a
-  // 160 chars con "…" si excede. Simple, sin "ver más" interactivo.
-  const MAX_LIBRE = 160;
+  // Contador de ids únicos para los <span class="bo-anamnesis-valor">.
+  // Se reinicia al inicio de cada renderAnamnesis para que los ids sean
+  // estables y predecibles dentro de un mismo render. _marcarDesbordados
+  // (post-render) los usa como aria-controls del botón "Ver más".
+  let _libreCounter = 0;
 
   // -----------------------------------------------------------------
   // Helpers de formato de anamnesis
@@ -105,16 +106,18 @@
     return String(v);
   }
 
-  // Construye un <dd> con la cadena ya formateada. Si el texto supera
-  // MAX_LIBRE caracteres, añade atributo title con el original y una clase
-  // para poder poner "ver más" vía CSS si se desea más adelante.
+  // Construye un <dd> con el texto ya formateado, envuelto en un <span> con
+  // clase + id único. CSS aplica line-clamp:3; _marcarDesbordados (post-render)
+  // detecta overflow real e inyecta el botón "Ver más" como hermano del span
+  // dentro del propio <dd>. Si el valor está vacío, devolvemos '<dd>—</dd>'
+  // sin span — no entra en el flujo de clamp.
   function _dd(valor) {
     const raw = _formatValor(valor);
     if (!raw) return '<dd>—</dd>';
-    const { text, trunc } = _truncar(raw, MAX_LIBRE);
-    if (!trunc) return '<dd>' + BoUi.escapeHtml(text) + '</dd>';
-    return '<dd class="bo-anamnesis-libre" title="' + BoUi.escapeHtml(raw) +
-      '">' + BoUi.escapeHtml(text) + '</dd>';
+    _libreCounter += 1;
+    const id = 'bo-libre-' + _libreCounter;
+    return '<dd><span class="bo-anamnesis-valor" id="' + id + '">' +
+      BoUi.escapeHtml(raw) + '</span></dd>';
   }
 
   function _par(label, valor) {
@@ -268,6 +271,7 @@
   // -----------------------------------------------------------------
 
   function renderAnamnesis(anamnesis) {
+    _libreCounter = 0;
     if (_esVacio(anamnesis)) {
       return '<section class="bo-anamnesis" data-bo-bloque="anamnesis">' +
         '<h2>Anamnesis</h2>' +
@@ -295,6 +299,55 @@
       '<h2>Anamnesis</h2>' +
       cuerpo +
     '</section>';
+  }
+
+  // -----------------------------------------------------------------
+  // Post-render: marca campos libres que desbordan e inyecta botón
+  // "Ver más / Ver menos". Idempotente: re-ejecutable tras resize sin
+  // duplicar botones; respeta el estado "expandido" del usuario.
+  //
+  // Estrategia: el CSS aplica el clamp salvo cuando data-bo-libre es
+  // "expandido". Eliminamos data-bo-libre antes de medir para limpiar
+  // un posible "truncado" obsoleto: si el span ya no desborda (resize a
+  // mayor ancho), el atributo se quedaría rancio. La medición es válida
+  // tanto sin atributo como con "truncado" porque el clamp sigue activo.
+  // -----------------------------------------------------------------
+
+  function _marcarDesbordados(root) {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+    if (typeof document === 'undefined') return;
+    const spans = root.querySelectorAll('.bo-anamnesis-valor');
+    for (const span of spans) {
+      const estado = span.getAttribute('data-bo-libre');
+      // Política de "respeto al usuario": si ya lo abrió, no lo cerramos
+      // automáticamente, ni siquiera si tras un resize el texto cabría sin
+      // clamp. Trade-off conocido: queda un botón "Ver menos" colgado en un
+      // span que no desbordaría — funcionalmente inocuo (clamp release =
+      // "unset" da el mismo render que ausencia de clamp en texto que cabe)
+      // y cuando el usuario lo cierre, _marcarDesbordados eliminará el botón
+      // en la siguiente pasada al ver que ya no desborda.
+      if (estado === 'expandido') continue;
+      span.removeAttribute('data-bo-libre');
+      const desborda = span.scrollHeight > span.clientHeight + 1;
+      const dd = span.parentElement;
+      if (!dd) continue;
+      if (!span.id) continue; // sin id no podemos referenciarlo desde aria-controls; saltamos
+      let toggle = dd.querySelector('.bo-libre-toggle');
+      if (desborda) {
+        span.setAttribute('data-bo-libre', 'truncado');
+        if (!toggle) {
+          toggle = document.createElement('button');
+          toggle.type = 'button';
+          toggle.className = 'bo-libre-toggle';
+          toggle.setAttribute('aria-expanded', 'false');
+          toggle.setAttribute('aria-controls', span.id);
+          toggle.textContent = 'Ver más';
+          dd.appendChild(toggle);
+        }
+      } else if (toggle) {
+        toggle.remove();
+      }
+    }
   }
 
   // -----------------------------------------------------------------
@@ -875,6 +928,81 @@
     if (root.dataset) root.dataset.boBound = '1';
   }
 
+  // Delegación de clicks en `.bo-libre-toggle` dentro de `root`. Idempotente
+  // vía data-bo-bound-libre. Cada click alterna data-bo-libre del span
+  // controlado (truncado ↔ expandido), aria-expanded del botón y el texto
+  // del botón ("Ver más" ↔ "Ver menos"). El span destino se localiza por
+  // aria-controls; si el id no resuelve (DOM mutó), no rompemos.
+  function conectarToggleLibre(root) {
+    if (!root || typeof root.addEventListener !== 'function') return;
+    if (root.dataset && root.dataset.boBoundLibre === '1') return;
+    root.addEventListener('click', function (ev) {
+      const btn = ev.target && ev.target.closest && ev.target.closest('.bo-libre-toggle');
+      if (!btn || !root.contains(btn)) return;
+      const id = btn.getAttribute('aria-controls');
+      if (!id) return;
+      const span = root.querySelector('#' + (typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(id) : id));
+      if (!span) return;
+      const expandido = span.getAttribute('data-bo-libre') === 'expandido';
+      span.setAttribute('data-bo-libre', expandido ? 'truncado' : 'expandido');
+      btn.setAttribute('aria-expanded', expandido ? 'false' : 'true');
+      btn.textContent = expandido ? 'Ver más' : 'Ver menos';
+    });
+    if (root.dataset) root.dataset.boBoundLibre = '1';
+  }
+
+  // Auto-expand al buscar (Ctrl+F): cuando el navegador resalta un match
+  // dentro de un span clamped, la selección cae en zona oculta. Detectamos
+  // selección con texto, miramos el ancestro `.bo-anamnesis-valor` y si está
+  // truncado lo expandimos (sincronizando aria + texto del botón hermano).
+  // Listener global a `document`: idempotente vía variable module-level.
+  let _selectionListenerBound = false;
+  function _conectarSelectionAutoExpand() {
+    if (typeof document === 'undefined') return;
+    if (_selectionListenerBound) return;
+    _selectionListenerBound = true;
+    document.addEventListener('selectionchange', function () {
+      const sel = document.getSelection && document.getSelection();
+      if (!sel || !String(sel).length) return;
+      const node = sel.anchorNode;
+      if (!node) return;
+      const el = node.nodeType === 1 ? node : node.parentElement;
+      if (!el || typeof el.closest !== 'function') return;
+      const span = el.closest('.bo-anamnesis-valor[data-bo-libre="truncado"]');
+      if (!span) return;
+      span.setAttribute('data-bo-libre', 'expandido');
+      const dd = span.parentElement;
+      const toggle = dd && dd.querySelector('.bo-libre-toggle');
+      if (toggle) {
+        toggle.setAttribute('aria-expanded', 'true');
+        toggle.textContent = 'Ver menos';
+      }
+    });
+  }
+
+  // Re-medir overflow cuando cambie el ancho del contenedor de anamnesis
+  // (resize de ventana, sidebar abierto/cerrado en el futuro). Debounced
+  // con requestAnimationFrame para no machacar al usuario al arrastrar.
+  // _marcarDesbordados es idempotente y respeta data-bo-libre=expandido,
+  // así que la re-evaluación nunca colapsa lo que el usuario abrió.
+  function _observarResize(root) {
+    if (!root || typeof ResizeObserver === 'undefined') return;
+    if (root.dataset && root.dataset.boResizeObserved === '1') return;
+    let pending = null;
+    const observer = new ResizeObserver(function () {
+      if (pending) return;
+      const raf = (typeof requestAnimationFrame === 'function')
+        ? requestAnimationFrame
+        : function (cb) { return setTimeout(cb, 16); };
+      pending = raf(function () {
+        pending = null;
+        _marcarDesbordados(root);
+      });
+    });
+    observer.observe(root);
+    if (root.dataset) root.dataset.boResizeObserved = '1';
+  }
+
   // PDFs del menú viven en el bucket privado `menus-pdf`. Firmamos al click
   // con createSignedUrl(path, 60, { download: filename }) y navegamos con
   // location.href — window.open tras await lo bloquea Safari (ver
@@ -1003,7 +1131,13 @@
     const tim = document.getElementById('timeline');
     const acc = document.getElementById('acciones');
     if (cab) cab.innerHTML = renderCabecera(datos.paciente);
-    if (ana) ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
+    _conectarSelectionAutoExpand();
+    if (ana) {
+      ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
+      _marcarDesbordados(ana);
+      conectarToggleLibre(ana);
+      _observarResize(ana);
+    }
     if (evo) {
       evo.innerHTML = renderEvolucion(
         datos.revisiones,
@@ -1042,7 +1176,11 @@
     arrancar,
     // Expuestas para tests (y posibles consumidores futuros del wiring).
     _manejarClickAccion: _manejarClickAccion,
-    conectarClickCopiar: conectarClickCopiar
+    _marcarDesbordados: _marcarDesbordados,
+    conectarClickCopiar: conectarClickCopiar,
+    conectarToggleLibre: conectarToggleLibre,
+    _conectarSelectionAutoExpand: _conectarSelectionAutoExpand,
+    _observarResize: _observarResize
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
