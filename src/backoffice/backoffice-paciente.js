@@ -1507,7 +1507,7 @@
     est.className = 'bo-estado is-error';
     est.innerHTML = 'Paciente no encontrado. ' +
       '<a class="bo-fila-link" href="/backoffice/pacientes/">Volver a Pacientes</a>.';
-    for (const id of ['cabecera', 'anamnesis', 'evolucion', 'checkins', 'pagos', 'timeline', 'acciones']) {
+    for (const id of ['cabecera', 'panel-anamnesis', 'panel-evolucion', 'panel-adherencia', 'panel-pagos', 'panel-timeline', 'acciones']) {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     }
@@ -1542,11 +1542,11 @@
     if (est) { est.className = 'bo-estado'; est.textContent = ''; }
 
     const cab = document.getElementById('cabecera');
-    const ana = document.getElementById('anamnesis');
-    const evo = document.getElementById('evolucion');
-    const chk = document.getElementById('checkins');
-    const pag = document.getElementById('pagos');
-    const tim = document.getElementById('timeline');
+    const ana = document.getElementById('panel-anamnesis');
+    const evo = document.getElementById('panel-evolucion');
+    const chk = document.getElementById('panel-adherencia');
+    const pag = document.getElementById('panel-pagos');
+    const tim = document.getElementById('panel-timeline');
     const acc = document.getElementById('acciones');
     if (cab) cab.innerHTML = renderCabecera(datos.paciente);
     _conectarSelectionAutoExpand();
@@ -1584,6 +1584,12 @@
       });
       conectarClickCopiar(acc);
     }
+
+    // Wiring de pestañas: delegación + activación inicial. Idempotente.
+    _conectarTabs(document);
+    const params = new URLSearchParams((typeof location !== 'undefined' && location.search) || '');
+    const slugInicial = slugTabValido(params.get('tab')) || TAB_SLUGS[0];
+    _activarTab(slugInicial);
   }
 
   // -----------------------------------------------------------------

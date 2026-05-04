@@ -603,9 +603,9 @@ test("build: /backoffice/paciente/index.html existe con noindex,nofollow", () =>
   assert.match(html, /<meta name="robots" content="noindex, nofollow">/);
 });
 
-test("build: /backoffice/paciente/ contiene los 5 contenedores (estado, cabecera, anamnesis, timeline, acciones)", () => {
+test("build: /backoffice/paciente/ contiene los 5 contenedores (estado, cabecera, panel-anamnesis, panel-timeline, acciones)", () => {
   const html = fs.readFileSync(path.join(SITE, "backoffice", "paciente", "index.html"), "utf8");
-  for (const id of ["estado-paciente", "cabecera", "anamnesis", "timeline", "acciones"]) {
+  for (const id of ["estado-paciente", "cabecera", "panel-anamnesis", "panel-timeline", "acciones"]) {
     assert.match(html, new RegExp(`<div id="${id}"`), `falta contenedor #${id}`);
   }
 });
