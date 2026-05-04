@@ -979,6 +979,27 @@ test("resolveInitialView: isLocked=true ignora el hash y fuerza 'today'", () => 
   assert.equal(resolveInitialView({ hash: "#compra", isLocked: true }), "today");
 });
 
+test("resolveInitialView: hash vacío + lastView='compra' → 'compra' (fallback localStorage)", () => {
+  // iOS PWA: tras kill+relaunch el hash se pierde porque arranca desde el
+  // start_url del manifest. localStorage es el cinturón de seguridad.
+  assert.equal(resolveInitialView({ hash: "", lastView: "compra", isLocked: false }), "compra");
+});
+
+test("resolveInitialView: hash gana sobre lastView (más reciente)", () => {
+  // Si el usuario está navegando, location.hash refleja la intención actual;
+  // localStorage puede ser más antiguo. El hash manda.
+  assert.equal(resolveInitialView({ hash: "#compra", lastView: "today", isLocked: false }), "compra");
+});
+
+test("resolveInitialView: lastView desconocido o ausente → 'today'", () => {
+  assert.equal(resolveInitialView({ hash: "", lastView: "today", isLocked: false }), "today");
+  assert.equal(resolveInitialView({ hash: "", lastView: null, isLocked: false }), "today");
+});
+
+test("resolveInitialView: lastView='compra' pero isLocked=true → 'today' (gate sigue mandando)", () => {
+  assert.equal(resolveInitialView({ hash: "", lastView: "compra", isLocked: true }), "today");
+});
+
 // ---------------------------- shouldCelebrarMilestone --------------------
 
 test("shouldCelebrarMilestone: onboarding aún no visto → null (no apilar modales)", () => {
