@@ -47,6 +47,111 @@
   let _libreCounter = 0;
 
   // -----------------------------------------------------------------
+  // Tabs de la ficha (slug helpers + activación)
+  // -----------------------------------------------------------------
+
+  // Slugs canónicos en orden vertical (= orden histórico de los bloques).
+  // Pegar al orden visible facilita aprender muscle memory.
+  const TAB_SLUGS = ['anamnesis', 'evolucion', 'adherencia', 'pagos', 'timeline'];
+
+  // Devuelve el slug si pertenece al catálogo (case-sensitive, ASCII), o null.
+  // Trim previo para tolerar URLs copiadas con espacios.
+  function slugTabValido(slug) {
+    if (typeof slug !== 'string') return null;
+    const s = slug.trim();
+    return TAB_SLUGS.indexOf(s) >= 0 ? s : null;
+  }
+
+  // Construye el querystring resultante de fijar tab=<slug> sin tocar el
+  // resto. Recibe el `currentSearch` como argumento para mantenerla pura
+  // (los tests no necesitan tocar window.location).
+  function urlConTab(slug, currentSearch) {
+    const raw = currentSearch == null ? '' : String(currentSearch);
+    const norm = raw.charAt(0) === '?' ? raw.slice(1) : raw;
+    const params = new URLSearchParams(norm);
+    params.set('tab', slug);
+    return '?' + params.toString();
+  }
+
+  // Calcula el slug vecino dado un array ordenado, el slug actual y la
+  // dirección. next/prev envuelven los extremos. Si actual no está en el
+  // array, devuelve el primero. Dirección desconocida → actual.
+  function siguienteTab(slugs, actual, dir) {
+    if (!Array.isArray(slugs) || slugs.length === 0) return actual;
+    if (dir === 'first') return slugs[0];
+    if (dir === 'last')  return slugs[slugs.length - 1];
+    const idx = slugs.indexOf(actual);
+    if (idx < 0) return slugs[0];
+    if (dir === 'next') return slugs[(idx + 1) % slugs.length];
+    if (dir === 'prev') return slugs[(idx - 1 + slugs.length) % slugs.length];
+    return actual;
+  }
+
+  // Aplica el slug activo al DOM: aria-selected, tabindex, hidden de paneles,
+  // history.replaceState con la URL nueva, y scrollIntoView del tab activo.
+  // Slug inválido → no-op (defensivo, evita corrupción si llega ?tab=foo).
+  function _activarTab(slug) {
+    if (typeof document === 'undefined') return;
+    if (!slugTabValido(slug)) return;
+    const tabs = document.querySelectorAll('[role="tab"]');
+    const panels = document.querySelectorAll('[role="tabpanel"]');
+    let activeBtn = null;
+    for (const tab of tabs) {
+      const isActive = tab.dataset && tab.dataset.boTab === slug;
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      tab.setAttribute('tabindex', isActive ? '0' : '-1');
+      if (isActive) activeBtn = tab;
+    }
+    for (const panel of panels) {
+      panel.hidden = !(panel.dataset && panel.dataset.boPanel === slug);
+    }
+    if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
+      const search = (typeof location !== 'undefined' && location.search) || '';
+      history.replaceState({}, '', urlConTab(slug, search));
+    }
+    if (activeBtn && typeof activeBtn.scrollIntoView === 'function') {
+      activeBtn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    }
+  }
+
+  // Wiring delegado del tablist. Idempotente vía data-bo-tabs-bound. Click
+  // sobre un [role="tab"] activa su pestaña; teclado en el tablist navega
+  // con flechas/Home/End usando siguienteTab.
+  function _conectarTabs(root) {
+    if (!root || typeof root.getElementById !== 'function') return;
+    const tablist = root.getElementById('tabs');
+    if (!tablist) return;
+    if (tablist.dataset && tablist.dataset.boTabsBound === '1') return;
+
+    tablist.addEventListener('click', function (ev) {
+      const btn = ev.target && ev.target.closest && ev.target.closest('[role="tab"]');
+      if (!btn || !tablist.contains(btn)) return;
+      const slug = slugTabValido(btn.dataset && btn.dataset.boTab);
+      if (slug) _activarTab(slug);
+    });
+
+    tablist.addEventListener('keydown', function (ev) {
+      let dir = null;
+      if (ev.key === 'ArrowRight')      dir = 'next';
+      else if (ev.key === 'ArrowLeft')  dir = 'prev';
+      else if (ev.key === 'Home')       dir = 'first';
+      else if (ev.key === 'End')        dir = 'last';
+      if (!dir) return;
+      const activo = tablist.querySelector('[role="tab"][aria-selected="true"]');
+      const slugActual = activo && activo.dataset ? activo.dataset.boTab : TAB_SLUGS[0];
+      const nuevo = siguienteTab(TAB_SLUGS, slugActual, dir);
+      if (nuevo && nuevo !== slugActual) {
+        _activarTab(nuevo);
+        const nuevoBtn = tablist.querySelector('[data-bo-tab="' + nuevo + '"]');
+        if (nuevoBtn && typeof nuevoBtn.focus === 'function') nuevoBtn.focus();
+      }
+      ev.preventDefault();
+    });
+
+    if (tablist.dataset) tablist.dataset.boTabsBound = '1';
+  }
+
+  // -----------------------------------------------------------------
   // Helpers de formato de anamnesis
   // -----------------------------------------------------------------
 
@@ -1402,7 +1507,7 @@
     est.className = 'bo-estado is-error';
     est.innerHTML = 'Paciente no encontrado. ' +
       '<a class="bo-fila-link" href="/backoffice/pacientes/">Volver a Pacientes</a>.';
-    for (const id of ['cabecera', 'anamnesis', 'evolucion', 'checkins', 'pagos', 'timeline', 'acciones']) {
+    for (const id of ['cabecera', 'panel-anamnesis', 'panel-evolucion', 'panel-adherencia', 'panel-pagos', 'panel-timeline', 'acciones']) {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     }
@@ -1437,11 +1542,11 @@
     if (est) { est.className = 'bo-estado'; est.textContent = ''; }
 
     const cab = document.getElementById('cabecera');
-    const ana = document.getElementById('anamnesis');
-    const evo = document.getElementById('evolucion');
-    const chk = document.getElementById('checkins');
-    const pag = document.getElementById('pagos');
-    const tim = document.getElementById('timeline');
+    const ana = document.getElementById('panel-anamnesis');
+    const evo = document.getElementById('panel-evolucion');
+    const chk = document.getElementById('panel-adherencia');
+    const pag = document.getElementById('panel-pagos');
+    const tim = document.getElementById('panel-timeline');
     const acc = document.getElementById('acciones');
     if (cab) cab.innerHTML = renderCabecera(datos.paciente);
     _conectarSelectionAutoExpand();
@@ -1479,6 +1584,12 @@
       });
       conectarClickCopiar(acc);
     }
+
+    // Wiring de pestañas: delegación + activación inicial. Idempotente.
+    _conectarTabs(document);
+    const params = new URLSearchParams((typeof location !== 'undefined' && location.search) || '');
+    const slugInicial = slugTabValido(params.get('tab')) || TAB_SLUGS[0];
+    _activarTab(slugInicial);
   }
 
   // -----------------------------------------------------------------
@@ -1503,7 +1614,14 @@
     _resolverFechaAlta: _resolverFechaAlta,
     construirHistorialCheckins: construirHistorialCheckins,
     renderCheckins: renderCheckins,
-    conectarSwitcherCheckins: conectarSwitcherCheckins
+    conectarSwitcherCheckins: conectarSwitcherCheckins,
+    // Tabs de la ficha
+    _TAB_SLUGS: TAB_SLUGS,
+    slugTabValido: slugTabValido,
+    urlConTab: urlConTab,
+    siguienteTab: siguienteTab,
+    _activarTab: _activarTab,
+    _conectarTabs: _conectarTabs
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

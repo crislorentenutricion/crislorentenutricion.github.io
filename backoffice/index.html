@@ -427,6 +427,45 @@
       }
     }
 
+    /* Tabs del detalle de paciente — fila scroll-x silenciosa con borde
+       inferior. La pestaña activa se identifica por el subrayado verde +
+       font-weight; nunca solo por color. Mobile: scroll-x natural; al
+       activar un tab, _activarTab le hace scrollIntoView({ inline: 'center' }). */
+    .bo-tabs {
+      display: flex;
+      gap: 0.25rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      border-bottom: 1px solid var(--color-green-glow);
+      margin-bottom: 18px;
+    }
+    .bo-tabs::-webkit-scrollbar { display: none; }
+    .bo-tabs button[role="tab"] {
+      font: inherit;
+      cursor: pointer;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: #55524a;
+      padding: 0.6rem 0.9rem;
+      white-space: nowrap;
+      transition: color 120ms ease, border-color 120ms ease;
+    }
+    .bo-tabs button[role="tab"]:hover {
+      color: var(--color-green-dark);
+    }
+    .bo-tabs button[role="tab"][aria-selected="true"] {
+      color: var(--color-green-dark);
+      border-bottom-color: var(--color-green);
+      font-weight: 600;
+    }
+    .bo-tabs button[role="tab"]:focus-visible {
+      outline: 2px solid var(--color-green);
+      outline-offset: 2px;
+    }
+    [role="tabpanel"][hidden] { display: none; }
+
     /* Detalle de paciente — cabecera, anamnesis, timeline, acciones. */
     .bo-cabecera {
       background: var(--color-white);

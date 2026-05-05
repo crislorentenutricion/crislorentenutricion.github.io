@@ -427,6 +427,45 @@
       }
     }
 
+    /* Tabs del detalle de paciente — fila scroll-x silenciosa con borde
+       inferior. La pestaña activa se identifica por el subrayado verde +
+       font-weight; nunca solo por color. Mobile: scroll-x natural; al
+       activar un tab, _activarTab le hace scrollIntoView({ inline: 'center' }). */
+    .bo-tabs {
+      display: flex;
+      gap: 0.25rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      border-bottom: 1px solid var(--color-green-glow);
+      margin-bottom: 18px;
+    }
+    .bo-tabs::-webkit-scrollbar { display: none; }
+    .bo-tabs button[role="tab"] {
+      font: inherit;
+      cursor: pointer;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: #55524a;
+      padding: 0.6rem 0.9rem;
+      white-space: nowrap;
+      transition: color 120ms ease, border-color 120ms ease;
+    }
+    .bo-tabs button[role="tab"]:hover {
+      color: var(--color-green-dark);
+    }
+    .bo-tabs button[role="tab"][aria-selected="true"] {
+      color: var(--color-green-dark);
+      border-bottom-color: var(--color-green);
+      font-weight: 600;
+    }
+    .bo-tabs button[role="tab"]:focus-visible {
+      outline: 2px solid var(--color-green);
+      outline-offset: 2px;
+    }
+    [role="tabpanel"][hidden] { display: none; }
+
     /* Detalle de paciente — cabecera, anamnesis, timeline, acciones. */
     .bo-cabecera {
       background: var(--color-white);
@@ -688,11 +727,21 @@
     
 <div id="estado-paciente" class="bo-estado" role="status" aria-live="polite"></div>
 <div id="cabecera"></div>
-<div id="anamnesis"></div>
-<div id="evolucion"></div>
-<div id="checkins"></div>
-<div id="pagos"></div>
-<div id="timeline"></div>
+
+<div id="tabs" class="bo-tabs" role="tablist" aria-label="Secciones del paciente">
+  <button id="tab-anamnesis"  type="button" role="tab" data-bo-tab="anamnesis"  aria-controls="panel-anamnesis"  aria-selected="false" tabindex="-1">Anamnesis</button>
+  <button id="tab-evolucion"  type="button" role="tab" data-bo-tab="evolucion"  aria-controls="panel-evolucion"  aria-selected="false" tabindex="-1">Evolución</button>
+  <button id="tab-adherencia" type="button" role="tab" data-bo-tab="adherencia" aria-controls="panel-adherencia" aria-selected="false" tabindex="-1">Adherencia</button>
+  <button id="tab-pagos"      type="button" role="tab" data-bo-tab="pagos"      aria-controls="panel-pagos"      aria-selected="false" tabindex="-1">Pagos</button>
+  <button id="tab-timeline"   type="button" role="tab" data-bo-tab="timeline"   aria-controls="panel-timeline"   aria-selected="false" tabindex="-1">Timeline</button>
+</div>
+
+<div id="panel-anamnesis"  role="tabpanel" data-bo-panel="anamnesis"  aria-labelledby="tab-anamnesis"  hidden></div>
+<div id="panel-evolucion"  role="tabpanel" data-bo-panel="evolucion"  aria-labelledby="tab-evolucion"  hidden></div>
+<div id="panel-adherencia" role="tabpanel" data-bo-panel="adherencia" aria-labelledby="tab-adherencia" hidden></div>
+<div id="panel-pagos"      role="tabpanel" data-bo-panel="pagos"      aria-labelledby="tab-pagos"      hidden></div>
+<div id="panel-timeline"   role="tabpanel" data-bo-panel="timeline"   aria-labelledby="tab-timeline"   hidden></div>
+
 <div id="acciones"></div>
 
 <script src="/backoffice/backoffice-paciente.js"></script>
