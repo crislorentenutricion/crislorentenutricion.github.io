@@ -90,3 +90,16 @@ test("backoffice: auth.js es fail-closed cuando cristinaEmail está vacío", () 
   assert.match(m[1], /render403\s*\(/, "rama !permitidoEmail no llama a render403 (gate abierto si falta el env)");
   assert.match(m[1], /mostrarNav\s*\(\s*false\s*\)/, "rama !permitidoEmail no oculta la nav");
 });
+
+test("backoffice: /backoffice/paciente/ contiene tablist con 5 tabs y 5 paneles", () => {
+  const file = path.join(SITE, "backoffice", "paciente", "index.html");
+  assert.ok(fs.existsSync(file), "falta _site/backoffice/paciente/index.html");
+  const html = fs.readFileSync(file, "utf8");
+  assert.match(html, /<div[^>]+id="tabs"[^>]+role="tablist"/, "falta el div#tabs role=tablist");
+  for (const slug of ["anamnesis", "evolucion", "adherencia", "pagos", "timeline"]) {
+    const reTab   = new RegExp(`data-bo-tab="${slug}"`);
+    const rePanel = new RegExp(`data-bo-panel="${slug}"`);
+    assert.match(html, reTab,   `falta el tab para ${slug}`);
+    assert.match(html, rePanel, `falta el panel para ${slug}`);
+  }
+});
