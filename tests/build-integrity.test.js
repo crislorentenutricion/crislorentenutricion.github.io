@@ -207,3 +207,23 @@ test("booking embed presente en home y 3 landings con plan correcto", () => {
     );
   }
 });
+
+test("booking embed carga booking-logic.js + booking.js exactamente una vez en las 4 páginas", () => {
+  const pages = [
+    "index.html",
+    "perdida-peso-sostenible/index.html",
+    "menu-mensual-personalizado/index.html",
+    "seguimiento/index.html",
+  ];
+
+  for (const page of pages) {
+    const html = fs.readFileSync(path.join(SITE, page), "utf8");
+    assert.match(html, /<script src="\/js\/booking-logic\.js" defer><\/script>/, `${page}: falta booking-logic.js`);
+    assert.match(html, /<script src="\/js\/booking\.js" defer><\/script>/, `${page}: falta booking.js`);
+    // Y solo una vez cada uno (sin doble carga si alguien re-incluye sin querer).
+    const logicCount = (html.match(/\/js\/booking-logic\.js/g) || []).length;
+    const bookingCount = (html.match(/\/js\/booking\.js(?!\w)/g) || []).length;
+    assert.equal(logicCount, 1, `${page}: booking-logic.js cargado ${logicCount} veces, esperado 1`);
+    assert.equal(bookingCount, 1, `${page}: booking.js cargado ${bookingCount} veces, esperado 1`);
+  }
+});
