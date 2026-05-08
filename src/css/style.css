@@ -488,19 +488,6 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   color: var(--color-green-dark);
   font-weight: var(--font-weight-bold);
 }
-.hero-price-hint .price-strike {
-  text-decoration: line-through;
-  text-decoration-color: var(--color-gray-light);
-  text-decoration-thickness: 2px;
-  color: var(--color-gray-light);
-  margin-right: 4px;
-}
-.hero-price-hint .price-promo {
-  color: var(--color-green-dark);
-  font-size: 1.2rem;
-  font-weight: var(--font-weight-bold);
-  margin-right: 4px;
-}
 .hero-img-placeholder {
   background: linear-gradient(135deg, var(--color-green-light), var(--color-green-muted));
   border-radius: var(--border-radius-lg); height: 400px; width: 100%;
@@ -641,7 +628,6 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   line-height: 1;
 }
 .period { font-size: 1rem; color: var(--color-gray); margin-left: 4px; }
-.plan-subprice { color: var(--color-green); font-size: 0.95rem; margin-top: -0.75rem; margin-bottom: 1.25rem; }
 .plan-features { flex: 1; margin-bottom: 28px; display: flex; flex-direction: column; gap: 12px; }
 .plan-features li { padding-left: 28px; position: relative; font-size: 0.92rem; color: var(--color-gray); line-height: 1.5; }
 .plan-features li::before {
@@ -663,14 +649,6 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .plan-featured::before {
   background: linear-gradient(90deg, var(--color-green), #6ba37a, var(--color-green-dark));
   height: 5px;
-}
-.plan-badge {
-  display: inline-block; background: linear-gradient(135deg, var(--color-green), var(--color-green-dark));
-  color: var(--color-white);
-  font-size: 0.72rem; font-weight: var(--font-weight-bold);
-  padding: 6px 16px; border-radius: 100px; margin-bottom: 16px;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  box-shadow: 0 2px 8px var(--color-green-glow);
 }
 .plans-note { text-align: center; color: var(--color-gray); font-size: 0.88rem; margin-top: 28px; }
 

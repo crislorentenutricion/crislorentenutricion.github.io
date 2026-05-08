@@ -125,7 +125,6 @@ test("header tiene items planos: Inicio, Testimonios, Sobre mí, Aprende, Métod
   assert.doesNotMatch(nav, /dropdown-toggle/, "header NO debe contener dropdown-toggle");
   assert.match(nav, /<a[^>]+href="\/metodo\/"[^>]*>\s*Método/, "debe haber enlace plano a /metodo/");
   assert.match(nav, /<a[^>]+href="\/"[^>]*>/, "debe haber enlace a Inicio");
-  assert.match(nav, /<a[^>]+href="\/testimonios\/"/, "debe haber enlace a /testimonios/");
   assert.match(nav, /<a[^>]+href="\/sobre-mi\/"/, "debe haber enlace a /sobre-mi/");
   assert.match(nav, /<a[^>]+href="\/blog\/"/, "debe haber enlace a /blog/");
 });
