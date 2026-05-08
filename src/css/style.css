@@ -363,63 +363,6 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
 .menu-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
 .menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; transform: scaleX(0); }
 .menu-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
-.has-dropdown { position: relative; }
-.has-dropdown > .dropdown-toggle {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: none; border: 0; cursor: pointer; padding: 0;
-  font: inherit; font-size: 0.95rem; font-family: inherit;
-  color: var(--color-black);
-  position: relative;
-  transition: color var(--transition-fast), font-weight var(--transition-fast);
-}
-.has-dropdown > .dropdown-toggle::after {
-  content: ''; position: absolute; bottom: -6px; left: 0; width: 0; height: 2px;
-  background-color: var(--color-green);
-  transition: width var(--transition-medium); border-radius: 1px;
-}
-.has-dropdown:hover > .dropdown-toggle::after,
-.has-dropdown.is-active-section > .dropdown-toggle::after { width: 100%; }
-.has-dropdown:hover > .dropdown-toggle,
-.has-dropdown.is-active-section > .dropdown-toggle { color: var(--color-green); }
-.has-dropdown.is-active-section > .dropdown-toggle { font-weight: var(--font-weight-semibold); }
-.dropdown-caret {
-  display: inline-block; width: 7px; height: 7px;
-  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-  transform: rotate(45deg) translate(-2px, -2px);
-  transition: transform var(--transition-fast);
-}
-.has-dropdown.is-open > .dropdown-toggle .dropdown-caret {
-  transform: rotate(-135deg) translate(-2px, -2px);
-}
-.main-nav .dropdown-menu {
-  position: absolute; top: calc(100% + 14px); left: 50%;
-  transform: translateX(-50%);
-  background-color: var(--color-white);
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius-md);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.10);
-  padding: 8px 0; min-width: 260px;
-  list-style: none; margin: 0;
-  display: none; gap: 0;
-  flex-direction: column; align-items: stretch;
-  z-index: 110;
-}
-.main-nav .has-dropdown:hover > .dropdown-menu,
-.main-nav .has-dropdown:focus-within > .dropdown-menu,
-.main-nav .has-dropdown.is-open > .dropdown-menu { display: block; }
-.main-nav .dropdown-menu li { display: block; border: 0; }
-.main-nav .dropdown-menu a {
-  display: block;
-  padding: 10px 20px;
-  font-size: 0.95rem;
-  color: var(--color-black);
-  white-space: nowrap;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-.main-nav .dropdown-menu a::after { display: none; }
-.main-nav .dropdown-menu a:hover { background-color: var(--color-cream); color: var(--color-green); }
-.main-nav .dropdown-menu a.active { color: var(--color-green); font-weight: var(--font-weight-semibold); }
-
 /* ========================
    HERO — FULL IMPACT
    ======================== */
@@ -1505,26 +1448,6 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
     white-space: normal;
     line-height: 1.3;
     box-shadow: 0 8px 20px rgba(74,124,89,0.25);
-  }
-  .main-nav .has-dropdown > .dropdown-toggle {
-    width: 100%; justify-content: space-between;
-    padding: 14px 4px; font-size: 1rem;
-    min-height: 48px; line-height: 1.4;
-  }
-  .main-nav .has-dropdown > .dropdown-toggle::after { display: none; }
-  .main-nav .dropdown-menu {
-    position: static; transform: none;
-    box-shadow: none; border: 0; background: transparent;
-    padding: 0 0 8px 16px; min-width: 0;
-    border-radius: 0;
-  }
-  .main-nav .has-dropdown:hover > .dropdown-menu,
-  .main-nav .has-dropdown:focus-within > .dropdown-menu { display: none; }
-  .main-nav .has-dropdown.is-open > .dropdown-menu { display: block; }
-  .main-nav .dropdown-menu a {
-    padding: 12px 4px;
-    min-height: 44px;
-    white-space: normal;
   }
   .plan-featured { transform: none; }
   .plan-featured:hover { transform: translateY(-6px); }
