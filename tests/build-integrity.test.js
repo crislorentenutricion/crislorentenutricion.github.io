@@ -179,3 +179,31 @@ test("enlaces internos en páginas core apuntan a páginas existentes", () => {
   }
   scan(SITE);
 });
+
+test("booking embed presente en home y 3 landings con plan correcto", () => {
+  const expected = [
+    { file: "index.html",                              plan: "Asesoría nutricional personalizada" },
+    { file: "perdida-peso-sostenible/index.html",      plan: "Pérdida de peso sostenible" },
+    { file: "menu-mensual-personalizado/index.html",   plan: "Menú mensual personalizado" },
+    { file: "seguimiento/index.html",                  plan: "Seguimiento" },
+  ];
+
+  for (const { file, plan } of expected) {
+    const html = fs.readFileSync(path.join(SITE, file), "utf8");
+
+    // Una sola sección id="formulario-contacto"
+    const matches = html.match(/id="formulario-contacto"/g) || [];
+    assert.equal(matches.length, 1, `${file}: se esperaba 1 #formulario-contacto, encontrado ${matches.length}`);
+
+    // booking-shell con data-booking-mock
+    assert.match(html, /class="booking-shell"\s+data-booking-mock/, `${file}: falta booking-shell[data-booking-mock]`);
+
+    // hidden input con el plan correcto (string-match, sin regex para evitar escapes)
+    const planLineMatch = html.match(/<input[^>]*id="plan-elegido"[^>]*>/);
+    assert.ok(planLineMatch, `${file}: no se encontró <input id="plan-elegido">`);
+    assert.ok(
+      planLineMatch[0].includes(`value="${plan}"`),
+      `${file}: #plan-elegido debe tener value="${plan}", encontrado: ${planLineMatch[0]}`
+    );
+  }
+});
