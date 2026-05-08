@@ -112,21 +112,22 @@ test("stub de redirect /servicios/ mantiene canonical + meta refresh", () => {
   assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
 });
 
-test("header tiene dropdown 'Servicios' con Método, Pérdida de peso y Menú mensual", () => {
-  // Las landings /perdida-peso-sostenible/ y /menu-mensual-personalizado/ son destinos de
-  // tráfico pagado (Google Ads) y SEO, pero estaban huérfanas del menú principal: el visitante
-  // que aterrizaba no podía navegar a las otras. Encajadas como dropdown bajo "Servicios"
-  // (que sustituye a "Método" como ítem plano; Método sigue accesible dentro del dropdown).
+test("header tiene items planos: Inicio, Testimonios, Sobre mí, Aprende, Método y CTA", () => {
+  // Tras eliminar el dropdown 'Servicios', el header tiene 5 items planos + CTA.
+  // Método pasa a ser item de primer nivel, las landings SEO quedan accesibles
+  // desde sus propias páginas (picker embotrado) y desde el footer.
   const file = path.join(SITE, "index.html");
   const html = fs.readFileSync(file, "utf8");
   const navMatch = html.match(/<nav class="main-nav"[\s\S]*?<\/nav>/);
   assert.ok(navMatch, "no se encontró <nav.main-nav> en la home");
   const nav = navMatch[0];
-  assert.match(nav, /class="dropdown-toggle"[^>]*aria-haspopup="menu"[^>]*aria-expanded="false"/, "falta el toggle del dropdown con aria-haspopup");
-  assert.match(nav, /class="dropdown-toggle"[\s\S]{0,200}?Servicios/, "el toggle no tiene la etiqueta 'Servicios'");
-  assert.match(nav, /<a[^>]+href="\/metodo\/"[^>]*>\s*Método/, "falta enlace Método en el dropdown");
-  assert.match(nav, /<a[^>]+href="\/perdida-peso-sostenible\/"/, "falta enlace a /perdida-peso-sostenible/");
-  assert.match(nav, /<a[^>]+href="\/menu-mensual-personalizado\/"/, "falta enlace a /menu-mensual-personalizado/");
+  assert.doesNotMatch(nav, /class="has-dropdown/, "header NO debe contener has-dropdown");
+  assert.doesNotMatch(nav, /dropdown-toggle/, "header NO debe contener dropdown-toggle");
+  assert.match(nav, /<a[^>]+href="\/metodo\/"[^>]*>\s*Método/, "debe haber enlace plano a /metodo/");
+  assert.match(nav, /<a[^>]+href="\/"[^>]*>/, "debe haber enlace a Inicio");
+  assert.match(nav, /<a[^>]+href="\/testimonios\/"/, "debe haber enlace a /testimonios/");
+  assert.match(nav, /<a[^>]+href="\/sobre-mi\/"/, "debe haber enlace a /sobre-mi/");
+  assert.match(nav, /<a[^>]+href="\/blog\/"/, "debe haber enlace a /blog/");
 });
 
 test("ninguna página HTML del site contiene 'asesoría alimentaria' (marca es 'nutricional')", () => {
