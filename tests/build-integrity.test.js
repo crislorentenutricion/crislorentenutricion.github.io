@@ -228,3 +228,28 @@ test("booking embed carga booking-logic.js + booking.js exactamente una vez en l
     assert.equal(bookingCount, 1, `${page}: booking.js cargado ${bookingCount} veces, esperado 1`);
   }
 });
+
+test("header sin dropdown Servicios y con Método como item plano", () => {
+  // Comprueba en una página representativa (home).
+  const html = fs.readFileSync(path.join(SITE, "index.html"), "utf8");
+
+  // Aislar el bloque <header>...</header> para no falsear con menciones legítimas
+  // de "dropdown" en otros sitios (p.ej. CSS comments) — no debería haberlas, pero
+  // restringir el match al header es más robusto.
+  const headerMatch = html.match(/<header class="site-header">[\s\S]*?<\/header>/);
+  assert.ok(headerMatch, "no se encuentra <header class=\"site-header\">");
+  const header = headerMatch[0];
+
+  assert.doesNotMatch(header, /class="has-dropdown/, "header NO debe contener has-dropdown");
+  assert.doesNotMatch(header, /dropdown-toggle/, "header NO debe contener dropdown-toggle");
+  assert.doesNotMatch(header, /dropdown-menu/, "header NO debe contener dropdown-menu");
+
+  // Métodos (en singular: link a /metodo/) sí debe aparecer en el header.
+  assert.match(header, /href="\/metodo\/"/, "header debe enlazar a /metodo/");
+
+  // Las landings NO deben aparecer en el header (convención web-landings-seo.md).
+  assert.doesNotMatch(header, /href="\/perdida-peso-sostenible\/"/, "header NO debe enlazar landings SEO");
+  assert.doesNotMatch(header, /href="\/menu-mensual-personalizado\/"/, "header NO debe enlazar landings SEO");
+  // /seguimiento/ tampoco está en el header (sigue accesible desde footer + cta-seguimiento).
+  assert.doesNotMatch(header, /href="\/seguimiento\/"/, "header NO debe enlazar /seguimiento/");
+});
