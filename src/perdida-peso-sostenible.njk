@@ -3,7 +3,6 @@ layout: layouts/base.njk
 title: "Pérdida de peso sostenible — sin dietas restrictivas, sin pasar hambre"
 description: "Pierde peso de forma sostenible con un menú mensual personalizado, lista de la compra y seguimiento real. Sin dietas estrictas, sin rebotes. Primer mes 15 €."
 permalink: /perdida-peso-sostenible/
-navActive: perdida-peso
 preloadImage: /img/hero/perdida-peso.jpg
 ---
 {% from "testimonials.njk" import testimonialsGrid %}
@@ -120,7 +119,7 @@ preloadImage: /img/hero/perdida-peso.jpg
       <h1 class="hero-animate hero-animate-2">Pierde peso <span class="gradient-text">sin pasar hambre</span> y sin dietas que odias</h1>
       <p class="hero-subtitle hero-animate hero-animate-3">Si has probado de todo y siempre acabas dejándolo, el problema no es tu fuerza de voluntad. Es que nadie te ha dado un plan pensado para tu vida real.</p>
       <div class="hero-animate hero-animate-4">
-        <a href="/#formulario-contacto" class="btn btn-primary btn-lg plan-btn" data-plan="Pérdida de peso sostenible">Reserva tu valoración gratuita&nbsp;→</a>
+        <a href="#formulario-contacto" class="btn btn-primary btn-lg plan-btn" data-plan="Pérdida de peso sostenible">Reserva tu valoración gratuita&nbsp;→</a>
         <p class="hero-price-hint"><span class="price-strike">40 €/mes</span> <strong class="price-promo">15 €</strong> el primer mes · Sin permanencia</p>
         <a href="/testimonios/" class="hero-social-proof" aria-label="5 de 5 estrellas en reseñas verificadas de Google">
           <span class="hero-social-stars" aria-hidden="true">★★★★★</span>
@@ -225,6 +224,9 @@ preloadImage: /img/hero/perdida-peso.jpg
   </div>
 </section>
 
+{% set bookingPlan = "Pérdida de peso sostenible" %}
+{% include "booking-embed.njk" %}
+
 {# ── PREGUNTAS FRECUENTES ── #}
 <section class="section section-cream">
   <div class="container">
@@ -263,6 +265,6 @@ preloadImage: /img/hero/perdida-peso.jpg
   <div class="container text-center reveal">
     <h2>¿Quieres dejar de hacer dietas que no funcionan?</h2>
     <p class="section-subtitle" style="margin-bottom:32px;">Reserva una valoración gratuita y hablamos de lo que necesitas. Sin compromiso.</p>
-    <a href="/#formulario-contacto" class="btn btn-primary plan-btn" data-plan="Pérdida de peso sostenible">Reserva tu valoración gratuita&nbsp;→</a>
+    <a href="#formulario-contacto" class="btn btn-primary plan-btn" data-plan="Pérdida de peso sostenible">Reserva tu valoración gratuita&nbsp;→</a>
   </div>
 </section>
