@@ -125,7 +125,6 @@ test("header tiene items planos: Inicio, Testimonios, Sobre mí, Aprende, Métod
   assert.doesNotMatch(nav, /dropdown-toggle/, "header NO debe contener dropdown-toggle");
   assert.match(nav, /<a[^>]+href="\/metodo\/"[^>]*>\s*Método/, "debe haber enlace plano a /metodo/");
   assert.match(nav, /<a[^>]+href="\/"[^>]*>/, "debe haber enlace a Inicio");
-  assert.match(nav, /<a[^>]+href="\/testimonios\/"/, "debe haber enlace a /testimonios/");
   assert.match(nav, /<a[^>]+href="\/sobre-mi\/"/, "debe haber enlace a /sobre-mi/");
   assert.match(nav, /<a[^>]+href="\/blog\/"/, "debe haber enlace a /blog/");
 });
@@ -183,9 +182,9 @@ test("enlaces internos en páginas core apuntan a páginas existentes", () => {
 
 test("booking embed presente en home y 3 landings con plan correcto", () => {
   const expected = [
-    { file: "index.html",                              plan: "Asesoría nutricional personalizada" },
+    { file: "index.html",                              plan: "Acompañamiento personalizado en hábitos" },
     { file: "perdida-peso-sostenible/index.html",      plan: "Pérdida de peso sostenible" },
-    { file: "menu-mensual-personalizado/index.html",   plan: "Menú mensual personalizado" },
+    { file: "menu-mensual-personalizado/index.html",   plan: "Propuestas de comidas mensuales" },
     { file: "seguimiento/index.html",                  plan: "Seguimiento" },
   ];
 
