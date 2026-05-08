@@ -185,7 +185,7 @@ test("booking embed presente en home y 3 landings con plan correcto", () => {
   const expected = [
     { file: "index.html",                              plan: "Acompañamiento personalizado en hábitos" },
     { file: "perdida-peso-sostenible/index.html",      plan: "Pérdida de peso sostenible" },
-    { file: "menu-mensual-personalizado/index.html",   plan: "Menú mensual personalizado" },
+    { file: "menu-mensual-personalizado/index.html",   plan: "Propuestas de comidas mensuales" },
     { file: "seguimiento/index.html",                  plan: "Seguimiento" },
   ];
 
