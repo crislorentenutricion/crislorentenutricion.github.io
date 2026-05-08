@@ -129,21 +129,10 @@
       <nav class="main-nav" id="main-nav" aria-label="Principal">
         <ul>
           <li><a href="/" class="active" aria-current="page">Inicio</a></li>
-          <li class="has-dropdown ">
-            <button type="button" class="dropdown-toggle" aria-haspopup="menu" aria-expanded="false" aria-controls="dropdown-servicios">
-              Servicios
-              <span class="dropdown-caret" aria-hidden="true"></span>
-            </button>
-            <ul class="dropdown-menu" id="dropdown-servicios" role="menu">
-              <li role="none"><a role="menuitem" href="/perdida-peso-sostenible/" >Pérdida de peso sostenible</a></li>
-              <li role="none"><a role="menuitem" href="/menu-mensual-personalizado/" >Menú mensual personalizado</a></li>
-              <li role="none"><a role="menuitem" href="/seguimiento/" >Seguimiento</a></li>
-              <li role="none"><a role="menuitem" href="/metodo/" >Método</a></li>
-            </ul>
-          </li>
           <li><a href="/testimonios/" >Testimonios</a></li>
           <li><a href="/sobre-mi/" >Sobre mí</a></li>
           <li><a href="/blog/" aria-label="Blog de nutrición" >Aprende</a></li>
+          <li><a href="/metodo/" >Método</a></li>
           <li class="nav-cta"><a href="/#formulario-contacto" class="btn btn-primary btn-sm">Valoración gratis</a></li>
         </ul>
       </nav>
@@ -400,7 +389,11 @@
 </div>
 
 
+
+
 <link rel="stylesheet" href="/css/booking.css">
+
+
 <section class="section section-white" id="formulario-contacto">
   <div class="container reveal">
     <div class="booking-intro">
@@ -471,7 +464,7 @@
                 <label for="booking-telefono">Teléfono (opcional)</label>
                 <input type="tel" id="booking-telefono" name="telefono" placeholder="612 345 678">
               </div>
-              <input type="hidden" id="plan-elegido" name="plan" value="">
+              <input type="hidden" id="plan-elegido" name="plan" value="Asesoría nutricional personalizada">
               <div class="booking-form-group">
                 <label for="booking-objetivo">¿Qué te gustaría mejorar? *</label>
                 <textarea id="booking-objetivo" name="objetivo" rows="3" required placeholder="Ej: quiero organizarme mejor con las comidas"></textarea>
@@ -508,6 +501,9 @@
     </div>
   </div>
 </section>
+<script src="/js/booking-logic.js" defer></script>
+<script src="/js/booking.js" defer></script>
+
 
 
 <section class="section section-cream">
@@ -519,17 +515,17 @@
           <li><span class="pain-icon">
 
 
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 19v1"/><path d="M8 14v1"/><path d="M16 19v1"/><path d="M16 14v1"/><path d="M12 21v1"/><path d="M12 16v1"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M8 19v1"/><path d="M8 14v1"/><path d="M16 19v1"/><path d="M16 14v1"/><path d="M12 21v1"/><path d="M12 16v1"/></svg>
 </span><p>Llevas años probando dietas y siempre acabas en el mismo punto de partida</p></li>
           <li><span class="pain-icon">
 
 
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 </span><p>No tienes tiempo de cocinar cosas complicadas ni de contar calorías todo el día</p></li>
           <li><span class="pain-icon">
 
 
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></svg>
 </span><p>El estrés te come por dentro y eso también se nota en cómo comes</p></li>
         </ul>
       </div>
@@ -539,17 +535,17 @@
           <li><span class="benefit-icon">
 
 
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
 </span><div><strong>Menú mensual adaptado a ti</strong><p>Recetas rápidas, lista de la compra incluida y sin alimentos que no te gustan</p></div></li>
           <li><span class="benefit-icon">
 
 
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
 </span><div><strong>Acompañamiento real</strong><p>Seguimiento por videollamada y WhatsApp para ajustar lo que necesites</p></div></li>
           <li><span class="benefit-icon">
 
 
-<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>
 </span><div><strong>Sin dietas estrictas</strong><p>Aprende a comer bien sin obsesionarte. Resultados sostenibles a largo plazo</p></div></li>
         </ul>
       </div>
@@ -748,8 +744,6 @@
   </div>
 </section>
 
-<script src="/js/booking-logic.js" defer></script>
-<script src="/js/booking.js" defer></script>
 
   </main>
     <div class="footer-accent"></div>

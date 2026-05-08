@@ -15,33 +15,6 @@ if (menuToggle && mainNav) {
   });
 }
 
-// Dropdown del navbar (Servicios)
-document.querySelectorAll('.has-dropdown > .dropdown-toggle').forEach(function(toggle) {
-  toggle.addEventListener('click', function(e) {
-    e.stopPropagation();
-    var parent = toggle.closest('.has-dropdown');
-    var isOpen = parent.classList.toggle('is-open');
-    toggle.setAttribute('aria-expanded', String(isOpen));
-  });
-});
-document.addEventListener('click', function(e) {
-  document.querySelectorAll('.has-dropdown.is-open').forEach(function(parent) {
-    if (!parent.contains(e.target)) {
-      parent.classList.remove('is-open');
-      var t = parent.querySelector('.dropdown-toggle');
-      if (t) t.setAttribute('aria-expanded', 'false');
-    }
-  });
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key !== 'Escape') return;
-  document.querySelectorAll('.has-dropdown.is-open').forEach(function(parent) {
-    parent.classList.remove('is-open');
-    var t = parent.querySelector('.dropdown-toggle');
-    if (t) { t.setAttribute('aria-expanded', 'false'); t.focus(); }
-  });
-});
-
 // Mark active nav link
 const currentPath = window.location.pathname;
 document.querySelectorAll('.main-nav a:not(.btn)').forEach(link => {
