@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="es">
   <title>Cris Lorente Nutrición — Blog</title>
-  <subtitle>Asesoría nutricional personalizada para mujeres. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
+  <subtitle>Acompañamiento online en hábitos alimentarios. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
   <link href="https://www.crislorentenutricion.com/feed.xml" rel="self"/>
   <link href="https://www.crislorentenutricion.com/"/>
   <updated>2026-04-16T00:00:00Z</updated>
@@ -67,7 +67,7 @@
     <published>2025-08-24T00:00:00Z</published>
     <id>https://www.crislorentenutricion.com/blog/educacion/comer-sano-no-es-comer-menos/</id>
     <category term="educacion" label="Educación"/>
-    <summary>Comer sano no es comer menos: es comer mejor. Una dietista online te explica qué significa realmente una alimentación saludable y cómo aplicarlo sin obsesionarte.</summary>
+    <summary>Comer sano no es comer menos: es comer mejor. Te explico qué significa realmente una alimentación saludable y cómo aplicarlo sin obsesionarte.</summary>
   </entry>
   <entry>
     <title>Tortilla de patata con verduras</title>
@@ -112,7 +112,7 @@
     <published>2025-06-20T00:00:00Z</published>
     <id>https://www.crislorentenutricion.com/blog/educacion/como-empezar-a-cuidarte-sin-dietas-ni-obsesiones/</id>
     <category term="educacion" label="Educación"/>
-    <summary>6 pasos para empezar a cuidarte sin dietas estrictas ni culpa. Guía de una nutricionista online para perder grasa respetando tu cuerpo y tu ritmo.</summary>
+    <summary>6 pasos para empezar a cuidarte sin dietas restrictivas ni culpa. Una guía para construir hábitos saludables respetando tu cuerpo y tu ritmo.</summary>
   </entry>
   <entry>
     <title>Agua de frutas</title>
@@ -184,6 +184,6 @@
     <published>2025-05-21T00:00:00Z</published>
     <id>https://www.crislorentenutricion.com/blog/cristifood/5-ensaladas-de-verano/</id>
     <category term="cristifood" label="CristiFood"/>
-    <summary>5 recetas de ensaladas saludables y completas para verano: fáciles, rápidas y perfectas para tupper o cena. Recetas de una dietista online.</summary>
+    <summary>5 recetas de ensaladas saludables y completas para verano: fáciles, rápidas y perfectas para tupper o cena.</summary>
   </entry>
 </feed>
