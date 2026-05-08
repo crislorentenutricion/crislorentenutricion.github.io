@@ -3,7 +3,6 @@ layout: layouts/base.njk
 title: "Menú mensual personalizado — con gramajes, lista de la compra y seguimiento"
 description: "Menú mensual personalizado con gramajes exactos, lista de la compra, seguimiento quincenal y WhatsApp directo con Cristina. Adaptado a tus gustos y a tu vida. Primer mes 15 €."
 permalink: /menu-mensual-personalizado/
-navActive: menu-mensual
 preloadImage: /img/hero/menu-mensual.jpg
 ---
 
@@ -127,7 +126,7 @@ preloadImage: /img/hero/menu-mensual.jpg
       <h1 class="hero-animate hero-animate-2">Un menú que <span class="gradient-text">se adapta a ti</span>, no al revés</h1>
       <p class="hero-subtitle hero-animate hero-animate-3">Si llevas tiempo probando menús con los que no consigues bajar de peso, el problema no eres tú. Es que ninguno estaba diseñado para tu vida, tus gustos y tu cuerpo.</p>
       <div class="hero-animate hero-animate-4">
-        <a href="/#formulario-contacto" class="btn btn-primary btn-lg">Reserva tu valoración gratuita&nbsp;→</a>
+        <a href="#formulario-contacto" class="btn btn-primary btn-lg">Reserva tu valoración gratuita&nbsp;→</a>
         <p class="hero-price-hint">Primer mes: <strong>15 €</strong> · Después 40 €/mes · Sin permanencia</p>
       </div>
     </div>
@@ -260,6 +259,9 @@ preloadImage: /img/hero/menu-mensual.jpg
   </div>
 </section>
 
+{% set bookingPlan = "Menú mensual personalizado" %}
+{% include "booking-embed.njk" %}
+
 {# ── PREGUNTAS FRECUENTES ── #}
 <section class="section section-cream">
   <div class="container">
@@ -302,6 +304,6 @@ preloadImage: /img/hero/menu-mensual.jpg
   <div class="container text-center reveal">
     <h2>¿Quieres un menú hecho para ti?</h2>
     <p class="section-subtitle" style="margin-bottom:32px;">Reserva una valoración gratuita y hablamos de lo que necesitas. Sin compromiso.</p>
-    <a href="/#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita&nbsp;→</a>
+    <a href="#formulario-contacto" class="btn btn-primary">Reserva tu valoración gratuita&nbsp;→</a>
   </div>
 </section>
