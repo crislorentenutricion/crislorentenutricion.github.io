@@ -11,7 +11,12 @@ const { ROOT, SITE, BLOG_JSON } = require("./_helpers/paths");
 const posts = JSON.parse(fs.readFileSync(BLOG_JSON, "utf8"));
 
 before(() => {
-  // Construye el sitio en _site/
+  // Si _site/ ya existe (build previo del script `test` o del workflow CI), no
+  // reconstruimos. Reconstruir aquí mientras otros ficheros de test corren en
+  // paralelo y leen passthrough files (p.ej. backoffice-pacientes.js) los pilla
+  // a medio reescribir → lecturas vacías intermitentes. Mismo guard que el resto
+  // de ficheros que construyen _site en su before().
+  if (fs.existsSync(path.join(SITE, "index.html"))) return;
   execFileSync("npx", ["eleventy"], { cwd: ROOT, stdio: "inherit", shell: process.platform === "win32" });
 });
 
