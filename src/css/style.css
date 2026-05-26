@@ -488,6 +488,8 @@ h3 { font-size: clamp(1.05rem, 2vw, 1.25rem); }
   color: var(--color-green-dark);
   font-weight: var(--font-weight-bold);
 }
+/* En la sección verde el "40 €/mes" iría en verde oscuro (ilegible): forzar blanco. */
+.section-green .hero-price-hint strong { color: var(--color-white); }
 .hero-img-placeholder {
   background: linear-gradient(135deg, var(--color-green-light), var(--color-green-muted));
   border-radius: var(--border-radius-lg); height: 400px; width: 100%;
