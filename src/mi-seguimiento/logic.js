@@ -181,6 +181,40 @@
     return 'el ' + DIAS_SEMANA_ES[f.getDay()] + ' a las ' + hora;
   }
 
+  // Normaliza el valor de una toma del menú a array de opciones (sin vacíos).
+  //   texto no vacío → [texto]; lista → lista filtrada; vacío/null → [].
+  // Es lo que hace al intercambiador "data-driven": una toma con >1 opciones
+  // es intercambiable; con 1 (o texto) se comporta como hoy.
+  function mealValueToOptions(value) {
+    if (Array.isArray(value)) {
+      return value
+        .filter(function (v) { return v != null && String(v).trim() !== ''; })
+        .map(function (v) { return String(v); });
+    }
+    if (value == null) return [];
+    const s = String(value);
+    return s.trim() === '' ? [] : [s];
+  }
+
+  // Clave de localStorage de las elecciones del intercambiador: una por menú.
+  // Espejo de compraStorageKey: al llegar un menú nuevo cambia el id → las
+  // elecciones se reinician solas (encaja con la rotación cada 15 días).
+  function opcionStorageKey(menu) {
+    return (menu && menu.id) ? ('ms-opcion-' + menu.id) : null;
+  }
+
+  // Clave de una elección concreta dentro del mapa: 'lunes:comida'.
+  function mealChoiceKey(diaKey, comidaKey) {
+    return String(diaKey) + ':' + String(comidaKey);
+  }
+
+  // Aplica una elección de forma inmutable: devuelve un Map nuevo.
+  function applyMealChoice(choicesMap, diaKey, comidaKey, idx) {
+    const m = new Map(choicesMap || []);
+    m.set(mealChoiceKey(diaKey, comidaKey), idx);
+    return m;
+  }
+
   // Pacientes con distinto nº de tomas (4 vs 5) → filtramos slots vacíos
   // para no mostrar "—" en la app. `dia` es el objeto { desayuno, almuerzo, ... }
   // del menú; `comidas` es el array [[key, label], ...].
@@ -780,7 +814,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

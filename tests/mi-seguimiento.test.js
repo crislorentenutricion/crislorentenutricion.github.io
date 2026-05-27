@@ -44,6 +44,10 @@ const {
   shouldMostrarRevisionModal,
   shouldMostrarMenuNuevoModal,
   hydrateDashboard,
+  mealValueToOptions,
+  opcionStorageKey,
+  mealChoiceKey,
+  applyMealChoice,
 } = require("../src/mi-seguimiento/logic.js");
 
 // ------------------------------- toISO -------------------------------
@@ -1576,4 +1580,47 @@ test("hydrateDashboard: racha rota (ayer sin marcar, pero checkin hace 3 días) 
     now: new Date(2026, 3, 17)
   });
   assert.equal(r.rota, true);
+});
+
+// ------------------------- mealValueToOptions ------------------------
+test("mealValueToOptions: texto no vacío → [texto]", () => {
+  assert.deepEqual(mealValueToOptions("Lentejas"), ["Lentejas"]);
+});
+test("mealValueToOptions: lista → filtra vacíos, nulos y espacios", () => {
+  assert.deepEqual(mealValueToOptions(["a", "", "  ", null, "b"]), ["a", "b"]);
+});
+test("mealValueToOptions: vacío / null / undefined → []", () => {
+  assert.deepEqual(mealValueToOptions(""), []);
+  assert.deepEqual(mealValueToOptions("   "), []);
+  assert.deepEqual(mealValueToOptions(null), []);
+  assert.deepEqual(mealValueToOptions(undefined), []);
+});
+
+// ------------------------- opcionStorageKey --------------------------
+test("opcionStorageKey: menu con id → 'ms-opcion-<id>'", () => {
+  assert.equal(opcionStorageKey({ id: "abc-123" }), "ms-opcion-abc-123");
+});
+test("opcionStorageKey: sin id o null → null", () => {
+  assert.equal(opcionStorageKey(null), null);
+  assert.equal(opcionStorageKey({}), null);
+  assert.equal(opcionStorageKey({ id: "" }), null);
+});
+
+// --------------------------- mealChoiceKey ---------------------------
+test("mealChoiceKey: combina día y comida con ':'", () => {
+  assert.equal(mealChoiceKey("lunes", "comida"), "lunes:comida");
+});
+
+// --------------------------- applyMealChoice -------------------------
+test("applyMealChoice: setea la elección en un Map nuevo", () => {
+  const orig = new Map();
+  const out = applyMealChoice(orig, "lunes", "comida", 2);
+  assert.equal(out.get("lunes:comida"), 2);
+});
+test("applyMealChoice: no muta el Map original (inmutable)", () => {
+  const orig = new Map([["lunes:cena", 0]]);
+  const out = applyMealChoice(orig, "lunes", "comida", 1);
+  assert.equal(orig.has("lunes:comida"), false);
+  assert.equal(out.get("lunes:cena"), 0);
+  assert.equal(out.get("lunes:comida"), 1);
 });
