@@ -217,14 +217,34 @@
     return m;
   }
 
-  // Pacientes con distinto nº de tomas (4 vs 5) → filtramos slots vacíos
-  // para no mostrar "—" en la app. `dia` es el objeto { desayuno, almuerzo, ... }
-  // del menú; `comidas` es el array [[key, label], ...].
-  function visibleMeals(dia, comidas) {
+  // Pacientes con distinto nº de tomas (4 vs 5) → filtramos slots vacíos.
+  // Cada toma puede ser texto (1 opción → opciones=null, como hoy) o lista
+  // (>1 opciones → intercambiable). `choicesMap`/`diaKey` resuelven la opción
+  // elegida; sin ellos cae a la primera (índice 0). Salida por toma:
+  //   { key, label, text, opciones: string[]|null, elegida: number }
+  function visibleMeals(dia, comidas, choicesMap, diaKey) {
     if (!dia || !Array.isArray(comidas)) return [];
+    const choices = choicesMap instanceof Map ? choicesMap : new Map();
     return comidas
-      .map(function (c) { return { key: c[0], label: c[1], text: dia[c[0]] }; })
-      .filter(function (m) { return m.text != null && String(m.text).trim() !== ''; });
+      .map(function (c) {
+        return { key: c[0], label: c[1], opts: mealValueToOptions(dia[c[0]]) };
+      })
+      .filter(function (m) { return m.opts.length > 0; })
+      .map(function (m) {
+        const multi = m.opts.length > 1;
+        let elegida = 0;
+        if (multi && diaKey != null) {
+          const raw = choices.get(mealChoiceKey(diaKey, m.key));
+          if (typeof raw === 'number' && raw >= 0 && raw < m.opts.length) elegida = raw;
+        }
+        return {
+          key: m.key,
+          label: m.label,
+          text: m.opts[elegida],
+          opciones: multi ? m.opts.slice() : null,
+          elegida: elegida
+        };
+      });
   }
 
   // -----------------------------------------------------------------
@@ -524,12 +544,13 @@
     const now = o.now instanceof Date ? o.now : new Date();
     const comidas = Array.isArray(o.comidas) ? o.comidas : [];
     const weekdayKeys = Array.isArray(o.weekdayKeys) ? o.weekdayKeys : WEEKDAY_KEYS_JSON;
+    const choicesMap = o.choicesMap instanceof Map ? o.choicesMap : new Map();
 
     const parts = String(iso || '').split('-').map(Number);
     const fecha = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
     const weekday = weekdayKeys[fecha.getDay()];
     const dia = menu && menu.contenido && menu.contenido.dias ? menu.contenido.dias[weekday] : null;
-    const meals = visibleMeals(dia, comidas);
+    const meals = visibleMeals(dia, comidas, choicesMap, weekday);
     const estado = checkinsMap.get(iso);
     const cfg = DAY_STATUS_LABELS[estado];
     let status;
@@ -556,10 +577,11 @@
     const now = o.now instanceof Date ? o.now : new Date();
     const comidas = Array.isArray(o.comidas) ? o.comidas : [];
     const weekdayKeys = Array.isArray(o.weekdayKeys) ? o.weekdayKeys : WEEKDAY_KEYS_JSON;
+    const choicesMap = o.choicesMap instanceof Map ? o.choicesMap : new Map();
 
     const weekday = weekdayKeys[now.getDay()];
     const dia = menu && menu.contenido && menu.contenido.dias ? menu.contenido.dias[weekday] : null;
-    const meals = visibleMeals(dia, comidas);
+    const meals = visibleMeals(dia, comidas, choicesMap, weekday);
     const todayISO = toISO(now);
     const activeCheck = checkinsMap.get(todayISO) || null;
     return { weekday, dia, meals, activeCheck, todayISO };

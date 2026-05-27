@@ -470,6 +470,45 @@ test("visibleMeals: dia nulo o comidas no-array → array vacío", () => {
   assert.deepEqual(visibleMeals({}, null), []);
 });
 
+test("visibleMeals: comida-lista → opciones array + text = primera por defecto", () => {
+  const dia = { desayuno: 'Tostada', comida: ['Lentejas', 'Garbanzos', 'Macarrones'], cena: 'Crema' };
+  const r = visibleMeals(dia, COMIDAS_5);
+  const comida = r.find(x => x.key === 'comida');
+  assert.deepEqual(comida.opciones, ['Lentejas', 'Garbanzos', 'Macarrones']);
+  assert.equal(comida.text, 'Lentejas');
+  assert.equal(comida.elegida, 0);
+});
+
+test("visibleMeals: comida-texto → opciones=null (igual que hoy)", () => {
+  const dia = { desayuno: 'Tostada', comida: 'Lentejas', cena: 'Crema' };
+  const r = visibleMeals(dia, COMIDAS_5);
+  assert.equal(r.find(x => x.key === 'comida').opciones, null);
+  assert.equal(r.find(x => x.key === 'comida').text, 'Lentejas');
+});
+
+test("visibleMeals: lista de 1 sola opción → opciones=null (no intercambiable)", () => {
+  const dia = { comida: ['Solo una'] };
+  const r = visibleMeals(dia, COMIDAS_5);
+  assert.equal(r[0].opciones, null);
+  assert.equal(r[0].text, 'Solo una');
+});
+
+test("visibleMeals: choicesMap + diaKey → text = opción elegida", () => {
+  const dia = { comida: ['Lentejas', 'Garbanzos', 'Macarrones'] };
+  const choices = new Map([['lunes:comida', 1]]);
+  const r = visibleMeals(dia, COMIDAS_5, choices, 'lunes');
+  assert.equal(r[0].text, 'Garbanzos');
+  assert.equal(r[0].elegida, 1);
+});
+
+test("visibleMeals: índice fuera de rango en choicesMap → cae a 0 (clamp)", () => {
+  const dia = { comida: ['Lentejas', 'Garbanzos'] };
+  const choices = new Map([['lunes:comida', 9]]);
+  const r = visibleMeals(dia, COMIDAS_5, choices, 'lunes');
+  assert.equal(r[0].elegida, 0);
+  assert.equal(r[0].text, 'Lentejas');
+});
+
 // ------------------------------ detectPlatform -----------------------------
 
 test("detectPlatform: iPhone UA → 'ios'", () => {
