@@ -1611,6 +1611,10 @@ test("mealChoiceKey: combina día y comida con ':'", () => {
   assert.equal(mealChoiceKey("lunes", "comida"), "lunes:comida");
 });
 
+test("mealChoiceKey: coerciona argumentos no-string a string", () => {
+  assert.equal(mealChoiceKey(0, "desayuno"), "0:desayuno");
+});
+
 // --------------------------- applyMealChoice -------------------------
 test("applyMealChoice: setea la elección en un Map nuevo", () => {
   const orig = new Map();

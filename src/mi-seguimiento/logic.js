@@ -204,6 +204,8 @@
   }
 
   // Clave de una elección concreta dentro del mapa: 'lunes:comida'.
+  // Asume diaKey/comidaKey sin ':' (vienen de WEEKDAY_KEYS_JSON y COMIDAS,
+  // enums fijos) → sin colisión en el espacio de claves de localStorage.
   function mealChoiceKey(diaKey, comidaKey) {
     return String(diaKey) + ':' + String(comidaKey);
   }
