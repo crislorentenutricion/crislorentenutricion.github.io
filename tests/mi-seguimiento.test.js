@@ -1689,3 +1689,7 @@ test("menuTieneOpciones: false sin menú o sin días", () => {
   assert.equal(menuTieneOpciones(null), false);
   assert.equal(menuTieneOpciones({ contenido: {} }), false);
 });
+test("menuTieneOpciones: false si todas las listas tienen solo 1 opción (no intercambiable)", () => {
+  const menu = { contenido: { dias: { lunes: { comida: ['Unica opcion'] } } } };
+  assert.equal(menuTieneOpciones(menu), false);
+});

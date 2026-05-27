@@ -217,8 +217,9 @@
     return m;
   }
 
-  // ¿Es un menú del plan base? = alguna toma de algún día tiene >1 opciones.
-  // Decide el copy base (tip) frente al menú clásico de texto.
+  // ¿Tiene el menú alguna toma intercambiable (lista con >1 opciones)? Si la
+  // tiene, es un menú base → renderTip muestra el tip del intercambiador en
+  // lugar de tipDelDia.
   function menuTieneOpciones(menu) {
     const dias = menu && menu.contenido && menu.contenido.dias;
     if (!dias || typeof dias !== 'object') return false;
