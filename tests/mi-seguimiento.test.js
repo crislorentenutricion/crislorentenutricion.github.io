@@ -48,6 +48,7 @@ const {
   opcionStorageKey,
   mealChoiceKey,
   applyMealChoice,
+  menuTieneOpciones,
 } = require("../src/mi-seguimiento/logic.js");
 
 // ------------------------------- toISO -------------------------------
@@ -1674,4 +1675,17 @@ test("applyMealChoice: no muta el Map original (inmutable)", () => {
   assert.equal(orig.has("lunes:comida"), false);
   assert.equal(out.get("lunes:cena"), 0);
   assert.equal(out.get("lunes:comida"), 1);
+});
+
+test("menuTieneOpciones: true si alguna toma de algún día es lista >1", () => {
+  const menu = { contenido: { dias: { lunes: { comida: ['a', 'b'], cena: 'c' } } } };
+  assert.equal(menuTieneOpciones(menu), true);
+});
+test("menuTieneOpciones: false si todo es texto (menú clásico/grandfathered)", () => {
+  const menu = { contenido: { dias: { lunes: { comida: 'a', cena: 'b' } } } };
+  assert.equal(menuTieneOpciones(menu), false);
+});
+test("menuTieneOpciones: false sin menú o sin días", () => {
+  assert.equal(menuTieneOpciones(null), false);
+  assert.equal(menuTieneOpciones({ contenido: {} }), false);
 });

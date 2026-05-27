@@ -1668,7 +1668,7 @@ appleTitle: "CLN"
     detectPlatform, detectInAppBrowser, nombreAppEmbebida,
     esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora,
     slugifyItem, compraStorageKey, totalItemsCompra, displayCat,
-    mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice,
+    mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones,
     validateLoginForm, validateOtpCode, resolveInitialLogin,
     shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone,
     computeDayView, computeTodayView,
@@ -2306,7 +2306,9 @@ appleTitle: "CLN"
 
   function renderTip() {
     const el = $('#ms-tip');
-    el.textContent = tipDelDia(new Date());
+    el.textContent = menuTieneOpciones(menuVigente)
+      ? 'Tu semana, a tu gusto. Toca «Cambiar» en una comida para elegir entre opciones equivalentes; las recetas se renuevan cada 15 días.'
+      : tipDelDia(new Date());
     el.hidden = false;
   }
 

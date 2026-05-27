@@ -217,6 +217,21 @@
     return m;
   }
 
+  // ¿Es un menú del plan base? = alguna toma de algún día tiene >1 opciones.
+  // Decide el copy base (tip) frente al menú clásico de texto.
+  function menuTieneOpciones(menu) {
+    const dias = menu && menu.contenido && menu.contenido.dias;
+    if (!dias || typeof dias !== 'object') return false;
+    for (const dk of Object.keys(dias)) {
+      const dia = dias[dk];
+      if (!dia || typeof dia !== 'object') continue;
+      for (const ck of Object.keys(dia)) {
+        if (mealValueToOptions(dia[ck]).length > 1) return true;
+      }
+    }
+    return false;
+  }
+
   // Pacientes con distinto nº de tomas (4 vs 5) → filtramos slots vacíos.
   // Cada toma puede ser texto (1 opción → opciones=null, como hoy) o lista
   // (>1 opciones → intercambiable). `choicesMap`/`diaKey` resuelven la opción
@@ -839,7 +854,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();
