@@ -1987,12 +1987,12 @@ appleTitle: "CLN"
   // Datos puros (weekday, dia, meals, status) vienen de computeDayView/
   // computeTodayView (logic.js). Aquí solo rendering.
 
-  function renderDayMealsDom(dia) {
-    if (!dia) {
+  function renderDayMealsDom(meals) {
+    if (!meals || !meals.length) {
       return `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Sin menú</span><p class="ms-meal-text">No hay menú planificado para este día.</p></li>`;
     }
-    return COMIDAS.map(([k, label]) =>
-      `<li class="ms-meal"><span class="ms-meal-time">${label}</span><p class="ms-meal-text">${escapeHtml(dia[k] || '—')}</p></li>`
+    return meals.map(m =>
+      `<li class="ms-meal"><span class="ms-meal-time">${m.label}</span><p class="ms-meal-text">${escapeHtml(m.text)}</p></li>`
     ).join('');
   }
 
@@ -2005,14 +2005,14 @@ appleTitle: "CLN"
 
   function mostrarDia(iso) {
     if (iso === toISO(new Date())) { mostrarHoy(); return; }
-    const v = computeDayView({ iso, menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS });
+    const v = computeDayView({ iso, menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS, choicesMap: opcionChoices });
     const [y, m, d] = iso.split('-').map(Number);
     const fecha = new Date(y, m - 1, d);
     $('#ms-today-label').textContent = capitalize(
       fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
     );
     $('#ms-check-label').textContent = 'ese día';
-    $('#ms-meals').innerHTML = renderDayMealsDom(v.dia);
+    $('#ms-meals').innerHTML = renderDayMealsDom(v.meals);
     $('#ms-check-status').innerHTML = renderDayStatusDom(v.status);
     $('#ms-authed').dataset.view = 'day';
     $('#ms-authed').scrollIntoView({ behavior: 'smooth', block: 'start' });
