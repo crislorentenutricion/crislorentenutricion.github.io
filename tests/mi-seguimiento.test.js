@@ -1212,6 +1212,19 @@ test("computeTodayView: menu null → meals vacío", () => {
   assert.equal(r.activeCheck, null);
 });
 
+test("computeTodayView: choicesMap → meals.text refleja la opción elegida", () => {
+  const now = new Date(2026, 3, 17);
+  const wd = WEEKDAY_KEYS_JSON[now.getDay()];
+  const menu = { id: 'm1', contenido: { dias: { [wd]: { comida: ['Lentejas', 'Garbanzos'] } } } };
+  const r = computeTodayView({
+    menu, checkinsMap: new Map(), now,
+    comidas: [['comida', 'Comida']],
+    choicesMap: new Map([[wd + ':comida', 1]])
+  });
+  assert.equal(r.meals[0].text, 'Garbanzos');
+  assert.equal(r.meals[0].elegida, 1);
+});
+
 // ---------------------------- buildCompraModel ---------------------------
 
 const MENU_COMPRA = {

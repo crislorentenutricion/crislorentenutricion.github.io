@@ -2024,7 +2024,7 @@ appleTitle: "CLN"
     $('#ms-check-label').textContent = '¿cómo ha ido hoy?';
     renderMeals(menuVigente);
     $('#ms-authed').dataset.view = 'today';
-    const v = computeTodayView({ menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS });
+    const v = computeTodayView({ menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS, choicesMap: opcionChoices });
     setActiveCheck(v.activeCheck);
   }
 
