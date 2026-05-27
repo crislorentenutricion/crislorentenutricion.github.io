@@ -1171,6 +1171,19 @@ test("computeDayView: menu null → meals vacío, status según checkin", () => 
   assert.equal(r.status.kind, "marked");
 });
 
+test("computeDayView: choicesMap → meals.text refleja la opción elegida", () => {
+  const iso = "2026-04-15";
+  const wd = WEEKDAY_KEYS_JSON[new Date(2026, 3, 15).getDay()];
+  const menu = { id: 'm1', contenido: { dias: { [wd]: { comida: ['Lentejas', 'Garbanzos', 'Macarrones'] } } } };
+  const r = computeDayView({
+    iso, menu, checkinsMap: new Map(), now: new Date(2026, 3, 17),
+    comidas: [['comida', 'Comida']],
+    choicesMap: new Map([[wd + ':comida', 1]])
+  });
+  assert.equal(r.meals[0].text, 'Garbanzos');
+  assert.equal(r.meals[0].elegida, 1);
+});
+
 // ---------------------------- computeTodayView ---------------------------
 
 test("computeTodayView: viernes con menú → devuelve 5 comidas del viernes + activeCheck='seguido'", () => {

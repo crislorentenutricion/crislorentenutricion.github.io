@@ -1985,7 +1985,8 @@ appleTitle: "CLN"
 
   // -------- day detail (read-only view from calendar tap) --------
   // Datos puros (weekday, dia, meals, status) vienen de computeDayView/
-  // computeTodayView (logic.js). Aquí solo rendering.
+  // computeTodayView (logic.js). Aquí solo rendering. renderDayMealsDom usa
+  // `meals` (opción resuelta), no `dia`.
 
   function renderDayMealsDom(meals) {
     if (!meals || !meals.length) {
