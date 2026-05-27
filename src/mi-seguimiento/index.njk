@@ -2032,6 +2032,7 @@ appleTitle: "CLN"
   // de modal existente (.ms-modal-backdrop) con focus/Escape/backdrop como
   // reiniciarCompra. Solo aplica a tomas con >1 opciones.
   function abrirIntercambiador(diaKey, comidaKey) {
+    const focoPrevio = document.activeElement;
     if (!menuVigente || !menuVigente.contenido || !menuVigente.contenido.dias) return;
     const dia = menuVigente.contenido.dias[diaKey];
     if (!dia) return;
@@ -2043,7 +2044,7 @@ appleTitle: "CLN"
     const title  = $('#ms-opcion-title');
     const list   = $('#ms-opcion-list');
     const cxlBtn = $('#ms-opcion-cancel');
-    if (!modal || !list || !cxlBtn) return;
+    if (!modal || !title || !list || !cxlBtn) return;
 
     title.textContent = 'Elige tu ' + comidaLabel.toLowerCase();
     const actual = opcionChoices.get(mealChoiceKey(diaKey, comidaKey));
@@ -2053,7 +2054,6 @@ appleTitle: "CLN"
       + escapeHtml(o) + '<span class="tick" aria-hidden="true">✓</span></button>'
     ).join('');
 
-    const focoPrevio = document.activeElement;
     const cerrar = () => {
       modal.hidden = true;
       list.removeEventListener('click', onPick);
