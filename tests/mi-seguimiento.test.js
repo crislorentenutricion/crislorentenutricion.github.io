@@ -509,6 +509,14 @@ test("visibleMeals: índice fuera de rango en choicesMap → cae a 0 (clamp)", (
   assert.equal(r[0].text, 'Lentejas');
 });
 
+test("visibleMeals: índice negativo en choicesMap → cae a 0 (clamp)", () => {
+  const dia = { comida: ['Lentejas', 'Garbanzos'] };
+  const choices = new Map([['lunes:comida', -1]]);
+  const r = visibleMeals(dia, COMIDAS_5, choices, 'lunes');
+  assert.equal(r[0].elegida, 0);
+  assert.equal(r[0].text, 'Lentejas');
+});
+
 // ------------------------------ detectPlatform -----------------------------
 
 test("detectPlatform: iPhone UA → 'ios'", () => {

@@ -222,6 +222,7 @@
   // (>1 opciones → intercambiable). `choicesMap`/`diaKey` resuelven la opción
   // elegida; sin ellos cae a la primera (índice 0). Salida por toma:
   //   { key, label, text, opciones: string[]|null, elegida: number }
+  // `elegida` es 0 cuando opciones=null (sin significado: la UI solo lo usa si hay opciones).
   function visibleMeals(dia, comidas, choicesMap, diaKey) {
     if (!dia || !Array.isArray(comidas)) return [];
     const choices = choicesMap instanceof Map ? choicesMap : new Map();
