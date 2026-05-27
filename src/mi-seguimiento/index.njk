@@ -490,6 +490,25 @@ appleTitle: "CLN"
     color: #a8a394;
     font-style: italic;
   }
+  .ms-meal.ms-meal--swap { display: flex; align-items: center; gap: 10px; }
+  .ms-meal.ms-meal--swap .ms-meal-text { flex: 1; }
+  .ms-meal-swap {
+    margin-left: auto; flex: none;
+    border: 1.5px solid #4a7c59; background: transparent; color: #4a7c59;
+    font: inherit; font-size: .78rem; font-weight: 600;
+    padding: 5px 12px; border-radius: 999px; cursor: pointer; min-height: 32px;
+  }
+  .ms-meal-swap:hover, .ms-meal-swap:focus-visible { background: #e2ecdf; }
+  .ms-modal-list { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
+  .ms-opcion-item {
+    text-align: left; font: inherit; font-size: .85rem; cursor: pointer;
+    border: 1.5px solid #e4e0d4; background: #fff; color: #2c3a30;
+    border-radius: 12px; padding: 12px 14px; min-height: 48px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ms-opcion-item.is-current { border-color: #4a7c59; background: #e2ecdf; color: #3a6147; font-weight: 600; }
+  .ms-opcion-item .tick { margin-left: auto; color: #4a7c59; font-weight: 700; opacity: 0; }
+  .ms-opcion-item.is-current .tick { opacity: 1; }
 
   /* ---------- tip del día ---------- */
   .ms-tip {
@@ -1601,6 +1620,18 @@ appleTitle: "CLN"
     </div>
   </div>
 
+  {# ============================== INTERCAMBIADOR — MODAL ============================== #}
+  <div id="ms-opcion-modal" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-opcion-title" hidden>
+    <div class="ms-modal">
+      <h2 id="ms-opcion-title" class="ms-modal-title">Elige tu comida</h2>
+      <p class="ms-modal-intro">Opciones equivalentes · se renuevan cada 15 días</p>
+      <div class="ms-modal-list" id="ms-opcion-list"></div>
+      <div class="ms-modal-actions">
+        <button type="button" class="ms-modal-secondary" id="ms-opcion-cancel">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   {# ============================== MENÚ NUEVO — MODAL ONE-SHOT ============================== #}
   <div id="ms-menu-nuevo-modal" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-menu-nuevo-title" hidden>
     <div class="ms-modal">
@@ -1637,6 +1668,7 @@ appleTitle: "CLN"
     detectPlatform, detectInAppBrowser, nombreAppEmbebida,
     esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora,
     slugifyItem, compraStorageKey, totalItemsCompra, displayCat,
+    mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice,
     validateLoginForm, validateOtpCode, resolveInitialLogin,
     shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone,
     computeDayView, computeTodayView,
@@ -1746,6 +1778,7 @@ appleTitle: "CLN"
   let paciente = null;
   let checkinsMap = new Map();
   let menuVigente = null;
+  let opcionChoices = new Map();
 
   // -------- utils --------
   const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
@@ -1888,14 +1921,18 @@ appleTitle: "CLN"
     }
     const hoy = DIAS_JS[new Date().getDay()];
     const dia = menu.contenido.dias && menu.contenido.dias[hoy];
-    const tomas = window.MsLogic.visibleMeals(dia, COMIDAS);
+    const tomas = window.MsLogic.visibleMeals(dia, COMIDAS, opcionChoices, hoy);
     if (!tomas.length) {
       container.innerHTML = `<li class="ms-meal is-skeleton"><span class="ms-meal-time">Hoy</span><p class="ms-meal-text">Hoy no hay comidas planificadas en este menú.</p></li>`;
       return;
     }
-    container.innerHTML = tomas.map(m =>
-      `<li class="ms-meal"><span class="ms-meal-time">${m.label}</span><p class="ms-meal-text">${escapeHtml(m.text)}</p></li>`
-    ).join('');
+    container.innerHTML = tomas.map(m => {
+      const swap = m.opciones
+        ? `<button type="button" class="ms-meal-swap" data-dia="${escapeHtml(hoy)}" data-comida="${escapeHtml(m.key)}" aria-label="Cambiar ${escapeHtml(m.label.toLowerCase())}">Cambiar</button>`
+        : '';
+      const cls = m.opciones ? 'ms-meal ms-meal--swap' : 'ms-meal';
+      return `<li class="${cls}"><span class="ms-meal-time">${m.label}</span><p class="ms-meal-text">${escapeHtml(m.text)}</p>${swap}</li>`;
+    }).join('');
   }
 
   async function marcarMilestoneVisto(pacienteId, nuevo, actual) {
@@ -1990,6 +2027,63 @@ appleTitle: "CLN"
     setActiveCheck(v.activeCheck);
   }
 
+  // Intercambiador (plan base): abre la hoja de opciones equivalentes de una
+  // toma. Persiste la elección en localStorage y repinta. Reutiliza el patrón
+  // de modal existente (.ms-modal-backdrop) con focus/Escape/backdrop como
+  // reiniciarCompra. Solo aplica a tomas con >1 opciones.
+  function abrirIntercambiador(diaKey, comidaKey) {
+    if (!menuVigente || !menuVigente.contenido || !menuVigente.contenido.dias) return;
+    const dia = menuVigente.contenido.dias[diaKey];
+    if (!dia) return;
+    const opciones = mealValueToOptions(dia[comidaKey]);
+    if (opciones.length < 2) return;
+
+    const comidaLabel = (COMIDAS.find(c => c[0] === comidaKey) || [null, comidaKey])[1];
+    const modal  = $('#ms-opcion-modal');
+    const title  = $('#ms-opcion-title');
+    const list   = $('#ms-opcion-list');
+    const cxlBtn = $('#ms-opcion-cancel');
+    if (!modal || !list || !cxlBtn) return;
+
+    title.textContent = 'Elige tu ' + comidaLabel.toLowerCase();
+    const actual = opcionChoices.get(mealChoiceKey(diaKey, comidaKey));
+    const elegida = (typeof actual === 'number' && actual >= 0 && actual < opciones.length) ? actual : 0;
+    list.innerHTML = opciones.map((o, i) =>
+      '<button type="button" class="ms-opcion-item' + (i === elegida ? ' is-current' : '') + '" data-idx="' + i + '">'
+      + escapeHtml(o) + '<span class="tick" aria-hidden="true">✓</span></button>'
+    ).join('');
+
+    const focoPrevio = document.activeElement;
+    const cerrar = () => {
+      modal.hidden = true;
+      list.removeEventListener('click', onPick);
+      cxlBtn.removeEventListener('click', cerrar);
+      modal.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKey);
+      if (focoPrevio && focoPrevio.focus) focoPrevio.focus();
+    };
+    const onPick = (e) => {
+      const item = e.target.closest('.ms-opcion-item');
+      if (!item) return;
+      const idx = Number(item.dataset.idx);
+      opcionChoices = applyMealChoice(opcionChoices, diaKey, comidaKey, idx);
+      saveOpcionState(menuVigente, opcionChoices);
+      renderMeals(menuVigente);
+      cerrar();
+      showToast('✅ Comida actualizada · ¡buena elección!');
+    };
+    const onBackdrop = (e) => { if (e.target === modal) cerrar(); };
+    const onKey = (e) => { if (e.key === 'Escape') cerrar(); };
+
+    list.addEventListener('click', onPick);
+    cxlBtn.addEventListener('click', cerrar);
+    modal.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKey);
+
+    modal.hidden = false;
+    requestAnimationFrame(() => { const f = list.querySelector('.ms-opcion-item'); if (f) f.focus(); });
+  }
+
   // -------- lista de la compra (localStorage por menú) --------
   // Estado local, sin servidor. Clave `ms-compra-<menu_id>` → al llegar un
   // nuevo menú la clave cambia y la lista vuelve a empezar vacía.
@@ -2013,6 +2107,25 @@ appleTitle: "CLN"
     const key = compraStorageKey(menu);
     if (!key) return;
     try { localStorage.setItem(key, JSON.stringify([...set])); }
+    catch (e) { /* modo privado o cuota llena: la UI ya está pintada */ }
+  }
+
+  // Elecciones del intercambiador (plan base). Espejo de loadCompraState pero
+  // con Map<'dia:comida', idx>. Clave ms-opcion-<menu_id> → reset por menú.
+  function loadOpcionState(menu) {
+    const key = opcionStorageKey(menu);
+    if (!key) return new Map();
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return new Map();
+      const arr = JSON.parse(raw);
+      return new Map(Array.isArray(arr) ? arr : []);
+    } catch (e) { return new Map(); }
+  }
+  function saveOpcionState(menu, map) {
+    const key = opcionStorageKey(menu);
+    if (!key) return;
+    try { localStorage.setItem(key, JSON.stringify([...map])); }
     catch (e) { /* modo privado o cuota llena: la UI ya está pintada */ }
   }
 
@@ -2338,6 +2451,7 @@ appleTitle: "CLN"
     // view === 'locked' | 'normal'
     $('#ms-name').textContent = primerNombre(paciente.nombre);
     menuVigente = result.menu;
+    opcionChoices = loadOpcionState(menuVigente);
     checkinsMap = result.checkinsMap;
 
     // Sin menú vigente, bloqueamos interacciones que dependen del menú
@@ -2875,6 +2989,11 @@ appleTitle: "CLN"
   $('#ms-compra-open').addEventListener('click', () => { mostrarCompra(); setViewHash('compra'); });
   $('#ms-compra-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
   $('#ms-compra-reset').addEventListener('click', reiniciarCompra);
+  $('#ms-meals').addEventListener('click', (e) => {
+    const btn = e.target.closest('.ms-meal-swap');
+    if (!btn) return;
+    abrirIntercambiador(btn.dataset.dia, btn.dataset.comida);
+  });
   // El <label> nativo envuelve checkbox + texto, así que cualquier clic
   // (ratón o teclado) togglea el checkbox y dispara 'change'. Un único handler.
   $('#ms-compra-cats').addEventListener('change', (e) => {
