@@ -564,6 +564,8 @@
   //   meals    : array de visibleMeals (puede ser [] si no hay menú ese día)
   //   status   : {kind: 'marked', cls, label, msg} si hay checkin;
   //              {kind: 'unmarked', msg} si no (copy depende de pasado/hoy/futuro).
+  //   editable : boolean — true si iso es ayer y now < 12:00 local (ventana de repesca).
+  //   estado   : string|null — valor del checkin de ese día, o null si no hay.
   function computeDayView(opts) {
     const o = opts || {};
     const iso = o.iso;
