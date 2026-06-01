@@ -33,6 +33,7 @@ const {
   resolveInitialView,
   shouldCelebrarMilestone,
   WEEKDAY_KEYS_JSON,
+  esAyerEditable,
   computeDayView,
   computeTodayView,
   buildCompraModel,
@@ -1184,6 +1185,27 @@ test("computeDayView: choicesMap → meals.text refleja la opción elegida", () 
   assert.equal(r.meals[0].elegida, 1);
 });
 
+test("computeDayView: ayer antes del mediodía → editable true + estado del checkin", () => {
+  const now = new Date(2026, 3, 17, 9, 0); // vie 17 abr 09:00; ayer = 16 abr
+  const map = new Map([["2026-04-16", "parcial"]]);
+  const r = computeDayView({ iso: "2026-04-16", menu: MENU_VIGENTE, checkinsMap: map, now, comidas: COMIDAS_CFG });
+  assert.equal(r.editable, true);
+  assert.equal(r.estado, "parcial");
+});
+
+test("computeDayView: ayer pero pasado el mediodía → editable false", () => {
+  const now = new Date(2026, 3, 17, 13, 0);
+  const r = computeDayView({ iso: "2026-04-16", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.editable, false);
+  assert.equal(r.estado, null);
+});
+
+test("computeDayView: día pasado no-ayer → editable false", () => {
+  const now = new Date(2026, 3, 17, 9, 0);
+  const r = computeDayView({ iso: "2026-04-10", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.editable, false);
+});
+
 // ---------------------------- computeTodayView ---------------------------
 
 test("computeTodayView: viernes con menú → devuelve 5 comidas del viernes + activeCheck='seguido'", () => {
@@ -1718,4 +1740,41 @@ test("menuTieneOpciones: false sin menú o sin días", () => {
 test("menuTieneOpciones: false si todas las listas tienen solo 1 opción (no intercambiable)", () => {
   const menu = { contenido: { dias: { lunes: { comida: ['Unica opcion'] } } } };
   assert.equal(menuTieneOpciones(menu), false);
+});
+
+// ------------------------ esAyerEditable ------------------------
+
+test("esAyerEditable: ayer antes del mediodía → true", () => {
+  const now = new Date(2026, 5, 3, 9, 0); // mié 3 jun, ayer = 2 jun
+  assert.equal(esAyerEditable("2026-06-02", now), true);
+});
+
+test("esAyerEditable: ayer a las 12:00 → false", () => {
+  const now = new Date(2026, 5, 3, 12, 0);
+  assert.equal(esAyerEditable("2026-06-02", now), false);
+});
+
+test("esAyerEditable: hoy → false", () => {
+  const now = new Date(2026, 5, 3, 9, 0);
+  assert.equal(esAyerEditable("2026-06-03", now), false);
+});
+
+test("esAyerEditable: anteayer → false", () => {
+  const now = new Date(2026, 5, 3, 9, 0);
+  assert.equal(esAyerEditable("2026-06-01", now), false);
+});
+
+test("esAyerEditable: día futuro → false", () => {
+  const now = new Date(2026, 5, 3, 9, 0);
+  assert.equal(esAyerEditable("2026-06-04", now), false);
+});
+
+test("esAyerEditable: cruce de mes (1 jun mañana, ayer 31 may) → true", () => {
+  const now = new Date(2026, 5, 1, 8, 0);
+  assert.equal(esAyerEditable("2026-05-31", now), true);
+});
+
+test("esAyerEditable: cruce de año (1 ene 2026 mañana, ayer 31 dic 2025) → true", () => {
+  const now = new Date(2026, 0, 1, 8, 0);
+  assert.equal(esAyerEditable("2025-12-31", now), true);
 });
