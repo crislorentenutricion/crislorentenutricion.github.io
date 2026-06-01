@@ -181,14 +181,87 @@
     return 'el ' + DIAS_SEMANA_ES[f.getDay()] + ' a las ' + hora;
   }
 
-  // Pacientes con distinto nº de tomas (4 vs 5) → filtramos slots vacíos
-  // para no mostrar "—" en la app. `dia` es el objeto { desayuno, almuerzo, ... }
-  // del menú; `comidas` es el array [[key, label], ...].
-  function visibleMeals(dia, comidas) {
+  // Normaliza el valor de una toma del menú a array de opciones (sin vacíos).
+  //   texto no vacío → [texto]; lista → lista filtrada; vacío/null → [].
+  // Es lo que hace al intercambiador "data-driven": una toma con >1 opciones
+  // es intercambiable; con 1 (o texto) se comporta como hoy.
+  function mealValueToOptions(value) {
+    if (Array.isArray(value)) {
+      return value
+        .filter(function (v) { return v != null && String(v).trim() !== ''; })
+        .map(function (v) { return String(v); });
+    }
+    if (value == null) return [];
+    const s = String(value);
+    return s.trim() === '' ? [] : [s];
+  }
+
+  // Clave de localStorage de las elecciones del intercambiador: una por menú.
+  // Espejo de compraStorageKey: al llegar un menú nuevo cambia el id → las
+  // elecciones se reinician solas (encaja con la rotación cada 15 días).
+  function opcionStorageKey(menu) {
+    return (menu && menu.id) ? ('ms-opcion-' + menu.id) : null;
+  }
+
+  // Clave de una elección concreta dentro del mapa: 'lunes:comida'.
+  // Asume diaKey/comidaKey sin ':' (vienen de WEEKDAY_KEYS_JSON y COMIDAS,
+  // enums fijos) → sin colisión en el espacio de claves de localStorage.
+  function mealChoiceKey(diaKey, comidaKey) {
+    return String(diaKey) + ':' + String(comidaKey);
+  }
+
+  // Aplica una elección de forma inmutable: devuelve un Map nuevo.
+  function applyMealChoice(choicesMap, diaKey, comidaKey, idx) {
+    const m = new Map(choicesMap || []);
+    m.set(mealChoiceKey(diaKey, comidaKey), idx);
+    return m;
+  }
+
+  // ¿Tiene el menú alguna toma intercambiable (lista con >1 opciones)? Si la
+  // tiene, es un menú base → renderTip muestra el tip del intercambiador en
+  // lugar de tipDelDia.
+  function menuTieneOpciones(menu) {
+    const dias = menu && menu.contenido && menu.contenido.dias;
+    if (!dias || typeof dias !== 'object') return false;
+    for (const dk of Object.keys(dias)) {
+      const dia = dias[dk];
+      if (!dia || typeof dia !== 'object') continue;
+      for (const ck of Object.keys(dia)) {
+        if (mealValueToOptions(dia[ck]).length > 1) return true;
+      }
+    }
+    return false;
+  }
+
+  // Pacientes con distinto nº de tomas (4 vs 5) → filtramos slots vacíos.
+  // Cada toma puede ser texto (1 opción → opciones=null, como hoy) o lista
+  // (>1 opciones → intercambiable). `choicesMap`/`diaKey` resuelven la opción
+  // elegida; sin ellos cae a la primera (índice 0). Salida por toma:
+  //   { key, label, text, opciones: string[]|null, elegida: number }
+  // `elegida` es 0 cuando opciones=null (sin significado: la UI solo lo usa si hay opciones).
+  function visibleMeals(dia, comidas, choicesMap, diaKey) {
     if (!dia || !Array.isArray(comidas)) return [];
+    const choices = choicesMap instanceof Map ? choicesMap : new Map();
     return comidas
-      .map(function (c) { return { key: c[0], label: c[1], text: dia[c[0]] }; })
-      .filter(function (m) { return m.text != null && String(m.text).trim() !== ''; });
+      .map(function (c) {
+        return { key: c[0], label: c[1], opts: mealValueToOptions(dia[c[0]]) };
+      })
+      .filter(function (m) { return m.opts.length > 0; })
+      .map(function (m) {
+        const multi = m.opts.length > 1;
+        let elegida = 0;
+        if (multi && diaKey != null) {
+          const raw = choices.get(mealChoiceKey(diaKey, m.key));
+          if (typeof raw === 'number' && raw >= 0 && raw < m.opts.length) elegida = raw;
+        }
+        return {
+          key: m.key,
+          label: m.label,
+          text: m.opts[elegida],
+          opciones: multi ? m.opts.slice() : null,
+          elegida: elegida
+        };
+      });
   }
 
   // -----------------------------------------------------------------
@@ -488,12 +561,13 @@
     const now = o.now instanceof Date ? o.now : new Date();
     const comidas = Array.isArray(o.comidas) ? o.comidas : [];
     const weekdayKeys = Array.isArray(o.weekdayKeys) ? o.weekdayKeys : WEEKDAY_KEYS_JSON;
+    const choicesMap = o.choicesMap instanceof Map ? o.choicesMap : new Map();
 
     const parts = String(iso || '').split('-').map(Number);
     const fecha = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
     const weekday = weekdayKeys[fecha.getDay()];
     const dia = menu && menu.contenido && menu.contenido.dias ? menu.contenido.dias[weekday] : null;
-    const meals = visibleMeals(dia, comidas);
+    const meals = visibleMeals(dia, comidas, choicesMap, weekday);
     const estado = checkinsMap.get(iso);
     const cfg = DAY_STATUS_LABELS[estado];
     let status;
@@ -520,10 +594,11 @@
     const now = o.now instanceof Date ? o.now : new Date();
     const comidas = Array.isArray(o.comidas) ? o.comidas : [];
     const weekdayKeys = Array.isArray(o.weekdayKeys) ? o.weekdayKeys : WEEKDAY_KEYS_JSON;
+    const choicesMap = o.choicesMap instanceof Map ? o.choicesMap : new Map();
 
     const weekday = weekdayKeys[now.getDay()];
     const dia = menu && menu.contenido && menu.contenido.dias ? menu.contenido.dias[weekday] : null;
-    const meals = visibleMeals(dia, comidas);
+    const meals = visibleMeals(dia, comidas, choicesMap, weekday);
     const todayISO = toISO(now);
     const activeCheck = checkinsMap.get(todayISO) || null;
     return { weekday, dia, meals, activeCheck, todayISO };
@@ -780,7 +855,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();
