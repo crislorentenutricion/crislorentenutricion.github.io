@@ -635,6 +635,10 @@ appleTitle: "CLN"
     box-shadow: 0 0 0 1.5px var(--color-green-dark);
     font-weight: 700;
   }
+  /* Ayer aún marcable (antes del mediodía, sin marcar): aro verde sutil. */
+  .ms-cal-cell.is-pendiente {
+    box-shadow: inset 0 0 0 2px var(--color-green);
+  }
   .ms-calendar-legend {
     display: flex;
     gap: 20px;
@@ -835,9 +839,10 @@ appleTitle: "CLN"
 
   #ms-authed[data-view="today"] .ms-back-today,
   #ms-authed[data-view="today"] .ms-check-status { display: none; }
-  #ms-authed[data-view="day"] .ms-tip,
-  #ms-authed[data-view="day"] .ms-check-btns,
-  #ms-authed[data-view="day"] .ms-check-hint { display: none; }
+  #ms-authed[data-view="day"] .ms-tip { display: none; }
+  #ms-authed[data-view="day"]:not(.is-day-editable) .ms-check-btns,
+  #ms-authed[data-view="day"]:not(.is-day-editable) .ms-check-hint { display: none; }
+  #ms-authed[data-view="day"].is-day-editable .ms-check-status { display: none; }
 
   /* ============================================================
      LISTA DE LA COMPRA — entry card + vista propia (data-view="compra")
