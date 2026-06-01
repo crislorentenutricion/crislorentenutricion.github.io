@@ -33,6 +33,7 @@ const {
   resolveInitialView,
   shouldCelebrarMilestone,
   WEEKDAY_KEYS_JSON,
+  esAyerEditable,
   computeDayView,
   computeTodayView,
   buildCompraModel,
@@ -1718,4 +1719,41 @@ test("menuTieneOpciones: false sin menú o sin días", () => {
 test("menuTieneOpciones: false si todas las listas tienen solo 1 opción (no intercambiable)", () => {
   const menu = { contenido: { dias: { lunes: { comida: ['Unica opcion'] } } } };
   assert.equal(menuTieneOpciones(menu), false);
+});
+
+// ------------------------ esAyerEditable ------------------------
+
+test("esAyerEditable: ayer antes del mediodía → true", () => {
+  const now = new Date(2026, 5, 3, 9, 0); // mié 3 jun, ayer = 2 jun
+  assert.equal(esAyerEditable("2026-06-02", now), true);
+});
+
+test("esAyerEditable: ayer a las 12:00 → false", () => {
+  const now = new Date(2026, 5, 3, 12, 0);
+  assert.equal(esAyerEditable("2026-06-02", now), false);
+});
+
+test("esAyerEditable: hoy → false", () => {
+  const now = new Date(2026, 5, 3, 9, 0);
+  assert.equal(esAyerEditable("2026-06-03", now), false);
+});
+
+test("esAyerEditable: anteayer → false", () => {
+  const now = new Date(2026, 5, 3, 9, 0);
+  assert.equal(esAyerEditable("2026-06-01", now), false);
+});
+
+test("esAyerEditable: día futuro → false", () => {
+  const now = new Date(2026, 5, 3, 9, 0);
+  assert.equal(esAyerEditable("2026-06-04", now), false);
+});
+
+test("esAyerEditable: cruce de mes (1 jun mañana, ayer 31 may) → true", () => {
+  const now = new Date(2026, 5, 1, 8, 0);
+  assert.equal(esAyerEditable("2026-05-31", now), true);
+});
+
+test("esAyerEditable: cruce de año (1 ene 2026 mañana, ayer 31 dic 2025) → true", () => {
+  const now = new Date(2026, 0, 1, 8, 0);
+  assert.equal(esAyerEditable("2025-12-31", now), true);
 });
