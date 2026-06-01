@@ -2235,6 +2235,10 @@ appleTitle: "CLN"
   }
 
   function mostrarCompra() {
+    // Salimos de cualquier modo editable de la vista de día: el estado de check-in
+    // solo debe quedar vivo en las vistas "today"/"day".
+    authedView.classList.remove('is-day-editable');
+    checkinTargetISO = null;
     $('#ms-authed').dataset.view = 'compra';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
