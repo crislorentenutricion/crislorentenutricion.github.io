@@ -2030,6 +2030,7 @@ appleTitle: "CLN"
       // Ayer dentro del plazo: la vista se comporta como "hoy" (botones editables).
       checkinTargetISO = iso;
       $('#ms-check-label').textContent = '¿cómo te fue?';
+      $('#ms-check-status').innerHTML = ''; // limpia la píldora de una visita read-only previa
       setActiveCheck(v.estado);
     } else {
       checkinTargetISO = null;
