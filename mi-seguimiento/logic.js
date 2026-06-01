@@ -540,6 +540,17 @@
   // Alineadas con Date.getDay(): 0 = domingo.
   const WEEKDAY_KEYS_JSON = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
+  // ¿Es `iso` el día de ayer y aún antes del mediodía local? Define la ventana en
+  // la que la vista de día permite marcar ayer (margen de 12h, decisión Cristina
+  // 2026-06-01). `now` inyectable. Construye "ayer" con componentes locales para
+  // cruzar mes/año/DST igual que toISO.
+  function esAyerEditable(iso, now) {
+    const n = now instanceof Date ? now : new Date();
+    if (n.getHours() >= 12) return false;
+    const ayer = new Date(n.getFullYear(), n.getMonth(), n.getDate() - 1);
+    return iso === toISO(ayer);
+  }
+
   // Estado y copy del detalle de día abierto desde el calendario.
   // Entradas:
   //   iso          : 'YYYY-MM-DD' del día a mostrar
@@ -553,6 +564,8 @@
   //   meals    : array de visibleMeals (puede ser [] si no hay menú ese día)
   //   status   : {kind: 'marked', cls, label, msg} si hay checkin;
   //              {kind: 'unmarked', msg} si no (copy depende de pasado/hoy/futuro).
+  //   editable : boolean — true si iso es ayer y now < 12:00 local (ventana de repesca).
+  //   estado   : string|null — valor del checkin de ese día, o null si no hay.
   function computeDayView(opts) {
     const o = opts || {};
     const iso = o.iso;
@@ -581,7 +594,7 @@
       else msg = 'Este día no lo marcaste. Sin drama, sigue tu camino.';
       status = { kind: 'unmarked', msg };
     }
-    return { weekday, dia, meals, status };
+    return { weekday, dia, meals, status, editable: esAyerEditable(iso, now), estado: estado || null };
   }
 
   // Vista "hoy": mismo shape que computeDayView pero simplificado.
@@ -855,7 +868,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, esAyerEditable, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();
