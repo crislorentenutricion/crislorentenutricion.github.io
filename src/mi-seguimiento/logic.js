@@ -592,7 +592,7 @@
       else msg = 'Este día no lo marcaste. Sin drama, sigue tu camino.';
       status = { kind: 'unmarked', msg };
     }
-    return { weekday, dia, meals, status };
+    return { weekday, dia, meals, status, editable: esAyerEditable(iso, now), estado: estado || null };
   }
 
   // Vista "hoy": mismo shape que computeDayView pero simplificado.

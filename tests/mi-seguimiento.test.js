@@ -1185,6 +1185,27 @@ test("computeDayView: choicesMap → meals.text refleja la opción elegida", () 
   assert.equal(r.meals[0].elegida, 1);
 });
 
+test("computeDayView: ayer antes del mediodía → editable true + estado del checkin", () => {
+  const now = new Date(2026, 3, 17, 9, 0); // vie 17 abr 09:00; ayer = 16 abr
+  const map = new Map([["2026-04-16", "parcial"]]);
+  const r = computeDayView({ iso: "2026-04-16", menu: MENU_VIGENTE, checkinsMap: map, now, comidas: COMIDAS_CFG });
+  assert.equal(r.editable, true);
+  assert.equal(r.estado, "parcial");
+});
+
+test("computeDayView: ayer pero pasado el mediodía → editable false", () => {
+  const now = new Date(2026, 3, 17, 13, 0);
+  const r = computeDayView({ iso: "2026-04-16", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.editable, false);
+  assert.equal(r.estado, null);
+});
+
+test("computeDayView: día pasado no-ayer → editable false", () => {
+  const now = new Date(2026, 3, 17, 9, 0);
+  const r = computeDayView({ iso: "2026-04-10", menu: MENU_VIGENTE, checkinsMap: new Map(), now, comidas: COMIDAS_CFG });
+  assert.equal(r.editable, false);
+});
+
 // ---------------------------- computeTodayView ---------------------------
 
 test("computeTodayView: viernes con menú → devuelve 5 comidas del viernes + activeCheck='seguido'", () => {
