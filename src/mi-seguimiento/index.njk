@@ -1676,7 +1676,7 @@ appleTitle: "CLN"
     mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones,
     validateLoginForm, validateOtpCode, resolveInitialLogin,
     shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone,
-    computeDayView, computeTodayView,
+    esAyerEditable, computeDayView, computeTodayView,
     buildCompraModel, computeCompraMeta,
     applyCheckinOptimistic, revertCheckin,
     buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal,
@@ -1782,6 +1782,9 @@ appleTitle: "CLN"
 
   let paciente = null;
   let checkinsMap = new Map();
+  // Fecha a la que escriben los botones de check-in: hoy en vista "today";
+  // el ISO de ayer cuando la vista de día está en modo editable.
+  let checkinTargetISO = null;
   let menuVigente = null;
   let opcionChoices = new Map();
 
@@ -1895,18 +1898,18 @@ appleTitle: "CLN"
     return !!(data && data.length);
   }
 
-  async function upsertCheckin(estado) {
+  async function upsertCheckin(estado, fechaISO) {
     // B4: auto-refresh de sesión antes de escribir. Si el SDK no consigue
     // revalidar el token, devolvemos un sentinel para que el caller vuelva al login.
     const { data: { session } } = await supa.auth.getSession();
     if (!session) return { sessionExpired: true };
 
-    const today = toISO(new Date());
+    const fecha = fechaISO || toISO(new Date());
     try {
       await withRetry(async () => {
         const { error } = await supa.from('checkins').upsert({
           paciente_id: paciente.id,
-          fecha: today,
+          fecha,
           estado
         }, { onConflict: 'paciente_id,fecha' });
         if (error) throw error;
@@ -1979,6 +1982,10 @@ appleTitle: "CLN"
       c.textContent = String(cell.day);
       if (ESTADO_CLASS[cell.estado]) c.classList.add(ESTADO_CLASS[cell.estado]);
       if (cell.isToday) c.classList.add('is-today');
+      if (cell.estado == null && esAyerEditable(cell.iso, now)) {
+        c.classList.add('is-pendiente');
+        c.setAttribute('aria-label', `Marcar el día de ayer (${cell.day})`);
+      }
       frag.appendChild(c);
     }
     $('#ms-calendar-grid').replaceChildren(frag);
@@ -2017,9 +2024,18 @@ appleTitle: "CLN"
     $('#ms-today-label').textContent = capitalize(
       fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
     );
-    $('#ms-check-label').textContent = 'ese día';
     $('#ms-meals').innerHTML = renderDayMealsDom(v.meals);
-    $('#ms-check-status').innerHTML = renderDayStatusDom(v.status);
+    authedView.classList.toggle('is-day-editable', v.editable);
+    if (v.editable) {
+      // Ayer dentro del plazo: la vista se comporta como "hoy" (botones editables).
+      checkinTargetISO = iso;
+      $('#ms-check-label').textContent = '¿cómo te fue?';
+      setActiveCheck(v.estado);
+    } else {
+      checkinTargetISO = null;
+      $('#ms-check-label').textContent = 'ese día';
+      $('#ms-check-status').innerHTML = renderDayStatusDom(v.status);
+    }
     $('#ms-authed').dataset.view = 'day';
     $('#ms-authed').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -2031,6 +2047,8 @@ appleTitle: "CLN"
     $('#ms-authed').dataset.view = 'today';
     const v = computeTodayView({ menu: menuVigente, checkinsMap, now: new Date(), comidas: COMIDAS, choicesMap: opcionChoices });
     setActiveCheck(v.activeCheck);
+    authedView.classList.remove('is-day-editable');
+    checkinTargetISO = toISO(new Date());
   }
 
   // Intercambiador (plan base): abre la hoja de opciones equivalentes de una
@@ -2956,14 +2974,14 @@ appleTitle: "CLN"
       // Optimistic UI: pinta calendario y racha al instante con estado local.
       // Así el feedback es inmediato aunque la red o la sesión estén lentas
       // (p.ej. al volver de bloquear el móvil).
-      const todayISO = toISO(new Date());
-      const estadoPrevio = applyCheckinOptimistic(checkinsMap, todayISO, estado);
+      const targetISO = checkinTargetISO || toISO(new Date());
+      const estadoPrevio = applyCheckinOptimistic(checkinsMap, targetISO, estado);
       renderStreak(checkinsMap);
       renderCalendar(checkinsMap);
 
-      const res = await upsertCheckin(estado);
+      const res = await upsertCheckin(estado, targetISO);
       if (res && (res.sessionExpired || res.error)) {
-        revertCheckin(checkinsMap, todayISO, estadoPrevio);
+        revertCheckin(checkinsMap, targetISO, estadoPrevio);
         if (estadoPrevio) setActiveCheck(estadoPrevio);
         renderStreak(checkinsMap);
         renderCalendar(checkinsMap);
