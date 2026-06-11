@@ -15,11 +15,11 @@
 (function () {
   'use strict';
 
-  // Los módulos BoUi y BoLogic pueden cargar después de este script en la
-  // página (el layout carga logic.js/ui.js al final, este fichero se carga
-  // antes dentro de <main>). Usamos getters en vez de constantes fijadas a
-  // load-time para que la primera llamada a las funciones encuentre las
-  // dependencias ya registradas en window.
+  // Los módulos BoUi, BoLogic y BoPaneles pueden cargar después de este script
+  // en la página (el layout carga logic.js/ui.js/paneles.js al final, este
+  // fichero se carga antes dentro de <main>). Usamos getters en vez de
+  // constantes fijadas a load-time para que la primera llamada a las funciones
+  // encuentre las dependencias ya registradas en window.
   function _BoUi() {
     if (typeof window !== 'undefined' && window.BoUi) return window.BoUi;
     if (typeof require === 'function') return require('./ui.js');
@@ -30,9 +30,15 @@
     if (typeof require === 'function') return require('./logic.js');
     return null;
   }
+  function _BoPaneles() {
+    if (typeof window !== 'undefined' && window.BoPaneles) return window.BoPaneles;
+    if (typeof require === 'function') return require('./paneles.js');
+    return null;
+  }
   // Shortcuts para las funciones puras — se resuelven en cada llamada.
-  const BoUi = new Proxy({}, { get: (_t, prop) => _BoUi()[prop] });
+  const BoUi    = new Proxy({}, { get: (_t, prop) => _BoUi()[prop] });
   const BoLogic = new Proxy({}, { get: (_t, prop) => _BoLogic()[prop] });
+  const BoPaneles = new Proxy({}, { get: (_t, prop) => _BoPaneles()[prop] });
 
   // -----------------------------------------------------------------
   // Renderers puros (testeables sin DOM)
@@ -166,11 +172,13 @@
 
     const valoracionId    = BoUi.escapeHtml(String(item.valoracionId || ''));
     const nombreInternoEs = BoUi.escapeHtml(String(item.nombre || ''));
-    const comandoAlta     = BoUi.escapeHtml(String(item.comandoAlta || ''));
+    const prefillEmail    = BoUi.escapeHtml(String(item.email || ''));
 
-    const btnAlta = '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
-      'data-bo-action="copy" ' +
-      'data-bo-comando="' + comandoAlta + '">' +
+    const btnAlta = '<button type="button" class="bo-btn bo-btn-directo bo-btn-copiar-sm" ' +
+      'data-bo-action="panel-fila" ' +
+      'data-bo-panel="alta" ' +
+      'data-bo-prefill-nombre="' + nombreInternoEs + '" ' +
+      'data-bo-prefill-email="' + prefillEmail + '">' +
       'Dar de alta</button>';
     const btnDescartar = '<button type="button" class="bo-btn bo-btn-secundario-sm" ' +
       'data-bo-action="descartar-valoracion" ' +
@@ -205,9 +213,13 @@
         '</span>' +
       '</div>' +
     '</a>';
-    const comando = BoLogic.generarComando('registrar-pago', item.nombre);
-    const accion = '<button type="button" class="bo-btn bo-btn-copiar-sm" ' +
-      'data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
+    const prefillNombre = BoUi.escapeHtml(String(item.nombre || ''));
+    const pacId = BoUi.escapeHtml(String(item.pacienteId || ''));
+    const accion = '<button type="button" class="bo-btn bo-btn-directo bo-btn-copiar-sm" ' +
+      'data-bo-action="panel-fila" ' +
+      'data-bo-panel="registrar-pago" ' +
+      'data-bo-paciente-id="' + pacId + '" ' +
+      'data-bo-prefill-nombre="' + prefillNombre + '">' +
       'Registrar pago</button>';
     return '<li class="bo-fila" data-bo-fila="pago-pendiente">' +
       link + accion +
@@ -469,49 +481,137 @@
     };
   }
 
-  async function arrancar(supa) {
-    if (typeof document === 'undefined') return;
+  // _panelAbiertoHoy almacena el nodo .bo-panel-fila actualmente abierto en
+  // la vista Tareas. Solo uno puede estar abierto a la vez.
+  let _panelAbiertoHoy = null;
+
+  // Wirea el handler de [data-bo-action="panel-fila"] dentro de `root`.
+  // Al hacer click: cierra el panel anterior si lo hay, crea un .bo-panel-fila
+  // insertado DESPUÉS del <li> de la fila, renderiza el formulario e inicia
+  // el wiring de envío. Un segundo click sobre el mismo botón (cuando el panel
+  // ya está abierto) lo cierra — comportamiento toggle.
+  function _conectarBotonesPanelFila(root, supa, recargar) {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+    const botones = root.querySelectorAll('[data-bo-action="panel-fila"]');
+    botones.forEach(function (btn) {
+      if (btn._boWiredPanelFila) return;
+      btn._boWiredPanelFila = true;
+      btn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        // Toggle: si el panel ya abierto pertenece a este botón, lo cerramos.
+        if (_panelAbiertoHoy && _panelAbiertoHoy._boBtn === btn) {
+          _panelAbiertoHoy.remove();
+          _panelAbiertoHoy = null;
+          return;
+        }
+        // Cerrar cualquier panel anterior.
+        if (_panelAbiertoHoy) {
+          _panelAbiertoHoy.remove();
+          _panelAbiertoHoy = null;
+        }
+
+        const accion = btn.getAttribute('data-bo-panel') || '';
+        const fila   = btn.closest('li') || btn.parentElement;
+        const cont   = document.createElement('div');
+        cont.className = 'bo-panel-fila';
+        cont._boBtn = btn;
+        fila.after(cont);
+        _panelAbiertoHoy = cont;
+
+        // Construir ctx según la acción.
+        let ctx;
+        if (accion === 'alta') {
+          ctx = {
+            prefill: {
+              nombre: btn.getAttribute('data-bo-prefill-nombre') || '',
+              email:  btn.getAttribute('data-bo-prefill-email')  || ''
+            }
+          };
+        } else {
+          // registrar-pago: siempre renovación vencida en esta vista.
+          ctx = {
+            pagosPrevios: 1,
+            prefill: { nombre: btn.getAttribute('data-bo-prefill-nombre') || '' }
+          };
+        }
+
+        cont.innerHTML = BoPaneles.renderPanelAccion(accion, ctx);
+
+        // Botón Cancelar del panel.
+        const btnCancelar = cont.querySelector('[data-bo-action="cerrar-panel"]');
+        if (btnCancelar) {
+          btnCancelar.addEventListener('click', function () {
+            cont.remove();
+            if (_panelAbiertoHoy === cont) _panelAbiertoHoy = null;
+          });
+        }
+
+        BoPaneles.conectarPanel(cont, accion, {
+          supa: supa,
+          ctxAccion: function () {
+            if (accion === 'alta') {
+              return {
+                nombre: btn.getAttribute('data-bo-prefill-nombre') || '',
+                email:  btn.getAttribute('data-bo-prefill-email')  || ''
+              };
+            }
+            return {
+              pacienteId: btn.getAttribute('data-bo-paciente-id') || '',
+              nombre:     btn.getAttribute('data-bo-prefill-nombre') || ''
+            };
+          },
+          recargar: function () {
+            if (_panelAbiertoHoy === cont) _panelAbiertoHoy = null;
+            return recargar();
+          }
+        });
+      });
+    });
+  }
+
+  // Carga datos + renderiza bloques y métricas en el DOM. Extraída de
+  // arrancar() para poder llamarla desde recargar() sin reinicializar auth.
+  async function _cargar(supa) {
     const root = document.getElementById('bloques');
     if (!root) return;
     root.innerHTML = '<p class="bo-cargando">Cargando datos…</p>';
-    // Contenedor de métricas (se pinta encima de #bloques). Si no existe, lo
-    // creamos en el DOM justo antes del contenedor de bloques.
     let metricasRoot = document.getElementById('metricas');
     if (!metricasRoot && root.parentNode) {
       metricasRoot = document.createElement('div');
       metricasRoot.id = 'metricas-wrap';
       root.parentNode.insertBefore(metricasRoot, root);
     }
+    const datos = await cargarDatos(supa);
+    const hoy = new Date();
+    const agrupado = BoLogic.agruparHoy({ ...datos, opts: {} }, hoy);
+    agrupado.pagosPendientes = BoLogic.recordatoriosPago(datos.pacientes, datos.pagos, hoy);
+    const metricas = BoLogic.calcularMetricasHoy(datos, hoy);
+    if (metricasRoot && metricasRoot.parentNode) {
+      metricasRoot.outerHTML = renderMetricas(metricas);
+    } else if (metricasRoot) {
+      const vivo = document.getElementById('metricas');
+      if (vivo && vivo.parentNode) vivo.outerHTML = renderMetricas(metricas);
+    }
+    // Limpiar panel abierto antes de re-render (el nodo desaparecerá con
+    // root.innerHTML =, pero limpiamos la referencia modular también).
+    _panelAbiertoHoy = null;
+    root.innerHTML = renderTodosLosBloques(agrupado);
+    // Conectar handlers: copy-commands (menús), descartar, y paneles directos.
+    _conectarBotonesCopiar(root);
+    _conectarBotonesDescartar(root, supa);
+    _conectarBotonesPanelFila(root, supa, function () { return _cargar(supa); });
+  }
+
+  async function arrancar(supa) {
+    if (typeof document === 'undefined') return;
     try {
-      const datos = await cargarDatos(supa);
-      const hoy = new Date();
-      const agrupado  = BoLogic.agruparHoy({ ...datos, opts: {} }, hoy);
-      // Recordatorios de pago: bloque autónomo computado fuera de agruparHoy
-      // porque agruparHoy ya tiene 7 responsabilidades; mantenemos el bloque
-      // nuevo desacoplado para no inflar la firma de la función principal.
-      agrupado.pagosPendientes = BoLogic.recordatoriosPago(datos.pacientes, datos.pagos, hoy);
-      // calcularMetricasHoy ignora `valoraciones`: las métricas siguen siendo
-      // de pacientes activas, no de prospectos.
-      const metricas  = BoLogic.calcularMetricasHoy(datos, hoy);
-      if (metricasRoot && metricasRoot.parentNode) {
-        metricasRoot.outerHTML = renderMetricas(metricas);
-      } else if (metricasRoot) {
-        // Defensa: si por alguna razón ya no tiene parent (arrancar reentrante),
-        // buscamos el sucesor por id en lugar de petar con NoModificationAllowedError.
-        const vivo = document.getElementById('metricas');
-        if (vivo && vivo.parentNode) vivo.outerHTML = renderMetricas(metricas);
-      }
-      root.innerHTML = renderTodosLosBloques(agrupado);
-      // Excepción documentada al patrón "fila = link al detalle": el bloque
-      // "Menús a crear esta semana" pinta un botón "Crear menú" (copy-command)
-      // cuando la anamnesis ya está rellena, para acortar el gesto más
-      // frecuente de Cristina. El bloque "Pendientes de resolver" añade
-      // [Dar de alta] (copy) y [Descartar] (acción directa con confirm).
-      _conectarBotonesCopiar(root);
-      _conectarBotonesDescartar(root, supa);
+      await _cargar(supa);
     } catch (err) {
       console.error('[backoffice/hoy]', err);
-      root.innerHTML = '';
+      const root = document.getElementById('bloques');
+      if (root) root.innerHTML = '';
       mostrarError('No se pudieron cargar los datos: ' + (err.message || 'error desconocido'));
     }
   }

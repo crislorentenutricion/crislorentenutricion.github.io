@@ -252,10 +252,15 @@ test("BoHoy.renderFilaPendiente: pinta nombre Title Case, hora y dos botones [Da
   assert.match(html, />13:00</);
   assert.ok(!/Hoy · 13:00/.test(html), "esHoy=true debe omitir prefijo de día");
 
-  // Botón "Dar de alta": copy-command estándar.
-  assert.match(html, /data-bo-action="copy"/);
-  assert.match(html, /data-bo-comando="\/alta-paciente JORGE NAVARRO jorge@x\.com"/);
+  // Botón "Dar de alta": acción directa con panel-fila (no copy-command).
+  assert.match(html, /data-bo-action="panel-fila"/);
+  assert.match(html, /data-bo-panel="alta"/);
+  assert.match(html, /data-bo-prefill-nombre="JORGE NAVARRO"/);
+  assert.match(html, /data-bo-prefill-email="jorge@x\.com"/);
   assert.match(html, />Dar de alta</);
+  // No debe emitir el copy-command de /alta-paciente.
+  assert.ok(!/data-bo-comando=/.test(html), "no debe haber data-bo-comando en fila pendiente");
+  assert.ok(!/\/alta-paciente/.test(html), "no debe haber comando /alta-paciente en HTML");
 
   // Botón "Descartar": acción directa con id+nombre para el handler.
   assert.match(html, /data-bo-action="descartar-valoracion"/);
@@ -288,9 +293,9 @@ test("BoHoy.renderFilaPendiente: escapa caracteres especiales en email/nombre", 
   });
   // El nombre interno en data-bo-valoracion-nombre debe quedar escapado.
   assert.match(html, /data-bo-valoracion-nombre="JOSÉ &quot;CHARO&quot;"/);
-  // El comando también escapado en data-bo-comando.
-  assert.match(html, /&quot;CHARO&quot;/);
-  assert.match(html, /x&amp;y@z\.com/);
+  // Los prefill también escapados en los data attrs del botón panel-fila.
+  assert.match(html, /data-bo-prefill-nombre="JOSÉ &quot;CHARO&quot;"/);
+  assert.match(html, /data-bo-prefill-email="x&amp;y@z\.com"/);
 });
 
 test("BoHoy.renderTodosLosBloques: pinta el bloque 'pendientes' cuando hay items", () => {
@@ -797,7 +802,12 @@ test("renderFilaPagoPendiente: vencido → badge 🔴 con clase bo-pago-vencido"
   assert.match(html, /vencido hace 3 días/);
   assert.match(html, /28 abr/);
   assert.match(html, /class="[^"]*bo-pago-vencido/);
-  assert.match(html, /data-bo-comando="\/registrar-pago NEREA"/);
+  // Acción directa panel-fila (no copy-command).
+  assert.match(html, /data-bo-action="panel-fila"/);
+  assert.match(html, /data-bo-panel="registrar-pago"/);
+  assert.match(html, /data-bo-paciente-id="p1"/);
+  assert.match(html, /data-bo-prefill-nombre="NEREA"/);
+  assert.ok(!/data-bo-comando=/.test(html), "no debe haber data-bo-comando en pago-pendiente");
   assert.match(html, /Registrar pago/);
   assert.match(html, /href="\/backoffice\/paciente\/\?id=p1"/);
 });
@@ -815,9 +825,12 @@ test("renderFilaPagoPendiente: aviso → badge 🟡 con clase bo-pago-aviso", ()
   assert.match(html, /1 may/);
   assert.match(html, /class="[^"]*bo-pago-aviso/);
   assert.ok(!/bo-pago-vencido/.test(html));
+  // Acción directa (no copy-command).
+  assert.match(html, /data-bo-panel="registrar-pago"/);
+  assert.match(html, /data-bo-paciente-id="p2"/);
 });
 
-test("renderFilaPagoPendiente: nombre va a comando en MAYÚSCULAS, visible en Title Case", () => {
+test("renderFilaPagoPendiente: nombre va a prefill en MAYÚSCULAS, visible en Title Case", () => {
   const html = BoHoy.renderFilaPagoPendiente({
     pacienteId: "p1",
     nombre: "MARÍA JOSÉ",
@@ -825,9 +838,10 @@ test("renderFilaPagoPendiente: nombre va a comando en MAYÚSCULAS, visible en Ti
     estado: "aviso",
     diasDiff: 1
   });
-  assert.match(html, /data-bo-comando="\/registrar-pago MARÍA JOSÉ"/);
-  // En el cuerpo visible aparece en Title Case (no MAYÚSCULAS)
-  const visible = html.replace(/<[^>]+>/g, " ").replace(/data-bo-comando="[^"]*"/g, "");
+  // Prefill en MAYÚSCULAS en el data attr.
+  assert.match(html, /data-bo-prefill-nombre="MARÍA JOSÉ"/);
+  // En el cuerpo visible aparece en Title Case (no MAYÚSCULAS).
+  const visible = html.replace(/<[^>]+>/g, " ");
   assert.match(visible, /María José/);
 });
 
@@ -840,6 +854,32 @@ test("renderFilaPagoPendiente: HTML escapado (defensa XSS)", () => {
     diasDiff: 0
   });
   assert.ok(!/<script>/.test(html));
+});
+
+test("renderFilaPagoPendiente: nombre con '\"' queda escapado en data-bo-prefill-nombre (XSS)", () => {
+  const html = BoHoy.renderFilaPagoPendiente({
+    pacienteId: "p1",
+    nombre: 'ANA "BELLA"',
+    fechaEsperada: "2026-05-01",
+    estado: "aviso",
+    diasDiff: 0
+  });
+  // El atributo no debe romper la comilla del HTML.
+  assert.match(html, /data-bo-prefill-nombre="ANA &quot;BELLA&quot;"/);
+  assert.ok(!/<script>/.test(html));
+});
+
+test("renderFilaMenuCrear: SIGUE usando copy-command /crear-menu (regresión)", () => {
+  const html = BoHoy.renderFilaMenuCrear({
+    pacienteId: "p1",
+    nombre: "ANA",
+    diasParaCaducar: 3,
+    anamnesisLista: true,
+    comando: "/crear-menu ANA"
+  });
+  // El bloque de menús no cambia — sigue emitiendo copy-command.
+  assert.match(html, /data-bo-comando="\/crear-menu ANA"/);
+  assert.ok(!/data-bo-panel=/.test(html), "menú no debe usar panel-fila");
 });
 
 // ===================================================================
