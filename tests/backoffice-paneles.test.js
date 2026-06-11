@@ -98,3 +98,168 @@ test('renderPanelAccion alta: XSS spot-check — nombre <x> se escapa', () => {
   assert.doesNotMatch(html, /<x>/);
   assert.match(html, /&lt;x&gt;/);
 });
+
+// -----------------------------------------------------------------
+// conectarPanel — submit handler
+// -----------------------------------------------------------------
+//
+// BoLogic es real (construirPayload / comandoRescate / resumenResultadoAccion
+// se testean aquí con datos reales). BoUi se stubea porque sus funciones
+// de DOM (toastResultado, ejecutarEdgeFunction) necesitan document/fetch.
+//
+// Estrategia Node globals:
+//   - BoLogic y BoUi están capturados a nivel módulo en paneles.js vía
+//     require('./logic.js') y require('./ui.js'). Node cachea los módulos,
+//     así que mutar propiedades del objeto devuelto por require() aquí
+//     es visible dentro del módulo ya cargado.
+//   - global.FormData se monkey-patchea temporalmente con una clase fake
+//     cuyo forEach(cb) itera sobre pares fijados por _fdEntries.
+// -----------------------------------------------------------------
+
+{
+  // Cargamos BoUi desde caché — es el mismo objeto que paneles.js capturó.
+  const BoUi = require('../src/backoffice/ui.js');
+
+  // Clase FormData fake; las entradas se inyectan por test via _fdEntries.
+  let _fdEntries = [];
+  class FakeFormData {
+    constructor() {}
+    forEach(cb) { _fdEntries.forEach(function (e) { cb(e[1], e[0]); }); }
+  }
+
+  // Helpers para construir fakes de form/cont.
+  function _makeForm(submitBtnStub) {
+    let _handler = null;
+    return {
+      querySelector: function (sel) {
+        if (sel === '[type="submit"]') return submitBtnStub || null;
+        if (sel === '[data-bo-motivo]') return null;
+        if (sel === '[data-bo-nota-personal]') return null;
+        return null;
+      },
+      addEventListener: function (ev, fn) { if (ev === 'submit') _handler = fn; },
+      _getHandler: function () { return _handler; }
+    };
+  }
+
+  function _makeCont(form) {
+    const spy = { removeAttributeCalls: [] };
+    return {
+      querySelector: function (sel) { return sel === '[data-bo-form]' ? form : null; },
+      get innerHTML() { return ''; },
+      set innerHTML(v) { spy.lastInnerHTML = v; },
+      removeAttribute: function (attr) { spy.removeAttributeCalls.push(attr); },
+      _spy: spy
+    };
+  }
+
+  function _makeDeps(overrides) {
+    return Object.assign({
+      supa: {},
+      ctxAccion: function () { return { pacienteId: 'p1', nombre: 'MARTA', email: 'a@b.c' }; },
+      recargar: function () {}
+    }, overrides || {});
+  }
+
+  test('conectarPanel agendar sin fecha: toastResultado tipo error, ejecutarEdgeFunction no llamado', async () => {
+    const origFormData = global.FormData;
+    global.FormData = FakeFormData;
+
+    const toastLlamadas = [];
+    const origToast = BoUi.toastResultado;
+    BoUi.toastResultado = function (m) { toastLlamadas.push(m); };
+
+    const efLlamadas = [];
+    const origEF = BoUi.ejecutarEdgeFunction;
+    BoUi.ejecutarEdgeFunction = async function () { efLlamadas.push(arguments); return { ok: true, data: {} }; };
+
+    try {
+      _fdEntries = [['fecha', '']]; // fecha vacía → inválida para 'agendar'
+      const submitBtn = { disabled: false, textContent: 'Agendar' };
+      const form = _makeForm(submitBtn);
+      const cont = _makeCont(form);
+      BoPaneles.conectarPanel(cont, 'agendar', _makeDeps());
+      const handler = form._getHandler();
+      await handler({ preventDefault: function () {} });
+
+      assert.equal(toastLlamadas.length, 1, 'toastResultado debe llamarse una vez');
+      assert.equal(toastLlamadas[0].tipo, 'error', 'tipo debe ser error');
+      assert.equal(efLlamadas.length, 0, 'ejecutarEdgeFunction no debe llamarse');
+    } finally {
+      global.FormData = origFormData;
+      BoUi.toastResultado = origToast;
+      BoUi.ejecutarEdgeFunction = origEF;
+    }
+  });
+
+  test('conectarPanel agendar happy path: toastResultado ok, cont vaciado, recargar llamado', async () => {
+    const origFormData = global.FormData;
+    global.FormData = FakeFormData;
+
+    const toastLlamadas = [];
+    const origToast = BoUi.toastResultado;
+    BoUi.toastResultado = function (m) { toastLlamadas.push(m); };
+
+    const origEF = BoUi.ejecutarEdgeFunction;
+    BoUi.ejecutarEdgeFunction = async function () { return { ok: true, data: {} }; };
+
+    let recargarLlamado = false;
+
+    try {
+      _fdEntries = [['fecha', '2026-08-01T10:00'], ['duracion', '30']];
+      const submitBtn = { disabled: false, textContent: 'Agendar' };
+      const form = _makeForm(submitBtn);
+      const cont = _makeCont(form);
+      const deps = _makeDeps({ recargar: function () { recargarLlamado = true; } });
+      BoPaneles.conectarPanel(cont, 'agendar', deps);
+      const handler = form._getHandler();
+      await handler({ preventDefault: function () {} });
+
+      assert.equal(toastLlamadas.length, 1, 'toastResultado debe llamarse');
+      assert.equal(toastLlamadas[0].tipo, 'ok', 'tipo debe ser ok');
+      assert.equal(cont._spy.lastInnerHTML, '', 'cont.innerHTML debe vaciarse');
+      assert.deepEqual(cont._spy.removeAttributeCalls, ['data-bo-abierto'], 'removeAttribute data-bo-abierto');
+      assert.equal(recargarLlamado, true, 'recargar debe llamarse');
+      assert.equal(submitBtn.disabled, false, 'submit btn debe re-habilitarse');
+    } finally {
+      global.FormData = origFormData;
+      BoUi.toastResultado = origToast;
+      BoUi.ejecutarEdgeFunction = origEF;
+    }
+  });
+
+  test('conectarPanel agendar EF error: toastResultado tipo error con comando rescate, recargar no llamado', async () => {
+    const origFormData = global.FormData;
+    global.FormData = FakeFormData;
+
+    const toastLlamadas = [];
+    const origToast = BoUi.toastResultado;
+    BoUi.toastResultado = function (m) { toastLlamadas.push(m); };
+
+    const origEF = BoUi.ejecutarEdgeFunction;
+    BoUi.ejecutarEdgeFunction = async function () { return { ok: false, error: { message: 'boom' } }; };
+
+    let recargarLlamado = false;
+
+    try {
+      _fdEntries = [['fecha', '2026-08-01T10:00'], ['duracion', '30']];
+      const submitBtn = { disabled: false, textContent: 'Agendar' };
+      const form = _makeForm(submitBtn);
+      const cont = _makeCont(form);
+      const deps = _makeDeps({ recargar: function () { recargarLlamado = true; } });
+      BoPaneles.conectarPanel(cont, 'agendar', deps);
+      const handler = form._getHandler();
+      await handler({ preventDefault: function () {} });
+
+      assert.equal(toastLlamadas.length, 1, 'toastResultado debe llamarse');
+      assert.equal(toastLlamadas[0].tipo, 'error', 'tipo debe ser error');
+      assert.ok(Array.isArray(toastLlamadas[0].extras) && toastLlamadas[0].extras.length > 0, 'debe tener extras');
+      assert.equal(toastLlamadas[0].extras[0].texto, '/agendar MARTA', 'extras[0].texto es el comando rescate');
+      assert.equal(recargarLlamado, false, 'recargar no debe llamarse en error');
+    } finally {
+      global.FormData = origFormData;
+      BoUi.toastResultado = origToast;
+      BoUi.ejecutarEdgeFunction = origEF;
+    }
+  });
+}

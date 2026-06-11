@@ -9,11 +9,11 @@
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
 //
-// Todas las acciones del detalle son copy-command: pegar el prompt en Claude
-// Code y dejar que la skill lo procese. No hay botones backend aquí — las
-// Edge Functions (supabase/functions/*) siguen vivas para invocación manual
-// pero la UI no las llama. El envío del menú es la cola natural de
-// `/crear-menu` en Claude, así que tampoco hay botón "Enviar menú".
+// Las acciones del detalle siguen dos vías: 8 acciones directas vía panel
+// (agendar, reagendar, alta, reactivar, cerrar, repescar, registrar-pago,
+// enviar-menu) invocan Edge Functions; 3 acciones copy-command "vía Claude"
+// (crear-menu, seguimiento, borrar-rgpd) pegan el prompt en Claude Code y
+// dejan que la skill lo procese.
 //
 // Funciones puras exportadas: renderCabecera, renderAnamnesis, renderTimeline,
 // renderAcciones. Reciben los datos ya cargados y devuelven HTML string.
@@ -1496,7 +1496,7 @@
     // migración 0019_pagos.sql; mientras no esté aplicada en una rama o entorno
     // dado, queremos que la página siga funcionando con el bloque "Pagos" vacío.
     const corePromises = Promise.all([
-      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis, anamnesis_completed_at, created_at, closed_at, close_reason').eq('id', idPaciente).maybeSingle(),
+      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis, anamnesis_completed_at, created_at, closed_at, close_reason, ultimo_intento_repesca').eq('id', idPaciente).maybeSingle(),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at').eq('paciente_id', idPaciente),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id, created_at').eq('paciente_id', idPaciente),
       supa.from('revisiones').select('id, paciente_id, sesion_id, contenido, created_at').eq('paciente_id', idPaciente).order('created_at', { ascending: false }),

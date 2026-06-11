@@ -143,7 +143,7 @@
         BoUi.toastResultado(modelo);
         cont.innerHTML = '';
         if (cont.removeAttribute) cont.removeAttribute('data-bo-abierto');
-        if (typeof deps.recargar === 'function') deps.recargar();
+        if (typeof deps.recargar === 'function') deps.recargar(); // fire-and-forget: el toast ya está mostrado; el re-render llega cuando llega
       } else {
         BoUi.toastResultado({
           tipo: 'error',

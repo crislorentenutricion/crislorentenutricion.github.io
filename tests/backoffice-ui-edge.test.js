@@ -1,8 +1,8 @@
 // Unit tests de BoUi.ejecutarEdgeFunction — wrapper sobre supa.functions.invoke.
 //
-// El helper sigue vivo en ui.js porque es infra compartida del backoffice;
-// el detalle del paciente ya no lo invoca (todas sus acciones son copy-command
-// desde 2026-04-24), pero futuras vistas pueden usarlo.
+// El helper vive en ui.js como infra compartida del backoffice. Lo invocan
+// las 8 acciones directas del detalle de paciente (vía BoPaneles.conectarPanel)
+// y cualquier vista futura que necesite llamar a Edge Functions.
 
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
