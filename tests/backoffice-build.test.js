@@ -37,10 +37,12 @@ test("backoffice: /backoffice/pacientes/ existe con noindex,nofollow", () => {
   assert.match(html, /<meta name="robots" content="noindex, nofollow">/, "falta noindex,nofollow en /pacientes/");
 });
 
-test("backoffice: ambas páginas cargan logic.js + auth.js y el SDK Supabase", () => {
+test("backoffice: ambas páginas cargan logic.js + ui.js + paneles.js + auth.js y el SDK Supabase", () => {
   for (const rel of ["backoffice/index.html", "backoffice/pacientes/index.html"]) {
     const html = fs.readFileSync(path.join(SITE, rel), "utf8");
     assert.match(html, /src="\/backoffice\/logic\.js"/, `${rel} no carga backoffice/logic.js`);
+    assert.match(html, /src="\/backoffice\/ui\.js"/, `${rel} no carga backoffice/ui.js`);
+    assert.match(html, /src="\/backoffice\/paneles\.js"/, `${rel} no carga backoffice/paneles.js`);
     assert.match(html, /src="\/backoffice\/auth\.js"/, `${rel} no carga backoffice/auth.js`);
     assert.match(html, /@supabase\/supabase-js@2/, `${rel} no importa el SDK de Supabase`);
     assert.match(html, /window\.BoAuth\.iniciar/, `${rel} no invoca BoAuth.iniciar`);
@@ -58,8 +60,10 @@ test("backoffice: robots.txt desautoriza /backoffice/ para todos los agentes rel
   }
 });
 
-test("backoffice: logic.js y auth.js se copian al _site/backoffice/", () => {
+test("backoffice: logic.js, ui.js, paneles.js y auth.js se copian al _site/backoffice/", () => {
   assert.ok(fs.existsSync(path.join(SITE, "backoffice", "logic.js")), "falta _site/backoffice/logic.js");
+  assert.ok(fs.existsSync(path.join(SITE, "backoffice", "ui.js")), "falta _site/backoffice/ui.js");
+  assert.ok(fs.existsSync(path.join(SITE, "backoffice", "paneles.js")), "falta _site/backoffice/paneles.js");
   assert.ok(fs.existsSync(path.join(SITE, "backoffice", "auth.js")), "falta _site/backoffice/auth.js");
 });
 

@@ -1637,3 +1637,16 @@ test('NOMBRE_EF: spot-check alta → alta-paciente', () => {
   assert.equal(NOMBRE_EF['cerrar'], 'cerrar-paciente');
   assert.equal(NOMBRE_EF['agendar'], 'agendar');
 });
+
+// PIGGYBACK — desde revisión Task 13
+test('construirPayload reactivar: crear_borrador ausente → false en payload', () => {
+  const r = construirPayload('reactivar', {}, { pacienteId: 'p1' });
+  assert.equal(r.ok, true);
+  assert.equal(r.payload.crear_borrador, false);
+});
+
+test('construirPayload repescar sin force: payload sin clave force', () => {
+  const r = construirPayload('repescar', {}, { pacienteId: 'p1' });
+  assert.equal(r.ok, true);
+  assert.equal('force' in r.payload, false);
+});

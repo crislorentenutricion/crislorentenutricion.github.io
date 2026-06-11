@@ -44,6 +44,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/backoffice/logic.js");
   eleventyConfig.addPassthroughCopy("src/backoffice/auth.js");
   eleventyConfig.addPassthroughCopy("src/backoffice/ui.js");
+  eleventyConfig.addPassthroughCopy("src/backoffice/paneles.js");
   eleventyConfig.addPassthroughCopy("src/backoffice/backoffice-hoy.js");
   eleventyConfig.addPassthroughCopy("src/backoffice/backoffice-pacientes.js");
   eleventyConfig.addPassthroughCopy("src/backoffice/backoffice-paciente.js");
