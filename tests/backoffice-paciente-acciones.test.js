@@ -1,9 +1,8 @@
 // Tests del wiring de acciones del detalle de paciente.
 //
-// Desde 2026-04-24 todas las acciones del detalle son copy-command: el click
-// copia el prompt al portapapeles. No hay botones backend aquí. El helper
-// BoUi.ejecutarEdgeFunction sigue vivo en ui.js (posibles futuros consumidores)
-// y tiene su suite en backoffice-ui-edge.test.js.
+// Desde tarea 16 hay dos tipos de botón: copy-command y panel inline.
+// Copy: crear-menu, seguimiento-paciente, borrar-paciente-rgpd.
+// Panel: agendar, reagendar, registrar-pago, repescar, cerrar, reactivar, enviar-menu.
 
 const { test, before } = require("node:test");
 const assert = require("node:assert/strict");
@@ -17,6 +16,8 @@ const BoLogic = require("../src/backoffice/logic.js");
 global.window = global.window || {};
 global.window.BoUi    = BoUi;
 global.window.BoLogic = BoLogic;
+const BoPaneles = require("../src/backoffice/paneles.js");
+global.window.BoPaneles = BoPaneles;
 const BoPaciente = require("../src/backoffice/backoffice-paciente.js");
 
 // -------------------------------------------------------------------
@@ -112,6 +113,94 @@ test("_manejarClickAccion: botón sin data-bo-comando no copia nada", async () =
 });
 
 // -------------------------------------------------------------------
+// Panel-path: _manejarClickAccion con action="panel" / "cerrar-panel"
+// -------------------------------------------------------------------
+
+// Fake DOM container para los tests de panel inline.
+function _fakeCont(attrs) {
+  const a = Object.assign({}, attrs || {});
+  const cont = {
+    _attrs: a,
+    innerHTML: '',
+    dataset: {},
+    getAttribute: function (k) { return this._attrs[k] != null ? this._attrs[k] : null; },
+    setAttribute: function (k, v) { this._attrs[k] = String(v); },
+    removeAttribute: function (k) { delete this._attrs[k]; }
+  };
+  return cont;
+}
+
+test("_manejarClickAccion: botón panel abre el panel en #bo-panel-accion", async () => {
+  const btn = _fakeBtn({
+    "data-bo-action": "panel",
+    "data-bo-panel": "agendar"
+  });
+  const cont = _fakeCont();
+  const renderCalls = [];
+  const conectarCalls = [];
+  const prevRender = BoPaneles.renderPanelAccion;
+  const prevConectar = BoPaneles.conectarPanel;
+  BoPaneles.renderPanelAccion = function (accion, ctx) { renderCalls.push({ accion, ctx }); return '<form data-bo-form="' + accion + '"></form>'; };
+  BoPaneles.conectarPanel = function (c, accion, deps) { conectarCalls.push({ c, accion, deps }); };
+  const prevGetById = global.document && global.document.getElementById;
+  global.document = global.document || {};
+  global.document.getElementById = function (id) { if (id === 'bo-panel-accion') return cont; return null; };
+  const ctxAccion = function () { return { nombre: 'MARTA', email: 'm@x.com' }; };
+  const deps = { ctxAccion: ctxAccion, recargar: function () {} };
+  const event = { target: btn, preventDefault: function () {} };
+  try {
+    await BoPaciente._manejarClickAccion(event, deps);
+  } finally {
+    BoPaneles.renderPanelAccion = prevRender;
+    BoPaneles.conectarPanel = prevConectar;
+    if (prevGetById) global.document.getElementById = prevGetById;
+  }
+  assert.equal(renderCalls.length, 1);
+  assert.equal(renderCalls[0].accion, 'agendar');
+  assert.equal(cont.getAttribute('data-bo-abierto'), 'agendar');
+  assert.equal(conectarCalls.length, 1);
+  assert.equal(conectarCalls[0].accion, 'agendar');
+});
+
+test("_manejarClickAccion: segundo click en el mismo panel lo cierra (toggle)", async () => {
+  const btn = _fakeBtn({
+    "data-bo-action": "panel",
+    "data-bo-panel": "agendar"
+  });
+  const cont = _fakeCont({ 'data-bo-abierto': 'agendar' });
+  cont.innerHTML = '<form></form>';
+  const prevRender = BoPaneles.renderPanelAccion;
+  const prevConectar = BoPaneles.conectarPanel;
+  BoPaneles.renderPanelAccion = function () { return '<form></form>'; };
+  BoPaneles.conectarPanel = function () {};
+  global.document = global.document || {};
+  global.document.getElementById = function (id) { if (id === 'bo-panel-accion') return cont; return null; };
+  const deps = { ctxAccion: function () { return {}; }, recargar: function () {} };
+  const event = { target: btn, preventDefault: function () {} };
+  try {
+    await BoPaciente._manejarClickAccion(event, deps);
+  } finally {
+    BoPaneles.renderPanelAccion = prevRender;
+    BoPaneles.conectarPanel = prevConectar;
+  }
+  // Panel debería haberse cerrado (toggle)
+  assert.equal(cont.innerHTML, '');
+  assert.equal(cont.getAttribute('data-bo-abierto'), null);
+});
+
+test("_manejarClickAccion: cerrar-panel limpia el contenedor", async () => {
+  const btn = _fakeBtn({ "data-bo-action": "cerrar-panel" });
+  const cont = _fakeCont({ 'data-bo-abierto': 'agendar' });
+  cont.innerHTML = '<form></form>';
+  global.document = global.document || {};
+  global.document.getElementById = function (id) { if (id === 'bo-panel-accion') return cont; return null; };
+  const event = { target: btn, preventDefault: function () {} };
+  await BoPaciente._manejarClickAccion(event, {});
+  assert.equal(cont.innerHTML, '');
+  assert.equal(cont.getAttribute('data-bo-abierto'), null);
+});
+
+// -------------------------------------------------------------------
 // Build: la vista detalle despliega los scripts esperados
 // -------------------------------------------------------------------
 
@@ -125,16 +214,17 @@ test("build: /backoffice/paciente/ no hardcodea botones (se pintan en runtime)",
   assert.match(html, /src="\/backoffice\/backoffice-paciente\.js"/);
 });
 
-test("build: backoffice-paciente.js desplegado renderiza acciones como copy-command", () => {
+test("build: backoffice-paciente.js desplegado tiene copy + panel, no backend directo", () => {
   const js = fs.readFileSync(path.join(SITE, "backoffice", "backoffice-paciente.js"), "utf8");
-  // Sigue vivo el wiring de copy.
+  // Copy sigue vivo (crear-menu, seguimiento-paciente, borrar-paciente-rgpd).
   assert.match(js, /data-bo-action="copy"/);
   assert.match(js, /data-bo-comando/);
-  // Ya no hay backend en el detalle.
+  // Panel inline también presente (tarea 16).
+  assert.match(js, /data-bo-action="panel"/);
+  assert.match(js, /data-bo-panel/);
+  // No hay backend directo en el detalle.
   assert.ok(!/data-bo-action="backend"/.test(js),
     "el detalle ya no debe emitir botones backend");
   assert.ok(!/data-bo-function=/.test(js),
     "el detalle ya no debe emitir data-bo-function");
-  assert.ok(!/ejecutarEdgeFunction/.test(js),
-    "el detalle ya no invoca Edge Functions directamente");
 });

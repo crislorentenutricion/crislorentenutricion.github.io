@@ -1,10 +1,10 @@
 // Paneles inline de acciones directas del backoffice — renderers puros
 // compartidos entre el detalle de paciente y la vista Tareas.
-// El submit lo conecta cada vista (backoffice-paciente.js / backoffice-hoy.js)
-// vía conectarPanel (se añade en la siguiente tarea de wiring).
+// El submit se conecta vía conectarPanel(cont, accion, deps).
 (function () {
   'use strict';
-  const BoUi = (typeof module !== 'undefined' && module.exports) ? require('./ui.js') : window.BoUi;
+  const BoUi    = (typeof module !== 'undefined' && module.exports) ? require('./ui.js')    : window.BoUi;
+  const BoLogic = (typeof module !== 'undefined' && module.exports) ? require('./logic.js') : window.BoLogic;
 
   function _campo(html) { return '<div class="bo-panel-campo">' + html + '</div>'; }
   function _pie(etiquetaEjecutar) {
@@ -113,7 +113,48 @@
     }
   }
 
-  const api = { renderPanelAccion: renderPanelAccion };
+  function conectarPanel(cont, accion, deps) {
+    const form = cont.querySelector('[data-bo-form]');
+    if (!form) return;
+    const motivoSel = form.querySelector('[data-bo-motivo]');
+    if (motivoSel) {
+      const nota = form.querySelector('[data-bo-nota-personal]');
+      const sync = function () { if (nota) nota.style.display = motivoSel.value === 'objetivo_cumplido' ? '' : 'none'; };
+      motivoSel.addEventListener('change', sync);
+      sync();
+    }
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      const valores = {};
+      new FormData(form).forEach(function (v, k) { valores[k] = String(v); });
+      const ctx = deps.ctxAccion();
+      const r = BoLogic.construirPayload(accion, valores, ctx);
+      if (!r.ok) { BoUi.toastResultado({ tipo: 'error', mensaje: r.error }); return; }
+      const submitBtn = form.querySelector('[type="submit"]');
+      submitBtn.disabled = true;
+      const original = submitBtn.textContent;
+      submitBtn.textContent = 'Ejecutando…';
+      const res = await BoUi.ejecutarEdgeFunction(deps.supa, BoLogic.NOMBRE_EF[accion], r.payload);
+      submitBtn.disabled = false;
+      submitBtn.textContent = original;
+      if (res.ok) {
+        const modelo = BoLogic.resumenResultadoAccion(accion, res.data);
+        modelo.tipo = (modelo.avisos && modelo.avisos.length) ? 'aviso' : 'ok';
+        BoUi.toastResultado(modelo);
+        cont.innerHTML = '';
+        if (cont.removeAttribute) cont.removeAttribute('data-bo-abierto');
+        if (typeof deps.recargar === 'function') deps.recargar();
+      } else {
+        BoUi.toastResultado({
+          tipo: 'error',
+          mensaje: 'No se pudo completar: ' + res.error.message,
+          extras: [{ etiqueta: 'Copiar comando para Claude', texto: BoLogic.comandoRescate(accion, ctx.nombre, ctx.email) }]
+        });
+      }
+    });
+  }
+
+  const api = { renderPanelAccion: renderPanelAccion, conectarPanel: conectarPanel };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.BoPaneles = api;
 })();
