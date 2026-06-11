@@ -242,8 +242,7 @@ test("BoHoy.renderFilaPendiente: pinta nombre Title Case, hora y dos botones [Da
     email: "jorge@x.com",
     hora: "13:00",
     diaLabel: "Hoy",
-    esHoy: true,
-    comandoAlta: "/alta-paciente JORGE NAVARRO jorge@x.com"
+    esHoy: true
   });
   assert.match(html, /data-bo-fila="pendiente"/);
   assert.match(html, /class="bo-fila bo-fila-pendiente"/);
@@ -276,8 +275,7 @@ test("BoHoy.renderFilaPendiente: esHoy=false → muestra 'Ayer · 13:00' (o etiq
     email: "a@x.com",
     hora: "13:00",
     diaLabel: "Ayer",
-    esHoy: false,
-    comandoAlta: "/alta-paciente ANA a@x.com"
+    esHoy: false
   });
   assert.match(html, /Ayer · 13:00/);
 });
@@ -288,8 +286,7 @@ test("BoHoy.renderFilaPendiente: escapa caracteres especiales en email/nombre", 
     nombre: 'JOSÉ "CHARO"',
     email: "x&y@z.com",
     hora: "10:00",
-    esHoy: true,
-    comandoAlta: '/alta-paciente JOSÉ "CHARO" x&y@z.com'
+    esHoy: true
   });
   // El nombre interno en data-bo-valoracion-nombre debe quedar escapado.
   assert.match(html, /data-bo-valoracion-nombre="JOSÉ &quot;CHARO&quot;"/);
@@ -303,7 +300,7 @@ test("BoHoy.renderTodosLosBloques: pinta el bloque 'pendientes' cuando hay items
     sesionesHoy: [],
     pendientes: [{
       valoracionId: "v1", nombre: "X", email: "x@x", hora: "10:00",
-      esHoy: true, comandoAlta: "/alta-paciente X x@x"
+      esHoy: true
     }],
     proximos7Dias: [],
     menusCrearSemana: []
@@ -417,7 +414,7 @@ test("BoHoy.renderTodosLosBloques: orden por urgencia (pendientes → sesiones-h
   const agrupado = {
     pendientes: [{
       valoracionId: "v1", nombre: "X", email: "x@x", hora: "10:00",
-      esHoy: true, comandoAlta: "/alta-paciente X x@x"
+      esHoy: true
     }],
     sesionesHoy: [{ pacienteId: "p1", nombre: "ANA", hora: "10:00", comando: "/seguimiento-paciente ANA" }],
     menusCrearSemana: [{ pacienteId: "p1", nombre: "ANA", diasParaCaducar: 1, comando: "/crear-menu ANA" }],

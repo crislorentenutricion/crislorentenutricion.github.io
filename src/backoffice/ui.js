@@ -152,8 +152,9 @@
   // existe — múltiples clics seguidos actualizan el mensaje en lugar de
   // apilar nodos.
   let _toastTimer = null;
-  function toast(mensaje) {
-    if (typeof document === 'undefined') return;
+  let _toastCerrarError = null;
+
+  function _getOrCreateToast() {
     let el = document.getElementById('bo-toast');
     if (!el) {
       el = document.createElement('div');
@@ -163,6 +164,12 @@
       el.setAttribute('aria-live', 'polite');
       document.body.appendChild(el);
     }
+    return el;
+  }
+
+  function toast(mensaje) {
+    if (typeof document === 'undefined') return;
+    const el = _getOrCreateToast();
     el.textContent = mensaje;
     // Limpia variantes de error/aviso previas para que un toast() simple tras
     // toastResultado('error') no herede el fondo rojo.
@@ -182,15 +189,7 @@
   function toastResultado(modelo) {
     if (typeof document === 'undefined') return;
     const m = modelo || {};
-    let el = document.getElementById('bo-toast');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'bo-toast';
-      el.className = 'bo-toast';
-      el.setAttribute('role', 'status');
-      el.setAttribute('aria-live', 'polite');
-      document.body.appendChild(el);
-    }
+    const el = _getOrCreateToast();
     el.className = 'bo-toast is-visible' +
       (m.tipo === 'error' ? ' bo-toast-error' : m.tipo === 'aviso' ? ' bo-toast-aviso' : '');
     el.textContent = '';
@@ -215,10 +214,15 @@
     });
     if (_toastTimer) clearTimeout(_toastTimer);
     if (m.tipo === 'error') {
-      el.addEventListener('click', function cerrar() {
+      // Un solo listener vivo: si quedó uno de un error anterior sin cerrar,
+      // se retira antes de añadir el nuevo (evita acumulación).
+      if (_toastCerrarError) el.removeEventListener('click', _toastCerrarError);
+      _toastCerrarError = function () {
         el.classList.remove('is-visible');
-        el.removeEventListener('click', cerrar);
-      });
+        el.removeEventListener('click', _toastCerrarError);
+        _toastCerrarError = null;
+      };
+      el.addEventListener('click', _toastCerrarError);
     } else {
       _toastTimer = setTimeout(function () { el.classList.remove('is-visible'); }, 6000);
     }

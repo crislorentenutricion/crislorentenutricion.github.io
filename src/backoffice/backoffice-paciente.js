@@ -33,8 +33,14 @@
     if (typeof require === 'function') return require('./logic.js');
     return null;
   }
-  const BoUi    = new Proxy({}, { get: (_t, prop) => _BoUi()[prop] });
-  const BoLogic = new Proxy({}, { get: (_t, prop) => _BoLogic()[prop] });
+  function _BoPaneles() {
+    if (typeof window !== 'undefined' && window.BoPaneles) return window.BoPaneles;
+    if (typeof require === 'function') return require('./paneles.js');
+    return null;
+  }
+  const BoUi     = new Proxy({}, { get: (_t, prop) => _BoUi()[prop] });
+  const BoLogic  = new Proxy({}, { get: (_t, prop) => _BoLogic()[prop] });
+  const BoPaneles = new Proxy({}, { get: (_t, prop) => _BoPaneles()[prop] });
 
   // -----------------------------------------------------------------
   // Constantes / estado de render
@@ -1341,8 +1347,6 @@
         cont.removeAttribute('data-bo-abierto');
         return;
       }
-      const BoPaneles = (typeof window !== 'undefined' && window.BoPaneles) ||
-        (typeof module !== 'undefined' && require('./paneles.js'));
       cont.innerHTML = BoPaneles.renderPanelAccion(accion, deps.ctxAccion());
       cont.setAttribute('data-bo-abierto', accion);
       BoPaneles.conectarPanel(cont, accion, deps);

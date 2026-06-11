@@ -305,17 +305,6 @@
     return '/' + s + ' ' + nombre;
   }
 
-  // Comando especial para el bloque "Pendientes de resolver": la skill
-  // /alta-paciente recoge nombre + email del mensaje (ver SKILL.md), así que
-  // emitimos el prompt directamente con ambos datos para que Cristina solo
-  // tenga que pegar y pulsar Enter. Email en minúsculas y trim.
-  function _comandoAltaConEmail(nombrePaciente, email) {
-    const nombre = _normalizarNombre(nombrePaciente);
-    const e = String(email == null ? '' : email).trim().toLowerCase();
-    if (!nombre || !e) return '';
-    return '/alta-paciente ' + nombre + ' ' + e;
-  }
-
   // -----------------------------------------------------------------
   // Indexadores: agrupan listas por paciente_id para O(1) lookups
   // -----------------------------------------------------------------
@@ -632,7 +621,6 @@
           hora: _horaSesion(v.fecha),
           diaLabel: fechaMid && hoyMid ? _diaLabel(fechaMid, hoyMid) : '',
           esHoy: esHoy,
-          comandoAlta: _comandoAltaConEmail(v.nombre, v.email),
           _ts: tIni
         });
       }
@@ -903,6 +891,10 @@
   // Acciones directas: payloads, validación y rescate
   // -----------------------------------------------------------------
 
+  // Prefijo de aviso que el frontend suprime del resumen visible (es un flag
+  // interno de la EF, no un mensaje para Cristina).
+  const AVISO_INTERNO_RGPD = 'borrado_rgpd_no_ejecutado';
+
   // Nombre de la Edge Function correspondiente a cada acción de backoffice.
   const NOMBRE_EF = {
     'agendar': 'agendar',
@@ -915,17 +907,8 @@
     'enviar-menu': 'enviar-menu'
   };
 
-  // Skill de rescate (comando a copiar en caso de error en la EF).
-  const SKILL_RESCATE = {
-    'agendar': 'agendar',
-    'reagendar': 'reagendar',
-    'alta': 'alta-paciente',
-    'reactivar': 'reactivar-paciente',
-    'cerrar': 'cerrar-paciente',
-    'repescar': 'repescar-paciente',
-    'registrar-pago': 'registrar-pago',
-    'enviar-menu': 'enviar-menu'
-  };
+  // La skill de rescate comparte nombres con la EF — mismo mapa.
+  const SKILL_RESCATE = NOMBRE_EF;
 
   // Devuelve el comando de rescate para el toast de error.
   // Para alta, concatena email al comando si se pasa.
@@ -970,8 +953,9 @@
         if (!v.confirmar) return _ko('Marca la casilla de confirmación para cerrar.');
         const MOTIVOS_UI = ['objetivo_cumplido', 'abandono', 'baja_voluntaria', 'fin_de_prueba'];
         if (MOTIVOS_UI.indexOf(v.motivo) === -1) return _ko('Elige un motivo de cierre.');
-        const p = { paciente_id: pid, motivo: v.motivo === 'fin_de_prueba' ? 'baja_voluntaria' : v.motivo };
-        if (v.motivo === 'fin_de_prueba') p.fin_de_prueba = true;
+        const esPrueba = v.motivo === 'fin_de_prueba';
+        const p = { paciente_id: pid, motivo: esPrueba ? 'baja_voluntaria' : v.motivo };
+        if (esPrueba) p.fin_de_prueba = true;
         if (v.motivo === 'objetivo_cumplido' && v.nota_personal && v.nota_personal.trim()) {
           if (v.nota_personal.length > 2000) return _ko('La nota personal supera 2000 caracteres.');
           p.nota_personal = v.nota_personal.trim();
@@ -1035,7 +1019,7 @@
       default:
         mensaje = 'Acción completada.';
     }
-    const avisos = Array.isArray(d.avisos) ? d.avisos.filter(function (a) { return a.indexOf('borrado_rgpd_no_ejecutado') !== 0; }) : [];
+    const avisos = Array.isArray(d.avisos) ? d.avisos.filter(function (a) { return a.indexOf(AVISO_INTERNO_RGPD) !== 0; }) : [];
     return { mensaje: mensaje, extras: extras, avisos: avisos };
   }
 

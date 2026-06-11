@@ -493,9 +493,9 @@
   function _conectarBotonesPanelFila(root, supa, recargar) {
     if (!root || typeof root.querySelectorAll !== 'function') return;
     const botones = root.querySelectorAll('[data-bo-action="panel-fila"]');
+    // root.innerHTML fue reseteado antes de esta llamada — los nodos son siempre
+    // nuevos, no hace falta guardia de re-wiring.
     botones.forEach(function (btn) {
-      if (btn._boWiredPanelFila) return;
-      btn._boWiredPanelFila = true;
       btn.addEventListener('click', function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -520,22 +520,16 @@
         fila.after(cont);
         _panelAbiertoHoy = cont;
 
-        // Construir ctx según la acción.
-        let ctx;
-        if (accion === 'alta') {
-          ctx = {
-            prefill: {
-              nombre: btn.getAttribute('data-bo-prefill-nombre') || '',
-              email:  btn.getAttribute('data-bo-prefill-email')  || ''
-            }
-          };
-        } else {
-          // registrar-pago: siempre renovación vencida en esta vista.
-          ctx = {
-            pagosPrevios: 1,
-            prefill: { nombre: btn.getAttribute('data-bo-prefill-nombre') || '' }
-          };
-        }
+        // Construir ctx una vez — se usa tanto para el render inicial como para
+        // ctxAccion() en el submit (mismos datos en ambos casos).
+        const ctx = accion === 'alta'
+          ? { prefill: {
+                nombre: btn.getAttribute('data-bo-prefill-nombre') || '',
+                email:  btn.getAttribute('data-bo-prefill-email')  || ''
+              } }
+          : { pagosPrevios: 1,  // registrar-pago: siempre renovación vencida en esta vista
+              pacienteId: btn.getAttribute('data-bo-paciente-id') || '',
+              prefill: { nombre: btn.getAttribute('data-bo-prefill-nombre') || '' } };
 
         cont.innerHTML = BoPaneles.renderPanelAccion(accion, ctx);
 
@@ -550,18 +544,7 @@
 
         BoPaneles.conectarPanel(cont, accion, {
           supa: supa,
-          ctxAccion: function () {
-            if (accion === 'alta') {
-              return {
-                nombre: btn.getAttribute('data-bo-prefill-nombre') || '',
-                email:  btn.getAttribute('data-bo-prefill-email')  || ''
-              };
-            }
-            return {
-              pacienteId: btn.getAttribute('data-bo-paciente-id') || '',
-              nombre:     btn.getAttribute('data-bo-prefill-nombre') || ''
-            };
-          },
+          ctxAccion: function () { return ctx; },
           recargar: function () {
             if (_panelAbiertoHoy === cont) _panelAbiertoHoy = null;
             return recargar();

@@ -631,7 +631,6 @@ test("agruparHoy: valoración con slot pasado y sin paciente → bloque pendient
   assert.equal(p.email, "jorge@x.com");
   assert.equal(p.hora, "13:00");
   assert.equal(p.esHoy, true);
-  assert.equal(p.comandoAlta, "/alta-paciente JORGE NAVARRO jorge@x.com");
 });
 
 test("agruparHoy: valoración con slot vigente sigue en sesionesHoy, no en pendientes", () => {
@@ -751,7 +750,7 @@ test("agruparHoy: pendientes ordenadas por timestamp ascendente (más antiguas p
   assert.deepEqual(r.pendientes.map(p => p.valoracionId), ["v_lun", "v_ayer", "v_hoy"]);
 });
 
-test("agruparHoy: comandoAlta omite cuando falta nombre o email", () => {
+test("agruparHoy: pendientes conserva nombre/email vacíos tal cual (la UI valida al dar de alta)", () => {
   const datos = {
     pacientes: [], menus: [], sesiones: [], checkins: [],
     valoraciones: [
@@ -761,8 +760,8 @@ test("agruparHoy: comandoAlta omite cuando falta nombre o email", () => {
   };
   const r = agruparHoy(datos, HOY_TARDE);
   assert.equal(r.pendientes.length, 2);
-  assert.equal(r.pendientes[0].comandoAlta, "");
-  assert.equal(r.pendientes[1].comandoAlta, "");
+  assert.equal(r.pendientes[0].nombre, "");
+  assert.equal(r.pendientes[1].email, "");
 });
 
 // ===================================================================
