@@ -164,11 +164,64 @@
       document.body.appendChild(el);
     }
     el.textContent = mensaje;
+    // Limpia variantes de error/aviso previas para que un toast() simple tras
+    // toastResultado('error') no herede el fondo rojo.
+    el.classList.remove('bo-toast-error');
+    el.classList.remove('bo-toast-aviso');
     el.classList.add('is-visible');
     if (_toastTimer) clearTimeout(_toastTimer);
     _toastTimer = setTimeout(function () {
       el.classList.remove('is-visible');
     }, 2800);
+  }
+
+  // Toast rico para resultados de acciones directas. tipo: 'ok'|'aviso'|'error'.
+  // extras: [{etiqueta, texto}] → botones que copian `texto` al portapapeles.
+  // Error: persiste hasta click (sin timer). Ok/aviso: 6s.
+  // Como `toast`, es función de DOM: se valida en integración navegador, no en Node.
+  function toastResultado(modelo) {
+    if (typeof document === 'undefined') return;
+    const m = modelo || {};
+    let el = document.getElementById('bo-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'bo-toast';
+      el.className = 'bo-toast';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      document.body.appendChild(el);
+    }
+    el.className = 'bo-toast is-visible' +
+      (m.tipo === 'error' ? ' bo-toast-error' : m.tipo === 'aviso' ? ' bo-toast-aviso' : '');
+    el.textContent = '';
+    const p = document.createElement('div');
+    p.textContent = m.mensaje || '';
+    el.appendChild(p);
+    (m.avisos || []).forEach(function (a) {
+      const av = document.createElement('div');
+      av.textContent = '⚠ ' + a;
+      el.appendChild(av);
+    });
+    (m.extras || []).forEach(function (x) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'bo-toast-extra';
+      b.textContent = x.etiqueta;
+      b.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        copiarAlPortapapeles(x.texto).then(function () { b.textContent = 'Copiado'; });
+      });
+      el.appendChild(b);
+    });
+    if (_toastTimer) clearTimeout(_toastTimer);
+    if (m.tipo === 'error') {
+      el.addEventListener('click', function cerrar() {
+        el.classList.remove('is-visible');
+        el.removeEventListener('click', cerrar);
+      });
+    } else {
+      _toastTimer = setTimeout(function () { el.classList.remove('is-visible'); }, 6000);
+    }
   }
 
   // Handler conveniente para el botón "Copiar comando".
@@ -275,6 +328,7 @@
     copiarAlPortapapeles,
     copiarComando,
     toast,
+    toastResultado,
     ejecutarEdgeFunction
   };
 
