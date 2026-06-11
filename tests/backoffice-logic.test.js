@@ -17,7 +17,11 @@ const {
   DIAS_VENTANA_PROXIMOS,
   REPESCA_VENTANA_DIAS,
   GAP_REPESCA_DIAS,
-  REPESCA_MIN_DENOMINADOR
+  REPESCA_MIN_DENOMINADOR,
+  construirPayload,
+  comandoRescate,
+  resumenResultadoAccion,
+  NOMBRE_EF
 } = require("../src/backoffice/logic.js");
 
 // ===================================================================
@@ -1523,4 +1527,113 @@ test("recordatoriosPago: error en calcularProximoPago de un paciente NO rompe el
   const r = recordatoriosPago(pacientes, pagos, new Date(2026, 4, 1));
   assert.equal(r.length, 2);
   assert.deepEqual(r.map(x => x.pacienteId).sort(), ["p1", "p2"]);
+});
+
+// ===================================================================
+// Acciones directas: construirPayload / comandoRescate / resumenResultadoAccion / NOMBRE_EF
+// ===================================================================
+
+test('construirPayload agendar: datetime-local → ISO + default 30min', () => {
+  const r = construirPayload('agendar', { fecha: '2026-07-01T17:00', duracion: '', notas: '' }, { pacienteId: 'p1' });
+  assert.equal(r.ok, true);
+  assert.equal(r.payload.paciente_id, 'p1');
+  assert.equal(r.payload.duracion_min, 30);
+  assert.equal(isNaN(new Date(r.payload.fecha).getTime()), false);
+});
+
+test('construirPayload agendar: fecha vacía → error legible', () => {
+  const r = construirPayload('agendar', { fecha: '' }, { pacienteId: 'p1' });
+  assert.equal(r.ok, false);
+  assert.match(r.error, /fecha/i);
+});
+
+test('construirPayload registrar-pago: método obligatorio, importe default 40', () => {
+  const ko = construirPayload('registrar-pago', { importe: '40', metodo: '' }, { pacienteId: 'p1' });
+  assert.equal(ko.ok, false);
+  const okr = construirPayload('registrar-pago', { importe: '40', metodo: 'Bizum', concepto: '', fecha: '', notas: '' }, { pacienteId: 'p1' });
+  assert.equal(okr.ok, true);
+  assert.equal(okr.payload.concepto, undefined); // '' → auto en la EF
+});
+
+test('construirPayload cerrar: fin_de_prueba mapea a baja_voluntaria + flag', () => {
+  const r = construirPayload('cerrar', { motivo: 'fin_de_prueba', nota_personal: '', confirmar: 'on' }, { pacienteId: 'p1' });
+  assert.equal(r.payload.motivo, 'baja_voluntaria');
+  assert.equal(r.payload.fin_de_prueba, true);
+});
+
+test('construirPayload cerrar: sin checkbox de confirmación → error', () => {
+  const r = construirPayload('cerrar', { motivo: 'abandono', confirmar: '' }, { pacienteId: 'p1' });
+  assert.equal(r.ok, false);
+});
+
+test('construirPayload alta: normaliza MAYÚSCULAS/minúsculas', () => {
+  const r = construirPayload('alta', { nombre: 'marta ruiz', email: ' Marta@X.com ' }, {});
+  assert.equal(r.payload.nombre, 'MARTA RUIZ');
+  assert.equal(r.payload.email, 'marta@x.com');
+});
+
+test('comandoRescate devuelve la skill equivalente', () => {
+  assert.equal(comandoRescate('cerrar', 'MARTA RUIZ'), '/cerrar-paciente MARTA RUIZ');
+  assert.equal(comandoRescate('alta', 'MARTA RUIZ', 'a@b.c'), '/alta-paciente MARTA RUIZ a@b.c');
+});
+
+test('resumenResultadoAccion construye mensaje + extras copiables', () => {
+  const r = resumenResultadoAccion('agendar', { calendar_event_id: 'e', meet_url: 'https://meet/x', whatsapp_texto: 'Hola Marta...' });
+  assert.match(r.mensaje, /agendada/i);
+  assert.equal(r.extras.length, 2); // WhatsApp + Meet
+  const r2 = resumenResultadoAccion('cerrar', { sesiones_canceladas: 2, draft_id: 'd1', whatsapp_texto: 'x' });
+  assert.match(r2.mensaje, /2 sesiones/);
+  assert.match(r2.mensaje, /borrador/i);
+});
+
+test('construirPayload reagendar: calendar_event_id + fecha → nueva_fecha ISO + paciente_id', () => {
+  const r = construirPayload('reagendar', { calendar_event_id: 'ev1', fecha: '2026-08-10T10:00' }, { pacienteId: 'p2' });
+  assert.equal(r.ok, true);
+  assert.equal(r.payload.calendar_event_id, 'ev1');
+  assert.equal(r.payload.paciente_id, 'p2');
+  assert.equal(isNaN(new Date(r.payload.nueva_fecha).getTime()), false);
+});
+
+test('construirPayload reagendar: sin calendar_event_id → error', () => {
+  const r = construirPayload('reagendar', { calendar_event_id: '', fecha: '2026-08-10T10:00' }, { pacienteId: 'p2' });
+  assert.equal(r.ok, false);
+});
+
+test('construirPayload reactivar: crear_borrador checkbox → true/false según valor', () => {
+  const r1 = construirPayload('reactivar', { crear_borrador: 'on' }, { pacienteId: 'p3' });
+  assert.equal(r1.ok, true);
+  assert.equal(r1.payload.crear_borrador, true);
+  const r2 = construirPayload('reactivar', { crear_borrador: '' }, { pacienteId: 'p3' });
+  assert.equal(r2.ok, true);
+  assert.equal(r2.payload.crear_borrador, false);
+});
+
+test('construirPayload repescar: force ausente/vacío → sin force; force on → true', () => {
+  const r1 = construirPayload('repescar', { force: '' }, { pacienteId: 'p4' });
+  assert.equal(r1.ok, true);
+  assert.equal(r1.payload.force, undefined);
+  assert.equal(r1.payload.paciente_id, 'p4');
+  const r2 = construirPayload('repescar', { force: 'on' }, { pacienteId: 'p4' });
+  assert.equal(r2.ok, true);
+  assert.equal(r2.payload.force, true);
+});
+
+test('construirPayload enviar-menu: menu_id obligatorio', () => {
+  const ko = construirPayload('enviar-menu', { menu_id: '' }, { pacienteId: 'p1' });
+  assert.equal(ko.ok, false);
+  const okr = construirPayload('enviar-menu', { menu_id: 'm42' }, { pacienteId: 'p1' });
+  assert.equal(okr.ok, true);
+  assert.equal(okr.payload.menu_id, 'm42');
+});
+
+test('construirPayload cerrar: nota_personal > 2000 chars → error', () => {
+  const nota = 'x'.repeat(2001);
+  const r = construirPayload('cerrar', { motivo: 'objetivo_cumplido', nota_personal: nota, confirmar: 'on' }, { pacienteId: 'p1' });
+  assert.equal(r.ok, false);
+});
+
+test('NOMBRE_EF: spot-check alta → alta-paciente', () => {
+  assert.equal(NOMBRE_EF['alta'], 'alta-paciente');
+  assert.equal(NOMBRE_EF['cerrar'], 'cerrar-paciente');
+  assert.equal(NOMBRE_EF['agendar'], 'agendar');
 });

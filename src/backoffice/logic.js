@@ -900,6 +900,146 @@
   }
 
   // -----------------------------------------------------------------
+  // Acciones directas: payloads, validación y rescate
+  // -----------------------------------------------------------------
+
+  // Nombre de la Edge Function correspondiente a cada acción de backoffice.
+  const NOMBRE_EF = {
+    'agendar': 'agendar',
+    'reagendar': 'reagendar',
+    'alta': 'alta-paciente',
+    'reactivar': 'reactivar-paciente',
+    'cerrar': 'cerrar-paciente',
+    'repescar': 'repescar-paciente',
+    'registrar-pago': 'registrar-pago',
+    'enviar-menu': 'enviar-menu'
+  };
+
+  // Skill de rescate (comando a copiar en caso de error en la EF).
+  const SKILL_RESCATE = {
+    'agendar': 'agendar',
+    'reagendar': 'reagendar',
+    'alta': 'alta-paciente',
+    'reactivar': 'reactivar-paciente',
+    'cerrar': 'cerrar-paciente',
+    'repescar': 'repescar-paciente',
+    'registrar-pago': 'registrar-pago',
+    'enviar-menu': 'enviar-menu'
+  };
+
+  // Devuelve el comando de rescate para el toast de error.
+  // Para alta, concatena email al comando si se pasa.
+  function comandoRescate(accion, nombrePaciente, email) {
+    const base = generarComando(SKILL_RESCATE[accion], nombrePaciente);
+    return (accion === 'alta' && email) ? base + ' ' + String(email).trim().toLowerCase() : base;
+  }
+
+  function _ko(error) { return { ok: false, error: error }; }
+  function _okP(payload) { return { ok: true, payload: payload }; }
+
+  // Construye y valida el payload para una Edge Function a partir de los
+  // valores del formulario (strings tal cual salen de FormData) y el contexto
+  // (ctx.pacienteId, etc.). Devuelve { ok, payload } o { ok: false, error }.
+  function construirPayload(accion, valores, ctx) {
+    const v = valores || {};
+    const pid = ctx && ctx.pacienteId;
+    switch (accion) {
+      case 'agendar': {
+        if (!v.fecha || isNaN(new Date(v.fecha).getTime())) return _ko('Falta la fecha y hora de la sesión.');
+        const dur = v.duracion ? parseInt(v.duracion, 10) : 30;
+        if (!(dur >= 15 && dur <= 120)) return _ko('Duración fuera de rango (15–120 min).');
+        const p = { paciente_id: pid, fecha: new Date(v.fecha).toISOString(), duracion_min: dur };
+        if (v.notas && v.notas.trim()) p.notas = v.notas.trim();
+        return _okP(p);
+      }
+      case 'reagendar': {
+        if (!v.calendar_event_id) return _ko('No hay sesión seleccionada.');
+        if (!v.fecha || isNaN(new Date(v.fecha).getTime())) return _ko('Falta la nueva fecha y hora.');
+        return _okP({ calendar_event_id: v.calendar_event_id, nueva_fecha: new Date(v.fecha).toISOString(), paciente_id: pid });
+      }
+      case 'alta': {
+        const nombre = String(v.nombre || '').trim().toLocaleUpperCase('es-ES');
+        const email = String(v.email || '').trim().toLowerCase();
+        if (!nombre) return _ko('Falta el nombre.');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return _ko('Email no válido.');
+        return _okP({ nombre: nombre, email: email });
+      }
+      case 'reactivar':
+        return _okP({ paciente_id: pid, crear_borrador: v.crear_borrador === 'on' || v.crear_borrador === true });
+      case 'cerrar': {
+        if (!v.confirmar) return _ko('Marca la casilla de confirmación para cerrar.');
+        const MOTIVOS_UI = ['objetivo_cumplido', 'abandono', 'baja_voluntaria', 'fin_de_prueba'];
+        if (MOTIVOS_UI.indexOf(v.motivo) === -1) return _ko('Elige un motivo de cierre.');
+        const p = { paciente_id: pid, motivo: v.motivo === 'fin_de_prueba' ? 'baja_voluntaria' : v.motivo };
+        if (v.motivo === 'fin_de_prueba') p.fin_de_prueba = true;
+        if (v.motivo === 'objetivo_cumplido' && v.nota_personal && v.nota_personal.trim()) {
+          if (v.nota_personal.length > 2000) return _ko('La nota personal supera 2000 caracteres.');
+          p.nota_personal = v.nota_personal.trim();
+        }
+        return _okP(p);
+      }
+      case 'repescar':
+        return _okP(v.force === 'on' || v.force === true ? { paciente_id: pid, force: true } : { paciente_id: pid });
+      case 'registrar-pago': {
+        const importe = parseFloat(String(v.importe || '40').replace(',', '.'));
+        if (!(importe > 0)) return _ko('Importe no válido.');
+        if (!v.metodo || !String(v.metodo).trim()) return _ko('Indica el método de pago.');
+        const p = { paciente_id: pid, importe: importe, metodo: String(v.metodo).trim() };
+        if (v.concepto) p.concepto = v.concepto;
+        if (v.fecha) p.fecha = v.fecha;
+        if (v.notas && v.notas.trim()) p.notas = v.notas.trim();
+        return _okP(p);
+      }
+      case 'enviar-menu': {
+        if (!v.menu_id) return _ko('No hay menú con PDF que enviar.');
+        return _okP({ paciente_id: pid, menu_id: v.menu_id });
+      }
+      default:
+        return _ko('Acción desconocida: ' + accion);
+    }
+  }
+
+  // Modelo puro del toast de resultado (la parte DOM vive en BoUi.toastResultado).
+  // Devuelve { mensaje, extras: [{etiqueta, texto}], avisos: [] }.
+  function resumenResultadoAccion(accion, data) {
+    const d = data || {};
+    const extras = [];
+    if (d.whatsapp_texto) extras.push({ etiqueta: 'Copiar WhatsApp', texto: d.whatsapp_texto });
+    if (d.meet_url) extras.push({ etiqueta: 'Copiar enlace Meet', texto: d.meet_url });
+    let mensaje;
+    switch (accion) {
+      case 'agendar':
+        mensaje = 'Sesión agendada. Calendar avisa a la paciente.';
+        break;
+      case 'reagendar':
+        mensaje = 'Sesión movida. Calendar avisa a la paciente.';
+        break;
+      case 'alta':
+        mensaje = 'Paciente dada de alta. Borrador de bienvenida creado en Gmail.';
+        break;
+      case 'reactivar':
+        mensaje = 'Paciente reactivada.' + (d.draft_id ? ' Borrador de bienvenida de vuelta en Gmail.' : '');
+        break;
+      case 'cerrar':
+        mensaje = 'Paciente cerrada. ' + (d.sesiones_canceladas || 0) + ' sesiones futuras canceladas.' + (d.draft_id ? ' Borrador de despedida en Gmail.' : '');
+        break;
+      case 'repescar':
+        mensaje = 'Borrador de repesca creado en Gmail.';
+        break;
+      case 'registrar-pago':
+        mensaje = 'Pago registrado (' + (d.concepto || '') + ').';
+        break;
+      case 'enviar-menu':
+        mensaje = 'Borrador con MENÚ ' + (d.menu_numero || '') + (d.adjunto === 'ok' ? ' adjunto' : ' (sin adjunto, ver avisos)') + ' creado en Gmail.';
+        break;
+      default:
+        mensaje = 'Acción completada.';
+    }
+    const avisos = Array.isArray(d.avisos) ? d.avisos.filter(function (a) { return a.indexOf('borrado_rgpd_no_ejecutado') !== 0; }) : [];
+    return { mensaje: mensaje, extras: extras, avisos: avisos };
+  }
+
+  // -----------------------------------------------------------------
   // API pública
   // -----------------------------------------------------------------
 
@@ -922,7 +1062,11 @@
     UMBRAL_AVISO_DIAS,
     REPESCA_VENTANA_DIAS,
     GAP_REPESCA_DIAS,
-    REPESCA_MIN_DENOMINADOR
+    REPESCA_MIN_DENOMINADOR,
+    NOMBRE_EF,
+    construirPayload,
+    comandoRescate,
+    resumenResultadoAccion
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
