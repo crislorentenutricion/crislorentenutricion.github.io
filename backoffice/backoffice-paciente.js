@@ -9,11 +9,11 @@
 //   4. Pinta #cabecera, #anamnesis, #timeline, #acciones con funciones puras
 //      testeables desde Node.
 //
-// Todas las acciones del detalle son copy-command: pegar el prompt en Claude
-// Code y dejar que la skill lo procese. No hay botones backend aquí — las
-// Edge Functions (supabase/functions/*) siguen vivas para invocación manual
-// pero la UI no las llama. El envío del menú es la cola natural de
-// `/crear-menu` en Claude, así que tampoco hay botón "Enviar menú".
+// Las acciones del detalle siguen dos vías: 8 acciones directas vía panel
+// (agendar, reagendar, alta, reactivar, cerrar, repescar, registrar-pago,
+// enviar-menu) invocan Edge Functions; 3 acciones copy-command "vía Claude"
+// (crear-menu, seguimiento, borrar-rgpd) pegan el prompt en Claude Code y
+// dejan que la skill lo procese.
 //
 // Funciones puras exportadas: renderCabecera, renderAnamnesis, renderTimeline,
 // renderAcciones. Reciben los datos ya cargados y devuelven HTML string.
@@ -33,8 +33,14 @@
     if (typeof require === 'function') return require('./logic.js');
     return null;
   }
-  const BoUi    = new Proxy({}, { get: (_t, prop) => _BoUi()[prop] });
-  const BoLogic = new Proxy({}, { get: (_t, prop) => _BoLogic()[prop] });
+  function _BoPaneles() {
+    if (typeof window !== 'undefined' && window.BoPaneles) return window.BoPaneles;
+    if (typeof require === 'function') return require('./paneles.js');
+    return null;
+  }
+  const BoUi     = new Proxy({}, { get: (_t, prop) => _BoUi()[prop] });
+  const BoLogic  = new Proxy({}, { get: (_t, prop) => _BoLogic()[prop] });
+  const BoPaneles = new Proxy({}, { get: (_t, prop) => _BoPaneles()[prop] });
 
   // -----------------------------------------------------------------
   // Constantes / estado de render
@@ -1212,6 +1218,15 @@
     return '<button type="button" class="' + clase +
       '" data-bo-action="copy"' +
       ' data-bo-comando="' + BoUi.escapeHtml(comando) + '">' +
+      BoUi.escapeHtml(etiqueta) +
+      '<span class="bo-btn-via">vía Claude</span>' +
+      '</button>';
+  }
+
+  function _btnDirecto(accion, etiqueta, extra) {
+    const clase = 'bo-btn bo-btn-directo' + (extra ? ' ' + extra : '');
+    return '<button type="button" class="' + clase +
+      '" data-bo-action="panel" data-bo-panel="' + accion + '">' +
       BoUi.escapeHtml(etiqueta) + '</button>';
   }
 
@@ -1230,6 +1245,7 @@
   function renderAcciones(ctx) {
     const paciente = (ctx && ctx.paciente) || {};
     const sesiones = (ctx && ctx.sesiones) || [];
+    const menus    = (ctx && ctx.menus)    || [];
     const hoy      = (ctx && ctx.hoy)      || new Date();
 
     const nombre = paciente.nombre || '';
@@ -1248,13 +1264,14 @@
     const botones = [];
 
     if (activa) {
-      // Alta pendiente: botón antes del resto (el resto apenas aplica hasta
-      // que la paciente rellene anamnesis, pero no bloqueamos la UI).
-      if (altaPendiente && paciente.email) {
-        const cmdAlta = BoLogic.generarComando('alta-paciente', nombre);
-        botones.push(_btnCopiar(cmdAlta + ' ' + paciente.email, 'Dar de alta'));
+      // Alta pendiente: acción directa (panel inline). El nombre/email ya
+      // llegan al panel vía deps.ctxAccion().prefill — no necesitamos
+      // pasarlos como argumento posicional en un copy-command.
+      if (altaPendiente) {
+        botones.push(_btnDirecto('alta', 'Dar de alta'));
       }
 
+      // Copy-command: crear-menu y seguimiento-paciente van a Claude.
       botones.push(_btnCopiar(
         BoLogic.generarComando('crear-menu', nombre),
         'Crear menú'
@@ -1263,46 +1280,32 @@
         BoLogic.generarComando('seguimiento-paciente', nombre),
         'Hacer seguimiento'
       ));
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('registrar-pago', nombre),
-        'Registrar pago'
-      ));
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('agendar', nombre),
-        'Agendar sesión'
-      ));
 
-      // Reagendar solo si hay sesión futura para mover. Sin próxima sesión
-      // el comando no aplica — mejor no ofrecerlo que forzar a Claude a
-      // responder "no hay nada que reagendar".
-      if (_proximaSesionFutura(sesiones, hoy)) {
-        botones.push(_btnCopiar(
-          BoLogic.generarComando('reagendar', nombre),
-          'Reagendar sesión'
-        ));
+      // Enviar menú solo si algún menú tiene pdf_url.
+      const menusConPdf = menus.filter(function (m) { return m && m.pdf_url; });
+      if (menusConPdf.length > 0) {
+        botones.push(_btnDirecto('enviar-menu', 'Enviar menú'));
       }
 
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('repescar-paciente', nombre),
-        'Repescar paciente'
-      ));
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('cerrar-paciente', nombre),
-        'Cerrar paciente'
-      ));
+      // Panel directo: acciones que tienen form inline.
+      botones.push(_btnDirecto('agendar', 'Agendar sesión'));
+
+      // Reagendar solo si hay sesión futura para mover.
+      if (_proximaSesionFutura(sesiones, hoy)) {
+        botones.push(_btnDirecto('reagendar', 'Reagendar sesión'));
+      }
+
+      botones.push(_btnDirecto('registrar-pago', 'Registrar pago'));
+      botones.push(_btnDirecto('repescar', 'Repescar paciente'));
+      botones.push(_btnDirecto('cerrar', 'Cerrar paciente'));
     }
 
     if (cerrada) {
-      botones.push(_btnCopiar(
-        BoLogic.generarComando('reactivar-paciente', nombre),
-        'Reactivar paciente'
-      ));
+      botones.push(_btnDirecto('reactivar', 'Reactivar paciente'));
     }
 
     // El derecho al olvido (RGPD) se puede ejercer en cualquier estado —
-    // el botón aparece siempre (con cualquier nombre válido). Clase
-    // destructiva (rojo outline) porque borra físicamente fila en Supabase,
-    // auth.users, checkins, menús, PDFs del bucket y carpeta Drive.
+    // copy-command porque el borrado físico lo ejecuta Claude (irreversible).
     botones.push(_btnCopiar(
       BoLogic.generarComando('borrar-paciente-rgpd', nombre),
       'Borrar RGPD',
@@ -1312,6 +1315,7 @@
     return '<section class="bo-acciones" data-bo-bloque="acciones">' +
       '<h2>Acciones</h2>' +
       '<div class="bo-acciones-botones">' + botones.join('') + '</div>' +
+      '<div id="bo-panel-accion"></div>' +
     '</section>';
   }
 
@@ -1319,22 +1323,47 @@
   // Wiring DOM: delegación de clicks + carga de datos
   // -----------------------------------------------------------------
 
-  // Handler único: todos los botones del detalle son copy-command. El click
-  // copia `data-bo-comando` al portapapeles vía BoUi.copiarComando (que ya
-  // maneja toast + feedback visual en el botón).
-  async function _manejarClickAccion(ev /*, supa */) {
+  // Handler de clicks del detalle. Soporta tres tipos de acción:
+  //   copy       → copia data-bo-comando al portapapeles vía BoUi.copiarComando.
+  //   panel      → abre/cierra panel inline en #bo-panel-accion.
+  //   cerrar-panel → cierra el panel inline.
+  async function _manejarClickAccion(ev, deps) {
     const btn = ev.target && ev.target.closest && ev.target.closest('[data-bo-action]');
     if (!btn) return;
-    ev.preventDefault();
-    const comando = btn.getAttribute('data-bo-comando');
-    if (comando) await BoUi.copiarComando(comando, btn);
+    const action = btn.getAttribute('data-bo-action');
+    if (action === 'copy') {
+      ev.preventDefault();
+      const comando = btn.getAttribute('data-bo-comando');
+      if (comando) await BoUi.copiarComando(comando, btn);
+      return;
+    }
+    if (action === 'panel') {
+      ev.preventDefault();
+      const cont = typeof document !== 'undefined' && document.getElementById('bo-panel-accion');
+      if (!cont || !deps) return;
+      const accion = btn.getAttribute('data-bo-panel');
+      if (cont.getAttribute('data-bo-abierto') === accion) {
+        cont.innerHTML = '';
+        cont.removeAttribute('data-bo-abierto');
+        return;
+      }
+      cont.innerHTML = BoPaneles.renderPanelAccion(accion, deps.ctxAccion());
+      cont.setAttribute('data-bo-abierto', accion);
+      BoPaneles.conectarPanel(cont, accion, deps);
+      return;
+    }
+    if (action === 'cerrar-panel') {
+      ev.preventDefault();
+      const cont = typeof document !== 'undefined' && document.getElementById('bo-panel-accion');
+      if (cont) { cont.innerHTML = ''; cont.removeAttribute('data-bo-abierto'); }
+    }
   }
 
-  function conectarClickCopiar(root /*, supa */) {
+  function conectarClickCopiar(root, deps) {
     if (!root || typeof root.addEventListener !== 'function') return;
     if (root.dataset && root.dataset.boBound === '1') return;
     root.addEventListener('click', function (ev) {
-      _manejarClickAccion(ev);
+      _manejarClickAccion(ev, deps);
     });
     if (root.dataset) root.dataset.boBound = '1';
   }
@@ -1471,7 +1500,7 @@
     // migración 0019_pagos.sql; mientras no esté aplicada en una rama o entorno
     // dado, queremos que la página siga funcionando con el bloque "Pagos" vacío.
     const corePromises = Promise.all([
-      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis, anamnesis_completed_at, created_at, closed_at, close_reason').eq('id', idPaciente).maybeSingle(),
+      supa.from('pacientes').select('id, email, nombre, estado, alta, onboarding, anamnesis, anamnesis_completed_at, created_at, closed_at, close_reason, ultimo_intento_repesca').eq('id', idPaciente).maybeSingle(),
       supa.from('menus').select('id, paciente_id, numero, vigente_desde, pdf_url, created_at').eq('paciente_id', idPaciente),
       supa.from('sesiones').select('id, paciente_id, fecha, calendar_event_id, created_at').eq('paciente_id', idPaciente),
       supa.from('revisiones').select('id, paciente_id, sesion_id, contenido, created_at').eq('paciente_id', idPaciente).order('created_at', { ascending: false }),
@@ -1527,69 +1556,106 @@
       est.className = 'bo-estado';
       est.textContent = 'Cargando paciente…';
     }
-    let datos;
-    try {
-      datos = await cargarDatos(supa, idPaciente);
-    } catch (err) {
-      console.error('[backoffice/paciente]', err);
-      _mostrarError(err.message || 'error');
-      return;
-    }
-    if (!datos.paciente) {
-      _mostrarNoEncontrado();
-      return;
-    }
-    if (est) { est.className = 'bo-estado'; est.textContent = ''; }
 
-    const cab = document.getElementById('cabecera');
-    const ana = document.getElementById('panel-anamnesis');
-    const evo = document.getElementById('panel-evolucion');
-    const chk = document.getElementById('panel-adherencia');
-    const pag = document.getElementById('panel-pagos');
-    const tim = document.getElementById('panel-timeline');
-    const acc = document.getElementById('acciones');
-    if (cab) cab.innerHTML = renderCabecera(datos.paciente);
-    _conectarSelectionAutoExpand();
-    if (ana) {
-      ana.innerHTML = renderAnamnesis(datos.paciente.anamnesis || null);
-      _marcarDesbordados(ana);
-      conectarToggleLibre(ana);
-      _observarResize(ana);
-    }
-    if (evo) {
-      evo.innerHTML = renderEvolucion(
-        datos.revisiones,
-        datos.paciente.anamnesis || null,
-        datos.paciente.anamnesis_completed_at || datos.paciente.alta || null
-      );
-    }
-    if (chk) {
-      const fechaAlta = _resolverFechaAlta(datos.paciente, new Date());
-      const historial = construirHistorialCheckins(datos.checkins || [], fechaAlta, new Date());
-      chk.innerHTML = renderCheckins(historial);
-      conectarSwitcherCheckins(chk, historial);
-    }
-    if (pag) pag.innerHTML = renderPagos(datos.pagos || [], datos.paciente, new Date());
-    if (tim) {
-      tim.innerHTML = renderTimeline({
-        menus: datos.menus, sesiones: datos.sesiones, revisiones: datos.revisiones
-      });
-      conectarClickPdf(tim, supa);
-    }
-    if (acc) {
-      acc.innerHTML = renderAcciones({
-        paciente: datos.paciente,
-        sesiones: datos.sesiones,
-        hoy:      new Date()
-      });
-      conectarClickCopiar(acc);
+    // Variables de closure para recargar y ctxAccion.
+    let paciente, sesiones, menus, pagos;
+
+    async function cargar() {
+      let datos;
+      try {
+        datos = await cargarDatos(supa, idPaciente);
+      } catch (err) {
+        console.error('[backoffice/paciente]', err);
+        _mostrarError(err.message || 'error');
+        return;
+      }
+      if (!datos.paciente) {
+        _mostrarNoEncontrado();
+        return;
+      }
+      // Actualizar closure variables para ctxAccion.
+      paciente = datos.paciente;
+      sesiones = datos.sesiones;
+      menus    = datos.menus;
+      pagos    = datos.pagos;
+
+      if (est) { est.className = 'bo-estado'; est.textContent = ''; }
+
+      const cab = document.getElementById('cabecera');
+      const ana = document.getElementById('panel-anamnesis');
+      const evo = document.getElementById('panel-evolucion');
+      const chk = document.getElementById('panel-adherencia');
+      const pag = document.getElementById('panel-pagos');
+      const tim = document.getElementById('panel-timeline');
+      const acc = document.getElementById('acciones');
+      if (cab) cab.innerHTML = renderCabecera(paciente);
+      _conectarSelectionAutoExpand();
+      if (ana) {
+        ana.innerHTML = renderAnamnesis(paciente.anamnesis || null);
+        _marcarDesbordados(ana);
+        conectarToggleLibre(ana);
+        _observarResize(ana);
+      }
+      if (evo) {
+        evo.innerHTML = renderEvolucion(
+          datos.revisiones,
+          paciente.anamnesis || null,
+          paciente.anamnesis_completed_at || paciente.alta || null
+        );
+      }
+      if (chk) {
+        const fechaAlta = _resolverFechaAlta(paciente, new Date());
+        const historial = construirHistorialCheckins(datos.checkins || [], fechaAlta, new Date());
+        chk.innerHTML = renderCheckins(historial);
+        conectarSwitcherCheckins(chk, historial);
+      }
+      if (pag) pag.innerHTML = renderPagos(pagos || [], paciente, new Date());
+      if (tim) {
+        tim.innerHTML = renderTimeline({
+          menus: menus, sesiones: sesiones, revisiones: datos.revisiones
+        });
+        conectarClickPdf(tim, supa);
+      }
+      if (acc) {
+        acc.innerHTML = renderAcciones({
+          paciente: paciente,
+          sesiones: sesiones,
+          menus:    menus,
+          hoy:      new Date()
+        });
+        conectarClickCopiar(acc, deps);
+      }
+
+      // Wiring de pestañas: delegación + activación inicial. Idempotente.
+      _conectarTabs(document);
+      const params = new URLSearchParams((typeof location !== 'undefined' && location.search) || '');
+      const slugInicial = slugTabValido(params.get('tab')) || TAB_SLUGS[0];
+      _activarTab(slugInicial);
     }
 
-    // Wiring de pestañas: delegación + activación inicial. Idempotente.
-    _conectarTabs(document);
-    const params = new URLSearchParams((typeof location !== 'undefined' && location.search) || '');
-    const slugInicial = slugTabValido(params.get('tab')) || TAB_SLUGS[0];
-    _activarTab(slugInicial);
+    const deps = {
+      supa: supa,
+      recargar: cargar,
+      ctxAccion: function () {
+        return {
+          pacienteId: paciente && paciente.id,
+          nombre:     paciente && paciente.nombre,
+          email:      paciente && paciente.email,
+          prefill: {
+            nombre: paciente && paciente.nombre,
+            email:  paciente && paciente.email
+          },
+          sesionesFuturas: (sesiones || []).filter(function (s) {
+            return s && s.fecha && new Date(String(s.fecha)) > new Date();
+          }),
+          menus:               menus || [],
+          pagosPrevios:        (pagos || []).length,
+          ultimoIntentoRepesca: paciente && paciente.ultimo_intento_repesca || null
+        };
+      }
+    };
+
+    await cargar();
   }
 
   // -----------------------------------------------------------------

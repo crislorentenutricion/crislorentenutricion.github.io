@@ -713,6 +713,20 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+    .bo-toast.bo-toast-error { background: #b3261e; }
+    .bo-toast.bo-toast-aviso { background: #8a6d3b; }
+    .bo-toast .bo-toast-extra { display: inline-block; margin: .4rem .4rem 0 0; padding: .2rem .6rem; border: 1px solid #fff; border-radius: 6px; background: transparent; color: #fff; cursor: pointer; font-size: .8rem; }
+
+    /* Paneles inline de acciones directas */
+    .bo-panel-fila { margin: .5rem 0 1rem; }
+    .bo-panel-accion { border: 1px solid var(--color-green); border-radius: 8px; padding: 1rem; margin-top: .75rem; display: grid; gap: .6rem; }
+    .bo-panel-campo label { display: flex; flex-direction: column; gap: .25rem; font-size: .9rem; }
+    .bo-panel-pie { display: flex; gap: .5rem; }
+    .bo-panel-aviso { font-size: .85rem; color: #8a6d3b; margin: 0; }
+    .bo-btn-via { font-size: .7rem; opacity: .65; margin-left: .35rem; }
+    .bo-btn[disabled] { opacity: .55; cursor: wait; }
+    .bo-btn-directo { background: var(--color-green); color: var(--color-white); }
+    .bo-btn-directo:hover { background: var(--color-green-dark); }
   </style>
 </head>
 <body class="bo-body">
@@ -782,6 +796,7 @@
   </script>
   <script src="/backoffice/logic.js"></script>
   <script src="/backoffice/ui.js"></script>
+  <script src="/backoffice/paneles.js"></script>
   <script src="/backoffice/auth.js"></script>
   <script type="module">
     /* Carga el SDK de Supabase (ESM) y se lo pasa a BoAuth. Mismo patrón que
