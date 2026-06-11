@@ -1258,10 +1258,11 @@
     const botones = [];
 
     if (activa) {
-      // Alta pendiente: copy-command (necesita email como parámetro posicional).
-      if (altaPendiente && paciente.email) {
-        const cmdAlta = BoLogic.generarComando('alta-paciente', nombre);
-        botones.push(_btnCopiar(cmdAlta + ' ' + paciente.email, 'Dar de alta'));
+      // Alta pendiente: acción directa (panel inline). El nombre/email ya
+      // llegan al panel vía deps.ctxAccion().prefill — no necesitamos
+      // pasarlos como argumento posicional en un copy-command.
+      if (altaPendiente) {
+        botones.push(_btnDirecto('alta', 'Dar de alta'));
       }
 
       // Copy-command: crear-menu y seguimiento-paciente van a Claude.

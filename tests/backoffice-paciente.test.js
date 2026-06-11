@@ -561,13 +561,19 @@ test("BoPaciente.renderAcciones: /borrar-paciente-rgpd aparece siempre (activa y
   }
 });
 
-test("BoPaciente.renderAcciones: /alta-paciente aparece como copy solo si estado alta_pendiente", () => {
+test("BoPaciente.renderAcciones: Dar de alta aparece como acción directa solo si estado alta_pendiente", () => {
   const normal = BoPaciente.renderAcciones(_ctxBase());
+  // Paciente activa sin altaPendiente no debe mostrar el botón de alta
+  assert.ok(!/data-bo-panel="alta"/.test(normal));
+  // Y nunca como copy-command
   assert.ok(!/\/alta-paciente/.test(normal));
   const pend = BoPaciente.renderAcciones(_ctxBase({
     paciente: { id: "p1", nombre: "MARTA", estado: "alta_pendiente", email: "marta@x.com" }
   }));
-  assert.match(pend, /data-bo-comando="\/alta-paciente MARTA marta@x\.com"/);
+  // Debe ser un botón directo de panel, NO un copy-command
+  assert.match(pend, /data-bo-action="panel"/);
+  assert.match(pend, /data-bo-panel="alta"/);
+  assert.ok(!/\/alta-paciente/.test(pend), "no debe emitir copy-command /alta-paciente");
 });
 
 test("BoPaciente.renderAcciones: no hay botones backend en el detalle (copy o panel)", () => {
