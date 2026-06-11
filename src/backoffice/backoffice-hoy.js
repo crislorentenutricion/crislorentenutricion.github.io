@@ -514,7 +514,7 @@
 
         const accion = btn.getAttribute('data-bo-panel') || '';
         const fila   = btn.closest('li') || btn.parentElement;
-        const cont   = document.createElement('div');
+        const cont   = document.createElement('li');
         cont.className = 'bo-panel-fila';
         cont._boBtn = btn;
         fila.after(cont);
