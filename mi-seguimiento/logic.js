@@ -817,8 +817,8 @@
     const today = toISO(now);
     const from = toISO(new Date(now.getTime() - 60 * 864e5));
     const [menu, checkinsRaw] = await Promise.all([
-      supa.loadMenuVigente(today),
-      supa.loadCheckins(from)
+      supa.loadMenuVigente(today, paciente.id),
+      supa.loadCheckins(from, paciente.id)
     ]);
     const arr = Array.isArray(checkinsRaw) ? checkinsRaw : [];
     const checkinsMap = new Map(arr.map(function (c) { return [c.fecha, c.estado]; }));
