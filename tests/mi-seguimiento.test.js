@@ -1523,8 +1523,8 @@ function makeSupaStub({ menu, checkins, proxima, revisionEnviada, onProxima }) {
   const calls = { loadMenuVigente: 0, loadCheckins: 0, loadProximaSesion: 0, loadRevisionEnviadaParaSesion: 0 };
   return {
     calls,
-    async loadMenuVigente(today) { calls.loadMenuVigente++; this.lastToday = today; return menu; },
-    async loadCheckins(from) { calls.loadCheckins++; this.lastFrom = from; return checkins || []; },
+    async loadMenuVigente(today, pid) { calls.loadMenuVigente++; this.lastToday = today; this.lastMenuPid = pid; return menu; },
+    async loadCheckins(from, pid) { calls.loadCheckins++; this.lastFrom = from; this.lastCheckinsPid = pid; return checkins || []; },
     async loadProximaSesion(pid) {
       calls.loadProximaSesion++;
       if (onProxima) return onProxima(pid);
@@ -1533,6 +1533,17 @@ function makeSupaStub({ menu, checkins, proxima, revisionEnviada, onProxima }) {
     async loadRevisionEnviadaParaSesion(sid) { calls.loadRevisionEnviadaParaSesion++; return !!revisionEnviada; }
   };
 }
+
+test("hydrateDashboard: filtra menú y checkins por el id del paciente logueado (no confía solo en RLS)", async () => {
+  const supa = makeSupaStub({ menu: MENU_VIGENTE, checkins: [] });
+  await hydrateDashboard({
+    supa,
+    paciente: { id: 'p-cristina', anamnesis_completed_at: '2026-03-01' },
+    now: new Date(2026, 3, 17)
+  });
+  assert.equal(supa.lastMenuPid, 'p-cristina', 'loadMenuVigente debe recibir el id del paciente logueado');
+  assert.equal(supa.lastCheckinsPid, 'p-cristina', 'loadCheckins debe recibir el id del paciente logueado');
+});
 
 test("hydrateDashboard: sin paciente → view:'sin-paciente' y no llama a supa", async () => {
   const supa = makeSupaStub({});
