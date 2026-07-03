@@ -3016,7 +3016,7 @@ appleTitle: "CLN"
       // Re-fetch para sincronizar con servidor (silencioso si falla).
       try {
         const from = toISO(new Date(Date.now() - 60 * 864e5));
-        const checkins = await loadCheckins(from);
+        const checkins = await loadCheckins(from, paciente.id);
         checkinsMap = new Map(checkins.map(c => [c.fecha, c.estado]));
         const racha = renderStreak(checkinsMap);
         renderCalendar(checkinsMap);
