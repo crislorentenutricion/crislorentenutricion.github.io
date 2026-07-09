@@ -40,7 +40,83 @@
     return d;
   }
 
-  var api = { FASES: FASES, TOTAL_LECCIONES: TOTAL_LECCIONES, parseISODate: parseISODate, addMonths: addMonths, fechaDesbloqueo: fechaDesbloqueo };
+  function toISO(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // Estado completo del curso para una paciente.
+  //   lecciones: filas de curso_lecciones (slug, fase, orden, titulo, contenido)
+  //   progreso:  filas de curso_progreso de ESA paciente
+  //   overrides: filas de curso_overrides de ESA paciente (tipo, target, modo)
+  //   altaISO / hoyISO: fechas YYYY-MM-DD
+  // Estados por lección: done | now (se puede abrir) | wait (anterior hecha,
+  // fecha no alcanzada — muestra abreElISO) | lock.
+  function estadoCurso(params) {
+    var hoy = parseISODate(params.hoyISO);
+    var orden = params.lecciones.slice().sort(function (a, b) { return a.orden - b.orden; });
+    var porSlug = {};
+    (params.progreso || []).forEach(function (p) { porSlug[p.leccion_slug] = p; });
+    var ovLeccion = {}, ovFase = {};
+    (params.overrides || []).forEach(function (o) {
+      if (o.tipo === 'leccion') ovLeccion[o.target] = o.modo; else ovFase[o.target] = o.modo;
+    });
+
+    var anteriorCompletada = true; // la primera lección no tiene anterior
+    var lecciones = orden.map(function (l) {
+      var faseIndex = FASES.findIndex(function (f) { return f.key === l.fase; });
+      var ordenEnFase = Number(l.slug.split('-')[1]);
+      var abreEl = fechaDesbloqueo(params.altaISO, faseIndex, ordenEnFase);
+      var done = !!porSlug[l.slug];
+      var modo = ovLeccion[l.slug] || ovFase[l.fase] || null;
+
+      var estado;
+      if (done) estado = 'done';
+      else if (modo === 'bloquear') estado = 'lock';
+      else if (modo === 'desbloquear') estado = 'now';
+      else if (!anteriorCompletada) estado = 'lock';
+      else if (hoy < abreEl) estado = 'wait';
+      else estado = 'now';
+
+      anteriorCompletada = done;
+      return {
+        slug: l.slug, fase: l.fase, titulo: l.titulo, min: (l.contenido && l.contenido.min) || 4,
+        estado: estado, abreElISO: toISO(abreEl), forzada: modo !== null && !done,
+      };
+    });
+
+    var guias = FASES.map(function (f) {
+      var deLaFase = lecciones.filter(function (l) { return l.fase === f.key; });
+      var completa = deLaFase.length > 0 && deLaFase.every(function (l) { return l.estado === 'done'; });
+      return { fase: f.key, titulo: f.guia.titulo, path: f.guia.path, desbloqueada: completa };
+    });
+
+    var completadas = (params.progreso || []).slice().sort(function (a, b) {
+      return String(a.completada_at).localeCompare(String(b.completada_at));
+    });
+    var ultima = completadas[completadas.length - 1];
+    var retoActivo = null;
+    if (ultima) {
+      var lec = orden.find(function (x) { return x.slug === ultima.leccion_slug; });
+      if (lec) {
+        retoActivo = {
+          slug: lec.slug, leccion: lec.titulo, reto: lec.contenido.reto,
+          hecho: !!ultima.reto_hecho, nota: ultima.reto_nota || '',
+        };
+      }
+    }
+
+    return {
+      lecciones: lecciones,
+      guias: guias,
+      contadores: {
+        lecciones: lecciones.filter(function (l) { return l.estado === 'done'; }).length,
+        guias: guias.filter(function (g) { return g.desbloqueada; }).length,
+      },
+      retoActivo: retoActivo,
+    };
+  }
+
+  var api = { FASES: FASES, TOTAL_LECCIONES: TOTAL_LECCIONES, parseISODate: parseISODate, addMonths: addMonths, fechaDesbloqueo: fechaDesbloqueo, estadoCurso: estadoCurso, toISO: toISO };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.AprenderLogic = api;
