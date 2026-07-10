@@ -507,7 +507,9 @@
     if (o.isLocked) return 'today';
     const hash = (o.hash || '').replace(/^#/, '');
     if (hash === 'compra') return 'compra';
+    if (hash === 'aprender') return 'aprender';
     if (o.lastView === 'compra') return 'compra';
+    if (o.lastView === 'aprender') return 'aprender';
     return 'today';
   }
 

@@ -1463,6 +1463,7 @@
   })();
 </script>
 
+<script src="/mi-seguimiento/logic.js"></script>
 <script type="module">
   // Cliente Supabase + auth-guard. Mismo patrón que /mi-seguimiento/empezar/.
   // La revisión mensual vive dentro del perímetro auth del PWA: sin sesión la
@@ -1479,6 +1480,41 @@
       auth: { persistSession: true, autoRefreshToken: true, storage: window.localStorage }
     });
     window.supa = supa;
+
+    // Redacción del paso 2 para pacientes de plan base (menú de opciones):
+    // reescribe textContent/placeholder de los elementos ya presentes en el
+    // DOM. Los `name=` de los campos no cambian — los datos siguen siendo
+    // comparables entre planes. Idempotente (se llama como mucho una vez,
+    // pero no rompe si se llamara dos veces).
+    function aplicarRedaccionBase() {
+      const paso2 = document.querySelector('.onb-step[data-step="2"]');
+      if (!paso2) return;
+      paso2.dataset.title = 'Cómo te ha ido la semana';
+      const h2 = paso2.querySelector('h2');
+      if (h2) h2.textContent = 'Cómo te ha ido la semana';
+
+      const labelAdherencia = paso2.querySelector('.onb-field label');
+      if (labelAdherencia) {
+        labelAdherencia.childNodes[0].textContent = '¿Cómo de fácil te está siendo llevar tu semana? ';
+      }
+      const spans = paso2.querySelectorAll('.onb-radios .onb-radio span');
+      if (spans[0]) spans[0].textContent = 'Fácil — la llevo sin problema';
+      if (spans[1]) spans[1].textContent = 'Regular — he tenido algún tropiezo';
+      if (spans[2]) spans[2].textContent = 'Me está costando bastante';
+
+      const labelDificultades = paso2.querySelector('label[for="f-dificultades"]');
+      if (labelDificultades) labelDificultades.textContent = '¿Has tenido dificultades para organizar tus comidas? ¿Cuáles?';
+
+      const labelPlatosNo = paso2.querySelector('label[for="f-platos-no"]');
+      if (labelPlatosNo) labelPlatosNo.innerHTML = 'Opciones que <strong>no</strong> repetirías';
+      const textareaPlatosNo = document.getElementById('f-platos-no');
+      if (textareaPlatosNo) textareaPlatosNo.placeholder = 'Nómbralas si puedes — las quito de tus próximas opciones.';
+
+      const labelPlatosSi = paso2.querySelector('label[for="f-platos-si"]');
+      if (labelPlatosSi) labelPlatosSi.innerHTML = 'Opciones que <strong>sí</strong> repetirías';
+      const textareaPlatosSi = document.getElementById('f-platos-si');
+      if (textareaPlatosSi) textareaPlatosSi.placeholder = 'Las que repetirías sin dudar — las mantengo en tu rotación.';
+    }
 
     supa.auth.onAuthStateChange(async (event, session) => {
       if (event !== 'INITIAL_SESSION') return;
@@ -1504,6 +1540,21 @@
         if (pac && pac.id) {
           const token = String(pac.nombre || '').trim().split(/\s+/)[0] || '';
           firstName = token ? token.charAt(0).toUpperCase() + token.slice(1).toLowerCase() : 'tú';
+
+          // Redacción del paso 2 según plan: mismo formulario para todas,
+          // solo cambia el texto si el menú vigente es de plan base
+          // (opciones/intercambiador) — detección sin flags, igual que la PWA.
+          const menuTodayISO = window.MsLogic ? window.MsLogic.toISO(new Date()) : new Date().toISOString().slice(0, 10);
+          const { data: menuVigente } = await supa
+            .from('menus')
+            .select('*')
+            .eq('paciente_id', pac.id)
+            .lte('vigente_desde', menuTodayISO)
+            .order('vigente_desde', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (window.MsLogic && window.MsLogic.menuTieneOpciones(menuVigente)) aplicarRedaccionBase();
+
           const nowIso = new Date().toISOString();
           const { data: proxima } = await supa
             .from('sesiones')

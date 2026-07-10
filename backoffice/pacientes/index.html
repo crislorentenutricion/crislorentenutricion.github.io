@@ -357,6 +357,48 @@
       color: var(--color-green-dark);
     }
 
+    /* Pestaña Curso «Aprender»: chips de estado + lista de lecciones por fase. */
+    .bo-curso-resumen { color: #6b7280; margin-bottom: 14px; }
+    .bo-curso-fase { margin-bottom: 22px; }
+    .bo-curso-fase h3 {
+      font-size: 1rem;
+      color: var(--color-green-dark);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bo-curso-fase-contador { font-size: 0.82rem; color: #6b7280; font-weight: 400; }
+    .bo-curso-leccion {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .bo-curso-leccion:last-of-type { border-bottom: none; }
+    .bo-curso-leccion-titulo { font-weight: 600; margin-right: 8px; }
+    .bo-curso-chip {
+      display: inline-block;
+      font-size: 0.78rem;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: var(--color-cream);
+      color: #6b7280;
+    }
+    .bo-curso-chip.is-done { background: #e2ecdf; color: var(--color-green-dark); }
+    .bo-curso-chip.is-now { background: #f6edd2; color: #a07c14; }
+    .bo-curso-chip-manual { font-weight: 600; color: #a07c14; }
+    .bo-curso-respuesta, .bo-curso-reto {
+      margin: 4px 0 0;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+    .bo-curso-leccion-acciones, .bo-curso-fase-acciones {
+      margin-top: 6px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .bo-curso-fase-acciones { margin-top: 10px; }
+
     /* Bloque "Pendientes de resolver": fila con [Dar de alta] + [Descartar]
        a la derecha, alineadas en horizontal con un gap reducido. */
     .bo-fila-pendiente .bo-fila-acciones {
@@ -768,6 +810,7 @@
       cristinaEmail: 'clorentep00@gmail.com'
     };
   </script>
+  <script src="/mi-seguimiento/aprender-logic.js"></script>
   <script src="/backoffice/logic.js"></script>
   <script src="/backoffice/ui.js"></script>
   <script src="/backoffice/paneles.js"></script>
