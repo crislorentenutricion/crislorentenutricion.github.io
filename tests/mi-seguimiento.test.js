@@ -31,6 +31,7 @@ const {
   shouldShowInstallHint,
   shouldRehydrateOnVisibility,
   resolveInitialView,
+  activeTabForView,
   shouldCelebrarMilestone,
   WEEKDAY_KEYS_JSON,
   esAyerEditable,
@@ -1065,6 +1066,26 @@ test("resolveInitialView: lastView='aprender' pero isLocked=true → 'today' (ga
   assert.equal(resolveInitialView({ hash: "", lastView: "aprender", isLocked: true }), "today");
 });
 
+// ---------------------------- activeTabForView ---------------------------
+// La barra de pestañas inferior marca una pestaña activa según data-view.
+// La vista 'day' (detalle de un día del calendario) pertenece a la pestaña
+// «Hoy»: se llega a ella desde el calendario de esa misma pestaña.
+
+test("activeTabForView: 'today' y 'day' → pestaña 'today'", () => {
+  assert.equal(activeTabForView("today"), "today");
+  assert.equal(activeTabForView("day"), "today");
+});
+
+test("activeTabForView: 'compra' y 'aprender' → su propia pestaña", () => {
+  assert.equal(activeTabForView("compra"), "compra");
+  assert.equal(activeTabForView("aprender"), "aprender");
+});
+
+test("activeTabForView: vista desconocida o ausente → 'today' (pestaña por defecto)", () => {
+  assert.equal(activeTabForView("cualquier-cosa"), "today");
+  assert.equal(activeTabForView(undefined), "today");
+});
+
 // ---------------------------- shouldCelebrarMilestone --------------------
 
 test("shouldCelebrarMilestone: onboarding aún no visto → null (no apilar modales)", () => {
@@ -1325,23 +1346,22 @@ test("buildCompraModel: estadoSet puede venir como array (convertible)", () => {
 
 // ---------------------------- computeCompraMeta --------------------------
 
-test("computeCompraMeta: total=0 → mensaje 'Disponible con tu próximo menú' + actions hidden", () => {
+test("computeCompraMeta: total=0 → 'Aún no hay lista' + actions hidden", () => {
   const r = computeCompraMeta({ total: 0, hechos: 0 });
-  assert.equal(r.metaText, 'Disponible con tu próximo menú');
+  assert.equal(r.progressText, 'Aún no hay lista para esta semana.');
   assert.equal(r.progressDone, false);
   assert.equal(r.actionsHidden, true);
 });
 
-test("computeCompraMeta: total>0 y hechos=0 → copy 'Semanal · N productos' y actions hidden (nada que reiniciar)", () => {
+test("computeCompraMeta: total>0 y hechos=0 → actions hidden (nada que reiniciar)", () => {
   const r = computeCompraMeta({ total: 10, hechos: 0 });
-  assert.equal(r.metaText, 'Semanal · 10 productos');
+  assert.equal(r.progressText, '0 de 10 comprados esta semana');
   assert.equal(r.actionsHidden, true);
   assert.equal(r.progressDone, false);
 });
 
-test("computeCompraMeta: progreso parcial → copy 'X/Y comprados' + actions visibles", () => {
+test("computeCompraMeta: progreso parcial → copy 'X de Y comprados' + actions visibles", () => {
   const r = computeCompraMeta({ total: 10, hechos: 3 });
-  assert.equal(r.metaText, 'Semanal · 3/10 comprados');
   assert.equal(r.progressText, '3 de 10 comprados esta semana');
   assert.equal(r.progressDone, false);
   assert.equal(r.actionsHidden, false);
@@ -1349,7 +1369,6 @@ test("computeCompraMeta: progreso parcial → copy 'X/Y comprados' + actions vis
 
 test("computeCompraMeta: hechos=total → copy 'completa' + progressDone=true", () => {
   const r = computeCompraMeta({ total: 5, hechos: 5 });
-  assert.equal(r.metaText, 'Semanal · 5/5 comprados');
   assert.equal(r.progressText, '¡Compra de la semana completa! Buen trabajo.');
   assert.equal(r.progressDone, true);
   assert.equal(r.actionsHidden, false);
