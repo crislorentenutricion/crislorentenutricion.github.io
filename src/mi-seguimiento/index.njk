@@ -1967,6 +1967,99 @@ appleTitle: "CLN"
     }, { retries: 1, delay: 700 });
   }
 
+  // ---- Curso «Aprender» ----
+  let cursoLecciones = [], cursoProgreso = [], cursoOverrides = [];
+
+  // curso_lecciones es contenido común (sin datos de paciente): no lleva filtro.
+  // curso_progreso y curso_overrides SÍ filtran por paciente_id — RLS es el
+  // suelo, no el único filtro (cuenta dual, ver mi-seguimiento-auth.md).
+  async function loadCurso(pacienteId) {
+    const [lec, prog, ov] = await Promise.all([
+      supa.from('curso_lecciones').select('slug, fase, orden, titulo, contenido').order('orden'),
+      supa.from('curso_progreso').select('leccion_slug, completada_at, mini_accion, reto_hecho, reto_nota').eq('paciente_id', pacienteId),
+      supa.from('curso_overrides').select('tipo, target, modo').eq('paciente_id', pacienteId),
+    ]);
+    if (lec.error || prog.error || ov.error) return false;
+    cursoLecciones = lec.data || [];
+    cursoProgreso = prog.data || [];
+    cursoOverrides = ov.data || [];
+    return true;
+  }
+
+  function estadoCursoActual() {
+    return AprenderLogic.estadoCurso({
+      lecciones: cursoLecciones, progreso: cursoProgreso, overrides: cursoOverrides,
+      altaISO: paciente.alta, hoyISO: toISO(new Date()),
+    });
+  }
+
+  function formatFechaDesbloqueo(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return capitalize(new Date(y, m - 1, d).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }));
+  }
+
+  function renderNodoLeccion(l) {
+    const bola = l.estado === 'done' ? '✓' : l.estado === 'now' ? '▶' : '🔒';
+    let sub = '';
+    if (l.estado === 'now') sub = '<small>Siguiente lección · ' + l.min + ' min</small>';
+    else if (l.estado === 'wait') sub = '<small>Se abre el ' + formatFechaDesbloqueo(l.abreElISO) + '</small>';
+    const clickable = l.estado === 'now' || l.estado === 'done';
+    return '<div class="ms-apr-node ' + l.estado + '"' + (clickable ? ' data-open="' + l.slug + '"' : '') + '>'
+      + '<div class="ms-apr-bola">' + bola + '</div>'
+      + '<div class="ms-apr-lbl">' + escapeHtml(l.titulo) + sub + '</div>'
+      + '</div>';
+  }
+
+  function renderNodoGuia(g) {
+    const bola = g.desbloqueada ? '📄' : '🔒';
+    const dl = g.desbloqueada ? '<span class="ms-apr-dl">Descargar</span>' : '';
+    return '<div class="ms-apr-node premio ' + (g.desbloqueada ? 'now' : 'lock') + '"' + (g.desbloqueada ? ' data-open-guia="' + g.fase + '"' : '') + '>'
+      + '<div class="ms-apr-bola">' + bola + '</div>'
+      + '<div class="ms-apr-lbl">📄 ' + escapeHtml(g.titulo) + dl + '</div>'
+      + '</div>';
+  }
+
+  function renderMapaCurso(e) {
+    const cont = $('#ms-apr-mapa');
+    if (!cont) return;
+    const html = AprenderLogic.FASES.map((fase) => {
+      const deLaFase = e.lecciones.filter((l) => l.fase === fase.key);
+      const completa = deLaFase.length > 0 && deLaFase.every((l) => l.estado === 'done');
+      const enCurso = deLaFase.some((l) => l.estado === 'done' || l.estado === 'now');
+      const estadoCls = completa ? 'ok' : enCurso ? 'now' : 'lock';
+      const estadoLbl = completa ? 'Completada' : enCurso ? 'En curso' : 'Bloqueada';
+      const guia = e.guias.find((g) => g.fase === fase.key);
+      const nodos = deLaFase.map(renderNodoLeccion).join('') + (guia ? renderNodoGuia(guia) : '');
+      return '<div class="ms-apr-fase">'
+        + '<span class="ms-apr-fase-nombre">' + escapeHtml(fase.titulo) + '</span>'
+        + '<span class="ms-apr-fase-sub">· ' + escapeHtml(fase.sub) + '</span>'
+        + '<span class="ms-apr-fase-estado ' + estadoCls + '">' + estadoLbl + '</span>'
+        + '</div>'
+        + '<div class="ms-apr-path">' + nodos + '</div>';
+    }).join('');
+    cont.innerHTML = html;
+  }
+
+  function renderRetoActivo(retoActivo) {
+    // Implementación completa en la Tarea 10; de momento no hace nada.
+  }
+
+  function abrirLeccion(slug) {
+    // Reproductor completo en la Tarea 9; de momento solo confirma el wiring.
+    console.log('abrirLeccion', slug);
+  }
+
+  function renderAprender() {
+    if (!cursoLecciones.length) return;      // sin contenido sembrado: no se muestra nada
+    const e = estadoCursoActual();
+    $('#ms-apr-entry').hidden = false;
+    $('#ms-apr-entry-sub').textContent = e.contadores.lecciones + '/10 lecciones · ' + e.contadores.guias + '/3 guías';
+    $('#ms-apr-stat-lecciones').textContent = e.contadores.lecciones + '/10';
+    $('#ms-apr-stat-guias').textContent = e.contadores.guias + '/3';
+    renderRetoActivo(e.retoActivo);
+    renderMapaCurso(e);
+  }
+
   // -------- próxima sesión + estado revisión mensual --------
   // Lee la próxima sesión futura del paciente (tabla `sesiones`) y, si existe,
   // comprueba si ya hay revisión (tabla `revisiones`) vinculada. Devuelve un
@@ -2639,6 +2732,8 @@ appleTitle: "CLN"
       maybeMostrarRevisionModal({ proxima: result.proximaSesion, enviada: result.revisionEnviada });
     }
 
+    if (await loadCurso(paciente.id)) renderAprender();
+
     return { racha: result.streak, rota: result.rota };
   }
 
@@ -3126,6 +3221,10 @@ appleTitle: "CLN"
   $('#ms-compra-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
   $('#ms-apr-open').addEventListener('click', () => { mostrarAprender(); setViewHash('aprender'); });
   $('#ms-apr-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
+  $('#ms-apr-mapa').addEventListener('click', (e) => {
+    const slug = e.target.closest('[data-open]')?.dataset.open;
+    if (slug) abrirLeccion(slug);
+  });
   $('#ms-compra-reset').addEventListener('click', reiniciarCompra);
   $('#ms-meals').addEventListener('click', (e) => {
     const btn = e.target.closest('.ms-meal-swap');
