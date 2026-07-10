@@ -1818,6 +1818,7 @@
     const deps = {
       supa: supa,
       recargar: cargar,
+      pacienteId: idPaciente,
       ctxAccion: function () {
         return {
           pacienteId: paciente && paciente.id,

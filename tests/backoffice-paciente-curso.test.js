@@ -119,3 +119,22 @@ test('_msgOverride: mensajes por modo y tipo', () => {
   assert.equal(BoPaciente._msgOverride('bloquear', 'leccion'), 'La lección queda bloqueada.');
   assert.equal(BoPaciente._msgOverride('auto', 'fase'), 'La fase vuelve al ritmo automático.');
 });
+
+// ---- Wiring guardián: el `deps` real que recibe _conectarCurso debe llevar
+// pacienteId a nivel superior. El test de arriba stubea `{ pacienteId: 'p1' }`
+// directamente y por eso no detectó que el `deps` construido en `arrancar()`
+// solo exponía `pacienteId` dentro del closure `ctxAccion()` (usado por
+// "Copiar /agendar"), nunca como propiedad plana — bug real en producción:
+// el click de override enviaba paciente_id vacío a la EF (400 paciente_id_requerido).
+const fs = require('node:fs');
+const path = require('node:path');
+
+test('arrancar(): el objeto deps expone pacienteId como propiedad plana (no solo dentro de ctxAccion)', () => {
+  const src = fs.readFileSync(path.join(__dirname, '../src/backoffice/backoffice-paciente.js'), 'utf8');
+  const inicio = src.indexOf('const deps = {');
+  const finCtx = src.indexOf('ctxAccion:', inicio);
+  assert.ok(inicio !== -1 && finCtx !== -1, 'no se encontró la construcción de deps en arrancar()');
+  const bloquePlano = src.slice(inicio, finCtx);
+  assert.match(bloquePlano, /pacienteId:\s*idPaciente/,
+    'deps debe tener pacienteId a nivel superior, antes de ctxAccion — _conectarCurso lee deps.pacienteId directamente');
+});

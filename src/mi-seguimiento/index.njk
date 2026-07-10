@@ -1155,6 +1155,7 @@ appleTitle: "CLN"
   .ms-apr-card ul { padding-left: 18px; font-size: 0.9rem; }
   .ms-apr-card li { margin-bottom: 6px; }
   .ms-apr-card b { color: var(--color-green-dark); }
+  .ms-apr-card-img { width: 100%; max-width: 280px; display: block; margin: 0 auto 14px; border-radius: 14px; }
 
   .ms-apr-player-nav { display: flex; gap: 9px; align-items: center; margin-top: 14px; }
   .ms-apr-btn-prev { background: none; border: none; color: #8d978b; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 10px 4px; visibility: hidden; }
@@ -2207,7 +2208,10 @@ appleTitle: "CLN"
       div.className = 'ms-apr-card';
       div.dataset.i = String(i);
       div.innerHTML = '<span class="ms-apr-eyebrow">' + escapeHtml(faseTitulo) + ' · ' + escapeHtml(l.titulo) + '</span><h2>' + escapeHtml(c.h) + '</h2>'
-        + (c.list ? '<ul>' + c.list.map((x) => '<li>' + x + '</li>').join('') + '</ul>' : '<p>' + c.p + '</p>');
+        + (c.img ? '<img class="ms-apr-card-img" src="' + escapeHtml(c.img) + '" alt="' + escapeHtml(c.imgAlt || '') + '">' : '')
+        + (c.intro ? '<p>' + c.intro + '</p>' : '')
+        + (c.list ? '<ul>' + c.list.map((x) => '<li>' + x + '</li>').join('') + '</ul>' : '<p>' + c.p + '</p>')
+        + (c.foot ? '<p>' + c.foot + '</p>' : '');
       body.appendChild(div);
     });
     const a = aprCur.accion;

@@ -85,3 +85,28 @@ test('guardar reto actualiza curso_progreso de la paciente logueada', () => {
     /from\('curso_progreso'\)[\s\S]{0,300}?\.update\([\s\S]{0,300}?\.eq\('paciente_id', paciente\.id\)/
   );
 });
+
+// ---- Curso «Aprender» (Parte F: img/intro/foot en tarjetas de lección) ----
+//
+// intro/foot ya existían en el contenido aprobado de 3 tarjetas (construccion-1
+// y construccion-2, ver lecciones.json) como requisito de la Tarea 9 del plan
+// ("el reproductor debe pintar intro antes de la <ul> y foot después"), pero
+// el forEach de abrirLeccion nunca los pintaba — descubierto al añadir la
+// imagen del método del plato. img es nuevo (ilustración de "los dos cuartos
+// que completan").
+
+test('abrirLeccion: la tarjeta soporta una imagen opcional (c.img)', () => {
+  const block = indexNjk.match(/aprCur\.cards\.forEach\(\(c, i\) => \{[\s\S]*?\}\);/);
+  assert.ok(block, 'no se encontró el forEach de tarjetas en abrirLeccion');
+  assert.match(block[0], /c\.img/,
+    'la tarjeta debe soportar c.img — ilustración como el método del plato');
+});
+
+test('abrirLeccion: la tarjeta pinta intro antes de la lista/párrafo y foot después', () => {
+  const block = indexNjk.match(/aprCur\.cards\.forEach\(\(c, i\) => \{[\s\S]*?\}\);/);
+  assert.ok(block, 'no se encontró el forEach de tarjetas en abrirLeccion');
+  assert.match(block[0], /c\.intro/,
+    'falta pintar c.intro — 3 tarjetas de Construcción ya lo traen en el contenido aprobado (Tarea 9 del plan)');
+  assert.match(block[0], /c\.foot/,
+    'falta pintar c.foot — 3 tarjetas de Construcción ya lo traen en el contenido aprobado (Tarea 9 del plan)');
+});
