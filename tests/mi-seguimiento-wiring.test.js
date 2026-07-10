@@ -67,3 +67,12 @@ test('los loaders del curso filtran por la paciente logueada', () => {
   assert.match(indexNjk, /from\('curso_progreso'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
   assert.match(indexNjk, /from\('curso_overrides'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
 });
+
+// ---- Curso «Aprender» (Tarea 9: reproductor de lección) ----
+
+test('completar lección hace upsert de curso_progreso con la paciente logueada', () => {
+  assert.match(
+    indexNjk,
+    /from\('curso_progreso'\)[\s\S]{0,300}?upsert\([\s\S]{0,200}?paciente_id: paciente\.id/
+  );
+});

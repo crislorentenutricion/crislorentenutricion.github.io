@@ -1120,8 +1120,76 @@ appleTitle: "CLN"
   .ms-apr-node.premio .ms-apr-bola { background: #c9a44c; color: #fff; }
   .ms-apr-dl { margin-left: auto; font-size: 10px; background: #c9a44c; color: #fff; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
 
+  /* ---------- reproductor de lección (overlay a pantalla completa) ---------- */
+  .ms-apr-player {
+    position: fixed; inset: 0; z-index: 70; background: var(--color-cream, #f3f1e8);
+    display: flex; flex-direction: column; padding: 26px 20px 24px;
+    overflow: hidden;
+  }
+  .ms-apr-player[hidden] { display: none; }
+  .ms-apr-player-top { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .ms-apr-player-x { background: none; border: none; color: #8d978b; font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 6px; }
+  .ms-apr-segs { flex: 1; display: flex; gap: 4px; }
+  .ms-apr-seg { flex: 1; height: 4px; border-radius: 3px; background: #dedad0; overflow: hidden; }
+  .ms-apr-seg i { display: block; height: 100%; width: 0%; background: var(--color-green); transition: width 0.2s; }
+  .ms-apr-seg.done i { width: 100%; }
+  .ms-apr-seg.now i { width: 100%; background: #c9a44c; }
+
+  .ms-apr-player-body { flex: 1; display: flex; flex-direction: column; position: relative; overflow-y: auto; }
+  .ms-apr-card { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; animation: msAprFadeIn 0.25s ease; }
+  .ms-apr-card.active { display: flex; }
+  @keyframes msAprFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .ms-apr-card .ms-apr-eyebrow { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #c9a44c; font-weight: 700; margin-bottom: 10px; }
+  .ms-apr-card h2 { font-family: 'Lora', serif; font-size: 1.3rem; font-weight: 600; color: var(--color-green-dark); line-height: 1.25; margin-bottom: 14px; }
+  .ms-apr-card p { font-size: 0.9rem; color: #2c3a30; margin-bottom: 10px; }
+  .ms-apr-card ul { padding-left: 18px; font-size: 0.9rem; }
+  .ms-apr-card li { margin-bottom: 6px; }
+  .ms-apr-card b { color: var(--color-green-dark); }
+
+  .ms-apr-player-nav { display: flex; gap: 9px; align-items: center; margin-top: 14px; }
+  .ms-apr-btn-prev { background: none; border: none; color: #8d978b; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 10px 4px; visibility: hidden; }
+  .ms-apr-btn-next { flex: 1; background: var(--color-green); color: #fff; border: none; border-radius: 14px; padding: 13px; font-family: var(--font-family); font-size: 13.5px; font-weight: 700; cursor: pointer; }
+  .ms-apr-btn-next:disabled { background: #c7cec4; cursor: default; }
+
+  .ms-apr-action-box { background: #fff; border: 1.5px solid #c9a44c; border-radius: 14px; padding: 13px; margin-top: 6px; }
+  .ms-apr-action-box textarea { width: 100%; border: none; font-family: var(--font-family); font-size: 0.85rem; resize: none; height: 56px; background: transparent; }
+  .ms-apr-action-box textarea:focus { outline: none; }
+  .ms-apr-action-done { display: flex; align-items: center; gap: 9px; background: #fff; border: 1.5px solid #e4dfcf; border-radius: 14px; padding: 13px; margin-top: 6px; cursor: pointer; }
+  .ms-apr-action-done .ms-apr-action-box-check { width: 20px; height: 20px; border-radius: 7px; border: 2px solid #cfd6cc; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+  .ms-apr-action-done.on { border-color: var(--color-green); background: #e2ecdf; }
+  .ms-apr-action-done.on .ms-apr-action-box-check { background: var(--color-green); border-color: var(--color-green); }
+
+  /* ---------- celebración ---------- */
+  .ms-apr-celebrate {
+    position: fixed; inset: 0; z-index: 71; background: var(--color-green-dark);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #fff; text-align: center; padding: 20px;
+  }
+  .ms-apr-celebrate[hidden] { display: none; }
+  .ms-apr-celebrate-ring { width: 70px; height: 70px; border-radius: 50%; background: #fff; color: var(--color-green-dark); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px; animation: msAprPop 0.45s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes msAprPop { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  .ms-apr-celebrate h3 { font-family: 'Lora', serif; font-size: 1.25rem; margin-bottom: 6px; }
+  .ms-apr-celebrate p { font-size: 12.5px; opacity: 0.85; }
+
+  /* ---------- desbloqueo de guía PDF ---------- */
+  .ms-apr-pdf-modal {
+    position: fixed; inset: 0; z-index: 72; background: rgba(20, 30, 24, 0.45);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .ms-apr-pdf-modal[hidden] { display: none; }
+  .ms-apr-pdf-card { background: #fff; border-radius: 18px; padding: 22px; text-align: center; max-width: 280px; width: 100%; }
+  .ms-apr-pdf-cover { width: 100%; aspect-ratio: 3/4; border-radius: 10px; background: linear-gradient(160deg, #f6edd2, #fff); border: 1.5px solid #e7d59a; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; padding: 14px; }
+  .ms-apr-pdf-ic { font-size: 30px; margin-bottom: 8px; }
+  .ms-apr-pdf-cover b { font-family: 'Lora', serif; font-size: 14px; color: #7c5f12; line-height: 1.3; }
+  .ms-apr-pdf-card p { font-size: 12px; color: #8d978b; margin-bottom: 14px; }
+  .ms-apr-pdf-dl { background: #c9a44c; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; font-family: var(--font-family); font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; }
+  .ms-apr-pdf-close { margin-top: 10px; background: none; border: none; color: #8d978b; font-size: 12px; cursor: pointer; }
+
   /* ---------- scroll lock mientras hay modal abierto ---------- */
-  body:has(.ms-modal-backdrop:not([hidden])) { overflow: hidden; }
+  body:has(.ms-modal-backdrop:not([hidden])),
+  body:has(.ms-apr-player:not([hidden])),
+  body:has(.ms-apr-celebrate:not([hidden])),
+  body:has(.ms-apr-pdf-modal:not([hidden])) { overflow: hidden; }
 
   /* ---------- milestone celebration ---------- */
   .ms-milestone { z-index: 55; }
@@ -1198,7 +1266,7 @@ appleTitle: "CLN"
     max-width: calc(100% - 32px);
     text-align: center;
     box-shadow: 0 14px 30px rgba(0,0,0,0.22);
-    z-index: 60;
+    z-index: 80;
     animation: msToastIn 0.3s ease both;
   }
   @keyframes msToastIn {
@@ -1741,6 +1809,36 @@ appleTitle: "CLN"
     </div>
   </div>
 
+  {# ============================== CURSO «APRENDER» — reproductor de lección ============================== #}
+  <div id="ms-apr-player" class="ms-apr-player" role="dialog" aria-modal="true" aria-label="Lección" hidden>
+    <div class="ms-apr-player-top">
+      <button type="button" class="ms-apr-player-x" id="ms-apr-player-close" aria-label="Cerrar sin guardar">✕</button>
+      <div class="ms-apr-segs" id="ms-apr-segs"></div>
+    </div>
+    <div class="ms-apr-player-body" id="ms-apr-player-body"></div>
+    <div class="ms-apr-player-nav">
+      <button type="button" class="ms-apr-btn-prev" id="ms-apr-btn-prev">‹ atrás</button>
+      <button type="button" class="ms-apr-btn-next" id="ms-apr-btn-next">Siguiente →</button>
+    </div>
+  </div>
+
+  {# ============================== CURSO «APRENDER» — celebración ============================== #}
+  <div id="ms-apr-celebrate" class="ms-apr-celebrate" role="status" aria-live="polite" hidden>
+    <div class="ms-apr-celebrate-ring">✓</div>
+    <h3 id="ms-apr-celebrate-title">¡Módulo completado!</h3>
+    <p id="ms-apr-celebrate-sub">Sigue así.</p>
+  </div>
+
+  {# ============================== CURSO «APRENDER» — desbloqueo de guía PDF ============================== #}
+  <div id="ms-apr-pdf-modal" class="ms-apr-pdf-modal" role="dialog" aria-modal="true" aria-label="Guía desbloqueada" hidden>
+    <div class="ms-apr-pdf-card">
+      <div class="ms-apr-pdf-cover"><span class="ms-apr-pdf-ic">📄</span><b id="ms-apr-pdf-titulo">Guía</b></div>
+      <p id="ms-apr-pdf-texto">¡Fase completada! Tu guía ya está lista.</p>
+      <button type="button" class="ms-apr-pdf-dl" id="ms-apr-pdf-dl">Descargar PDF</button>
+      <button type="button" class="ms-apr-pdf-close" id="ms-apr-pdf-close">Seguir en la app</button>
+    </div>
+  </div>
+
   {# ============================== TOAST ============================== #}
   <div id="ms-toast" class="ms-toast" role="status" aria-live="polite" hidden></div>
 </div>
@@ -2044,9 +2142,130 @@ appleTitle: "CLN"
     // Implementación completa en la Tarea 10; de momento no hace nada.
   }
 
+  // ---- Reproductor de lección (Tarea 9) ----
+  // Port directo de mockup-app-mi-seguimiento-aprender.html (openLesson/
+  // showCard/updateNextEnabled/completeLesson, líneas 288-364): navegación
+  // solo con botones, "Siguiente" deshabilitado hasta responder la
+  // mini-acción, último botón "Completar módulo ✓", el ✕ cierra sin guardar.
+  let aprCur = null, aprCurSlug = null, aprIdx = 0, aprActionValue = false, aprGuiaActual = null;
+
   function abrirLeccion(slug) {
-    // Reproductor completo en la Tarea 9; de momento solo confirma el wiring.
-    console.log('abrirLeccion', slug);
+    const l = cursoLecciones.find((x) => x.slug === slug);
+    if (!l) return;
+    aprCur = l.contenido;
+    aprCurSlug = slug;
+    aprIdx = 0;
+    aprActionValue = false;
+    const fase = AprenderLogic.FASES.find((f) => f.key === l.fase);
+    const faseTitulo = fase ? fase.titulo : '';
+
+    const total = aprCur.cards.length + 1;
+    $('#ms-apr-segs').innerHTML = Array.from({ length: total }, () => '<div class="ms-apr-seg"><i></i></div>').join('');
+
+    const body = $('#ms-apr-player-body');
+    body.innerHTML = '';
+    aprCur.cards.forEach((c, i) => {
+      const div = document.createElement('div');
+      div.className = 'ms-apr-card';
+      div.dataset.i = String(i);
+      div.innerHTML = '<span class="ms-apr-eyebrow">' + escapeHtml(faseTitulo) + ' · ' + escapeHtml(l.titulo) + '</span><h2>' + escapeHtml(c.h) + '</h2>'
+        + (c.list ? '<ul>' + c.list.map((x) => '<li>' + x + '</li>').join('') + '</ul>' : '<p>' + c.p + '</p>');
+      body.appendChild(div);
+    });
+    const a = aprCur.accion;
+    const adiv = document.createElement('div');
+    adiv.className = 'ms-apr-card';
+    adiv.dataset.i = String(aprCur.cards.length);
+    let inner = '<span class="ms-apr-eyebrow">' + escapeHtml(faseTitulo) + ' · ' + escapeHtml(l.titulo) + '</span><h2>Tu mini-acción</h2><p>' + a.p + '</p>';
+    if (a.type === 'text') {
+      inner += '<div class="ms-apr-action-box"><textarea id="ms-apr-action-input" placeholder="' + escapeHtml(a.placeholder) + '"></textarea></div>';
+    } else {
+      inner += '<div class="ms-apr-action-done" id="ms-apr-action-check"><span class="ms-apr-action-box-check"></span><span>' + escapeHtml(a.label) + '</span></div>';
+    }
+    adiv.innerHTML = inner;
+    body.appendChild(adiv);
+
+    $('#ms-apr-player').hidden = false;
+    showCardLeccion(0);
+  }
+
+  function showCardLeccion(i) {
+    aprIdx = i;
+    const body = $('#ms-apr-player-body');
+    Array.from(body.querySelectorAll('.ms-apr-card')).forEach((c) => c.classList.toggle('active', Number(c.dataset.i) === i));
+    $$('.ms-apr-seg').forEach((s, si) => { s.classList.toggle('done', si < i); s.classList.toggle('now', si === i); });
+    $('#ms-apr-btn-prev').style.visibility = i === 0 ? 'hidden' : 'visible';
+    const isAction = i === aprCur.cards.length;
+    $('#ms-apr-btn-next').textContent = isAction ? 'Completar módulo ✓' : 'Siguiente →';
+    updateAprNextEnabled();
+    if (isAction && aprCur.accion.type === 'check') {
+      const chk = $('#ms-apr-action-check');
+      chk.onclick = () => { aprActionValue = !aprActionValue; chk.classList.toggle('on', aprActionValue); updateAprNextEnabled(); };
+    }
+    if (isAction && aprCur.accion.type === 'text') {
+      $('#ms-apr-action-input').oninput = updateAprNextEnabled;
+    }
+  }
+
+  function updateAprNextEnabled() {
+    const isAction = aprIdx === aprCur.cards.length;
+    if (!isAction) { $('#ms-apr-btn-next').disabled = false; return; }
+    if (aprCur.accion.type === 'check') { $('#ms-apr-btn-next').disabled = !aprActionValue; return; }
+    const input = $('#ms-apr-action-input');
+    const val = input ? input.value.trim() : '';
+    $('#ms-apr-btn-next').disabled = val.length < 2;
+  }
+
+  function cerrarPlayer() {
+    $('#ms-apr-player').hidden = true;
+    aprCur = null;
+    aprCurSlug = null;
+  }
+
+  function celebrar(mensaje) {
+    $('#ms-apr-celebrate-sub').textContent = mensaje;
+    $('#ms-apr-celebrate').hidden = false;
+    setTimeout(() => { $('#ms-apr-celebrate').hidden = true; }, 1500);
+  }
+
+  // Población + apertura del modal de guía; la descarga (signed URL) vive en
+  // la Tarea 11 (descargarGuia), igual que el click sobre el nodo premio.
+  function mostrarGuiaModal(guia) {
+    aprGuiaActual = guia;
+    $('#ms-apr-pdf-titulo').textContent = guia.titulo;
+    $('#ms-apr-pdf-texto').textContent = 'Tu guía está lista para descargar.';
+    $('#ms-apr-pdf-modal').hidden = false;
+  }
+
+  async function completarLeccion() {
+    if (!aprCur || !aprCurSlug) return;
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) { showToast('Tu sesión ha caducado. Te llevamos a iniciar sesión.'); return; }
+    const accion = aprCur.accion;
+    const miniAccion = accion.type === 'text' ? $('#ms-apr-action-input').value.trim() : null;
+    const { error } = await supa.from('curso_progreso')
+      .upsert({
+        paciente_id: paciente.id,
+        leccion_slug: aprCurSlug,
+        mini_accion: miniAccion,
+      }, { onConflict: 'paciente_id,leccion_slug' });
+    if (error) { showToast('No se ha podido guardar. Inténtalo de nuevo.'); return; }
+    const guiasAntes = estadoCursoActual().guias;
+    cursoProgreso.push({
+      leccion_slug: aprCurSlug, completada_at: new Date().toISOString(),
+      mini_accion: miniAccion, reto_hecho: false, reto_nota: null,
+    });
+    cerrarPlayer();
+    const eDespues = estadoCursoActual();
+    const guiaNueva = eDespues.guias.find((g, i) => g.desbloqueada && !guiasAntes[i].desbloqueada);
+    if (guiaNueva) {
+      const faseInfo = AprenderLogic.FASES.find((f) => f.key === guiaNueva.fase);
+      celebrar('¡Fase ' + (faseInfo ? faseInfo.titulo : '') + ' completada! Tu guía te espera.');
+      setTimeout(() => mostrarGuiaModal(guiaNueva), 1600);
+    } else {
+      celebrar('Sigue así — siguiente lección desbloqueada.');
+    }
+    renderAprender();
   }
 
   function renderAprender() {
@@ -3225,6 +3444,14 @@ appleTitle: "CLN"
     const slug = e.target.closest('[data-open]')?.dataset.open;
     if (slug) abrirLeccion(slug);
   });
+  $('#ms-apr-btn-next').addEventListener('click', () => {
+    const isAction = aprIdx === aprCur.cards.length;
+    if (isAction) { completarLeccion(); return; }
+    showCardLeccion(aprIdx + 1);
+  });
+  $('#ms-apr-btn-prev').addEventListener('click', () => { if (aprIdx > 0) showCardLeccion(aprIdx - 1); });
+  $('#ms-apr-player-close').addEventListener('click', cerrarPlayer);
+  $('#ms-apr-pdf-close').addEventListener('click', () => { $('#ms-apr-pdf-modal').hidden = true; });
   $('#ms-compra-reset').addEventListener('click', reiniciarCompra);
   $('#ms-meals').addEventListener('click', (e) => {
     const btn = e.target.closest('.ms-meal-swap');
