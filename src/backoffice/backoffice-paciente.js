@@ -1212,6 +1212,42 @@
     return '<section class="bo-curso" data-bo-bloque="curso"><h2>Curso «Aprender»</h2>' + resumen + bloques + '</section>';
   }
 
+  // Mensaje de confirmación tras aplicar un override — sin juicio, describe
+  // el efecto (regla dura del proyecto: "el ritmo automático nunca es un
+  // límite para Cristina").
+  function _msgOverride(modo, tipo) {
+    const que = tipo === 'fase' ? 'La fase' : 'La lección';
+    if (modo === 'auto') return que + ' vuelve al ritmo automático.';
+    return modo === 'desbloquear' ? que + ' queda desbloqueada.' : que + ' queda bloqueada.';
+  }
+
+  // Delegación de eventos sobre #panel-curso: cualquier click en un botón
+  // [data-bo-curso] (lección o fase) invoca la EF curso-override con
+  // service_role — mutación de admin por Edge Function, nunca con anon key
+  // directamente (regla dura del backoffice).
+  function _conectarCurso(cont, deps) {
+    if (cont.dataset && cont.dataset.boBoundCurso === '1') return;
+    cont.addEventListener('click', async function (e) {
+      const btn = e.target.closest('[data-bo-curso]');
+      if (!btn) return;
+      btn.disabled = true;
+      const res = await BoUi.ejecutarEdgeFunction(deps.supa, 'curso-override', {
+        paciente_id: deps.pacienteId,
+        tipo: btn.dataset.tipo,
+        target: btn.dataset.target,
+        modo: btn.dataset.boCurso
+      });
+      if (res.ok) {
+        BoUi.toast(_msgOverride(btn.dataset.boCurso, btn.dataset.tipo));
+        deps.recargar();
+      } else {
+        btn.disabled = false;
+        BoUi.toast('No se ha podido aplicar: ' + ((res.error && res.error.message) || 'error desconocido'));
+      }
+    });
+    if (cont.dataset) cont.dataset.boBoundCurso = '1';
+  }
+
   // -----------------------------------------------------------------
   // renderTimeline (pura) — lista cronológica descendente mixta
   // -----------------------------------------------------------------
@@ -1753,6 +1789,7 @@
             })
           : { lecciones: [], guias: [], contadores: { lecciones: 0, guias: 0 }, retoActivo: null };
         curso.innerHTML = renderCurso(estadoCurso, datos.cursoProgreso || []);
+        _conectarCurso(curso, deps);
       }
       if (pag) pag.innerHTML = renderPagos(pagos || [], paciente, new Date());
       if (tim) {
@@ -1813,6 +1850,8 @@
     renderEvolucion,
     renderPagos,
     renderCurso,
+    _conectarCurso: _conectarCurso,
+    _msgOverride: _msgOverride,
     renderTimeline,
     renderAcciones,
     arrancar,
