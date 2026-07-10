@@ -1068,6 +1068,58 @@ appleTitle: "CLN"
   #ms-authed[data-view="compra"] .ms-calendar,
   #ms-authed[data-view="compra"] .ms-compra-entry { display: none; }
 
+  /* Switch de vista: mostrar aprender sólo cuando data-view="aprender" */
+  .ms-aprender { display: none; }
+  #ms-authed[data-view="aprender"] .ms-aprender { display: block; }
+  #ms-authed[data-view="aprender"] .ms-today,
+  #ms-authed[data-view="aprender"] .ms-tip,
+  #ms-authed[data-view="aprender"] .ms-check,
+  #ms-authed[data-view="aprender"] .ms-calendar,
+  #ms-authed[data-view="aprender"] .ms-compra-entry { display: none; }
+
+  /* ---------- Curso «Aprender»: mapa de lecciones (portado del mockup) ---------- */
+  .ms-sub { font-size: 0.82rem; color: #8a8678; margin-bottom: 16px; }
+  .ms-apr-badge {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #a07c14; background: #f6edd2;
+    padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle;
+  }
+  .ms-apr-top { display: flex; gap: 9px; margin-bottom: 18px; }
+  .ms-apr-stat {
+    flex: 1; background: #fff; border: 1px solid #e4dfcf; border-radius: 13px;
+    padding: 10px; text-align: center;
+  }
+  .ms-apr-stat b { display: block; font-family: 'Lora', serif; font-size: 1.05rem; color: var(--color-green-dark); }
+  .ms-apr-stat small { font-size: 10px; color: #8a8678; }
+  .ms-apr-fase { display: flex; align-items: center; gap: 7px; margin: 16px 0 7px; }
+  .ms-apr-fase .ms-apr-fase-nombre { font-family: 'Lora', serif; font-size: 0.95rem; color: var(--color-green-dark); }
+  .ms-apr-fase .ms-apr-fase-sub { font-size: 10.5px; color: #8a8678; }
+  .ms-apr-fase .ms-apr-fase-estado { margin-left: auto; font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .ms-apr-fase-estado.ok { color: var(--color-green); background: #e2ecdf; }
+  .ms-apr-fase-estado.now { color: #a07c14; background: #f6edd2; }
+  .ms-apr-fase-estado.lock { color: #8a8678; background: #eceae0; }
+  .ms-apr-path { position: relative; padding-left: 34px; }
+  .ms-apr-path::before { content: ""; position: absolute; left: 12px; top: 5px; bottom: 14px; width: 2px; background: #e4dfcf; }
+  .ms-apr-node { position: relative; margin-bottom: 11px; cursor: pointer; }
+  .ms-apr-node .ms-apr-bola {
+    position: absolute; left: -34px; top: 0; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+    border: 3px solid var(--color-cream); transition: 0.2s;
+  }
+  .ms-apr-node.done .ms-apr-bola { background: var(--color-green); color: #fff; }
+  .ms-apr-node.now .ms-apr-bola { background: #c9a44c; color: #fff; box-shadow: 0 0 0 5px rgba(201, 164, 76, 0.2); }
+  .ms-apr-node.lock .ms-apr-bola,
+  .ms-apr-node.wait .ms-apr-bola { background: #dcdfd3; color: #9aa395; }
+  .ms-apr-node .ms-apr-lbl { background: #fff; border: 1px solid #e4dfcf; border-radius: 12px; padding: 10px 12px; font-size: 12.5px; transition: 0.2s; }
+  .ms-apr-node.now .ms-apr-lbl { border-color: #c9a44c; font-weight: 600; }
+  .ms-apr-node.lock .ms-apr-lbl,
+  .ms-apr-node.wait .ms-apr-lbl { color: #8d978b; background: #faf8f1; cursor: default; }
+  .ms-apr-node .ms-apr-lbl small { display: block; font-size: 10px; color: #8a8678; font-weight: 400; }
+  .ms-apr-node.premio .ms-apr-lbl { background: #f6edd2; border-color: #e7d59a; color: #7c5f12; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .ms-apr-node.premio.lock .ms-apr-lbl { background: #faf8f1; border-color: #e4dfcf; color: #8a8678; }
+  .ms-apr-node.premio .ms-apr-bola { background: #c9a44c; color: #fff; }
+  .ms-apr-dl { margin-left: auto; font-size: 10px; background: #c9a44c; color: #fff; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
+
   /* ---------- scroll lock mientras hay modal abierto ---------- */
   body:has(.ms-modal-backdrop:not([hidden])) { overflow: hidden; }
 
@@ -1536,6 +1588,23 @@ appleTitle: "CLN"
       </button>
     </section>
 
+    {# ============================== CURSO «APRENDER» — entry + view ============================== #}
+    <section class="ms-compra-entry ms-apr-entry" id="ms-apr-entry" aria-label="Abrir el curso Aprender" hidden>
+      <button type="button" class="ms-compra-cta" id="ms-apr-open" aria-label="Abrir el curso Aprender">
+        <span class="ms-compra-cta-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+        </span>
+        <span class="ms-compra-cta-text">
+          <span class="ms-compra-cta-title">Aprender <span class="ms-apr-badge">Nuevo</span></span>
+          <span class="ms-compra-cta-meta" id="ms-apr-entry-sub">Tu curso para comer con autonomía</span>
+        </span>
+        <span class="ms-compra-cta-arrow" aria-hidden="true">→</span>
+      </button>
+    </section>
+
     <section class="ms-compra" id="ms-compra" aria-labelledby="ms-compra-title">
       <button type="button" class="ms-back-today ms-compra-back" id="ms-compra-back">← volver a hoy</button>
       <h2 id="ms-compra-title" class="ms-section-title"><span>la compra de esta semana</span></h2>
@@ -1550,6 +1619,19 @@ appleTitle: "CLN"
           <span>Reiniciar lista</span>
         </button>
       </div>
+    </section>
+
+    {# ===== Vista Aprender ===== #}
+    <section class="ms-aprender" aria-label="Aprender">
+      <button type="button" class="ms-back-today" id="ms-apr-back">← volver a hoy</button>
+      <h2 class="ms-section-title">Aprender</h2>
+      <p class="ms-sub">Completa las lecciones y desbloquea tu guía.</p>
+      <div class="ms-apr-top">
+        <div class="ms-apr-stat"><b id="ms-apr-stat-lecciones">0/10</b><small>lecciones</small></div>
+        <div class="ms-apr-stat"><b id="ms-apr-stat-guias">0/3</b><small>guías</small></div>
+      </div>
+      <div id="ms-apr-reto" hidden></div>
+      <div id="ms-apr-mapa"></div>
     </section>
 
     <footer class="ms-foot">
@@ -1664,6 +1746,7 @@ appleTitle: "CLN"
 </div>
 
 <script src="/mi-seguimiento/logic.js"></script>
+<script src="/mi-seguimiento/aprender-logic.js"></script>
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
   // Lógica pura (ver src/mi-seguimiento/logic.js y tests/mi-seguimiento.test.js).
@@ -2256,6 +2339,13 @@ appleTitle: "CLN"
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function mostrarAprender() {
+    authedView.classList.remove('is-day-editable');
+    checkinTargetISO = null;
+    $('#ms-authed').dataset.view = 'aprender';
+    window.scrollTo(0, 0);
+  }
+
   // Persistimos la vista activa en dos sitios — sólo cuando el cambio lo
   // dispara una acción del usuario (clics en los botones):
   //   1) location.hash — para bfcache, recargas normales y resumes "blandos".
@@ -2266,14 +2356,14 @@ appleTitle: "CLN"
   // llama internamente sin tocar el hash ni el storage, así puede leerlos
   // después para restaurar la vista que la paciente tenía al bloquear.
   function setViewHash(viewName) {
-    const target = viewName === 'compra' ? '#compra' : '';
+    const target = viewName === 'compra' ? '#compra' : viewName === 'aprender' ? '#aprender' : '';
     if ((location.hash || '') !== target) {
       try {
         history.replaceState(null, '', location.pathname + location.search + target);
       } catch (e) { /* noop */ }
     }
     try {
-      if (target === '#compra') localStorage.setItem('ms-active-view', 'compra');
+      if (target === '#compra' || target === '#aprender') localStorage.setItem('ms-active-view', target.slice(1));
       else localStorage.removeItem('ms-active-view');
     } catch (e) { /* noop */ }
   }
@@ -2517,16 +2607,18 @@ appleTitle: "CLN"
     // vista compra está oculta por CSS y restaurarla dejaría la pantalla en blanco.
     let lastViewLS = null;
     try { lastViewLS = localStorage.getItem('ms-active-view'); } catch (e) { /* noop */ }
-    if (resolveInitialView({
+    const initialView = resolveInitialView({
       hash: location.hash,
       lastView: lastViewLS,
       isLocked: result.view === 'locked'
-    }) === 'compra') {
-      $('#ms-authed').dataset.view = 'compra';
+    });
+    if (initialView === 'compra' || initialView === 'aprender') {
+      $('#ms-authed').dataset.view = initialView;
       // Si el hash se perdió (iOS relaunch), lo re-sincronizamos para que
       // bfcache y enlaces internos vean la vista correcta.
-      if (location.hash !== '#compra') {
-        try { history.replaceState(null, '', location.pathname + location.search + '#compra'); } catch (e) { /* noop */ }
+      const targetHash = '#' + initialView;
+      if (location.hash !== targetHash) {
+        try { history.replaceState(null, '', location.pathname + location.search + targetHash); } catch (e) { /* noop */ }
       }
     }
 
@@ -3032,6 +3124,8 @@ appleTitle: "CLN"
   $('#ms-back-today').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
   $('#ms-compra-open').addEventListener('click', () => { mostrarCompra(); setViewHash('compra'); });
   $('#ms-compra-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
+  $('#ms-apr-open').addEventListener('click', () => { mostrarAprender(); setViewHash('aprender'); });
+  $('#ms-apr-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
   $('#ms-compra-reset').addEventListener('click', reiniciarCompra);
   $('#ms-meals').addEventListener('click', (e) => {
     const btn = e.target.closest('.ms-meal-swap');

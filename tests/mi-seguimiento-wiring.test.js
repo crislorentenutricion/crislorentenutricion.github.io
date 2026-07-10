@@ -49,3 +49,21 @@ test('renderStreak devuelve la racha (la usa maybeCelebrarMilestone tras el chec
     'renderStreak debe devolver el número de racha — el handler de check-in hace `const racha = renderStreak(...)` y sin return el milestone nunca se celebra en el momento'
   );
 });
+
+// ---- Curso «Aprender» (Tarea 7: tarjeta, vista y navegación) ----
+
+test('mi-seguimiento carga aprender-logic.js antes del módulo principal', () => {
+  assert.match(indexNjk, /<script src="\/mi-seguimiento\/aprender-logic\.js"><\/script>/);
+});
+
+test('la vista aprender existe y se navega con mostrarAprender', () => {
+  assert.match(indexNjk, /data-view="aprender"|'aprender'/);
+  assert.match(indexNjk, /function mostrarAprender\(\)/);
+});
+
+// ---- Curso «Aprender» (Tarea 8: loaders filtrados por paciente) ----
+
+test('los loaders del curso filtran por la paciente logueada', () => {
+  assert.match(indexNjk, /from\('curso_progreso'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
+  assert.match(indexNjk, /from\('curso_overrides'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
+});

@@ -1053,6 +1053,18 @@ test("resolveInitialView: lastView='compra' pero isLocked=true → 'today' (gate
   assert.equal(resolveInitialView({ hash: "", lastView: "compra", isLocked: true }), "today");
 });
 
+test("resolveInitialView: hash '#aprender' → 'aprender' (paciente estaba en el curso)", () => {
+  assert.equal(resolveInitialView({ hash: "#aprender", isLocked: false }), "aprender");
+});
+
+test("resolveInitialView: hash vacío + lastView='aprender' → 'aprender' (fallback localStorage)", () => {
+  assert.equal(resolveInitialView({ hash: "", lastView: "aprender", isLocked: false }), "aprender");
+});
+
+test("resolveInitialView: lastView='aprender' pero isLocked=true → 'today' (gate sigue mandando)", () => {
+  assert.equal(resolveInitialView({ hash: "", lastView: "aprender", isLocked: true }), "today");
+});
+
 // ---------------------------- shouldCelebrarMilestone --------------------
 
 test("shouldCelebrarMilestone: onboarding aún no visto → null (no apilar modales)", () => {
