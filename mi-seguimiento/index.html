@@ -360,7 +360,12 @@
   /* ============================================================
      AUTHED VIEW
      ============================================================ */
-  .ms-authed { padding-top: 4px; }
+  .ms-authed {
+    padding-top: 4px;
+    /* Hueco para la barra de pestañas fija inferior (+ safe area iPhone) */
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+  .ms-authed.is-locked { padding-bottom: 0; }
 
   /* Estado "sin menú vigente": ocultamos acciones que rompen si no hay
      menú aún (check-in, calendario, lista compra, PDF, revisión). La
@@ -371,7 +376,6 @@
   .ms-authed.is-locked .ms-tip,
   .ms-authed.is-locked .ms-check,
   .ms-authed.is-locked .ms-calendar,
-  .ms-authed.is-locked .ms-compra-entry,
   .ms-authed.is-locked .ms-compra,
   .ms-authed.is-locked .ms-pdf-link,
   .ms-authed.is-locked .ms-back-today { display: none !important; }
@@ -906,69 +910,68 @@
   #ms-authed[data-view="day"].is-day-editable .ms-check-status { display: none; }
 
   /* ============================================================
-     LISTA DE LA COMPRA — entry card + vista propia (data-view="compra")
-     Estado local: localStorage 'ms-compra-<menu_id>', sin servidor.
+     BARRA DE PESTAÑAS — navegación fija inferior (Hoy · Compra · Aprender)
+     La pestaña activa la decide el CSS según #ms-authed[data-view];
+     JS solo sincroniza aria-current para lectores de pantalla.
+     El nav vive FUERA de #ms-authed: la animación ms-fade-in deja un
+     transform aplicado en el contenedor y eso rompe el anclaje de
+     position:fixed (la barra scrollearía con la página y no ocuparía
+     el ancho del viewport). Su visibilidad se deriva con :has().
      ============================================================ */
-
-  /* Entry card — tras el calendario, siempre visible en vista today/day */
-  .ms-compra-entry { margin-bottom: 44px; }
-  .ms-compra-cta {
-    display: grid;
-    grid-template-columns: 48px 1fr auto;
-    gap: 14px;
+  .ms-tabbar { display: none; }
+  /* Visible solo con sesión y menú vigente (mismo gating que tenía dentro) */
+  body:has(#ms-authed:not([hidden]):not(.is-locked)) .ms-tabbar { display: block; }
+  .ms-tabbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 60;
+    background: rgba(253, 251, 244, 0.94);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid #e4dfcf;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .ms-tabbar-inner {
+    max-width: 560px;
+    margin: 0 auto;
+    display: flex;
+  }
+  .ms-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    width: 100%;
-    padding: 16px 18px;
-    background: linear-gradient(180deg, #fdfbf4 0%, #f4ecd8 100%);
-    border: 1px solid #ece7d6;
-    border-radius: 18px;
+    gap: 3px;
+    padding: 9px 0 7px;
+    background: none;
+    border: 0;
     cursor: pointer;
     font-family: var(--font-family);
-    text-align: left;
-    transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .ms-compra-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(74, 124, 89, 0.10);
-    border-color: #d9d3c3;
-  }
-  .ms-compra-cta:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.18);
-  }
-  .ms-compra-cta-icon {
-    display: grid; place-items: center;
-    width: 48px; height: 48px;
-    border-radius: 50%;
-    background: #e3efe5;
-    color: var(--color-green-dark);
-  }
-  .ms-compra-cta-icon svg { width: 24px; height: 24px; }
-  .ms-compra-cta-text { min-width: 0; }
-  .ms-compra-cta-title {
-    display: block;
-    font-family: 'Lora', serif;
-    font-style: italic;
-    font-weight: 600;
-    font-size: 1.05rem;
-    color: #2d2a24;
-    line-height: 1.25;
-  }
-  .ms-compra-cta-meta {
-    display: block;
-    font-size: 0.82rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
     color: #8a8678;
-    margin-top: 2px;
-    letter-spacing: 0.01em;
+    transition: color 0.2s ease;
   }
-  .ms-compra-cta-arrow {
-    font-family: 'Lora', serif;
-    font-size: 1.3rem;
-    color: var(--color-green);
-    transition: transform 0.2s ease;
-    padding-right: 4px;
+  .ms-tab[hidden] { display: none; }
+  .ms-tab svg { width: 22px; height: 22px; }
+  .ms-tab:focus-visible {
+    outline: none;
+    box-shadow: inset 0 0 0 3px rgba(74, 124, 89, 0.18);
+    border-radius: 12px;
   }
-  .ms-compra-cta:hover .ms-compra-cta-arrow { transform: translateX(4px); }
+  /* «day» pertenece a la pestaña Hoy — misma regla que activeTabForView (logic.js) */
+  body:has(#ms-authed[data-view="today"]) .ms-tab[data-tab="today"],
+  body:has(#ms-authed[data-view="day"]) .ms-tab[data-tab="today"],
+  body:has(#ms-authed[data-view="compra"]) .ms-tab[data-tab="compra"],
+  body:has(#ms-authed[data-view="aprender"]) .ms-tab[data-tab="aprender"] {
+    color: var(--color-green-dark);
+    font-weight: 600;
+  }
+
+  /* ============================================================
+     LISTA DE LA COMPRA — vista propia (data-view="compra")
+     Estado local: localStorage 'ms-compra-<menu_id>', sin servidor.
+     ============================================================ */
 
   /* Vista: lista de la compra */
   .ms-compra { margin-bottom: 48px; }
@@ -1085,7 +1088,6 @@
     border: 1px solid rgba(224, 221, 212, 0.65);
     border-radius: 16px;
   }
-  .ms-compra-back { margin-bottom: 14px; }
 
   /* Acción de reiniciar — visible sólo cuando hay items marcados */
   .ms-compra-actions {
@@ -1120,31 +1122,19 @@
     width: 16px; height: 16px;
   }
 
-  /* Switch de vista: mostrar compra sólo cuando data-view="compra" */
+  /* Switch de vista: el bloque de "hoy" (menú, tip, check-in, calendario)
+     solo vive en las vistas today/day; cada otra vista muestra su sección. */
+  #ms-authed:not([data-view="today"], [data-view="day"]) .ms-today,
+  #ms-authed:not([data-view="today"], [data-view="day"]) .ms-tip,
+  #ms-authed:not([data-view="today"], [data-view="day"]) .ms-check,
+  #ms-authed:not([data-view="today"], [data-view="day"]) .ms-calendar { display: none; }
   .ms-compra { display: none; }
   #ms-authed[data-view="compra"] .ms-compra { display: block; }
-  #ms-authed[data-view="compra"] .ms-today,
-  #ms-authed[data-view="compra"] .ms-tip,
-  #ms-authed[data-view="compra"] .ms-check,
-  #ms-authed[data-view="compra"] .ms-calendar,
-  #ms-authed[data-view="compra"] .ms-compra-entry { display: none; }
-
-  /* Switch de vista: mostrar aprender sólo cuando data-view="aprender" */
   .ms-aprender { display: none; }
   #ms-authed[data-view="aprender"] .ms-aprender { display: block; }
-  #ms-authed[data-view="aprender"] .ms-today,
-  #ms-authed[data-view="aprender"] .ms-tip,
-  #ms-authed[data-view="aprender"] .ms-check,
-  #ms-authed[data-view="aprender"] .ms-calendar,
-  #ms-authed[data-view="aprender"] .ms-compra-entry { display: none; }
 
   /* ---------- Curso «Aprender»: mapa de lecciones (portado del mockup) ---------- */
   .ms-sub { font-size: 0.82rem; color: #8a8678; margin-bottom: 16px; }
-  .ms-apr-badge {
-    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
-    text-transform: uppercase; color: #a07c14; background: #f6edd2;
-    padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle;
-  }
   .ms-apr-top { display: flex; gap: 9px; margin-bottom: 18px; }
   .ms-apr-stat {
     flex: 1; background: #fff; border: 1px solid #e4dfcf; border-radius: 13px;
@@ -1326,7 +1316,8 @@
   .ms-toast {
     position: fixed;
     left: 50%;
-    bottom: 28px;
+    /* Por encima de la barra de pestañas fija */
+    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     transform: translateX(-50%);
     background: #2d2a24;
     color: #fff;
@@ -1478,7 +1469,6 @@
   .sk-line--eyebrow    { width: 150px; height: 0.78em; }
   .sk-line--name       { width: 104px; height: 0.82em; vertical-align: baseline; background: linear-gradient(90deg, #e6ddc6 0%, #f0e7d0 45%, #e6ddc6 90%); background-size: 220% 100%; }
   .sk-line--streak     { width: 34px;  height: 0.88em; background: linear-gradient(90deg, rgba(200,104,56,0.18) 0%, rgba(200,104,56,0.34) 45%, rgba(200,104,56,0.18) 90%); background-size: 220% 100%; border-radius: 5px; margin-top: 2px; }
-  .sk-line--meta       { width: 150px; height: 0.82em; }
   .sk-line--meal       { display: block; width: 100%; height: 0.85em; margin: 4px 0; }
   .sk-line--meal-short { width: 62%; }
 
@@ -1779,42 +1769,7 @@
     </section>
 
     
-    <section class="ms-compra-entry" aria-label="Abrir lista de la compra semanal">
-      <button type="button" class="ms-compra-cta" id="ms-compra-open" aria-label="Abrir lista de la compra semanal">
-        <span class="ms-compra-cta-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 4h2l2.6 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.5L21 7H6"/>
-            <circle cx="9.5" cy="20" r="1.3"/>
-            <circle cx="17.5" cy="20" r="1.3"/>
-          </svg>
-        </span>
-        <span class="ms-compra-cta-text">
-          <span class="ms-compra-cta-title">Lista de la compra</span>
-          <span class="ms-compra-cta-meta" id="ms-compra-meta"><span class="sk-line sk-line--meta" aria-hidden="true"></span></span>
-        </span>
-        <span class="ms-compra-cta-arrow" aria-hidden="true">→</span>
-      </button>
-    </section>
-
-    
-    <section class="ms-compra-entry ms-apr-entry" id="ms-apr-entry" aria-label="Abrir el curso Aprender" hidden>
-      <button type="button" class="ms-compra-cta" id="ms-apr-open" aria-label="Abrir el curso Aprender">
-        <span class="ms-compra-cta-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-          </svg>
-        </span>
-        <span class="ms-compra-cta-text">
-          <span class="ms-compra-cta-title">Aprender <span class="ms-apr-badge">Nuevo</span></span>
-          <span class="ms-compra-cta-meta" id="ms-apr-entry-sub">Tu curso para comer con autonomía</span>
-        </span>
-        <span class="ms-compra-cta-arrow" aria-hidden="true">→</span>
-      </button>
-    </section>
-
     <section class="ms-compra" id="ms-compra" aria-labelledby="ms-compra-title">
-      <button type="button" class="ms-back-today ms-compra-back" id="ms-compra-back">← volver a hoy</button>
       <h2 id="ms-compra-title" class="ms-section-title"><span>la compra de esta semana</span></h2>
       <p class="ms-compra-progress" id="ms-compra-progress">—</p>
       <div class="ms-compra-cats" id="ms-compra-cats"></div>
@@ -1831,7 +1786,6 @@
 
     
     <section class="ms-aprender" aria-label="Aprender">
-      <button type="button" class="ms-back-today" id="ms-apr-back">← volver a hoy</button>
       <h2 class="ms-section-title">Aprender</h2>
       <p class="ms-sub">Completa las lecciones y desbloquea tu guía.</p>
       <div class="ms-apr-top">
@@ -1847,6 +1801,34 @@
       <button type="button" class="ms-signout" id="ms-signout">Cerrar sesión</button>
     </footer>
   </section>
+
+  
+  <nav class="ms-tabbar" aria-label="Secciones de tu espacio">
+      <div class="ms-tabbar-inner">
+        <button type="button" class="ms-tab" data-tab="today" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5"/>
+            <path d="M5 9.5V21h14V9.5"/>
+          </svg>
+          <span>Hoy</span>
+        </button>
+        <button type="button" class="ms-tab" data-tab="compra">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 4h2l2.6 11.2a2 2 0 0 0 2 1.6h7.9a2 2 0 0 0 2-1.5L21 7H6"/>
+            <circle cx="9.5" cy="20" r="1.3"/>
+            <circle cx="17.5" cy="20" r="1.3"/>
+          </svg>
+          <span>Compra</span>
+        </button>
+        <button type="button" class="ms-tab" id="ms-tab-aprender" data-tab="aprender" hidden>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          <span>Aprender</span>
+        </button>
+      </div>
+  </nav>
 
   
   <div id="ms-onboarding" class="ms-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ms-modal-title" hidden>
@@ -1996,7 +1978,7 @@
     slugifyItem, compraStorageKey, totalItemsCompra, displayCat,
     mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones,
     validateLoginForm, validateOtpCode, resolveInitialLogin,
-    shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone,
+    shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, activeTabForView, shouldCelebrarMilestone,
     esAyerEditable, computeDayView, computeTodayView,
     buildCompraModel, computeCompraMeta,
     applyCheckinOptimistic, revertCheckin,
@@ -2452,8 +2434,7 @@
   function renderAprender() {
     if (!cursoLecciones.length) return;      // sin contenido sembrado: no se muestra nada
     const e = estadoCursoActual();
-    $('#ms-apr-entry').hidden = false;
-    $('#ms-apr-entry-sub').textContent = e.contadores.lecciones + '/10 lecciones · ' + e.contadores.guias + '/3 guías';
+    $('#ms-tab-aprender').hidden = false;
     $('#ms-apr-stat-lecciones').textContent = e.contadores.lecciones + '/10';
     $('#ms-apr-stat-guias').textContent = e.contadores.guias + '/3';
     renderRetoActivo(e.retoActivo);
@@ -2756,12 +2737,10 @@
   }
 
   function updateCompraMeta() {
-    const meta = $('#ms-compra-meta');
     const prog = $('#ms-compra-progress');
     const actions = $('#ms-compra-actions');
-    if (!meta || !prog) return;
+    if (!prog) return;
     const cfg = computeCompraMeta({ total: compraTotal, hechos: compraState.size });
-    meta.textContent = cfg.metaText;
     prog.textContent = cfg.progressText;
     prog.classList.toggle('is-done', cfg.progressDone);
     if (actions) actions.hidden = cfg.actionsHidden;
@@ -3617,10 +3596,27 @@
     if (iso) mostrarDia(iso);
   });
   $('#ms-back-today').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
-  $('#ms-compra-open').addEventListener('click', () => { mostrarCompra(); setViewHash('compra'); });
-  $('#ms-compra-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
-  $('#ms-apr-open').addEventListener('click', () => { mostrarAprender(); setViewHash('aprender'); });
-  $('#ms-apr-back').addEventListener('click', () => { mostrarHoy(); setViewHash('today'); });
+  // Barra de pestañas: un solo listener delegado; el data-tab del markup es el
+  // registro de pestañas (mismo valor que consume setViewHash).
+  const TAB_RENDERERS = { today: mostrarHoy, compra: mostrarCompra, aprender: mostrarAprender };
+  $('.ms-tabbar-inner').addEventListener('click', (e) => {
+    const tab = e.target.closest('.ms-tab')?.dataset.tab;
+    if (TAB_RENDERERS[tab]) { TAB_RENDERERS[tab](); setViewHash(tab); }
+  });
+
+  // El estilo de la pestaña activa lo resuelve el CSS con #ms-authed[data-view];
+  // aquí solo mantenemos aria-current sincronizado para lectores de pantalla.
+  // data-view cambia en varios puntos (tabs, calendario, restauración al
+  // hidratar), así que observamos el atributo en vez de repetir la llamada en
+  // cada uno.
+  function syncTabbarAria() {
+    const active = activeTabForView(authedView.dataset.view);
+    $$('.ms-tab').forEach((btn) => {
+      if (btn.dataset.tab === active) btn.setAttribute('aria-current', 'page');
+      else btn.removeAttribute('aria-current');
+    });
+  }
+  new MutationObserver(syncTabbarAria).observe(authedView, { attributes: true, attributeFilter: ['data-view'] });
   $('#ms-apr-mapa').addEventListener('click', (e) => {
     const slug = e.target.closest('[data-open]')?.dataset.open;
     if (slug) { abrirLeccion(slug); return; }

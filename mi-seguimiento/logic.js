@@ -513,6 +513,12 @@
     return 'today';
   }
 
+  // Pestaña activa de la barra inferior según data-view. La vista 'day'
+  // (detalle de un día del calendario) pertenece a la pestaña «Hoy».
+  function activeTabForView(view) {
+    return (view === 'compra' || view === 'aprender') ? view : 'today';
+  }
+
   // -----------------------------------------------------------------
   // Milestone celebration: detectarMilestone + gate de onboarding
   // -----------------------------------------------------------------
@@ -650,7 +656,7 @@
     return { empty: false, total, hechos, cats };
   }
 
-  // Meta de la entry card + barra de progreso. "Semanal" explícito en el copy
+  // Barra de progreso de la vista compra. "Semana" explícito en el copy
   // (feedback 2026-04-17: la paciente necesita saber la cadencia).
   function computeCompraMeta(opts) {
     const o = opts || {};
@@ -658,25 +664,19 @@
     const hechos = Number(o.hechos || 0);
     if (total === 0) {
       return {
-        metaText: 'Disponible con tu próximo menú',
         progressText: 'Aún no hay lista para esta semana.',
         progressDone: false,
         actionsHidden: true
       };
     }
-    const metaText = hechos === 0
-      ? 'Semanal · ' + total + ' productos'
-      : 'Semanal · ' + hechos + '/' + total + ' comprados';
     if (hechos === total) {
       return {
-        metaText,
         progressText: '¡Compra de la semana completa! Buen trabajo.',
         progressDone: true,
         actionsHidden: false
       };
     }
     return {
-      metaText,
       progressText: hechos + ' de ' + total + ' comprados esta semana',
       progressDone: false,
       actionsHidden: hechos === 0
@@ -870,7 +870,7 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, esAyerEditable, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, activeTabForView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, esAyerEditable, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();
