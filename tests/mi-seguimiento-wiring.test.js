@@ -76,3 +76,12 @@ test('completar lección hace upsert de curso_progreso con la paciente logueada'
     /from\('curso_progreso'\)[\s\S]{0,300}?upsert\([\s\S]{0,200}?paciente_id: paciente\.id/
   );
 });
+
+// ---- Curso «Aprender» (Tarea 10: reto de la semana) ----
+
+test('guardar reto actualiza curso_progreso de la paciente logueada', () => {
+  assert.match(
+    indexNjk,
+    /from\('curso_progreso'\)[\s\S]{0,300}?\.update\([\s\S]{0,300}?\.eq\('paciente_id', paciente\.id\)/
+  );
+});

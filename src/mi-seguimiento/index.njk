@@ -1120,6 +1120,16 @@ appleTitle: "CLN"
   .ms-apr-node.premio .ms-apr-bola { background: #c9a44c; color: #fff; }
   .ms-apr-dl { margin-left: auto; font-size: 10px; background: #c9a44c; color: #fff; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
 
+  /* ---------- reto de la semana ---------- */
+  .ms-apr-reto-card { background: #fff; border: 1.5px solid #c9a44c; border-radius: 14px; padding: 15px; margin-bottom: 18px; }
+  .ms-apr-reto-eyebrow { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #a07c14; font-weight: 700; margin-bottom: 8px; }
+  .ms-apr-reto-card p { font-size: 0.9rem; color: #2c3a30; margin-bottom: 12px; }
+  .ms-apr-reto-check { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #2c3a30; margin-bottom: 10px; cursor: pointer; }
+  .ms-apr-reto-check input { accent-color: var(--color-green); width: 17px; height: 17px; cursor: pointer; }
+  #ms-apr-reto-nota { width: 100%; border: 1px solid #e4dfcf; border-radius: 10px; font-family: var(--font-family); font-size: 0.85rem; resize: vertical; min-height: 52px; padding: 9px 11px; background: #faf8f1; margin-bottom: 10px; }
+  #ms-apr-reto-nota:focus { outline: none; border-color: var(--color-green); }
+  .ms-apr-reto-btn { background: var(--color-green); color: #fff; border: none; border-radius: 12px; padding: 10px 16px; font-family: var(--font-family); font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+
   /* ---------- reproductor de lección (overlay a pantalla completa) ---------- */
   .ms-apr-player {
     position: fixed; inset: 0; z-index: 70; background: var(--color-cream, #f3f1e8);
@@ -2138,8 +2148,36 @@ appleTitle: "CLN"
     cont.innerHTML = html;
   }
 
+  // ---- Reto de la semana (Tarea 10) ----
+  // Sin juicio: si no lo hizo, la nota lo recoge — no textos de culpa.
   function renderRetoActivo(retoActivo) {
-    // Implementación completa en la Tarea 10; de momento no hace nada.
+    const cont = $('#ms-apr-reto');
+    if (!cont) return;
+    if (!retoActivo) { cont.hidden = true; cont.innerHTML = ''; return; }
+    cont.hidden = false;
+    cont.innerHTML =
+      '<div class="ms-apr-reto-card">'
+      + '<span class="ms-apr-reto-eyebrow">Tu reto de esta semana</span>'
+      + '<p>' + escapeHtml(retoActivo.reto) + '</p>'
+      + '<label class="ms-apr-reto-check"><input type="checkbox" id="ms-apr-reto-hecho"' + (retoActivo.hecho ? ' checked' : '') + '> Hecho</label>'
+      + '<textarea id="ms-apr-reto-nota" placeholder="¿Cómo ha ido? (opcional, lo leo antes de tu sesión)">' + escapeHtml(retoActivo.nota || '') + '</textarea>'
+      + '<button type="button" id="ms-apr-reto-guardar" class="ms-apr-reto-btn">Guardar</button>'
+      + '</div>';
+    $('#ms-apr-reto-guardar').addEventListener('click', () => guardarReto(retoActivo.slug));
+  }
+
+  async function guardarReto(slug) {
+    const { data: { session } } = await supa.auth.getSession();
+    if (!session) { showToast('Tu sesión ha caducado. Te llevamos a iniciar sesión.'); return; }
+    const hecho = $('#ms-apr-reto-hecho').checked;
+    const nota = $('#ms-apr-reto-nota').value.trim();
+    const { error } = await supa.from('curso_progreso')
+      .update({ reto_hecho: hecho, reto_nota: nota || null, reto_marcado_at: new Date().toISOString() })
+      .eq('paciente_id', paciente.id).eq('leccion_slug', slug);
+    if (error) { showToast('No se ha podido guardar.'); return; }
+    const fila = cursoProgreso.find((p) => p.leccion_slug === slug);
+    if (fila) { fila.reto_hecho = hecho; fila.reto_nota = nota || null; }
+    showToast('Reto guardado 💪');
   }
 
   // ---- Reproductor de lección (Tarea 9) ----
