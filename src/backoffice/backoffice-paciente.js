@@ -58,7 +58,7 @@
 
   // Slugs canónicos en orden vertical (= orden histórico de los bloques).
   // Pegar al orden visible facilita aprender muscle memory.
-  const TAB_SLUGS = ['anamnesis', 'evolucion', 'adherencia', 'pagos', 'timeline'];
+  const TAB_SLUGS = ['anamnesis', 'evolucion', 'adherencia', 'curso', 'pagos', 'timeline'];
 
   // Devuelve el slug si pertenece al catálogo (case-sensitive, ASCII), o null.
   // Trim previo para tolerar URLs copiadas con espacios.
@@ -1101,6 +1101,118 @@
   }
 
   // -----------------------------------------------------------------
+  // renderCurso (pura) — pestaña Curso «Aprender»
+  // -----------------------------------------------------------------
+  // Recibe la salida de AprenderLogic.estadoCurso (ya calculada en cargar())
+  // + las filas de curso_progreso — no depende de AprenderLogic directamente,
+  // así los tests Node no necesitan stub de window.AprenderLogic.
+
+  const _CURSO_FASES_ORDEN = ['cimientos', 'construccion', 'integracion'];
+  const _CURSO_FASES_TITULO = { cimientos: 'Cimientos', construccion: 'Construcción', integracion: 'Integración' };
+
+  function _cursoBoton(modo, label, tipo, target) {
+    return '<button type="button" class="bo-btn bo-btn-secundario-sm" data-bo-curso="' + modo + '"' +
+      ' data-tipo="' + tipo + '" data-target="' + BoUi.escapeHtml(target) + '">' + label + '</button>';
+  }
+
+  // Fase: siempre los tres controles ("toda la fase" es una acción aparte de
+  // las lecciones individuales, no hay un "forzada" a nivel de fase que leer
+  // del estado calculado).
+  function _cursoBotonesFase(faseKey) {
+    return '<div class="bo-curso-fase-acciones">' +
+      _cursoBoton('desbloquear', 'Desbloquear ya', 'fase', faseKey) +
+      _cursoBoton('bloquear', 'Bloquear', 'fase', faseKey) +
+      _cursoBoton('auto', 'Volver a automático', 'fase', faseKey) +
+    '</div>';
+  }
+
+  // Lección sin forzar: Desbloquear ya + Bloquear. Forzada: Volver a
+  // automático + el botón del modo contrario — se infiere del estado ya
+  // calculado (forzada + estado='lock' solo puede venir de un override
+  // 'bloquear'; forzada + estado='now' solo de un override 'desbloquear';
+  // estadoCurso nunca deja 'done' con forzada=true, ver aprender-logic.js).
+  function _cursoBotonesLeccion(l) {
+    if (!l.forzada) {
+      return '<div class="bo-curso-leccion-acciones">' +
+        _cursoBoton('desbloquear', 'Desbloquear ya', 'leccion', l.slug) +
+        _cursoBoton('bloquear', 'Bloquear', 'leccion', l.slug) +
+      '</div>';
+    }
+    const contrario = l.estado === 'lock'
+      ? _cursoBoton('desbloquear', 'Desbloquear ya', 'leccion', l.slug)
+      : _cursoBoton('bloquear', 'Bloquear', 'leccion', l.slug);
+    return '<div class="bo-curso-leccion-acciones">' +
+      _cursoBoton('auto', 'Volver a automático', 'leccion', l.slug) +
+      contrario +
+    '</div>';
+  }
+
+  function _cursoChipEstado(l, p) {
+    const manual = l.forzada ? ' <span class="bo-curso-chip-manual">manual</span>' : '';
+    if (l.estado === 'done') {
+      const fecha = p && p.completada_at ? BoUi.formatearFecha(p.completada_at) : '';
+      return '<span class="bo-curso-chip is-done">Completada' + (fecha ? ' ' + BoUi.escapeHtml(fecha) : '') + '</span>';
+    }
+    if (l.estado === 'now') return '<span class="bo-curso-chip is-now">Disponible' + manual + '</span>';
+    if (l.estado === 'wait') {
+      return '<span class="bo-curso-chip is-wait">Se abre el ' + BoUi.escapeHtml(BoUi.formatearFecha(l.abreElISO)) + '</span>';
+    }
+    return '<span class="bo-curso-chip is-lock">Bloqueada' + manual + '</span>';
+  }
+
+  function _cursoLeccion(l, p) {
+    let extra = '';
+    if (p) {
+      if (p.mini_accion) {
+        extra += '<p class="bo-curso-respuesta">Respuesta: «' + BoUi.escapeHtml(p.mini_accion) + '»</p>';
+      }
+      const retoTxt = p.reto_hecho ? 'Reto: hecho ✓' : 'Reto: pendiente';
+      const notaTxt = p.reto_nota ? ' — «' + BoUi.escapeHtml(p.reto_nota) + '»' : '';
+      extra += '<p class="bo-curso-reto">' + retoTxt + notaTxt + '</p>';
+    }
+    // Lo completado nunca se re-bloquea (aprender-logic.js ignora overrides
+    // en lecciones done) — sin botones para no ofrecer una acción sin efecto.
+    const botones = l.estado === 'done' ? '' : _cursoBotonesLeccion(l);
+    return '<div class="bo-curso-leccion" data-bo-leccion="' + BoUi.escapeHtml(l.slug) + '">' +
+      '<span class="bo-curso-leccion-titulo">' + BoUi.escapeHtml(l.titulo) + '</span>' +
+      _cursoChipEstado(l, p) +
+      extra +
+      botones +
+    '</div>';
+  }
+
+  function renderCurso(estado, progreso) {
+    if (!estado || !Array.isArray(estado.lecciones) || estado.lecciones.length === 0) {
+      return '<section class="bo-curso" data-bo-bloque="curso">' +
+        '<h2>Curso «Aprender»</h2>' +
+        '<p class="bo-vacio">Sin contenido del curso sembrado todavía.</p>' +
+      '</section>';
+    }
+    const porSlug = {};
+    (progreso || []).forEach(function (p) { porSlug[p.leccion_slug] = p; });
+
+    const bloques = _CURSO_FASES_ORDEN.map(function (faseKey) {
+      const deLaFase = estado.lecciones.filter(function (l) { return l.fase === faseKey; });
+      if (!deLaFase.length) return '';
+      const completadas = deLaFase.filter(function (l) { return l.estado === 'done'; }).length;
+      const filas = deLaFase.map(function (l) { return _cursoLeccion(l, porSlug[l.slug]); }).join('');
+      return '<div class="bo-curso-fase">' +
+        '<h3>' + BoUi.escapeHtml(_CURSO_FASES_TITULO[faseKey] || faseKey) +
+          ' <span class="bo-curso-fase-contador">' + completadas + '/' + deLaFase.length + '</span></h3>' +
+        filas +
+        _cursoBotonesFase(faseKey) +
+      '</div>';
+    }).join('');
+
+    const contadores = estado.contadores || { lecciones: 0, guias: 0 };
+    const resumen = '<p class="bo-curso-resumen">' +
+      contadores.lecciones + '/10 lecciones · ' + contadores.guias + '/3 guías' +
+    '</p>';
+
+    return '<section class="bo-curso" data-bo-bloque="curso"><h2>Curso «Aprender»</h2>' + resumen + bloques + '</section>';
+  }
+
+  // -----------------------------------------------------------------
   // renderTimeline (pura) — lista cronológica descendente mixta
   // -----------------------------------------------------------------
 
@@ -1511,22 +1623,38 @@
       .select('id, paciente_id, fecha, importe, concepto, metodo, notas, created_at')
       .eq('paciente_id', idPaciente)
       .then(r => r, () => ({ data: [], error: null }));
+    // Curso «Aprender»: mismo patrón tolerante que pagos — la migración
+    // 0024_curso_aprender.sql puede no estar aplicada en algún entorno/rama.
+    // curso_lecciones es contenido común (sin datos de paciente): sin filtro.
+    // curso_progreso/curso_overrides SÍ filtran por paciente_id.
+    const cursoPromise = Promise.all([
+      supa.from('curso_lecciones').select('slug, fase, orden, titulo, contenido').order('orden')
+        .then(r => r, () => ({ data: [], error: null })),
+      supa.from('curso_progreso').select('leccion_slug, completada_at, mini_accion, reto_hecho, reto_nota').eq('paciente_id', idPaciente)
+        .then(r => r, () => ({ data: [], error: null })),
+      supa.from('curso_overrides').select('tipo, target, modo').eq('paciente_id', idPaciente)
+        .then(r => r, () => ({ data: [], error: null })),
+    ]);
 
-    const [results, pagosRes] = await Promise.all([corePromises, pagosPromise]);
+    const [results, pagosRes, cursoRes] = await Promise.all([corePromises, pagosPromise, cursoPromise]);
     const [pac, menus, sesiones, revisiones, checkins] = results;
     const errores = results.map(r => r.error).filter(Boolean);
     if (errores.length) {
       throw new Error('Supabase: ' + errores.map(e => e.message || String(e)).join(' · '));
     }
-    // pagosRes.error se ignora: si la tabla aún no existe (404) o las RLS
-    // bloquean, mostramos "Sin pagos registrados" en vez de romper la página.
+    // pagosRes.error / cursoRes[*].error se ignoran: si la tabla aún no existe
+    // (404) o las RLS bloquean, mostramos el bloque vacío en vez de romper la página.
+    const [cursoLeccionesRes, cursoProgresoRes, cursoOverridesRes] = cursoRes;
     return {
-      paciente:   pac.data || null,
-      menus:      menus.data || [],
-      sesiones:   sesiones.data || [],
-      revisiones: revisiones.data || [],
-      checkins:   checkins.data || [],
-      pagos:      (pagosRes && pagosRes.data) || []
+      paciente:       pac.data || null,
+      menus:          menus.data || [],
+      sesiones:       sesiones.data || [],
+      revisiones:     revisiones.data || [],
+      checkins:       checkins.data || [],
+      pagos:          (pagosRes && pagosRes.data) || [],
+      cursoLecciones: cursoLeccionesRes.data || [],
+      cursoProgreso:  cursoProgresoRes.data || [],
+      cursoOverrides: cursoOverridesRes.data || []
     };
   }
 
@@ -1536,7 +1664,7 @@
     est.className = 'bo-estado is-error';
     est.innerHTML = 'Paciente no encontrado. ' +
       '<a class="bo-fila-link" href="/backoffice/pacientes/">Volver a Pacientes</a>.';
-    for (const id of ['cabecera', 'panel-anamnesis', 'panel-evolucion', 'panel-adherencia', 'panel-pagos', 'panel-timeline', 'acciones']) {
+    for (const id of ['cabecera', 'panel-anamnesis', 'panel-evolucion', 'panel-adherencia', 'panel-curso', 'panel-pagos', 'panel-timeline', 'acciones']) {
       const el = document.getElementById(id);
       if (el) el.innerHTML = '';
     }
@@ -1609,6 +1737,23 @@
         chk.innerHTML = renderCheckins(historial);
         conectarSwitcherCheckins(chk, historial);
       }
+      const curso = document.getElementById('panel-curso');
+      if (curso) {
+        // AprenderLogic solo se resuelve aquí (vía window), no en el módulo:
+        // el renderer puro renderCurso() no depende de ella (recibe el
+        // estado ya calculado) para que los tests Node no necesiten stub.
+        const aprenderLogic = (typeof window !== 'undefined' && window.AprenderLogic) || null;
+        const estadoCurso = aprenderLogic
+          ? aprenderLogic.estadoCurso({
+              lecciones: datos.cursoLecciones || [],
+              progreso:  datos.cursoProgreso || [],
+              overrides: datos.cursoOverrides || [],
+              altaISO:   paciente.alta,
+              hoyISO:    new Date().toISOString().slice(0, 10)
+            })
+          : { lecciones: [], guias: [], contadores: { lecciones: 0, guias: 0 }, retoActivo: null };
+        curso.innerHTML = renderCurso(estadoCurso, datos.cursoProgreso || []);
+      }
       if (pag) pag.innerHTML = renderPagos(pagos || [], paciente, new Date());
       if (tim) {
         tim.innerHTML = renderTimeline({
@@ -1667,6 +1812,7 @@
     renderAnamnesis,
     renderEvolucion,
     renderPagos,
+    renderCurso,
     renderTimeline,
     renderAcciones,
     arrancar,
