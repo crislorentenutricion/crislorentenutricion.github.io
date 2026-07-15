@@ -70,3 +70,36 @@ test("ejecutarEdgeFunction: devuelve error app si falta nombre", async () => {
   assert.equal(res.ok, false);
   assert.equal(res.error.type, "app");
 });
+
+test("ejecutarEdgeFunction: lee el motivo real del body cuando el error HTTP trae context (Response)", async () => {
+  const supa = _supaMock(() => ({
+    data: null,
+    error: {
+      message: "Edge Function returned a non-2xx status code",
+      status: 500,
+      context: {
+        json: async () => ({ ok: false, error: "oauth_refresh_fallo", message: "oauth_refresh_fallo: invalid_grant" })
+      }
+    }
+  }));
+  const res = await BoUi.ejecutarEdgeFunction(supa, "agendar", { paciente_id: "p1" });
+  assert.equal(res.ok, false);
+  assert.equal(res.error.type, "http");
+  assert.match(res.error.message, /oauth_refresh_fallo: invalid_grant/);
+  assert.doesNotMatch(res.error.message, /non-2xx/);
+});
+
+test("ejecutarEdgeFunction: si context.json() falla, cae al mensaje genérico", async () => {
+  const supa = _supaMock(() => ({
+    data: null,
+    error: {
+      message: "Edge Function returned a non-2xx status code",
+      status: 500,
+      context: { json: async () => { throw new Error("body ya consumido"); } }
+    }
+  }));
+  const res = await BoUi.ejecutarEdgeFunction(supa, "agendar", { paciente_id: "p1" });
+  assert.equal(res.ok, false);
+  assert.equal(res.error.type, "http");
+  assert.match(res.error.message, /non-2xx/);
+});
