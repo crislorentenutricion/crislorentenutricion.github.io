@@ -295,13 +295,21 @@
       };
     }
     if (resp && resp.error) {
+      let mensaje = (resp.error.message || String(resp.error)) +
+        (resp.error.status ? ' (' + resp.error.status + ')' : '');
+      const context = resp.error.context;
+      if (context && typeof context.json === 'function') {
+        try {
+          const body = await context.json();
+          const motivo = body && (body.message || body.error);
+          if (motivo) mensaje = String(motivo);
+        } catch (_e) {
+          // body no legible (ya consumido, no es JSON...): nos quedamos con el mensaje genérico
+        }
+      }
       return {
         ok: false,
-        error: {
-          type: 'http',
-          message: (resp.error.message || String(resp.error)) +
-            (resp.error.status ? ' (' + resp.error.status + ')' : '')
-        }
+        error: { type: 'http', message: mensaje }
       };
     }
     const data = resp && resp.data;
