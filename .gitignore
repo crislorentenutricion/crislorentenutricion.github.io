@@ -15,3 +15,12 @@ node_modules/
 /recursos/
 /.aiplans/
 /CLAUDE.md.backup
+
+# Imágenes sin uso aún (no publicar hasta que alguna página las use)
+src/img/cristina-avatar.jpg
+src/img/cristina-hero.jpg
+src/img/cristina.jpg
+src/img/hero-food.jpg
+src/img/hero-menu-mensual.jpg
+src/img/hero-metodo.jpg
+src/img/hero-perdida-peso.jpg
