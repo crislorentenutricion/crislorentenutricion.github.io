@@ -851,6 +851,19 @@
       });
     });
 
+    // Orden global por fecha (ASC). El punto de partida es el más antiguo por
+    // fecha, no necesariamente el alta: una paciente puede tener un pesaje de
+    // autoseguimiento anterior a su alta formal (caso Cristina). Fechas
+    // nulas/ inválidas se tratan como las más antiguas para preservar el
+    // comportamiento previo (INICIO sin fecha queda primero). Sort estable.
+    filas.sort(function (a, b) {
+      const ta = new Date(String(a.fecha || '')).getTime();
+      const tb = new Date(String(b.fecha || '')).getTime();
+      const va = isNaN(ta) ? -Infinity : ta;
+      const vb = isNaN(tb) ? -Infinity : tb;
+      return va - vb;
+    });
+
     return filas;
   }
 
