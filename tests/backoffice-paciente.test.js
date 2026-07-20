@@ -223,6 +223,38 @@ test("BoPaciente.renderEvolucion: orden ascendente de revisiones (más antigua p
   assert.match(html, /Δ peso:.*-5/);
 });
 
+test("BoPaciente.renderEvolucion: revisión anterior al alta es el punto de partida (caso Cristina)", () => {
+  // Cristina se pesó 94,9 kg en marzo (autoseguimiento) ANTES de su alta como
+  // paciente (28/04, 91,9 kg). El punto de partida y las Δ deben anclarse al
+  // pesaje más antiguo por fecha, no a la fila INICIO del alta.
+  const html = BoPaciente.renderEvolucion(
+    [
+      { created_at: "2026-03-15T12:00:00Z", contenido: { peso: 94.9 } },
+      { created_at: "2026-05-15T12:00:00Z", contenido: { peso: 91.8 } },
+      { created_at: "2026-07-01T12:00:00Z", contenido: { peso: 91 } },
+      { created_at: "2026-07-15T12:00:00Z", contenido: { peso: 90.9 } }
+    ],
+    { peso: 91.9, cintura: 92 },
+    "2026-04-28"
+  );
+  // Orden por fecha: rev(15/03) · inicio(28/04) · rev(15/05) · rev(01/07) · rev(15/07)
+  const filas = html.match(/data-bo-fila="(inicio|revision)"/g);
+  assert.deepEqual(filas, [
+    'data-bo-fila="revision"',
+    'data-bo-fila="inicio"',
+    'data-bo-fila="revision"',
+    'data-bo-fila="revision"',
+    'data-bo-fila="revision"'
+  ]);
+  // Resumen: parte de 94,9 (marzo), termina en 90,9 → Δ -4.
+  assert.match(html, /Inicio:.*94\.9 kg/);
+  assert.match(html, /Actual:.*90\.9 kg/);
+  assert.match(html, /Δ peso:.*-4/);
+  // Δ vs inicio: 94,9 es la referencia (—); el alta de 91,9 queda a -3.
+  const celdasDelta = [...html.matchAll(/<td class="bo-evol-delta">([^<]*)<\/td>/g)].map(m => m[1]);
+  assert.deepEqual(celdasDelta, ['—', '-3', '-3.1', '-3.9', '-4']);
+});
+
 test("BoPaciente.renderEvolucion: peso como string con coma decimal se normaliza", () => {
   const html = BoPaciente.renderEvolucion(
     [{ created_at: "2026-04-10", contenido: { peso: "72,5" } }],
