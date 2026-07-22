@@ -207,5 +207,16 @@
     "image": "la-importancia-dejar-ir.jpg",
     "imageAlt": "Manos soltando hojas al viento, simbolizando dejar ir lo que no es para ti",
     "featured": false
+  },
+  {
+    "slug": "como-comer-sano-sin-hacer-dieta",
+    "title": "Cómo comer sano sin hacer dieta",
+    "description": "Comer sano sin hacer dieta es posible: sin contar calorías, sin prohibiciones ni listas de alimentos buenos y malos. Te cuento cómo lo enfoco de verdad.",
+    "category": "educacion",
+    "categoryLabel": "Educación",
+    "date": "2026-07-22",
+    "image": "como-comer-sano-sin-hacer-dieta.jpg",
+    "imageAlt": "Bol de ensalada fresca y colorida con aguacate, tomate y frutos secos sobre una mesa de madera clara, luz natural cálida",
+    "featured": false
   }
 ]
