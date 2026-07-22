@@ -218,5 +218,16 @@
     "image": "como-comer-sano-sin-hacer-dieta.jpg",
     "imageAlt": "Bol de ensalada fresca y colorida con aguacate, tomate y frutos secos sobre una mesa de madera clara, luz natural cálida",
     "featured": false
+  },
+  {
+    "slug": "recetas-reales-para-el-dia-a-dia",
+    "title": "Recetas reales para el día a día",
+    "description": "Recetas saludables de verdad: rápidas, sin ingredientes raros y pensadas para un día normal entre semana. Desayunos, comidas, meriendas, cenas y batch cooking.",
+    "category": "cristifood",
+    "categoryLabel": "CristiFood",
+    "date": "2026-07-22",
+    "image": "recetas-reales-para-el-dia-a-dia.jpg",
+    "imageAlt": "Varios recipientes de meal prep de cristal con arroz, pollo y verduras vistos desde arriba sobre una mesa de madera clara",
+    "featured": false
   }
 ]
