@@ -4,7 +4,7 @@
   <subtitle>Acompañamiento online en hábitos alimentarios. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
   <link href="https://www.crislorentenutricion.com/feed.xml" rel="self"/>
   <link href="https://www.crislorentenutricion.com/"/>
-  <updated>2026-04-16T00:00:00Z</updated>
+  <updated>2026-07-22T00:00:00Z</updated>
   <id>https://www.crislorentenutricion.com/</id>
   <rights>© Cristina Lorente Piquer — Cris Lorente Nutrición</rights>
   <generator uri="https://www.11ty.dev/" version="3.1.2">Eleventy</generator>
@@ -15,6 +15,15 @@
     <email>cristina@crislorentenutricion.com</email>
     <uri>https://www.crislorentenutricion.com/sobre-mi/</uri>
   </author>
+  <entry>
+    <title>Cómo comer sano sin hacer dieta</title>
+    <link href="https://www.crislorentenutricion.com/blog/educacion/como-comer-sano-sin-hacer-dieta/"/>
+    <updated>2026-07-22T00:00:00Z</updated>
+    <published>2026-07-22T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/educacion/como-comer-sano-sin-hacer-dieta/</id>
+    <category term="educacion" label="Educación"/>
+    <summary>Comer sano sin hacer dieta es posible: sin contar calorías, sin prohibiciones ni listas de alimentos buenos y malos. Te cuento cómo lo enfoco de verdad.</summary>
+  </entry>
   <entry>
     <title>Bol de atún, huevo y cebolla pochada</title>
     <link href="https://www.crislorentenutricion.com/blog/cristifood/bol-atun-huevo-cebolla-pochada/"/>

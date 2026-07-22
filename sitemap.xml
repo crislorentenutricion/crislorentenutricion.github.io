@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemaps/image/1.1">
   <url>
     <loc>https://www.crislorentenutricion.com/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -13,7 +13,7 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/seguimiento/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
@@ -23,37 +23,37 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/menu-mensual-personalizado/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/perdida-peso-sostenible/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/metodo/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/testimonios/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/preguntas-frecuentes/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/sobre-mi/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <image:image>
@@ -63,9 +63,20 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/blog/</loc>
-    <lastmod>2026-04-16</lastmod>
+    <lastmod>2026-07-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.crislorentenutricion.com/blog/educacion/como-comer-sano-sin-hacer-dieta/</loc>
+    <lastmod>2026-07-22</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+    <image:image>
+      <image:loc>https://www.crislorentenutricion.com/img/blog/como-comer-sano-sin-hacer-dieta.jpg</image:loc>
+      <image:title>Cómo comer sano sin hacer dieta</image:title>
+      <image:caption>Bol de ensalada fresca y colorida con aguacate, tomate y frutos secos sobre una mesa de madera clara, luz natural cálida</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/blog/cristifood/bol-atun-huevo-cebolla-pochada/</loc>
