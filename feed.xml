@@ -4,7 +4,7 @@
   <subtitle>Acompañamiento online en hábitos alimentarios. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
   <link href="https://www.crislorentenutricion.com/feed.xml" rel="self"/>
   <link href="https://www.crislorentenutricion.com/"/>
-  <updated>2026-07-22T00:00:00Z</updated>
+  <updated>2026-07-23T00:00:00Z</updated>
   <id>https://www.crislorentenutricion.com/</id>
   <rights>© Cristina Lorente Piquer — Cris Lorente Nutrición</rights>
   <generator uri="https://www.11ty.dev/" version="3.1.2">Eleventy</generator>
@@ -15,6 +15,15 @@
     <email>cristina@crislorentenutricion.com</email>
     <uri>https://www.crislorentenutricion.com/sobre-mi/</uri>
   </author>
+  <entry>
+    <title>Por qué fallan las dietas restrictivas (y qué funciona en su lugar)</title>
+    <link href="https://www.crislorentenutricion.com/blog/bienestar/por-que-fallan-las-dietas-restrictivas/"/>
+    <updated>2026-07-23T00:00:00Z</updated>
+    <published>2026-07-23T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/bienestar/por-que-fallan-las-dietas-restrictivas/</id>
+    <category term="bienestar" label="Bienestar"/>
+    <summary>Las dietas restrictivas no fallan porque te falte fuerza de voluntad. Te cuento por qué no funcionan a largo plazo y qué es lo que sí sostiene un cambio de hábitos.</summary>
+  </entry>
   <entry>
     <title>Cómo comer sano sin hacer dieta</title>
     <link href="https://www.crislorentenutricion.com/blog/educacion/como-comer-sano-sin-hacer-dieta/"/>

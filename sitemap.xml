@@ -3,7 +3,7 @@
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://www.crislorentenutricion.com/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
     <image:image>
@@ -13,7 +13,7 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/seguimiento/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
     <image:image>
@@ -23,37 +23,37 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/menu-mensual-personalizado/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/perdida-peso-sostenible/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/metodo/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/testimonios/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/preguntas-frecuentes/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/sobre-mi/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <image:image>
@@ -63,9 +63,20 @@
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/blog/</loc>
-    <lastmod>2026-07-22</lastmod>
+    <lastmod>2026-07-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.crislorentenutricion.com/blog/bienestar/por-que-fallan-las-dietas-restrictivas/</loc>
+    <lastmod>2026-07-23</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+    <image:image>
+      <image:loc>https://www.crislorentenutricion.com/img/blog/por-que-fallan-las-dietas-restrictivas.jpg</image:loc>
+      <image:title>Por qué fallan las dietas restrictivas (y qué funciona en su lugar)</image:title>
+      <image:caption>Mesa de madera clara junto a una ventana con luz cálida, plato con pollo, verduras asadas y pan servido de forma relajada</image:caption>
+    </image:image>
   </url>
   <url>
     <loc>https://www.crislorentenutricion.com/blog/educacion/como-comer-sano-sin-hacer-dieta/</loc>
