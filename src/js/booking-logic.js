@@ -175,7 +175,7 @@ function apiUrlFor(hostname, devUrl, prodUrl) {
 
 // Payload que se envía al backend. `formData` puede ser FormData, Map o plain object
 // con las claves del <form>. `slot` es `{ start, end }`.
-function buildBookingPayload(formData, isoDate, slot, captchaToken) {
+function buildBookingPayload(formData, isoDate, slot) {
   function get(k) {
     if (!formData) return '';
     if (typeof formData.get === 'function') return formData.get(k) || '';
@@ -190,8 +190,7 @@ function buildBookingPayload(formData, isoDate, slot, captchaToken) {
     objetivo: String(get('objetivo')).trim(),
     plan: String(get('plan') || '').trim(),
     privacidad: privacidadRaw === true || privacidadRaw === 'on' || privacidadRaw === 'true',
-    slot: { date: isoDate, start: slot && slot.start ? slot.start : '' },
-    captchaToken: captchaToken || ''
+    slot: { date: isoDate, start: slot && slot.start ? slot.start : '' }
   };
 }
 
@@ -260,8 +259,6 @@ function bookingErrorMessage(reason) {
   switch (reason) {
     case 'slot_taken':
       return 'Justo alguien acaba de reservar ese hueco. He refrescado la disponibilidad — elige otro.';
-    case 'captcha_failed':
-      return 'No se pudo verificar que no eres un bot. Refresca la página y vuelve a intentarlo.';
     case 'rate_limited':
       return 'Has reservado demasiadas veces desde este email en la última hora. Inténtalo más tarde.';
     case 'invalid_payload':

@@ -235,8 +235,7 @@ test('buildBookingPayload: arma el JSON con action=book y privacidad=true', () =
   const payload = booking.buildBookingPayload(
     makeFormDataLike(),
     '2026-04-20',
-    { start: '10:00', end: '10:30' },
-    'token-123'
+    { start: '10:00', end: '10:30' }
   );
   assert.equal(payload.action, 'book');
   assert.equal(payload.nombre, 'Ana');
@@ -246,15 +245,13 @@ test('buildBookingPayload: arma el JSON con action=book y privacidad=true', () =
   assert.equal(payload.plan, '');
   assert.equal(payload.privacidad, true);
   assert.deepEqual(payload.slot, { date: '2026-04-20', start: '10:00' });
-  assert.equal(payload.captchaToken, 'token-123');
 });
 
 test('buildBookingPayload: acepta plain object además de FormData', () => {
   const payload = booking.buildBookingPayload(
     { nombre: 'Ana', email: 'a@b.c', telefono: '', objetivo: 'Ok', plan: 'Premium', privacidad: true },
     '2026-04-20',
-    { start: '10:00', end: '10:30' },
-    ''
+    { start: '10:00', end: '10:30' }
   );
   assert.equal(payload.nombre, 'Ana');
   assert.equal(payload.plan, 'Premium');
@@ -265,15 +262,9 @@ test('buildBookingPayload: privacidad=false si el checkbox no viene', () => {
   const p = booking.buildBookingPayload(
     { nombre: 'Ana', email: 'a@b.c', objetivo: 'Ok' },
     '2026-04-20',
-    { start: '10:00', end: '10:30' },
-    ''
+    { start: '10:00', end: '10:30' }
   );
   assert.equal(p.privacidad, false);
-});
-
-test('buildBookingPayload: captchaToken vacío por defecto', () => {
-  const p = booking.buildBookingPayload({}, '2026-04-20', { start: '10:00' }, null);
-  assert.equal(p.captchaToken, '');
 });
 
 test('parseBookingResponse: ok=true propaga meetLink y eventId', () => {
@@ -308,7 +299,7 @@ test('parseBookingResponse: null / string → invalid_shape', () => {
 });
 
 test('bookingErrorMessage: reasons conocidos devuelven mensajes distintos', () => {
-  const reasons = ['slot_taken', 'captcha_failed', 'rate_limited', 'invalid_payload', 'calendar_error'];
+  const reasons = ['slot_taken', 'rate_limited', 'invalid_payload', 'calendar_error'];
   const messages = new Set(reasons.map(booking.bookingErrorMessage));
   assert.equal(messages.size, reasons.length, 'mensajes deben ser distintos');
   for (const m of messages) assert.ok(m.length > 10, 'mensajes no vacíos');
