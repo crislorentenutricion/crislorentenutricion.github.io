@@ -15,7 +15,6 @@
     // puede tardar 10-15 s. 20 s cubre el cold start sin castigar el caso bueno.
     TIMEOUT_MS: 20000,
     SLOTS_RETRY_BACKOFF_MS: 800,
-    HCAPTCHA_SITE_KEY: '9a82e394-bf54-4d36-8e8a-ed9e1f94f7fe',
     SESSION_CACHE_TTL_MS: 60000
   };
 
@@ -99,45 +98,6 @@
     } catch (_) { /* noop: telemetry never breaks UX */ }
   }
 
-  // Render explícito de hCaptcha invisible: creamos un contenedor oculto y
-  // llamamos a hcaptcha.render() desde el callback onload del script. Solo
-  // entonces execute(widgetId) funciona. El patrón ?render=<sitekey> parece
-  // no rendering el widget a tiempo en algunos navegadores → token vacío.
-  let hcaptchaWidgetId = null;
-  const hcaptchaReady = new Promise(function (resolve) {
-    if (!CONFIG.HCAPTCHA_SITE_KEY) return resolve(false);
-    window.__onHcaptchaLoad = function () {
-      try {
-        let container = document.getElementById('hcaptcha-container');
-        if (!container) {
-          container = document.createElement('div');
-          container.id = 'hcaptcha-container';
-          container.style.display = 'none';
-          document.body.appendChild(container);
-        }
-        hcaptchaWidgetId = window.hcaptcha.render('hcaptcha-container', {
-          sitekey: CONFIG.HCAPTCHA_SITE_KEY,
-          size: 'invisible'
-        });
-        resolve(true);
-      } catch (err) {
-        resolve(false);
-      }
-    };
-    setTimeout(function () { resolve(hcaptchaWidgetId !== null); }, 10000);
-  });
-
-  async function getCaptchaToken() {
-    if (!CONFIG.HCAPTCHA_SITE_KEY) return '';
-    if (!(await hcaptchaReady)) return '';
-    try {
-      const res = await window.hcaptcha.execute(hcaptchaWidgetId, { async: true });
-      return (res && res.response) || '';
-    } catch (err) {
-      return '';
-    }
-  }
-
   document.addEventListener('DOMContentLoaded', function () {
     const root = document.querySelector('[data-booking-mock]');
     if (!root) return;
@@ -165,16 +125,6 @@
       step: 'picker',
       submitting: false
     };
-
-    // Carga el script de hCaptcha sólo si hay site key configurada.
-    if (CONFIG.HCAPTCHA_SITE_KEY && !document.querySelector('script[data-hcaptcha]')) {
-      const s = document.createElement('script');
-      s.src = 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=__onHcaptchaLoad';
-      s.async = true;
-      s.defer = true;
-      s.setAttribute('data-hcaptcha', '');
-      document.head.appendChild(s);
-    }
 
     const els = {
       monthLabel: root.querySelector('[data-month-label]'),
@@ -509,8 +459,7 @@
         track('booking_submitted', { date: state.selectedIso, start: state.selectedSlot.start });
         try {
           const data = new FormData(els.form);
-          const captchaToken = await getCaptchaToken();
-          const payload = buildBookingPayload(data, state.selectedIso, state.selectedSlot, captchaToken);
+          const payload = buildBookingPayload(data, state.selectedIso, state.selectedSlot);
           const result = await postBooking(payload);
           if (result.ok) {
             // Una reserva ocupa un slot: el cache local del mes deja de ser
