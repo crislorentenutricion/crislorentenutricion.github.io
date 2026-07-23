@@ -5,7 +5,8 @@ description: "Programa de 3 meses para aprender a comer bien sin dietas, con el 
 ogImageAlt: "Cris Lorente — Acompañamiento online en hábitos alimentarios"
 navActive: inicio
 jsonLd: true
-preloadImage: /img/hero/food.jpg
+preloadImage: /img/hero/food.webp
+preloadImageType: image/webp
 ---
 {% from "testimonials.njk" import testimonialsGrid %}
 
@@ -223,7 +224,10 @@ preloadImage: /img/hero/food.jpg
       </div>
     </div>
     <div class="hero-food-pic hero-animate hero-animate-4">
-      <img src="/img/hero/food.jpg" alt="Bowl de comida saludable: salmón, quinoa, aguacate y verduras" width="1000" height="563" fetchpriority="high" decoding="async">
+      <picture>
+        <source srcset="/img/hero/food.webp" type="image/webp">
+        <img src="/img/hero/food.jpg" alt="Bowl de comida saludable: salmón, quinoa, aguacate y verduras" width="1000" height="563" fetchpriority="high" decoding="async">
+      </picture>
     </div>
   </div>
 </section>
@@ -334,9 +338,12 @@ preloadImage: /img/hero/food.jpg
       {# IZQUIERDA: foto del mockup con sello "100% gratis" #}
       <div class="lm-pic-wrap reveal">
         <div class="lm-pic">
-          <img src="/img/lead-magnet/mockup-2-paginas.jpeg"
-               alt="Planificador semanal y lista de la compra impresos sobre mesa de madera"
-               width="1400" height="1050" loading="lazy" decoding="async">
+          <picture>
+            <source srcset="/img/lead-magnet/mockup-2-paginas.webp" type="image/webp">
+            <img src="/img/lead-magnet/mockup-2-paginas.jpeg"
+                 alt="Planificador semanal y lista de la compra impresos sobre mesa de madera"
+                 width="1400" height="1050" loading="lazy" decoding="async">
+          </picture>
         </div>
         <div class="lm-stamp" aria-hidden="true">
           <span class="lm-stamp-line1">100%</span>

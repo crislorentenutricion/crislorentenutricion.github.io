@@ -64,7 +64,10 @@ ogType: article
     <p class="article-meta">{{ date | fechaEs }} · Cris Lorente</p>
     {% if postImage %}
     <div class="article-hero-img">
-      <img src="/img/blog/{{ postImage }}" alt="{{ title }}" width="1100" height="380" loading="eager" fetchpriority="high" decoding="async">
+      <picture>
+        <source srcset="/img/blog/{{ postImage | replace('.jpg', '.webp') }}" type="image/webp">
+        <img src="/img/blog/{{ postImage }}" alt="{{ title }}" width="1100" height="380" loading="eager" fetchpriority="high" decoding="async">
+      </picture>
     </div>
     {% endif %}
   </div>
@@ -78,7 +81,10 @@ ogType: article
     </div>
     <aside class="article-author reveal">
       <a href="/sobre-mi/" class="article-author-link">
-        <img src="/img/cristina-profesional.jpg" alt="Cristina Lorente" class="article-author-img" loading="lazy" decoding="async" width="80" height="80">
+        <picture>
+          <source srcset="/img/cristina-profesional.webp" type="image/webp">
+          <img src="/img/cristina-profesional.jpg" alt="Cristina Lorente" class="article-author-img" loading="lazy" decoding="async" width="80" height="80">
+        </picture>
         <div class="article-author-text">
           <span class="article-author-label">Escrito por</span>
           <strong class="article-author-name">Cristina Lorente Piquer</strong>
