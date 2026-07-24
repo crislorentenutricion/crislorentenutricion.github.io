@@ -50,7 +50,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="preload" as="image" href="/img/hero/food.jpg" fetchpriority="high">
+  <link rel="preload" as="image" href="/img/hero/food.webp" type="image/webp" fetchpriority="high">
 
   <script type="application/ld+json">
   {
@@ -355,7 +355,10 @@
       </div>
     </div>
     <div class="hero-food-pic hero-animate hero-animate-4">
-      <img src="/img/hero/food.jpg" alt="Bowl de comida saludable: salmón, quinoa, aguacate y verduras" width="1000" height="563" fetchpriority="high" decoding="async">
+      <picture>
+        <source srcset="/img/hero/food.webp" type="image/webp">
+        <img src="/img/hero/food.jpg" alt="Bowl de comida saludable: salmón, quinoa, aguacate y verduras" width="1000" height="563" fetchpriority="high" decoding="async">
+      </picture>
     </div>
   </div>
 </section>
@@ -659,9 +662,12 @@
       
       <div class="lm-pic-wrap reveal">
         <div class="lm-pic">
-          <img src="/img/lead-magnet/mockup-2-paginas.jpeg"
-               alt="Planificador semanal y lista de la compra impresos sobre mesa de madera"
-               width="1400" height="1050" loading="lazy" decoding="async">
+          <picture>
+            <source srcset="/img/lead-magnet/mockup-2-paginas.webp" type="image/webp">
+            <img src="/img/lead-magnet/mockup-2-paginas.jpeg"
+                 alt="Planificador semanal y lista de la compra impresos sobre mesa de madera"
+                 width="1400" height="1050" loading="lazy" decoding="async">
+          </picture>
         </div>
         <div class="lm-stamp" aria-hidden="true">
           <span class="lm-stamp-line1">100%</span>
