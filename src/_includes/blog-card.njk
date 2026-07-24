@@ -2,7 +2,10 @@
   <article class="blog-card card">
     <div class="blog-card-img-wrap">
       {% if post.image %}
-        <img src="/img/blog/{{ post.image }}" alt="{{ post.imageAlt }}" class="blog-card-img" loading="lazy" decoding="async" width="400" height="200">
+        <picture>
+          <source srcset="/img/blog/{{ post.image | replace('.jpg', '.webp') }}" type="image/webp">
+          <img src="/img/blog/{{ post.image }}" alt="{{ post.imageAlt }}" class="blog-card-img" loading="lazy" decoding="async" width="400" height="200">
+        </picture>
       {% else %}
         <div class="blog-img-placeholder"></div>
       {% endif %}

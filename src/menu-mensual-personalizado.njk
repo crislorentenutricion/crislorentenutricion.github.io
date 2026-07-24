@@ -3,7 +3,8 @@ layout: layouts/base.njk
 title: "Propuestas de comidas mensuales — con lista de la compra y seguimiento"
 description: "Propuestas de comidas mensuales orientativas, lista de la compra, sesiones de seguimiento quincenales y WhatsApp directo con Cristina. Adaptadas a tus gustos y a tu vida. 40 €/mes, sin permanencia."
 permalink: /menu-mensual-personalizado/
-preloadImage: /img/hero/menu-mensual.jpg
+preloadImage: /img/hero/menu-mensual.webp
+preloadImageType: image/webp
 ---
 
 <script type="application/ld+json">
@@ -131,7 +132,10 @@ preloadImage: /img/hero/menu-mensual.jpg
       </div>
     </div>
     <div class="hero-food-pic hero-animate hero-animate-4">
-      <img src="/img/hero/menu-mensual.jpg" alt="Tuppers de cristal con arroz con verduras, pasta con pollo y ensalada, con lista de la compra" width="1200" height="670" fetchpriority="high" decoding="async" style="object-position:center center">
+      <picture>
+        <source srcset="/img/hero/menu-mensual.webp" type="image/webp">
+        <img src="/img/hero/menu-mensual.jpg" alt="Tuppers de cristal con arroz con verduras, pasta con pollo y ensalada, con lista de la compra" width="1200" height="670" fetchpriority="high" decoding="async" style="object-position:center center">
+      </picture>
     </div>
   </div>
 </section>
