@@ -66,15 +66,21 @@
   <script src="/js/main.js" defer></script>
   {% if env.amplitudeApiKey %}
   <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" defer></script>
-  <script src="https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.2-min.js.gz" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      var sessionReplayTracking = window.sessionReplay.plugin({
-        sampleRate: 0.1,
-        privacyConfig: { defaultMaskLevel: 'medium', maskSelector: ['input', 'textarea', 'select', '.form-sensitive'] }
-      });
-      window.amplitude.add(sessionReplayTracking);
       window.amplitude.init('{{ env.amplitudeApiKey }}', { autocapture: true });
+    });
+    // Session Replay (95 KB) tras load: no compite con el primer pintado en móvil.
+    window.addEventListener('load', function() {
+      var s = document.createElement('script');
+      s.src = 'https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.2-min.js.gz';
+      s.onload = function() {
+        window.amplitude.add(window.sessionReplay.plugin({
+          sampleRate: 0.1,
+          privacyConfig: { defaultMaskLevel: 'medium', maskSelector: ['input', 'textarea', 'select', '.form-sensitive'] }
+        }));
+      };
+      document.head.appendChild(s);
     });
   </script>
   {% endif %}

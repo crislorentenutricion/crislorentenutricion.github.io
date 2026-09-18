@@ -12,3 +12,12 @@
     </div>
   </div>
 </div>
+<script>
+  // Muestra el banner en el primer pintado (antes era el LCP móvil y aparecía tarde).
+  // tracking.js conecta los botones y lo cierra; misma clave y criterio que readConsent.
+  (function () {
+    var c = null;
+    try { c = window.localStorage.getItem('cln_consent_v1'); } catch (_) {}
+    if (c !== 'accepted' && c !== 'rejected') document.getElementById('cln-consent-banner').hidden = false;
+  })();
+</script>
