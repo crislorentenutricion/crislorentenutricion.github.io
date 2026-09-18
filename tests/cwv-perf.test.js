@@ -83,3 +83,31 @@ test('replay: se conservan sampleRate 0.1 y el enmascarado de inputs', () => {
 test('amplitude: init con autocapture sigue en DOMContentLoaded', () => {
   assert.match(baseNjk, /DOMContentLoaded[\s\S]*amplitude\.init\('\{\{ env\.amplitudeApiKey \}\}', \{ autocapture: true \}\)/);
 });
+
+// C) Fuentes autoalojadas: sin conexiones a Google Fonts en el camino crítico.
+
+const headMeta = fs.readFileSync(path.join(root, 'src/_includes/head-meta.njk'), 'utf8');
+const styleCss = fs.readFileSync(path.join(root, 'src/css/style.css'), 'utf8');
+const eleventyJs = fs.readFileSync(path.join(root, '.eleventy.js'), 'utf8');
+
+test('fuentes: ninguna plantilla carga Google Fonts', () => {
+  assert.doesNotMatch(headMeta, /fonts\.(googleapis|gstatic)\.com/);
+});
+
+test('fuentes: @font-face para Lora normal, Lora itálica y Manrope con ficheros existentes', () => {
+  const faces = [...styleCss.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((m) => m[1]);
+  const find = (family, style) => faces.find((f) => f.includes(`'${family}'`) && f.includes(`font-style: ${style}`));
+  for (const [family, style] of [['Lora', 'normal'], ['Lora', 'italic'], ['Manrope', 'normal']]) {
+    const face = find(family, style);
+    assert.ok(face, `falta @font-face ${family} ${style}`);
+    assert.match(face, /font-display: swap/);
+    const url = face.match(/url\('\/fonts\/([^']+\.woff2)'\)/);
+    assert.ok(url, `${family} ${style} debe apuntar a /fonts/*.woff2`);
+    assert.ok(fs.existsSync(path.join(root, 'src/fonts', url[1])), `no existe src/fonts/${url[1]}`);
+  }
+});
+
+test('fuentes: se copian al build y la principal se precarga', () => {
+  assert.match(eleventyJs, /addPassthroughCopy\("src\/fonts"\)/);
+  assert.match(headMeta, /<link rel="preload" href="\/fonts\/manrope-latin\.woff2" as="font" type="font\/woff2" crossorigin>/);
+});
