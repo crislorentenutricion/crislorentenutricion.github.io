@@ -4,7 +4,7 @@
   <subtitle>Acompañamiento online en hábitos alimentarios. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
   <link href="https://www.crislorentenutricion.com/feed.xml" rel="self"/>
   <link href="https://www.crislorentenutricion.com/"/>
-  <updated>2026-07-23T00:00:00Z</updated>
+  <updated>2026-09-18T00:00:00Z</updated>
   <id>https://www.crislorentenutricion.com/</id>
   <rights>© Cristina Lorente Piquer — Cris Lorente Nutrición</rights>
   <generator uri="https://www.11ty.dev/" version="3.1.2">Eleventy</generator>
@@ -15,6 +15,24 @@
     <email>cristina@crislorentenutricion.com</email>
     <uri>https://www.crislorentenutricion.com/sobre-mi/</uri>
   </author>
+  <entry>
+    <title>Cómo construir una relación sana con la comida</title>
+    <link href="https://www.crislorentenutricion.com/blog/bienestar/relacion-sana-con-la-comida/"/>
+    <updated>2026-09-18T00:00:00Z</updated>
+    <published>2026-09-18T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/bienestar/relacion-sana-con-la-comida/</id>
+    <category term="bienestar" label="Bienestar"/>
+    <summary>Una relación sana con la comida no es comer perfecto: es dejar de vivir en guerra con lo que comes. Atracones, eventos sociales, vacaciones y todo lo que hay en medio.</summary>
+  </entry>
+  <entry>
+    <title>Cómo leer una etiqueta nutricional en 30 segundos</title>
+    <link href="https://www.crislorentenutricion.com/blog/educacion/como-leer-una-etiqueta-nutricional/"/>
+    <updated>2026-09-18T00:00:00Z</updated>
+    <published>2026-09-18T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/educacion/como-leer-una-etiqueta-nutricional/</id>
+    <category term="educacion" label="Educación"/>
+    <summary>Aprende a leer una etiqueta nutricional en 30 segundos: qué mirar primero, qué ignorar y qué señales indican que un producto está más o menos procesado.</summary>
+  </entry>
   <entry>
     <title>Por qué fallan las dietas restrictivas (y qué funciona en su lugar)</title>
     <link href="https://www.crislorentenutricion.com/blog/bienestar/por-que-fallan-las-dietas-restrictivas/"/>
