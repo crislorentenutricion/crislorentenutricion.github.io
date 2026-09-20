@@ -94,20 +94,22 @@ test('fuentes: ninguna plantilla carga Google Fonts', () => {
   assert.doesNotMatch(headMeta, /fonts\.(googleapis|gstatic)\.com/);
 });
 
-test('fuentes: @font-face para Lora normal, Lora itálica y Manrope con ficheros existentes', () => {
+test('fuentes: @font-face para Cormorant Garamond (normal e itálica) y Jost con ficheros existentes', () => {
   const faces = [...styleCss.matchAll(/@font-face\s*\{([^}]*)\}/g)].map((m) => m[1]);
   const find = (family, style) => faces.find((f) => f.includes(`'${family}'`) && f.includes(`font-style: ${style}`));
-  for (const [family, style] of [['Lora', 'normal'], ['Lora', 'italic'], ['Manrope', 'normal']]) {
+  for (const [family, style] of [['Cormorant Garamond', 'normal'], ['Cormorant Garamond', 'italic'], ['Jost', 'normal']]) {
     const face = find(family, style);
     assert.ok(face, `falta @font-face ${family} ${style}`);
     assert.match(face, /font-display: swap/);
+  }
+  for (const face of faces) {
     const url = face.match(/url\('\/fonts\/([^']+\.woff2)'\)/);
-    assert.ok(url, `${family} ${style} debe apuntar a /fonts/*.woff2`);
+    assert.ok(url, 'cada @font-face debe apuntar a /fonts/*.woff2');
     assert.ok(fs.existsSync(path.join(root, 'src/fonts', url[1])), `no existe src/fonts/${url[1]}`);
   }
 });
 
-test('fuentes: se copian al build y la principal se precarga', () => {
+test('fuentes: se copian al build y la de texto se precarga', () => {
   assert.match(eleventyJs, /addPassthroughCopy\("src\/fonts"\)/);
-  assert.match(headMeta, /<link rel="preload" href="\/fonts\/manrope-latin\.woff2" as="font" type="font\/woff2" crossorigin>/);
+  assert.match(headMeta, /<link rel="preload" href="\/fonts\/jost[^"]*\.woff2" as="font" type="font\/woff2" crossorigin>/);
 });
