@@ -55,47 +55,79 @@
    VARIABLES & TOKENS
    ======================== */
 :root {
-  --color-green: #4a7c59;
-  --color-green-dark: #3a6347;
-  --color-green-light: #f4f9f5;
-  --color-green-muted: #e8f0eb;
-  --color-green-tint: rgba(74, 124, 89, 0.06);
-  --color-green-glow: rgba(74, 124, 89, 0.25);
-  --color-cream: #f8f6f0;
-  --color-cream-dark: #f0ede4;
-  --color-white: #ffffff;
-  --color-black: #111111;
-  --color-gray: #6b7280;
-  --color-gray-light: #9ca3af;
-  --color-border: #e5e2da;
+  /* Color */
+  --papel:        #F6F2EA;
+  --panel:        #FFFDF9;
+  --verde-oscuro: #3E4A32;
+  --verde-medio:  #6E7A55;  /* solo líneas y numerales >= 24px: 4,1:1 sobre papel */
+  --verde-claro:  #B9C0A2;
+  --verde-claro-hover: #C9D0B2;
+  --verde-hover:  #5A6644;  /* también acento de texto pequeño: 5,5:1 sobre papel */
+  --texto:        #2E2A24;
+  --texto-2:      #575147;
+  --texto-3:      #6E675C;
+  --texto-4:      #8A8276;  /* 3,4:1: solo decorativo, nunca texto que haya que leer */
+  --texto-art:    #3A342C;
+  --linea:        #C8CDB4;
+  --linea-calida: #E2D9CA;
+  --linea-campo:  #B3B79C;  /* borde de inputs */
+  --error:        #8C2A2A;
+  --error-fondo:  #FDECEC;
 
-  --font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-accent: 'Lora', Georgia, serif;
-  --font-weight-regular: 400;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
-  --line-height-base: 1.65;
-  --line-height-heading: 1.1;
-  --letter-spacing-tight: -0.03em;
-  --letter-spacing-wide: 0.08em;
+  /* Tipografía */
+  --display: 'Cormorant Garamond', Georgia, serif;
+  --sans:    'Jost', system-ui, sans-serif;
+
+  /* Medidas */
+  --margen:   96px;
+  --margen-s: 64px;
+  --col-texto: 680px;
+  --col-art:   660px;
+
+  /* Alias heredados — los consumen la PWA, el backoffice, booking.css y lead-magnet.css.
+     No usar en CSS nuevo. */
+  --color-green: var(--verde-oscuro);
+  --color-green-dark: var(--verde-hover);
+  --color-green-light: var(--panel);
+  --color-green-muted: var(--linea-calida);
+  --color-green-tint: rgba(62, 74, 50, 0.06);
+  --color-green-glow: transparent;
+  --color-cream: var(--papel);
+  --color-cream-dark: var(--linea-calida);
+  --color-white: var(--panel);
+  --color-black: var(--texto);
+  --color-text: var(--texto-2);
+  --color-gray: var(--texto-2);
+  --color-gray-light: var(--texto-3);
+  --color-border: var(--linea);
+
+  --font-family: var(--sans);
+  --font-accent: var(--display);
+  --font-weight-regular: 300;
+  --font-weight-semibold: 500;
+  --font-weight-bold: 500;
+  --line-height-base: 1.8;
+  --line-height-heading: 1.14;
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-wide: 0.2em;
 
   --section-padding: 100px;
-  --section-padding-mobile: 64px;
+  --section-padding-mobile: 56px;
   --container-max: 1140px;
-  --container-narrow: 720px;
+  --container-narrow: var(--col-texto);
   --container-padding: 24px;
   --card-padding: 32px;
 
-  --border-radius-sm: 8px;
-  --border-radius-card: 16px;
-  --border-radius-lg: 24px;
-  --border-radius-btn: 100px;
-  --shadow-sm: 0 1px 4px rgba(0,0,0,0.04), 0 0 1px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-card: 0 2px 12px rgba(0,0,0,0.04), 0 0 1px rgba(0,0,0,0.06);
-  --shadow-card-hover: 0 16px 40px rgba(74,124,89,0.12), 0 4px 12px rgba(0,0,0,0.04);
-  --shadow-elevated: 0 24px 48px rgba(0,0,0,0.08);
-  --shadow-portrait: 0 20px 50px -20px rgba(74,124,89,0.22), 0 6px 18px -10px rgba(0,0,0,0.06);
+  --border-radius-sm: 0;
+  --border-radius-card: 0;
+  --border-radius-lg: 0;
+  --border-radius-btn: 0;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-card: none;
+  --shadow-card-hover: none;
+  --shadow-elevated: none;
+  --shadow-portrait: none;
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
