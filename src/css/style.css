@@ -438,8 +438,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
    PLANS
    ======================== */
 .plan-card-wrap { max-width: 520px; margin: 0 auto; }
-.blog-more-wrap { text-align: center; margin-top: 32px; }
-.blog-more-wrap[hidden] { display: none; }
 .plan-card { position: relative; display: flex; flex-direction: column; padding: 48px; }
 .plan-card h3 { font-size: 36px; font-weight: 300; line-height: 1.18; margin-bottom: 12px; }
 .plan-description { font-size: 14px; color: var(--texto-3); margin-bottom: 20px; line-height: 1.75; }
@@ -843,10 +841,9 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
   :root { --container-padding: 20px; --card-padding: 22px; }
   .steps-grid { grid-template-columns: 1fr; }
   .steps-grid--3 { grid-template-columns: 1fr; }
-  .footer-nav { grid-template-columns: 1fr; }
   .hero-image { max-width: 240px; }
   .blog-card-img, .blog-img-placeholder { height: 220px; }
-  .form-promise { grid-template-columns: 1fr; gap: 12px; text-align: center; }
+  .form-promise { text-align: center; }
   .hero-text .btn, .section-cta .btn { width: 100%; max-width: 320px; }
   .section-subtitle { font-size: 1rem; margin-bottom: 40px; }
   .form-container input, .form-container textarea, .form-container select { font-size: 16px; }
