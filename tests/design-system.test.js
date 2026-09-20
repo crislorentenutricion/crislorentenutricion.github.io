@@ -47,5 +47,11 @@ const sinDecoracion = (nombre, css) => {
   assert.doesNotMatch(css, /74,\s*124,\s*89|#4a7c59|#3a6347/i, `${nombre}: queda el verde antiguo escrito a mano`);
 };
 
+test('style.css (web pública): sin degradados, sombras ni radios', () => {
+  // El bloque del backoffice conserva sus formas propias (celdas redondas del calendario).
+  const publico = styleCss.split(/\/\* =+\s*BACKOFFICE/)[0];
+  sinDecoracion('style.css', publico);
+});
+
 test('booking.css: sin degradados, sombras ni radios', () => sinDecoracion('booking.css', read('booking.css')));
 test('lead-magnet.css: sin degradados, sombras ni radios', () => sinDecoracion('lead-magnet.css', read('lead-magnet.css')));
