@@ -142,10 +142,9 @@
 
 .lm-form-field input::placeholder { color: var(--color-gray-light); }
 
-.lm-form-field input:focus {
-  outline: none;
-  border-color: var(--verde-oscuro);
-}
+/* El foco lo pinta la regla global input:focus-visible de style.css (filete de 2px
+   + borde verde). Aqui no se anula el outline: sin el, el foco de teclado en estos
+   dos campos solo se notaba por 1px de borde. */
 
 @media (max-width: 540px) {
   .lm-form-field input { font-size: 16px; }
