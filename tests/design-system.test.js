@@ -37,3 +37,15 @@ test('tokens: radios a 0 y sombras a none', () => {
   for (const t of ['--border-radius-sm', '--border-radius-card', '--border-radius-lg', '--border-radius-btn']) assert.equal(token(t), '0', t);
   for (const t of ['--shadow-sm', '--shadow-md', '--shadow-card', '--shadow-card-hover', '--shadow-elevated', '--shadow-portrait']) assert.equal(token(t), 'none', t);
 });
+
+const sinDecoracion = (nombre, css) => {
+  assert.doesNotMatch(css, /(linear|radial)-gradient/, `${nombre}: hay degradados`);
+  const sombras = [...css.matchAll(/box-shadow:\s*([^;]+);/g)].map((m) => m[1].trim()).filter((v) => v !== 'none');
+  assert.deepEqual(sombras, [], `${nombre}: hay sombras`);
+  const radios = [...css.matchAll(/border-radius:\s*([^;]+);/g)].map((m) => m[1].trim()).filter((v) => !/^(0|var\(--border-radius-[a-z]+\))$/.test(v));
+  assert.deepEqual(radios, [], `${nombre}: hay radios distintos de 0`);
+  assert.doesNotMatch(css, /74,\s*124,\s*89|#4a7c59|#3a6347/i, `${nombre}: queda el verde antiguo escrito a mano`);
+};
+
+test('booking.css: sin degradados, sombras ni radios', () => sinDecoracion('booking.css', read('booking.css')));
+test('lead-magnet.css: sin degradados, sombras ni radios', () => sinDecoracion('lead-magnet.css', read('lead-magnet.css')));

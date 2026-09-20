@@ -27,9 +27,8 @@
 .booking-shell {
   background: var(--color-white);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 0;
   padding: 24px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
   max-width: 960px;
   margin: 0 auto;
 }
@@ -65,7 +64,7 @@
 .booking-nav-btn {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 0;
   border: 1px solid var(--color-border);
   background: var(--color-white);
   cursor: pointer;
@@ -116,7 +115,7 @@
 }
 .booking-cal-cell {
   aspect-ratio: 1 / 1;
-  border-radius: 10px;
+  border-radius: 0;
   border: 1px solid transparent;
   background: transparent;
   font-size: 0.92rem;
@@ -133,14 +132,11 @@
   cursor: pointer;
 }
 .booking-cal-cell.is-available:hover {
-  background: var(--color-green);
-  color: var(--color-white);
-  transform: translateY(-1px);
+  border-color: var(--verde-medio);
 }
 .booking-cal-cell.is-selected {
-  background: var(--color-green);
-  color: var(--color-white);
-  box-shadow: 0 4px 14px var(--color-green-glow);
+  background: var(--verde-oscuro);
+  color: var(--papel);
 }
 .booking-cal-cell.is-unavailable {
   color: var(--color-gray-light);
@@ -171,28 +167,21 @@
   border: 0;
 }
 
-/* Skeleton del calendario: misma estructura 7×6 con shimmer.
+/* Skeleton del calendario: misma estructura 7×6 con parpadeo.
    Mantener el layout idéntico evita "salto" al pasar de loading a datos. */
 .booking-cal-cell.is-skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(74, 124, 89, 0.06) 0%,
-    rgba(74, 124, 89, 0.16) 50%,
-    rgba(74, 124, 89, 0.06) 100%
-  );
-  background-size: 200% 100%;
-  animation: bookingShimmer 1.2s ease-in-out infinite;
+  background: var(--linea-calida);
+  animation: bookingPulse 1.2s ease-in-out infinite;
   cursor: default;
   color: transparent;
 }
-@keyframes bookingShimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+@keyframes bookingPulse {
+  50% { opacity: 0.5; }
 }
 @media (prefers-reduced-motion: reduce) {
   .booking-cal-cell.is-skeleton {
     animation: none;
-    background: rgba(74, 124, 89, 0.1);
+    background: var(--color-green-tint);
   }
 }
 .booking-cal-error p {
@@ -204,7 +193,7 @@
   color: var(--color-green);
   border: 1px solid var(--color-green);
   padding: 8px 18px;
-  border-radius: 999px;
+  border-radius: 0;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
@@ -219,7 +208,7 @@
   border-left: 3px solid #d97757;
   color: #8f3912;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 0.92rem;
   margin-bottom: 14px;
 }
@@ -245,7 +234,7 @@
 .booking-slot-btn {
   padding: 12px 14px;
   border: 1px solid var(--color-green);
-  border-radius: 10px;
+  border-radius: 0;
   background: var(--color-white);
   color: var(--color-green-dark);
   font-weight: 600;
@@ -256,21 +245,18 @@
   transition: all 0.15s;
 }
 .booking-slot-btn:hover {
-  background: var(--color-green);
-  color: var(--color-white);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px var(--color-green-glow);
+  border-color: var(--verde-medio);
 }
 
 .booking-form-panel {
   background: var(--color-cream);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 18px;
 }
 .booking-form-summary {
   background: var(--color-white);
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 0;
   border-left: 3px solid var(--color-green);
   font-weight: 600;
   color: var(--color-green-dark);
@@ -280,22 +266,26 @@
 .booking-form-group { margin-bottom: 12px; }
 .booking-form-panel label {
   display: block;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.20em;
   margin-bottom: 4px;
-  color: var(--color-black);
+  color: var(--texto-3);
 }
 .booking-form-panel input[type="text"],
 .booking-form-panel input[type="email"],
 .booking-form-panel input[type="tel"],
 .booking-form-panel textarea {
   width: 100%;
+  min-height: 46px;
   padding: 10px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  font-family: inherit;
+  border: 1px solid var(--linea-campo);
+  border-radius: 0;
+  font-family: var(--sans);
+  font-weight: 300;
   font-size: 0.95rem;
-  background: var(--color-white);
+  background: var(--panel);
 }
 .booking-form-panel textarea { min-height: 80px; resize: vertical; }
 .booking-form-actions {
@@ -310,7 +300,7 @@
   color: var(--color-green);
   border: 1px solid var(--color-green);
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: 0;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
@@ -329,7 +319,7 @@
 
 .booking-confirm-panel {
   background: var(--color-green-light);
-  border-radius: 12px;
+  border-radius: 0;
   padding: 24px;
   text-align: center;
   border: 1px solid var(--color-green-muted);
@@ -341,7 +331,7 @@
   height: 48px;
   background: var(--color-green);
   color: var(--color-white);
-  border-radius: 50%;
+  border-radius: 0;
   align-items: center;
   justify-content: center;
   font-size: 1.8rem;
@@ -358,7 +348,7 @@
   color: var(--color-green-dark);
   background: var(--color-white);
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 0;
   display: inline-block;
   margin: 10px 0;
 }
@@ -366,7 +356,7 @@
   margin-top: 18px;
   padding: 10px;
   background: #fff9e6;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 0.85rem;
   color: #6b5a10;
 }
