@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
   <meta name="google-site-verification" content="a5hA-WBmBo4Hp1V61UimY41b1McnSKxFXM2HGxGRsP8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#4a7c59">
+  <meta name="theme-color" content="#3E4A32">
   <meta name="color-scheme" content="light">
   <meta name="author" content="Cristina Lorente Piquer">
   <title>Mi seguimiento — Cris Lorente</title>
@@ -40,7 +40,7 @@
   <link rel="author" href="/humans.txt">
   <link rel="preconnect" href="https://cdn.amplitude.com" crossorigin>
   <link rel="dns-prefetch" href="https://api2.amplitude.com">
-  <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
   <!-- Favicons -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -71,7 +71,7 @@
   /* ============================================================
      /mi-seguimiento — editorial-matutino
      Espacio íntimo tipo diario de mañana. Sin header ni footer.
-     Reusa tokens del sitio (Manrope + Lora + verde bosque + crema)
+     Reusa tokens del sitio (Jost + Cormorant Garamond + verde + papel)
      y añade una paleta cálida sólo para esta página.
      ============================================================ */
 
@@ -90,7 +90,7 @@
   }
 
   .ms-brand {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.85rem;
     color: #8a8678;
@@ -155,7 +155,7 @@
     position: absolute;
     inset: 0;
     margin: 0;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 1rem;
     color: #8a8678;
@@ -181,7 +181,7 @@
      ============================================================ */
   .ms-login { padding-top: 4vh; }
   .ms-login-title {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-weight: 400;
     font-size: clamp(1.85rem, 6.2vw, 2.55rem);
     line-height: 1.12;
@@ -212,7 +212,7 @@
   }
   .ms-login-form[hidden] { display: none; }
   .ms-label {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.95rem;
     color: #6b6759;
@@ -232,7 +232,7 @@
   .ms-input::placeholder { color: #a8a394; }
   .ms-input:focus {
     border-color: var(--color-green);
-    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.12);
+    box-shadow: 0 0 0 3px var(--color-green-tint);
   }
   .ms-submit {
     margin-top: 6px;
@@ -254,7 +254,7 @@
   .ms-status {
     margin-top: 22px;
     text-align: center;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.95rem;
     color: #55524a;
@@ -269,7 +269,7 @@
     gap: 10px;
     align-items: flex-start;
     margin: 2px 6px 4px;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-size: 0.85rem;
     line-height: 1.5;
     color: #6b6759;
@@ -290,7 +290,7 @@
 
   .ms-login-hint {
     margin: 4px 6px 0;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.85rem;
     color: #8a8678;
@@ -301,7 +301,7 @@
   .ms-login-foot {
     margin-top: 44px;
     text-align: center;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.82rem;
     color: #a29e91;
@@ -319,7 +319,7 @@
     animation: msFade 0.45s ease both;
   }
   .ms-welcome-back-title {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 1.08rem;
     color: #2d2a24;
@@ -332,7 +332,7 @@
     color: var(--color-green);
   }
   .ms-welcome-back-msg {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-size: 0.9rem;
     color: #6b6759;
     line-height: 1.55;
@@ -344,7 +344,7 @@
     background: none;
     border: 0;
     padding: 4px 8px;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.82rem;
     color: #8a8678;
@@ -386,7 +386,7 @@
   }
   .ms-hero-text { flex: 1; min-width: 0; }
   .ms-eyebrow {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.92rem;
     color: #8a8678;
@@ -394,7 +394,7 @@
     letter-spacing: 0.01em;
   }
   .ms-greeting {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-weight: 400;
     font-size: clamp(1.65rem, 5.4vw, 2rem);
     line-height: 1.12;
@@ -424,7 +424,7 @@
   }
   .ms-flame { width: 22px; height: 22px; color: #c86838; margin-bottom: 1px; }
   .ms-streak-num {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-weight: 600;
     font-size: 1.75rem;
     color: #9d4820;
@@ -439,7 +439,7 @@
 
   /* section titles — italic, delicados */
   .ms-section-title {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-weight: 400;
     font-size: 1.02rem;
@@ -480,12 +480,11 @@
   .ms-revision-cta[data-state="urgent"] {
     background: #f0ede0;
     border-left-color: var(--color-green);
-    box-shadow: 0 2px 10px rgba(74,124,89,0.08);
   }
   .ms-revision-cta-body { flex: 1 1 240px; min-width: 0; }
   .ms-revision-cta-eyebrow {
     display: block;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.78rem;
     letter-spacing: 0.04em;
@@ -536,7 +535,7 @@
     transition: background 0.2s ease, border-color 0.2s ease;
   }
   .ms-meal-time {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.88rem;
     color: var(--color-green);
@@ -556,11 +555,11 @@
   .ms-meal.ms-meal--swap .ms-meal-text { flex: 1; }
   .ms-meal-swap {
     margin-left: auto; flex: none;
-    border: 1.5px solid #4a7c59; background: transparent; color: #4a7c59;
+    border: 1.5px solid var(--color-green); background: transparent; color: var(--color-green);
     font: inherit; font-size: .78rem; font-weight: 600;
     padding: 5px 12px; border-radius: 999px; cursor: pointer; min-height: 32px;
   }
-  .ms-meal-swap:hover, .ms-meal-swap:focus-visible { background: #e2ecdf; }
+  .ms-meal-swap:hover, .ms-meal-swap:focus-visible { background: var(--color-green-muted); }
   .ms-modal-list { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
   .ms-opcion-item {
     text-align: left; font: inherit; font-size: .85rem; cursor: pointer;
@@ -568,8 +567,8 @@
     border-radius: 12px; padding: 12px 14px; min-height: 48px;
     display: flex; align-items: center; gap: 8px;
   }
-  .ms-opcion-item.is-current { border-color: #4a7c59; background: #e2ecdf; color: #3a6147; font-weight: 600; }
-  .ms-opcion-item .tick { margin-left: auto; color: #4a7c59; font-weight: 700; opacity: 0; }
+  .ms-opcion-item.is-current { border-color: var(--color-green); background: var(--color-green-muted); color: var(--color-green-dark); font-weight: 600; }
+  .ms-opcion-item .tick { margin-left: auto; color: var(--color-green); font-weight: 700; opacity: 0; }
   .ms-opcion-item.is-current .tick { opacity: 1; }
 
   /* ---------- tip del día ---------- */
@@ -577,7 +576,7 @@
     margin: -20px 4px 44px;
     padding: 14px 18px 0;
     border-top: 1px solid #ece7d6;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.92rem;
     line-height: 1.55;
@@ -618,7 +617,7 @@
   .ms-check-btn:focus-visible {
     outline: none;
     border-color: currentColor;
-    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.12);
+    box-shadow: 0 0 0 3px var(--color-green-tint);
   }
   .ms-check-btn.is-active {
     border-color: currentColor;
@@ -630,11 +629,11 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-size: 1.2rem;
     font-weight: 600;
   }
-  .ms-check-ok  { color: #4a7c59; }
+  .ms-check-ok  { color: var(--color-green); }
   .ms-check-ok  .ms-check-emoji { background: #e3efe5; }
   .ms-check-mid { color: #a37a2a; }
   .ms-check-mid .ms-check-emoji { background: #f6ebce; }
@@ -653,7 +652,7 @@
     grid-template-columns: repeat(7, 1fr);
     gap: 8px;
     margin-bottom: 10px;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.72rem;
     color: #a29e91;
@@ -674,7 +673,7 @@
     background: #efeadd;
     display: grid;
     place-items: center;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-size: 0.82rem;
     font-weight: 500;
     color: #8a8678;
@@ -706,7 +705,7 @@
     gap: 20px;
     flex-wrap: wrap;
     justify-content: center;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.82rem;
     color: #8a8678;
@@ -733,7 +732,7 @@
     background: none;
     border: 0;
     cursor: pointer;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.88rem;
     color: #8a8678;
@@ -746,7 +745,7 @@
   .ms-pdf-link {
     display: inline-block;
     margin-right: 18px;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.88rem;
     color: var(--color-green);
@@ -758,7 +757,7 @@
   /* ---------- check hint ---------- */
   .ms-check-hint {
     margin: 14px 2px 0;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.86rem;
     color: #8a8678;
@@ -788,7 +787,7 @@
     text-align: center;
   }
   .ms-modal-title {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-weight: 400;
     font-size: 1.55rem;
     line-height: 1.2;
@@ -821,12 +820,12 @@
   }
   .ms-modal-list li:last-child { border-bottom: 0; }
   .ms-modal-list .ms-modal-ico {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-weight: 600;
     text-align: center;
     padding-top: 1px;
   }
-  .ms-modal-list .is-ok  { color: #4a7c59; }
+  .ms-modal-list .is-ok  { color: var(--color-green); }
   .ms-modal-list .is-mid { color: #a37a2a; }
   .ms-modal-list .is-no  { color: #a14d3a; }
   .ms-modal-list .is-streak { color: #c86838; }
@@ -865,7 +864,7 @@
   .ms-back-today:hover { background: var(--color-green); color: #fff; }
 
   #ms-authed[data-view="day"] #ms-today-label {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-weight: 500;
     font-size: 1.35rem;
@@ -891,7 +890,7 @@
   .ms-day-badge.is-no  { background: #d9a08e; }
   .ms-day-msg {
     margin: 0;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.96rem;
     color: #55524a;
@@ -953,7 +952,7 @@
   .ms-tab svg { width: 22px; height: 22px; }
   .ms-tab:focus-visible {
     outline: none;
-    box-shadow: inset 0 0 0 3px rgba(74, 124, 89, 0.18);
+    box-shadow: inset 0 0 0 3px var(--color-green-tint);
     border-radius: 12px;
   }
   /* «day» pertenece a la pestaña Hoy — misma regla que activeTabForView (logic.js) */
@@ -973,7 +972,7 @@
   /* Vista: lista de la compra */
   .ms-compra { margin-bottom: 48px; }
   .ms-compra-progress {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.95rem;
     color: #8a8678;
@@ -999,7 +998,7 @@
     gap: 10px;
     padding: 14px 18px;
     cursor: pointer;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-size: 0.95rem;
     color: #6b6759;
@@ -1077,7 +1076,7 @@
   .ms-compra-empty {
     padding: 28px 20px;
     text-align: center;
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     color: #8a8678;
     font-size: 0.95rem;
@@ -1113,7 +1112,7 @@
   }
   .ms-compra-reset:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(74, 124, 89, 0.18);
+    box-shadow: 0 0 0 3px var(--color-green-tint);
   }
   .ms-compra-reset svg {
     width: 16px; height: 16px;
@@ -1137,10 +1136,10 @@
     flex: 1; background: #fff; border: 1px solid #e4dfcf; border-radius: 13px;
     padding: 10px; text-align: center;
   }
-  .ms-apr-stat b { display: block; font-family: 'Lora', serif; font-size: 1.05rem; color: var(--color-green-dark); }
+  .ms-apr-stat b { display: block; font-family: var(--display); font-size: 1.05rem; color: var(--color-green-dark); }
   .ms-apr-stat small { font-size: 10px; color: #8a8678; }
   .ms-apr-fase { display: flex; align-items: center; gap: 7px; margin: 16px 0 7px; }
-  .ms-apr-fase .ms-apr-fase-nombre { font-family: 'Lora', serif; font-size: 0.95rem; color: var(--color-green-dark); }
+  .ms-apr-fase .ms-apr-fase-nombre { font-family: var(--display); font-size: 0.95rem; color: var(--color-green-dark); }
   .ms-apr-fase .ms-apr-fase-sub { font-size: 10.5px; color: #8a8678; }
   .ms-apr-fase .ms-apr-fase-estado { margin-left: auto; font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
   .ms-apr-fase-estado.ok { color: var(--color-green); background: #e2ecdf; }
@@ -1198,7 +1197,7 @@
   .ms-apr-card.active { display: flex; }
   @keyframes msAprFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .ms-apr-card .ms-apr-eyebrow { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #c9a44c; font-weight: 700; margin-bottom: 10px; }
-  .ms-apr-card h2 { font-family: 'Lora', serif; font-size: 1.3rem; font-weight: 600; color: var(--color-green-dark); line-height: 1.25; margin-bottom: 14px; }
+  .ms-apr-card h2 { font-family: var(--display); font-size: 1.3rem; font-weight: 600; color: var(--color-green-dark); line-height: 1.25; margin-bottom: 14px; }
   .ms-apr-card p { font-size: 0.9rem; color: #2c3a30; margin-bottom: 10px; }
   .ms-apr-card ul { padding-left: 18px; font-size: 0.9rem; }
   .ms-apr-card li { margin-bottom: 6px; }
@@ -1227,7 +1226,7 @@
   .ms-apr-celebrate[hidden] { display: none; }
   .ms-apr-celebrate-ring { width: 70px; height: 70px; border-radius: 50%; background: #fff; color: var(--color-green-dark); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px; animation: msAprPop 0.45s cubic-bezier(.34,1.56,.64,1); }
   @keyframes msAprPop { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
-  .ms-apr-celebrate h3 { font-family: 'Lora', serif; font-size: 1.25rem; margin-bottom: 6px; }
+  .ms-apr-celebrate h3 { font-family: var(--display); font-size: 1.25rem; margin-bottom: 6px; }
   .ms-apr-celebrate p { font-size: 12.5px; opacity: 0.85; }
 
   /* ---------- desbloqueo de guía PDF ---------- */
@@ -1239,7 +1238,7 @@
   .ms-apr-pdf-card { background: #fff; border-radius: 18px; padding: 22px; text-align: center; max-width: 280px; width: 100%; }
   .ms-apr-pdf-cover { width: 100%; aspect-ratio: 3/4; border-radius: 10px; background: linear-gradient(160deg, #f6edd2, #fff); border: 1.5px solid #e7d59a; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; padding: 14px; }
   .ms-apr-pdf-ic { font-size: 30px; margin-bottom: 8px; }
-  .ms-apr-pdf-cover b { font-family: 'Lora', serif; font-size: 14px; color: #7c5f12; line-height: 1.3; }
+  .ms-apr-pdf-cover b { font-family: var(--display); font-size: 14px; color: #7c5f12; line-height: 1.3; }
   .ms-apr-pdf-card p { font-size: 12px; color: #8d978b; margin-bottom: 14px; }
   .ms-apr-pdf-dl { background: #c9a44c; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; font-family: var(--font-family); font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; }
   .ms-apr-pdf-close { margin-top: 10px; background: none; border: none; color: #8d978b; font-size: 12px; cursor: pointer; }
@@ -1271,7 +1270,7 @@
     100% { transform: scale(1); opacity: 1; }
   }
   .ms-milestone-title {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-weight: 400;
     font-size: 1.75rem;
     line-height: 1.18;
@@ -1395,7 +1394,7 @@
   }
   .ms-install-steps li + li { border-top: 1px solid #ece7d6; }
   .ms-install-step-n {
-    font-family: 'Lora', serif;
+    font-family: var(--display);
     font-style: italic;
     font-weight: 600;
     color: var(--color-green);
