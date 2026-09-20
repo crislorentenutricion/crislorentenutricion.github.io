@@ -1758,6 +1758,19 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
 }
 
 /* ========================
+   ICONOS — el diseño no lleva iconos. Se ocultan aquí; el HTML no cambia.
+   Excepciones funcionales: WhatsApp, estrellas de reseñas, hamburguesa, +/- del FAQ.
+   ======================== */
+.icon, .icon-circle, .icon-tile,
+.trust-icon, .pain-icon, .benefit-icon, .step-icon,
+.value-icon, .credential-icon, .category-icon,
+.form-promise-icon, .sg-pwa-icon,
+.logo-mark, .testimonial-avatar, .lm-check, .lm-stamp,
+.footer-social-link svg { display: none; }
+.value-item .value-icon { display: none; }
+.category-card-label { display: inline; }
+
+/* ========================
    BACKOFFICE — CALENDARIO ADHERENCIA (check-ins)
    Tokens de color idénticos a los de la PWA mi-seguimiento
    (que viven inline en src/mi-seguimiento/index.njk).
@@ -1870,17 +1883,4 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
   height: 16px;
   aspect-ratio: auto;
 }
-
-/* ========================
-   ICONOS — el diseño no lleva iconos. Se ocultan aquí; el HTML no cambia.
-   Excepciones funcionales: WhatsApp, estrellas de reseñas, hamburguesa, +/- del FAQ.
-   ======================== */
-.icon, .icon-circle, .icon-tile,
-.trust-icon, .pain-icon, .benefit-icon, .step-icon,
-.value-icon, .credential-icon, .category-icon,
-.form-promise-icon, .sg-pwa-icon,
-.logo-mark, .testimonial-avatar, .lm-check, .lm-stamp,
-.footer-social-link svg { display: none; }
-.value-item .value-icon { display: none; }
-.category-card-label { display: inline; }
 
