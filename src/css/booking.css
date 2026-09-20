@@ -6,7 +6,7 @@
   text-align: center;
 }
 .booking-preview-intro h1 {
-  font-family: 'Lora', Georgia, serif;
+  font-family: var(--display);
   color: var(--color-green-dark);
   margin-bottom: 12px;
 }
@@ -340,7 +340,7 @@
 .booking-confirm-panel h2 {
   margin: 0 0 14px;
   color: var(--color-green-dark);
-  font-family: 'Lora', Georgia, serif;
+  font-family: var(--display);
 }
 .booking-confirm-date {
   font-size: 1.1rem;
