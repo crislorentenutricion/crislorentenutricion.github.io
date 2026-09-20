@@ -1,4 +1,4 @@
-// Capa DOM del picker de valoración gratuita.
+// Capa DOM del picker de primera llamada gratuita.
 // Consume funciones puras expuestas por booking-logic.js.
 //
 // Fase 2.3: conectado al backend real vía fetch. Con `USE_REAL_BACKEND=false`
@@ -522,7 +522,7 @@
           escapeHtml(formDataObj.get('email') || '') + '</strong>.</p>';
       els.confirmSummary.innerHTML =
         '<p><strong>' + escapeHtml(formDataObj.get('nombre') || '') + '</strong>, ' +
-        'tu valoración gratuita ha quedado reservada para:</p>' +
+        'tu primera llamada gratuita ha quedado reservada para:</p>' +
         '<p class="booking-confirm-date">' +
         escapeHtml(formatPrettyDateTime(state.selectedIso, state.selectedSlot)) + '</p>' +
         linkHtml;

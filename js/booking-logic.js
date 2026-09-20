@@ -1,4 +1,4 @@
-// Funciones puras del picker de valoración gratuita.
+// Funciones puras del picker de primera llamada gratuita.
 // La capa DOM vive en booking.js (Fase 2.2). Estas funciones son testables
 // en Node — ver tests/booking-logic.test.js.
 

@@ -27,7 +27,7 @@
   // Hoy queda fuera porque ya lo cubre el bloque "Sesiones hoy" — duplicar
   // sería ruido.
   const DIAS_VENTANA_PROXIMOS = 7;
-  // Duración del slot de primera consulta (valoración gratuita). Pasado este
+  // Duración del slot de primera consulta (primera llamada gratuita). Pasado este
   // tiempo desde el inicio, la fila migra de "Sesiones hoy" a "Pendientes de
   // resolver" con botones [Dar de alta] [Descartar].
   const DURACION_VALORACION_MIN = 30;
