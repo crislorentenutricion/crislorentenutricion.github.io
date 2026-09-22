@@ -55,3 +55,15 @@ test('style.css (web pública): sin degradados, sombras ni radios', () => {
 
 test('booking.css: sin degradados, sombras ni radios', () => sinDecoracion('booking.css', read('booking.css')));
 test('lead-magnet.css: sin degradados, sombras ni radios', () => sinDecoracion('lead-magnet.css', read('lead-magnet.css')));
+
+test('marca: SVG maestros y redirección de servicios sin el verde ni las fuentes antiguas', () => {
+  const ficheros = ['src/img/brand/monogram.svg', 'src/img/brand/wordmark.svg', 'src/servicios.njk'];
+  for (const f of ficheros) {
+    const txt = fs.readFileSync(path.join(root, f), 'utf8');
+    assert.doesNotMatch(txt, /#4a7c59|#3a6347|#345840|74,\s*124,\s*89/i, `${f}: queda el verde antiguo`);
+    assert.doesNotMatch(txt, /\b(Lora|Manrope)\b|font-family:\s*system-ui/, `${f}: quedan las fuentes antiguas`);
+  }
+  for (const f of ficheros.slice(0, 2)) {
+    assert.match(fs.readFileSync(path.join(root, f), 'utf8'), /#3E4A32/, `${f}: sin el verde de marca`);
+  }
+});
