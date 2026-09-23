@@ -67,3 +67,15 @@ test('marca: SVG maestros y redirección de servicios sin el verde ni las fuente
     assert.match(fs.readFileSync(path.join(root, f), 'utf8'), /#3E4A32/, `${f}: sin el verde de marca`);
   }
 });
+
+test('marca: ninguna plantilla ni estilo de src/ usa la paleta o las fuentes antiguas', () => {
+  const antiguo = /#4a7c59|#3a6347|#345840|#1f2a23|#d4e6d9|#5a6961|#7a8a7e|#9ca395|74,\s*124,\s*89|\b(Lora|Manrope)\b/i;
+  const recorrer = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const p = path.join(dir, e.name);
+    return e.isDirectory() ? recorrer(p) : /\.(njk|html|css|svg|js|md)$/.test(e.name) ? [p] : [];
+  });
+  const conRestos = recorrer(path.join(root, 'src'))
+    .filter((f) => antiguo.test(fs.readFileSync(f, 'utf8')))
+    .map((f) => path.relative(root, f).replace(/\\/g, '/'));
+  assert.deepEqual(conRestos, [], 'quedan colores o fuentes del diseño anterior');
+});
