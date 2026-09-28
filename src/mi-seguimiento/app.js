@@ -3,11 +3,11 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 // Lógica pura (ver src/mi-seguimiento/logic.js y tests/mi-seguimiento.test.js).
 const {
-  toISO, detectarMilestone, countStreak, detectarRachaRota,
-  tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa,
+  toISO, countStreak,
+  tipDelDia, buildCalendarCells, getRevisionCtaState,
   detectPlatform, detectInAppBrowser, nombreAppEmbebida,
   esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora,
-  slugifyItem, compraStorageKey, totalItemsCompra, displayCat,
+  slugifyItem, compraStorageKey, displayCat,
   mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones,
   validateLoginForm, validateOtpCode, resolveInitialLogin,
   shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, activeTabForView, shouldCelebrarMilestone,
@@ -758,15 +758,6 @@ function saveOpcionState(menu, map) {
 
 let compraState = new Set();
 let compraTotal = 0;
-
-function getListaCompra(menu) {
-  return (menu && menu.contenido && menu.contenido.lista_compra) || {};
-}
-
-// totalItemsCompra vive en logic.js (pura, testada).
-function totalItemsCompraLocal(lista) {
-  return totalItemsCompra(lista);
-}
 
 function updateCompraMeta() {
   const prog = $('#ms-compra-progress');
