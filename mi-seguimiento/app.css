@@ -1,0 +1,1448 @@
+/* ============================================================
+   /mi-seguimiento — editorial-matutino
+   Espacio íntimo tipo diario de mañana. Sin header ni footer.
+   Reusa tokens del sitio (Jost + Cormorant Garamond + verde + papel)
+   y añade una paleta cálida sólo para esta página.
+   ============================================================ */
+
+.ms-body {
+  background:
+    radial-gradient(1100px 500px at 50% -180px, #f3eddc 0%, transparent 60%),
+    var(--color-cream);
+  color: #2d2a24;
+}
+
+.ms-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 36px 22px 72px;
+  position: relative;
+}
+
+.ms-brand {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #8a8678;
+  text-align: center;
+  letter-spacing: 0.04em;
+  margin-bottom: 18px;
+}
+.ms-brand a { color: inherit; }
+.ms-brand a:hover { color: var(--color-green); text-decoration: none; }
+
+/* ---------- decorative sprig ---------- */
+.ms-sprig {
+  width: 58px; height: 58px;
+  margin: 12px auto 28px;
+  display: block;
+  color: var(--color-green);
+  opacity: 0.8;
+}
+
+/* ============================================================
+   LOADING VIEW (boot)
+   Ramita de marca que se traza, respira y acompaña al mensaje
+   editorial. El loader nunca es "un spinner": forma parte del
+   lenguaje visual de CLN (crecimiento, pausa, cuidado).
+   ============================================================ */
+.ms-loading {
+  padding-top: 14vh;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+  animation: ms-loading-in 420ms ease-out both;
+}
+.ms-loading[hidden] { display: none; }
+.ms-loading-sprig {
+  width: 72px;
+  height: 72px;
+  color: var(--color-green);
+  transform-origin: 50% 82%;
+  animation: ms-loading-breathe 3s ease-in-out infinite 1500ms;
+}
+.ms-loading-sprig path,
+.ms-loading-sprig circle {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: ms-loading-draw 900ms cubic-bezier(.7,.2,.2,1) forwards;
+}
+.ms-loading-sprig path:nth-of-type(1) { animation-delay: 0ms; }
+.ms-loading-sprig path:nth-of-type(2) { animation-delay: 260ms; }
+.ms-loading-sprig path:nth-of-type(3) { animation-delay: 440ms; }
+.ms-loading-sprig path:nth-of-type(4) { animation-delay: 620ms; }
+.ms-loading-sprig path:nth-of-type(5) { animation-delay: 800ms; }
+.ms-loading-sprig circle { animation-delay: 1000ms; stroke-dasharray: 20; stroke-dashoffset: 20; }
+.ms-loading-msgs {
+  position: relative;
+  height: 1.6em;
+  min-width: 240px;
+  text-align: center;
+}
+.ms-loading-msg {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 1rem;
+  color: #8a8678;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  opacity: 0;
+  transform: translateY(5px);
+  transition: opacity 440ms ease, transform 440ms ease;
+}
+.ms-loading-msg.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@keyframes ms-loading-draw  { to { stroke-dashoffset: 0; } }
+@keyframes ms-loading-breathe {
+  0%, 100% { transform: scale(1);      opacity: 0.88; }
+  50%      { transform: scale(1.028);  opacity: 1; }
+}
+@keyframes ms-loading-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ============================================================
+   LOGIN VIEW
+   ============================================================ */
+.ms-login { padding-top: 4vh; }
+.ms-login-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(1.85rem, 6.2vw, 2.55rem);
+  line-height: 1.12;
+  letter-spacing: -0.012em;
+  text-align: center;
+  margin-bottom: 18px;
+  color: #2d2a24;
+}
+.ms-login-title em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--color-green);
+}
+.ms-login-intro {
+  font-size: 1rem;
+  color: #55524a;
+  max-width: 430px;
+  margin: 0 auto 44px;
+  line-height: 1.65;
+  text-align: center;
+}
+.ms-login-form {
+  max-width: 380px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ms-login-form[hidden] { display: none; }
+.ms-label {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #6b6759;
+  margin-left: 6px;
+}
+.ms-input {
+  font-family: var(--font-family);
+  font-size: 1rem;
+  padding: 15px 18px;
+  border: 1px solid #d9d3c3;
+  border-radius: 14px;
+  background: #fffefa;
+  color: #2d2a24;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.ms-input::placeholder { color: #a8a394; }
+.ms-input:focus {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px var(--color-green-tint);
+}
+.ms-submit {
+  margin-top: 6px;
+  padding: 15px 22px;
+  background: var(--color-green);
+  color: #fff;
+  border: 0;
+  border-radius: 14px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+.ms-submit:hover { background: var(--color-green-dark); }
+.ms-submit:active { transform: translateY(1px); }
+.ms-submit[disabled] { opacity: 0.6; cursor: progress; }
+
+.ms-status {
+  margin-top: 22px;
+  text-align: center;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #55524a;
+  line-height: 1.55;
+  padding: 0 12px;
+}
+.ms-status.is-ok    { color: var(--color-green-dark); }
+.ms-status.is-error { color: #a14d3a; }
+
+.ms-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 2px 6px 4px;
+  font-family: var(--display);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #6b6759;
+  cursor: pointer;
+}
+.ms-consent-box {
+  flex: 0 0 auto;
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-green);
+  cursor: pointer;
+}
+.ms-consent a {
+  color: var(--color-green);
+  text-decoration: underline;
+}
+
+.ms-login-hint {
+  margin: 4px 6px 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #8a8678;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.ms-login-foot {
+  margin-top: 44px;
+  text-align: center;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: #a29e91;
+}
+
+/* ---------- welcome-back (sesión expirada, paciente conocido) ---------- */
+.ms-welcome-back {
+  max-width: 420px;
+  margin: 0 auto 28px;
+  padding: 16px 20px;
+  background: #fdfbf4;
+  border: 1px solid #ece7d6;
+  border-radius: 16px;
+  text-align: center;
+  animation: msFade 0.45s ease both;
+}
+.ms-welcome-back-title {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 1.08rem;
+  color: #2d2a24;
+  margin: 0 0 4px;
+  line-height: 1.35;
+}
+.ms-welcome-back-title em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--color-green);
+}
+.ms-welcome-back-msg {
+  font-family: var(--display);
+  font-size: 0.9rem;
+  color: #6b6759;
+  line-height: 1.55;
+  margin: 0;
+}
+.ms-welcome-back-forget {
+  display: inline-block;
+  margin-top: 10px;
+  background: none;
+  border: 0;
+  padding: 4px 8px;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: #8a8678;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ms-welcome-back-forget:hover { color: var(--color-green); }
+
+/* ============================================================
+   AUTHED VIEW
+   ============================================================ */
+.ms-authed {
+  padding-top: 4px;
+  /* Hueco para la barra de pestañas fija inferior (+ safe area iPhone) */
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+.ms-authed.is-locked { padding-bottom: 0; }
+
+/* Estado "sin menú vigente": ocultamos acciones que rompen si no hay
+   menú aún (check-in, calendario, lista compra, PDF, revisión). La
+   paciente ve la bienvenida y el mensaje de "aún no hay menú" dentro
+   de .ms-today; el resto se activa en cuanto Cristina sube el menú. */
+.ms-authed.is-locked .ms-streak,
+.ms-authed.is-locked .ms-revision-cta,
+.ms-authed.is-locked .ms-tip,
+.ms-authed.is-locked .ms-check,
+.ms-authed.is-locked .ms-calendar,
+.ms-authed.is-locked .ms-compra,
+.ms-authed.is-locked .ms-pdf-link,
+.ms-authed.is-locked .ms-back-today { display: none !important; }
+
+.ms-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 44px;
+}
+.ms-hero-text { flex: 1; min-width: 0; }
+.ms-eyebrow {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.92rem;
+  color: #8a8678;
+  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+}
+.ms-greeting {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(1.65rem, 5.4vw, 2rem);
+  line-height: 1.12;
+  color: #2d2a24;
+}
+.ms-greeting em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--color-green);
+}
+
+/* streak — cálido, como un pequeño talismán */
+.ms-streak {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  min-width: 84px;
+  padding: 14px 12px 12px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #fff4dc 0%, #ffe2b8 100%);
+  box-shadow:
+    0 2px 14px rgba(193, 125, 60, 0.14),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+  text-align: center;
+}
+.ms-flame { width: 22px; height: 22px; color: #c86838; margin-bottom: 1px; }
+.ms-streak-num {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.75rem;
+  color: #9d4820;
+  line-height: 1;
+}
+.ms-streak-label {
+  font-size: 0.7rem;
+  color: #7a5538;
+  letter-spacing: 0.03em;
+  margin-top: 2px;
+}
+
+/* section titles — italic, delicados */
+.ms-section-title {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 1.02rem;
+  color: #8a8678;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-transform: lowercase;
+  letter-spacing: 0.01em;
+}
+.ms-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e4dfcf;
+}
+
+/* ---------- revision CTA (recordatorio de revisión mensual) ---------- */
+.ms-revision-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  margin: 0 0 28px;
+  background: #f6f1e3;
+  border: 1px solid #e4dfcf;
+  border-left: 4px solid var(--color-green);
+  border-radius: 14px;
+}
+.ms-revision-cta[hidden] { display: none; }
+.ms-revision-cta[data-state="done"] {
+  background: #eaf3ed;
+  border-left-color: var(--color-green-dark, var(--color-green));
+}
+.ms-revision-cta[data-state="urgent"] {
+  background: #f0ede0;
+  border-left-color: var(--color-green);
+}
+.ms-revision-cta-body { flex: 1 1 240px; min-width: 0; }
+.ms-revision-cta-eyebrow {
+  display: block;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: #8a8678;
+  margin-bottom: 4px;
+}
+.ms-revision-cta-msg {
+  margin: 0;
+  color: #2d2a24;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+.ms-revision-cta-btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 100px;
+  background: var(--color-green);
+  color: #fff !important;
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease-out, transform 0.15s ease-out;
+}
+.ms-revision-cta-btn[hidden] { display: none; }
+.ms-revision-cta-btn:hover {
+  background: var(--color-green-dark, #3a6447);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+/* ---------- meals (menú del día) ---------- */
+.ms-today { margin-bottom: 44px; }
+.ms-meals {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ms-meal {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 16px 20px;
+  background: #fdfbf4;
+  border: 1px solid rgba(224, 221, 212, 0.65);
+  border-radius: 14px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.ms-meal-time {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--color-green);
+  padding-top: 3px;
+  letter-spacing: 0.015em;
+}
+.ms-meal-text {
+  font-size: 0.96rem;
+  color: #3e3b34;
+  line-height: 1.55;
+}
+.ms-meal.is-skeleton .ms-meal-text {
+  color: #a8a394;
+  font-style: italic;
+}
+.ms-meal.ms-meal--swap { display: flex; align-items: center; gap: 10px; }
+.ms-meal.ms-meal--swap .ms-meal-text { flex: 1; }
+.ms-meal-swap {
+  margin-left: auto; flex: none;
+  border: 1.5px solid var(--color-green); background: transparent; color: var(--color-green);
+  font: inherit; font-size: .78rem; font-weight: 600;
+  padding: 5px 12px; border-radius: 999px; cursor: pointer; min-height: 32px;
+}
+.ms-meal-swap:hover, .ms-meal-swap:focus-visible { background: var(--color-green-muted); }
+.ms-modal-list { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 14px; }
+.ms-opcion-item {
+  text-align: left; font: inherit; font-size: .85rem; cursor: pointer;
+  border: 1.5px solid #e4e0d4; background: #fff; color: #2c3a30;
+  border-radius: 12px; padding: 12px 14px; min-height: 48px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ms-opcion-item.is-current { border-color: var(--color-green); background: var(--color-green-muted); color: var(--color-green-dark); font-weight: 600; }
+.ms-opcion-item .tick { margin-left: auto; color: var(--color-green); font-weight: 700; opacity: 0; }
+.ms-opcion-item.is-current .tick { opacity: 1; }
+
+/* ---------- tip del día ---------- */
+.ms-tip {
+  margin: -20px 4px 44px;
+  padding: 14px 18px 0;
+  border-top: 1px solid #ece7d6;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--color-green-dark);
+  text-align: center;
+}
+.ms-tip::before {
+  content: "✦ ";
+  color: #c8b98a;
+  font-style: normal;
+  margin-right: 4px;
+}
+
+/* ---------- check buttons ---------- */
+.ms-check { margin-bottom: 52px; }
+.ms-check-btns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.ms-check-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 8px 16px;
+  border: 1.5px solid #e4dfcf;
+  background: #fffefa;
+  border-radius: 18px;
+  cursor: pointer;
+  font-family: var(--font-family);
+  transition: transform 0.15s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.ms-check-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(50, 40, 20, 0.06);
+}
+.ms-check-btn:focus-visible {
+  outline: none;
+  border-color: currentColor;
+  box-shadow: 0 0 0 3px var(--color-green-tint);
+}
+.ms-check-btn.is-active {
+  border-color: currentColor;
+  background: #fdfbf4;
+}
+.ms-check-emoji {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.ms-check-ok  { color: var(--color-green); }
+.ms-check-ok  .ms-check-emoji { background: #e3efe5; }
+.ms-check-mid { color: #a37a2a; }
+.ms-check-mid .ms-check-emoji { background: #f6ebce; }
+.ms-check-no  { color: #a14d3a; }
+.ms-check-no  .ms-check-emoji { background: #f2dfd7; }
+.ms-check-label {
+  font-size: 0.84rem;
+  color: #3e3b34;
+  font-weight: 500;
+}
+
+/* ---------- calendar ---------- */
+.ms-calendar { margin-bottom: 48px; }
+.ms-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.72rem;
+  color: #a29e91;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+.ms-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 22px;
+}
+.ms-cal-cell {
+  aspect-ratio: 1 / 1;
+  border: 0;
+  border-radius: 50%;
+  padding: 0;
+  background: #efeadd;
+  display: grid;
+  place-items: center;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #8a8678;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.ms-cal-cell:not(.is-empty):hover { transform: scale(1.08); }
+.ms-cal-cell:focus-visible {
+  outline: 2px solid var(--color-green-dark);
+  outline-offset: 2px;
+}
+.ms-cal-cell.is-empty { background: transparent; color: transparent; cursor: default; pointer-events: none; }
+.ms-cal-cell.is-ok,
+.ms-cal-cell.is-mid,
+.ms-cal-cell.is-no { color: #fff; font-weight: 600; }
+.ms-cal-cell.is-ok    { background: var(--color-green); }
+.ms-cal-cell.is-mid   { background: #d9b36a; }
+.ms-cal-cell.is-no    { background: #d9a08e; }
+.ms-cal-cell.is-today {
+  box-shadow: 0 0 0 1.5px var(--color-green-dark);
+  font-weight: 700;
+}
+/* Ayer aún marcable (antes del mediodía, sin marcar): aro verde sutil. */
+.ms-cal-cell.is-pendiente {
+  box-shadow: inset 0 0 0 2px var(--color-green);
+}
+.ms-calendar-legend {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.82rem;
+  color: #8a8678;
+}
+.ms-legend-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 7px;
+  vertical-align: baseline;
+}
+.ms-legend-dot.is-ok  { background: var(--color-green); }
+.ms-legend-dot.is-mid { background: #d9b36a; }
+.ms-legend-dot.is-no  { background: #d9a08e; }
+
+/* ---------- footer ---------- */
+.ms-foot {
+  text-align: center;
+  padding-top: 12px;
+  border-top: 1px solid #e4dfcf;
+  margin-top: 24px;
+}
+.ms-signout {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: #8a8678;
+  padding: 10px 16px;
+  transition: color 0.2s ease;
+}
+.ms-signout:hover { color: var(--color-green); }
+
+/* ---------- PDF link in foot ---------- */
+.ms-pdf-link {
+  display: inline-block;
+  margin-right: 18px;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--color-green);
+  padding: 10px 2px;
+  text-decoration: none;
+}
+.ms-pdf-link:hover { text-decoration: underline; }
+
+/* ---------- check hint ---------- */
+.ms-check-hint {
+  margin: 14px 2px 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.86rem;
+  color: #8a8678;
+  text-align: center;
+  line-height: 1.55;
+}
+
+/* ---------- onboarding modal ---------- */
+.ms-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 42, 36, 0.55);
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  z-index: 50;
+  animation: msFade 0.3s ease both;
+}
+.ms-modal-backdrop[hidden] { display: none; }
+.ms-modal {
+  background: #fffdf6;
+  border-radius: 20px;
+  padding: 34px 28px 28px;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 18px 48px rgba(45, 42, 36, 0.22);
+  text-align: center;
+}
+.ms-modal-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  color: #2d2a24;
+  margin: 0 0 10px;
+}
+.ms-modal-title em { font-style: italic; font-weight: 600; color: var(--color-green); }
+.ms-modal-intro {
+  font-size: 0.96rem;
+  color: #55524a;
+  line-height: 1.6;
+  margin: 0 0 22px;
+}
+.ms-modal-list {
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 26px;
+  font-size: 0.94rem;
+  color: #3e3b34;
+  line-height: 1.55;
+}
+.ms-modal-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #ece7d6;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+.ms-modal-list li:last-child { border-bottom: 0; }
+.ms-modal-list .ms-modal-ico {
+  font-family: var(--display);
+  font-weight: 600;
+  text-align: center;
+  padding-top: 1px;
+}
+.ms-modal-list .is-ok  { color: var(--color-green); }
+.ms-modal-list .is-mid { color: #a37a2a; }
+.ms-modal-list .is-no  { color: #a14d3a; }
+.ms-modal-list .is-streak { color: #c86838; }
+.ms-modal-ok {
+  width: 100%;
+  padding: 14px 22px;
+  background: var(--color-green);
+  color: #fff;
+  border: 0;
+  border-radius: 14px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.ms-modal-ok:hover { background: var(--color-green-dark); }
+
+/* ---------- day view (reutiliza la UI de hoy) ---------- */
+.ms-back-today {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+  background: transparent;
+  color: var(--color-green);
+  border: 1.5px solid var(--color-green);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-family: var(--font-family);
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.ms-back-today:hover { background: var(--color-green); color: #fff; }
+
+#ms-authed[data-view="day"] #ms-today-label {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.35rem;
+  color: var(--color-green-dark);
+  text-transform: none;
+}
+.ms-check-status {
+  text-align: center;
+  padding: 6px 4px 0;
+}
+.ms-day-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 999px;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.ms-day-badge.is-ok  { background: var(--color-green); }
+.ms-day-badge.is-mid { background: #d9b36a; }
+.ms-day-badge.is-no  { background: #d9a08e; }
+.ms-day-msg {
+  margin: 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.96rem;
+  color: #55524a;
+  line-height: 1.55;
+}
+.ms-day-msg.is-soft { color: #8a8678; }
+
+#ms-authed[data-view="today"] .ms-back-today,
+#ms-authed[data-view="today"] .ms-check-status { display: none; }
+#ms-authed[data-view="day"] .ms-tip { display: none; }
+#ms-authed[data-view="day"]:not(.is-day-editable) .ms-check-btns,
+#ms-authed[data-view="day"]:not(.is-day-editable) .ms-check-hint { display: none; }
+#ms-authed[data-view="day"].is-day-editable .ms-check-status { display: none; }
+
+/* ============================================================
+   BARRA DE PESTAÑAS — navegación fija inferior (Hoy · Compra · Aprender)
+   La pestaña activa la decide el CSS según #ms-authed[data-view];
+   JS solo sincroniza aria-current para lectores de pantalla.
+   El nav vive FUERA de #ms-authed: la animación ms-fade-in deja un
+   transform aplicado en el contenedor y eso rompe el anclaje de
+   position:fixed (la barra scrollearía con la página y no ocuparía
+   el ancho del viewport). Su visibilidad se deriva con :has().
+   ============================================================ */
+.ms-tabbar { display: none; }
+/* Visible solo con sesión y menú vigente (mismo gating que tenía dentro) */
+body:has(#ms-authed:not([hidden]):not(.is-locked)) .ms-tabbar { display: block; }
+.ms-tabbar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  z-index: 60;
+  background: rgba(253, 251, 244, 0.94);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid #e4dfcf;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.ms-tabbar-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  display: flex;
+}
+.ms-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 9px 0 7px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-family);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: #8a8678;
+  transition: color 0.2s ease;
+}
+.ms-tab[hidden] { display: none; }
+.ms-tab svg { width: 22px; height: 22px; }
+.ms-tab:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--color-green-tint);
+  border-radius: 12px;
+}
+/* «day» pertenece a la pestaña Hoy — misma regla que activeTabForView (logic.js) */
+body:has(#ms-authed[data-view="today"]) .ms-tab[data-tab="today"],
+body:has(#ms-authed[data-view="day"]) .ms-tab[data-tab="today"],
+body:has(#ms-authed[data-view="compra"]) .ms-tab[data-tab="compra"],
+body:has(#ms-authed[data-view="aprender"]) .ms-tab[data-tab="aprender"] {
+  color: var(--color-green-dark);
+  font-weight: 600;
+}
+
+/* ============================================================
+   LISTA DE LA COMPRA — vista propia (data-view="compra")
+   Estado local: localStorage 'ms-compra-<menu_id>', sin servidor.
+   ============================================================ */
+
+/* Vista: lista de la compra */
+.ms-compra { margin-bottom: 48px; }
+.ms-compra-progress {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #8a8678;
+  text-align: center;
+  margin: -4px 0 22px;
+  line-height: 1.5;
+}
+.ms-compra-progress.is-done { color: var(--color-green-dark); }
+.ms-compra-cats {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.ms-compra-cat {
+  background: #fdfbf4;
+  border: 1px solid rgba(224, 221, 212, 0.65);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.ms-compra-cat-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  cursor: pointer;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #6b6759;
+  letter-spacing: 0.02em;
+  list-style: none;
+  user-select: none;
+}
+.ms-compra-cat-head::-webkit-details-marker { display: none; }
+.ms-compra-cat-head:focus-visible {
+  outline: 2px solid var(--color-green-dark);
+  outline-offset: -2px;
+  border-radius: 16px;
+}
+.ms-compra-cat-name { flex: 1; }
+.ms-compra-cat-count {
+  font-family: var(--font-family);
+  font-style: normal;
+  font-size: 0.76rem;
+  color: #6b6759;
+  background: #f2eedf;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0;
+}
+.ms-compra-cat-count.is-done {
+  background: #e3efe5;
+  color: var(--color-green-dark);
+}
+.ms-compra-cat-chevron {
+  display: inline-block;
+  transition: transform 0.2s ease;
+  color: #a8a394;
+  font-size: 0.72rem;
+}
+.ms-compra-cat[open] .ms-compra-cat-chevron { transform: rotate(180deg); }
+.ms-compra-items {
+  list-style: none;
+  padding: 0 6px 8px;
+  margin: 0;
+}
+.ms-compra-item {
+  border-top: 1px solid #f0ebd9;
+  transition: background 0.15s ease;
+}
+.ms-compra-item:hover { background: #faf4e2; }
+.ms-compra-item label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 48px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.96rem;
+  color: #3e3b34;
+  line-height: 1.45;
+}
+.ms-compra-item input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 22px; height: 22px;
+  margin: 0;
+  accent-color: var(--color-green);
+  cursor: pointer;
+}
+.ms-compra-item-text {
+  flex: 1;
+  transition: color 0.2s ease;
+}
+.ms-compra-item.is-done .ms-compra-item-text {
+  color: #a8a394;
+  text-decoration: line-through;
+  text-decoration-color: #c8b98a;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+}
+.ms-compra-empty {
+  padding: 28px 20px;
+  text-align: center;
+  font-family: var(--display);
+  font-style: italic;
+  color: #8a8678;
+  font-size: 0.95rem;
+  background: #fdfbf4;
+  border: 1px solid rgba(224, 221, 212, 0.65);
+  border-radius: 16px;
+}
+
+/* Acción de reiniciar — visible sólo cuando hay items marcados */
+.ms-compra-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 26px;
+}
+.ms-compra-actions[hidden] { display: none; }
+.ms-compra-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--color-green);
+  border: 1.5px solid var(--color-green);
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.ms-compra-reset:hover {
+  background: var(--color-green);
+  color: #fff;
+}
+.ms-compra-reset:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-green-tint);
+}
+.ms-compra-reset svg {
+  width: 16px; height: 16px;
+}
+
+/* Switch de vista: el bloque de "hoy" (menú, tip, check-in, calendario)
+   solo vive en las vistas today/day; cada otra vista muestra su sección. */
+#ms-authed:not([data-view="today"], [data-view="day"]) .ms-today,
+#ms-authed:not([data-view="today"], [data-view="day"]) .ms-tip,
+#ms-authed:not([data-view="today"], [data-view="day"]) .ms-check,
+#ms-authed:not([data-view="today"], [data-view="day"]) .ms-calendar { display: none; }
+.ms-compra { display: none; }
+#ms-authed[data-view="compra"] .ms-compra { display: block; }
+.ms-aprender { display: none; }
+#ms-authed[data-view="aprender"] .ms-aprender { display: block; }
+
+/* ---------- Curso «Aprender»: mapa de lecciones (portado del mockup) ---------- */
+.ms-sub { font-size: 0.82rem; color: #8a8678; margin-bottom: 16px; }
+.ms-apr-top { display: flex; gap: 9px; margin-bottom: 18px; }
+.ms-apr-stat {
+  flex: 1; background: #fff; border: 1px solid #e4dfcf; border-radius: 13px;
+  padding: 10px; text-align: center;
+}
+.ms-apr-stat b { display: block; font-family: var(--display); font-size: 1.05rem; color: var(--color-green-dark); }
+.ms-apr-stat small { font-size: 10px; color: #8a8678; }
+.ms-apr-fase { display: flex; align-items: center; gap: 7px; margin: 16px 0 7px; }
+.ms-apr-fase .ms-apr-fase-nombre { font-family: var(--display); font-size: 0.95rem; color: var(--color-green-dark); }
+.ms-apr-fase .ms-apr-fase-sub { font-size: 10.5px; color: #8a8678; }
+.ms-apr-fase .ms-apr-fase-estado { margin-left: auto; font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+.ms-apr-fase-estado.ok { color: var(--color-green); background: #e2ecdf; }
+.ms-apr-fase-estado.now { color: #a07c14; background: #f6edd2; }
+.ms-apr-fase-estado.lock { color: #8a8678; background: #eceae0; }
+.ms-apr-path { position: relative; padding-left: 34px; }
+.ms-apr-path::before { content: ""; position: absolute; left: 12px; top: 5px; bottom: 14px; width: 2px; background: #e4dfcf; }
+.ms-apr-node { position: relative; margin-bottom: 11px; cursor: pointer; }
+.ms-apr-node .ms-apr-bola {
+  position: absolute; left: -34px; top: 0; width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+  border: 3px solid var(--color-cream); transition: 0.2s;
+}
+.ms-apr-node.done .ms-apr-bola { background: var(--color-green); color: #fff; }
+.ms-apr-node.now .ms-apr-bola { background: #c9a44c; color: #fff; box-shadow: 0 0 0 5px rgba(201, 164, 76, 0.2); }
+.ms-apr-node.lock .ms-apr-bola,
+.ms-apr-node.wait .ms-apr-bola { background: #dcdfd3; color: #9aa395; }
+.ms-apr-node .ms-apr-lbl { background: #fff; border: 1px solid #e4dfcf; border-radius: 12px; padding: 10px 12px; font-size: 12.5px; transition: 0.2s; }
+.ms-apr-node.now .ms-apr-lbl { border-color: #c9a44c; font-weight: 600; }
+.ms-apr-node.lock .ms-apr-lbl,
+.ms-apr-node.wait .ms-apr-lbl { color: #8d978b; background: #faf8f1; cursor: default; }
+.ms-apr-node .ms-apr-lbl small { display: block; font-size: 10px; color: #8a8678; font-weight: 400; }
+.ms-apr-node.premio .ms-apr-lbl { background: #f6edd2; border-color: #e7d59a; color: #7c5f12; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.ms-apr-node.premio.lock .ms-apr-lbl { background: #faf8f1; border-color: #e4dfcf; color: #8a8678; }
+.ms-apr-node.premio .ms-apr-bola { background: #c9a44c; color: #fff; }
+.ms-apr-dl { margin-left: auto; font-size: 10px; background: #c9a44c; color: #fff; padding: 3px 9px; border-radius: 999px; font-weight: 700; }
+
+/* ---------- reto de la semana ---------- */
+.ms-apr-reto-card { background: #fff; border: 1.5px solid #c9a44c; border-radius: 14px; padding: 15px; margin-bottom: 18px; }
+.ms-apr-reto-eyebrow { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #a07c14; font-weight: 700; margin-bottom: 8px; }
+.ms-apr-reto-card p { font-size: 0.9rem; color: #2c3a30; margin-bottom: 12px; }
+.ms-apr-reto-check { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #2c3a30; margin-bottom: 10px; cursor: pointer; }
+.ms-apr-reto-check input { accent-color: var(--color-green); width: 17px; height: 17px; cursor: pointer; }
+#ms-apr-reto-nota { width: 100%; border: 1px solid #e4dfcf; border-radius: 10px; font-family: var(--font-family); font-size: 0.85rem; resize: vertical; min-height: 52px; padding: 9px 11px; background: #faf8f1; margin-bottom: 10px; }
+#ms-apr-reto-nota:focus { outline: none; border-color: var(--color-green); }
+.ms-apr-reto-btn { background: var(--color-green); color: #fff; border: none; border-radius: 12px; padding: 10px 16px; font-family: var(--font-family); font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+
+/* ---------- reproductor de lección (overlay a pantalla completa) ---------- */
+.ms-apr-player {
+  position: fixed; inset: 0; z-index: 70; background: var(--color-cream, #f3f1e8);
+  display: flex; flex-direction: column; padding: 26px 20px 24px;
+  overflow: hidden;
+}
+.ms-apr-player[hidden] { display: none; }
+.ms-apr-player-top { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+.ms-apr-player-x { background: none; border: none; color: #8d978b; font-size: 22px; line-height: 1; cursor: pointer; padding: 2px 6px; }
+.ms-apr-segs { flex: 1; display: flex; gap: 4px; }
+.ms-apr-seg { flex: 1; height: 4px; border-radius: 3px; background: #dedad0; overflow: hidden; }
+.ms-apr-seg i { display: block; height: 100%; width: 0%; background: var(--color-green); transition: width 0.2s; }
+.ms-apr-seg.done i { width: 100%; }
+.ms-apr-seg.now i { width: 100%; background: #c9a44c; }
+
+.ms-apr-player-body { flex: 1; display: flex; flex-direction: column; position: relative; overflow-y: auto; }
+.ms-apr-card { position: absolute; inset: 0; display: none; flex-direction: column; justify-content: center; animation: msAprFadeIn 0.25s ease; }
+.ms-apr-card.active { display: flex; }
+@keyframes msAprFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.ms-apr-card .ms-apr-eyebrow { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: #c9a44c; font-weight: 700; margin-bottom: 10px; }
+.ms-apr-card h2 { font-family: var(--display); font-size: 1.3rem; font-weight: 600; color: var(--color-green-dark); line-height: 1.25; margin-bottom: 14px; }
+.ms-apr-card p { font-size: 0.9rem; color: #2c3a30; margin-bottom: 10px; }
+.ms-apr-card ul { padding-left: 18px; font-size: 0.9rem; }
+.ms-apr-card li { margin-bottom: 6px; }
+.ms-apr-card b { color: var(--color-green-dark); }
+.ms-apr-card-img { width: 100%; max-width: 280px; display: block; margin: 0 auto 14px; border-radius: 14px; }
+
+.ms-apr-player-nav { display: flex; gap: 9px; align-items: center; margin-top: 14px; }
+.ms-apr-btn-prev { background: none; border: none; color: #8d978b; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 10px 4px; visibility: hidden; }
+.ms-apr-btn-next { flex: 1; background: var(--color-green); color: #fff; border: none; border-radius: 14px; padding: 13px; font-family: var(--font-family); font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.ms-apr-btn-next:disabled { background: #c7cec4; cursor: default; }
+
+.ms-apr-action-box { background: #fff; border: 1.5px solid #c9a44c; border-radius: 14px; padding: 13px; margin-top: 6px; }
+.ms-apr-action-box textarea { width: 100%; border: none; font-family: var(--font-family); font-size: 0.85rem; resize: none; height: 56px; background: transparent; }
+.ms-apr-action-box textarea:focus { outline: none; }
+.ms-apr-action-done { display: flex; align-items: center; gap: 9px; background: #fff; border: 1.5px solid #e4dfcf; border-radius: 14px; padding: 13px; margin-top: 6px; cursor: pointer; }
+.ms-apr-action-done .ms-apr-action-box-check { width: 20px; height: 20px; border-radius: 7px; border: 2px solid #cfd6cc; flex: none; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+.ms-apr-action-done.on { border-color: var(--color-green); background: #e2ecdf; }
+.ms-apr-action-done.on .ms-apr-action-box-check { background: var(--color-green); border-color: var(--color-green); }
+
+/* ---------- celebración ---------- */
+.ms-apr-celebrate {
+  position: fixed; inset: 0; z-index: 71; background: var(--color-green-dark);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: #fff; text-align: center; padding: 20px;
+}
+.ms-apr-celebrate[hidden] { display: none; }
+.ms-apr-celebrate-ring { width: 70px; height: 70px; border-radius: 50%; background: #fff; color: var(--color-green-dark); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px; animation: msAprPop 0.45s cubic-bezier(.34,1.56,.64,1); }
+@keyframes msAprPop { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+.ms-apr-celebrate h3 { font-family: var(--display); font-size: 1.25rem; margin-bottom: 6px; }
+.ms-apr-celebrate p { font-size: 12.5px; opacity: 0.85; }
+
+/* ---------- desbloqueo de guía PDF ---------- */
+.ms-apr-pdf-modal {
+  position: fixed; inset: 0; z-index: 72; background: rgba(20, 30, 24, 0.45);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.ms-apr-pdf-modal[hidden] { display: none; }
+.ms-apr-pdf-card { background: #fff; border-radius: 18px; padding: 22px; text-align: center; max-width: 280px; width: 100%; }
+.ms-apr-pdf-cover { width: 100%; aspect-ratio: 3/4; border-radius: 10px; background: linear-gradient(160deg, #f6edd2, #fff); border: 1.5px solid #e7d59a; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; padding: 14px; }
+.ms-apr-pdf-ic { font-size: 30px; margin-bottom: 8px; }
+.ms-apr-pdf-cover b { font-family: var(--display); font-size: 14px; color: #7c5f12; line-height: 1.3; }
+.ms-apr-pdf-card p { font-size: 12px; color: #8d978b; margin-bottom: 14px; }
+.ms-apr-pdf-dl { background: #c9a44c; color: #fff; border: none; border-radius: 12px; padding: 11px 16px; font-family: var(--font-family); font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; }
+.ms-apr-pdf-close { margin-top: 10px; background: none; border: none; color: #8d978b; font-size: 12px; cursor: pointer; }
+
+/* ---------- scroll lock mientras hay modal abierto ---------- */
+body:has(.ms-modal-backdrop:not([hidden])),
+body:has(.ms-apr-player:not([hidden])),
+body:has(.ms-apr-celebrate:not([hidden])),
+body:has(.ms-apr-pdf-modal:not([hidden])) { overflow: hidden; }
+
+/* ---------- milestone celebration ---------- */
+.ms-milestone { z-index: 55; }
+.ms-milestone .ms-modal {
+  padding: 44px 30px 30px;
+  background:
+    radial-gradient(600px 240px at 50% -80px, #fff4dc 0%, transparent 70%),
+    #fffdf6;
+}
+.ms-milestone-emoji {
+  font-size: 4.8rem;
+  line-height: 1;
+  margin-bottom: 14px;
+  display: block;
+  animation: msMilestonePop 0.6s ease-out both;
+}
+@keyframes msMilestonePop {
+  0%   { transform: scale(0.4); opacity: 0; }
+  60%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.ms-milestone-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.75rem;
+  line-height: 1.18;
+  color: #2d2a24;
+  margin: 0 0 10px;
+}
+.ms-milestone-title em {
+  font-style: italic;
+  font-weight: 600;
+  color: var(--color-green);
+}
+.ms-milestone-msg {
+  font-size: 0.98rem;
+  color: #55524a;
+  line-height: 1.6;
+  margin: 0 0 26px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ms-milestone-emoji { animation: none; }
+}
+
+/* ---------- menú nuevo (one-shot por menu_id) ---------- */
+.ms-menu-nuevo-emoji {
+  font-size: 3.4rem;
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+  animation: msMenuNuevoPop 0.5s ease-out both;
+}
+@keyframes msMenuNuevoPop {
+  0%   { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ms-menu-nuevo-emoji { animation: none; }
+}
+
+/* ---------- toast ---------- */
+.ms-toast {
+  position: fixed;
+  left: 50%;
+  /* Por encima de la barra de pestañas fija */
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  background: #2d2a24;
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-family: var(--font-family);
+  line-height: 1.45;
+  max-width: calc(100% - 32px);
+  text-align: center;
+  box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+  z-index: 80;
+  animation: msToastIn 0.3s ease both;
+}
+@keyframes msToastIn {
+  from { opacity: 0; transform: translate(-50%, 12px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ---------- micro-interactions ---------- */
+.ms-fade-in { animation: msFade 0.45s ease both; }
+@keyframes msFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ms-check-btn.ms-pulsing {
+  animation: msCheckPulse 220ms ease-out;
+}
+@keyframes msCheckPulse {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ms-check-btn.ms-pulsing { animation: none; }
+}
+
+@media (max-width: 380px) {
+  .ms-meal { grid-template-columns: 76px 1fr; gap: 10px; padding: 14px 16px; }
+  .ms-check-label { font-size: 0.78rem; }
+  .ms-streak { min-width: 74px; padding: 12px 10px 10px; }
+  .ms-streak-num { font-size: 1.55rem; }
+}
+
+/* ---------- install tutorial + in-app modals (A3/A4) ---------- */
+.ms-install-illu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 18px;
+  padding: 14px 10px;
+  background: #f8f3e4;
+  border-radius: 14px;
+  color: var(--color-green-dark);
+}
+.ms-install-illu svg { display: block; }
+.ms-install-steps {
+  text-align: left;
+  margin: 0 0 22px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.95rem;
+  color: #3e3b34;
+  line-height: 1.55;
+}
+.ms-install-steps li {
+  padding: 8px 0;
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.ms-install-steps li + li { border-top: 1px solid #ece7d6; }
+.ms-install-step-n {
+  font-family: var(--display);
+  font-style: italic;
+  font-weight: 600;
+  color: var(--color-green);
+}
+.ms-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ms-modal-secondary {
+  display: inline-block;
+  padding: 10px 22px;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--color-green);
+  border: 1.5px solid var(--color-green);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease-out, color 0.15s ease-out;
+}
+.ms-modal-secondary:hover {
+  background: var(--color-green);
+  color: #fff;
+}
+
+.ms-install-hint {
+  display: none;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff8e6;
+  border: 1px solid #e8d9a8;
+  color: #5a4a1a;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+.ms-install-hint.is-visible { display: block; }
+.ms-install-hint strong { color: #3d2f0d; }
+.ms-install-hint .ms-ih-close {
+  float: right;
+  background: none;
+  border: 0;
+  color: #8a7a4a;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 0 0 8px;
+  cursor: pointer;
+}
+
+/* ============================================================
+   SKELETON UTILITIES
+   Líneas y bloques con shimmer que rellenan los placeholders
+   mientras hydrate() resuelve. Se reemplazan al poner textContent
+   / innerHTML en el render correspondiente.
+   ============================================================ */
+.sk-line {
+  display: inline-block;
+  position: relative;
+  vertical-align: middle;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #ece7d6 0%, #f6f1e2 45%, #ece7d6 90%);
+  background-size: 220% 100%;
+  animation: sk-shimmer 1.8s linear infinite;
+}
+.sk-line--eyebrow    { width: 150px; height: 0.78em; }
+.sk-line--name       { width: 104px; height: 0.82em; vertical-align: baseline; background: linear-gradient(90deg, #e6ddc6 0%, #f0e7d0 45%, #e6ddc6 90%); background-size: 220% 100%; }
+.sk-line--streak     { width: 34px;  height: 0.88em; background: linear-gradient(90deg, rgba(200,104,56,0.18) 0%, rgba(200,104,56,0.34) 45%, rgba(200,104,56,0.18) 90%); background-size: 220% 100%; border-radius: 5px; margin-top: 2px; }
+.sk-line--meal       { display: block; width: 100%; height: 0.85em; margin: 4px 0; }
+.sk-line--meal-short { width: 62%; }
+
+.ms-meal.is-skeleton .ms-meal-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+}
+
+.ms-cal-cell.is-loading {
+  background: linear-gradient(90deg, #efeadd 0%, #f6f1e2 45%, #efeadd 90%);
+  background-size: 220% 100%;
+  animation: sk-shimmer 1.8s linear infinite;
+  animation-delay: var(--sk-delay, 0ms);
+  color: transparent;
+  cursor: default;
+  pointer-events: none;
+}
+
+@keyframes sk-shimmer {
+  0%   { background-position: 120% 0; }
+  100% { background-position: -20% 0; }
+}
+
+/* ============================================================
+   BUTTON LOADING STATE (sprig mini spinner)
+   Spinner inline para .ms-submit / .ms-modal-ok en curso.
+   ============================================================ */
+.ms-btn-spinner {
+  display: none;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  vertical-align: -2px;
+  color: currentColor;
+  animation: ms-btn-rotate 900ms linear infinite;
+}
+.ms-submit.is-loading .ms-btn-spinner,
+.ms-modal-ok.is-loading .ms-btn-spinner {
+  display: inline-block;
+}
+.ms-submit.is-loading,
+.ms-modal-ok.is-loading { cursor: progress; }
+@keyframes ms-btn-rotate { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-line,
+  .ms-cal-cell.is-loading,
+  .ms-btn-spinner { animation: none; }
+  .ms-loading-sprig,
+  .ms-loading-sprig path,
+  .ms-loading-sprig circle { animation: none; stroke-dashoffset: 0; }
+  .ms-loading-msg { transition: opacity 200ms linear; transform: none; }
+}

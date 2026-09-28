@@ -1,0 +1,16 @@
+/* ======================================================
+   /mi-seguimiento/revision/ — revisión mensual. Va después de onboarding.css.
+   ====================================================== */
+
+.onb-welcome { padding: 16px 0 0; }
+.onb-welcome-foot {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .onb-step[data-step="0"] { padding-bottom: 20px; }
+  .onb-welcome-list { margin-bottom: 24px; }
+  .onb-medida h3 { grid-column: 2; }
+  .onb-medida p { grid-column: 2; }
+}
