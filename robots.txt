@@ -33,7 +33,12 @@ Allow: /
 Disallow: /mi-seguimiento/
 Disallow: /backoffice/
 
-User-agent: Claude-Web
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /mi-seguimiento/
+Disallow: /backoffice/
+
+User-agent: Claude-User
 Allow: /
 Disallow: /mi-seguimiento/
 Disallow: /backoffice/
