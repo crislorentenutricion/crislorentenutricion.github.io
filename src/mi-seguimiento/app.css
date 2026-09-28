@@ -1302,10 +1302,6 @@ body:has(.ms-apr-pdf-modal:not([hidden])) { overflow: hidden; }
   color: var(--color-green-dark);
 }
 .ms-install-illu svg { display: block; }
-.ms-install-illu-arrow {
-  color: #c8b98a;
-  font-size: 1.2rem;
-}
 .ms-install-steps {
   text-align: left;
   margin: 0 0 22px;

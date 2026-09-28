@@ -344,13 +344,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
    HERO
    ======================== */
 .hero { padding: 0; }
-.hero-home {
-  min-height: 0;
-  display: flex; align-items: center;
-  position: relative;
-  background: var(--papel);
-}
-.hero-home .container { position: relative; z-index: 1; }
 .hero-inner {
   display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center;
   padding: 60px 0;
@@ -361,9 +354,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
   display: inline-block; margin-bottom: 26px; padding: 0; background: none; border-radius: 0;
   font-size: 10px; font-weight: 400; letter-spacing: 0.24em; text-transform: uppercase; color: var(--texto-3);
 }
-.hero-image { display: block; position: relative; z-index: 1; }
-.hero-image::before, .hero-image::after { display: none; }
-.hero-image img { border-radius: 0; box-shadow: none; width: 100%; height: auto; }
 
 /* ── HERO FOOD SPLIT ── */
 .hero-food-split { background: var(--papel); min-height: 720px; display: flex; }
@@ -397,7 +387,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
 .hero-social-stars { color: var(--verde-medio); font-size: 0.85rem; letter-spacing: 2px; flex-shrink: 0; }
 .hero-social-text { color: var(--texto-3); font-size: 12px; letter-spacing: 0.04em; line-height: 1.5; }
 .hero-social-link { color: var(--texto); border-bottom: 1px solid var(--verde-medio); white-space: nowrap; }
-.hero-img-placeholder { background: var(--linea-calida); border-radius: 0; height: 400px; width: 100%; }
 
 /* ========================
    TRUST BAR
@@ -440,14 +429,12 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
 .plan-card-wrap { max-width: 520px; margin: 0 auto; }
 .plan-card { position: relative; display: flex; flex-direction: column; padding: 48px; }
 .plan-card h3 { font-size: 36px; font-weight: 300; line-height: 1.18; margin-bottom: 12px; }
-.plan-description { font-size: 14px; color: var(--texto-3); margin-bottom: 20px; line-height: 1.75; }
 .plan-price { margin-bottom: 8px; display: flex; align-items: baseline; gap: 12px; }
 .price { font-family: var(--display); font-size: 56px; font-weight: 300; color: var(--verde-oscuro); line-height: 1; letter-spacing: 0; }
 .period { font-size: 14px; color: var(--texto-3); margin: 0; }
 .plan-features { flex: 1; margin: 28px 0; display: flex; flex-direction: column; gap: 14px; }
 .plan-features li { padding: 14px 0 0; border-top: 1px solid var(--linea); font-size: 14px; color: var(--texto-2); line-height: 1.75; }
 .plan-featured { background: var(--panel); border: 1px solid var(--linea); transform: none; }
-.plans-note { text-align: center; color: var(--texto-3); font-size: 12px; letter-spacing: 0.06em; margin-top: 28px; }
 
 /* ========================
    FORM — PROMISE BAR
@@ -465,9 +452,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
 /* ========================
    QUOTE / PHILOSOPHY
    ======================== */
-.philosophy-quote { max-width: 900px; margin: 0 auto; text-align: center; border: 0; padding: 0; background: none; border-radius: 0; }
-.philosophy-quote p { font-family: var(--display); font-style: italic; font-weight: 300; font-size: clamp(24px, 3vw, 34px); line-height: 1.4; margin-bottom: 26px; color: var(--texto); }
-.philosophy-quote cite { font-family: var(--sans); font-style: normal; font-size: 10px; font-weight: 400; letter-spacing: 0.24em; text-transform: uppercase; color: var(--texto-3); display: block; }
 
 /* ========================
    TESTIMONIALS
@@ -527,8 +511,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
 /* ========================
    FORM
    ======================== */
-.form-container { max-width: 560px; margin: 0 auto; }
-.form-container h2 { margin-bottom: 12px; }
 .form-subtitle { color: var(--texto-2); margin-bottom: 40px; line-height: 1.8; font-size: 1rem; }
 .form-reassurance { text-align: center; color: var(--texto-3); font-size: 12px; letter-spacing: 0.04em; margin-top: 20px; }
 
@@ -561,7 +543,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
 .credential-list li { display: flex; flex-direction: column; gap: 2px; padding: 14px 0; border-top: 1px solid var(--linea); font-size: 14px; }
 .credential-list li strong { color: var(--texto); font-size: 15px; font-weight: 500; }
 .credential-list li span { color: var(--texto-3); }
-.credential-list li span.credential-year { font-size: 12px; letter-spacing: 0.06em; color: var(--texto-3); font-weight: 300; }
 .credential-list.plain li { padding-left: 0; color: var(--texto-2); line-height: 1.75; }
 .credential-disclaimer { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--linea); font-size: 12px; letter-spacing: 0.04em; color: var(--texto-3); line-height: 1.75; font-style: normal; }
 
@@ -771,7 +752,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
 }
 .method-step-content h3 { margin: 0 0 12px; font-size: clamp(28px, 3vw, 36px); font-weight: 300; line-height: 1.18; }
 .method-step-content p { margin: 0 0 10px; color: var(--texto-2); }
-.method-step-detail { font-size: 14px; color: var(--texto-3); font-style: normal; }
 .method-step-question { font-family: var(--display); font-style: italic; font-size: 22px; line-height: 1.45; color: var(--verde-oscuro); margin: 0 0 16px; }
 @media (max-width: 540px) { .method-step { grid-template-columns: 1fr; gap: 12px; } }
 
@@ -806,8 +786,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
   .hero-text .btn, .hero-text .hero-label { margin: 0 auto; }
   .hero-text { display: flex; flex-direction: column; align-items: center; }
   .hero-text .hero-social-proof { margin-left: auto; margin-right: auto; }
-  .hero-image { max-width: 300px; margin: 0 auto; }
-  .hero-image img { max-height: 340px; object-fit: cover; object-position: 50% 12%; }
   .problem-solution { grid-template-columns: 1fr; gap: 48px; }
   .footer-inner { grid-template-columns: 1fr; gap: 36px; }
   .about-hero-inner { grid-template-columns: 1fr; min-height: 0; text-align: left; }
@@ -825,7 +803,6 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
   .blog-grid { grid-template-columns: 1fr; gap: 40px; max-width: none; }
   .footer-nav { grid-template-columns: 1fr; }
   .article-hero-img img { height: 260px; }
-  .hero-home { min-height: auto; padding: 40px 0; }
   .hero-centered { padding-top: 48px; padding-bottom: 48px; }
   h1 { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
   h2 { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
@@ -841,12 +818,10 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
   :root { --container-padding: 20px; --card-padding: 22px; }
   .steps-grid { grid-template-columns: 1fr; }
   .steps-grid--3 { grid-template-columns: 1fr; }
-  .hero-image { max-width: 240px; }
   .blog-card-img, .blog-img-placeholder { height: 220px; }
   .form-promise { text-align: center; }
   .hero-text .btn, .section-cta .btn { width: 100%; max-width: 320px; }
   .section-subtitle { font-size: 1rem; margin-bottom: 40px; }
-  .form-container input, .form-container textarea, .form-container select { font-size: 16px; }
   table, pre { display: block; max-width: 100%; overflow-x: auto; }
 }
 
@@ -1150,13 +1125,12 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
    ICONOS — el diseño no lleva iconos. Se ocultan aquí; el HTML no cambia.
    Excepciones funcionales: WhatsApp, estrellas de reseñas, hamburguesa, +/- del FAQ.
    ======================== */
-.icon, .icon-circle, .icon-tile,
+.icon,
 .trust-icon, .pain-icon, .benefit-icon, .step-icon,
 .value-icon, .credential-icon, .category-icon,
 .form-promise-icon, .sg-pwa-icon,
 .logo-mark, .testimonial-avatar, .lm-check, .lm-stamp,
 .footer-social-link svg { display: none; }
-.category-card-label { display: inline; }
 
 /* ========================
    BACKOFFICE — CALENDARIO ADHERENCIA (check-ins)
