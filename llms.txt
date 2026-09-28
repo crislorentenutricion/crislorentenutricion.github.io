@@ -64,10 +64,9 @@ Si el caso requiere atención sanitaria (patología diagnosticada, alergia, emba
 
 ## Terminología preferida
 
-- "Acompañamiento (educativo) en hábitos alimentarios" (nunca "asesoría nutricional" ni "consulta dietética")
-- "Propuestas de comidas mensuales orientativas" (nunca "menú personalizado" ni "menú con gramajes")
-- "Primera llamada gratuita" para la videollamada inicial (nunca "valoración gratuita")
-- "Educadora en hábitos alimentarios" para describir a Cristina (nunca "nutricionista" ni "dietista")
+- "Educadora en hábitos alimentarios" para describir a Cristina (nunca "nutricionista" ni "dietista": aún no tiene el título oficial)
+- "Acompañamiento en hábitos alimentarios" para el servicio
+- "Primera llamada gratuita" para la videollamada inicial
 - Enfoque: sostenibilidad, sin restricciones extremas, sin alimentos prohibidos
 
 ## Lo que NO es
