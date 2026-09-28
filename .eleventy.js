@@ -38,8 +38,9 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/favicon-16x16.png");
   eleventyConfig.addPassthroughCopy("src/apple-touch-icon.png");
   eleventyConfig.addPassthroughCopy("src/mi-seguimiento/manifest.webmanifest");
-  eleventyConfig.addPassthroughCopy("src/mi-seguimiento/logic.js");
-  eleventyConfig.addPassthroughCopy("src/mi-seguimiento/aprender-logic.js");
+  // PWA: JS y CSS van tal cual (sin minificar): el minificador de src/css
+  // rompería calc(a + b) al quitar los espacios alrededor del +.
+  eleventyConfig.addPassthroughCopy("src/mi-seguimiento/*.{js,css}");
   // Backoffice interno — scripts del cliente (lógica pura + auth OTP).
   // El gate UX vive en auth.js; la barrera real está en las policies RLS
   // de Supabase (solo `auth.email() = cristinaEmail` puede leer pacientes).

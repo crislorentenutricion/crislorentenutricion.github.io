@@ -1,7 +1,8 @@
-// Test de wiring (lectura de fuente) para el script inline de /mi-seguimiento/.
+// Test de wiring (lectura de fuente) para el módulo principal de /mi-seguimiento/.
 //
 // La lógica pura vive en logic.js y se testea en mi-seguimiento.test.js; el
-// cableado DOM+Supabase vive inline en index.njk y no es require()-able.
+// cableado DOM+Supabase vive en app.js (ES module que importa el SDK de
+// Supabase desde CDN) y no es require()-able.
 // Igual que tracking-integration.test.js, aquí comprobamos por lectura de
 // fichero que los cables críticos siguen conectados.
 //
@@ -15,23 +16,23 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const indexNjk = fs.readFileSync(
-  path.join(__dirname, '..', 'src', 'mi-seguimiento', 'index.njk'),
-  'utf8'
-);
+const MS_DIR = path.join(__dirname, '..', 'src', 'mi-seguimiento');
+const read = (...p) => fs.readFileSync(path.join(...p), 'utf8');
+const indexNjk = read(MS_DIR, 'index.njk');
+const appJs = read(MS_DIR, 'app.js');
 
 test('re-sync tras check-in llama a loadCheckins con paciente.id', () => {
   assert.match(
-    indexNjk,
+    appJs,
     /await loadCheckins\(\s*from\s*,\s*paciente\.id\s*\)/,
     'el re-fetch tras upsertCheckin debe pasar paciente.id — sin él loadCheckins devuelve [] y la racha se repinta a 0'
   );
 });
 
-test('ninguna llamada a loadCheckins en index.njk va sin pacienteId', () => {
+test('ninguna llamada a loadCheckins en app.js va sin pacienteId', () => {
   // Excluimos la definición (fromISO, pacienteId); cualquier otra invocación
   // con un solo argumento reintroduciría el bug de racha a 0.
-  const calls = indexNjk.match(/loadCheckins\((?!fromISO)[^)]*\)/g) || [];
+  const calls = appJs.match(/loadCheckins\((?!fromISO)[^)]*\)/g) || [];
   for (const call of calls) {
     assert.ok(
       /,/.test(call),
@@ -41,8 +42,8 @@ test('ninguna llamada a loadCheckins en index.njk va sin pacienteId', () => {
 });
 
 test('renderStreak devuelve la racha (la usa maybeCelebrarMilestone tras el check-in)', () => {
-  const fn = indexNjk.match(/function renderStreak\([^)]*\)\s*\{[^{}]*\}/);
-  assert.ok(fn, 'function renderStreak debe existir en index.njk');
+  const fn = appJs.match(/function renderStreak\([^)]*\)\s*\{[^{}]*\}/);
+  assert.ok(fn, 'function renderStreak debe existir en app.js');
   assert.match(
     fn[0],
     /return n;/,
@@ -53,26 +54,26 @@ test('renderStreak devuelve la racha (la usa maybeCelebrarMilestone tras el chec
 // ---- Curso «Aprender» (Tarea 7: tarjeta, vista y navegación) ----
 
 test('mi-seguimiento carga aprender-logic.js antes del módulo principal', () => {
-  assert.match(indexNjk, /<script src="\/mi-seguimiento\/aprender-logic\.js"><\/script>/);
+  assert.match(indexNjk, /<script src="\/mi-seguimiento\/aprender-logic\.js"><\/script>[\s\S]*<script type="module" src="\/mi-seguimiento\/app\.js"><\/script>/);
 });
 
 test('la vista aprender existe y se navega con mostrarAprender', () => {
-  assert.match(indexNjk, /data-view="aprender"|'aprender'/);
-  assert.match(indexNjk, /function mostrarAprender\(\)/);
+  assert.match(appJs, /data-view="aprender"|'aprender'/);
+  assert.match(appJs, /function mostrarAprender\(\)/);
 });
 
 // ---- Curso «Aprender» (Tarea 8: loaders filtrados por paciente) ----
 
 test('los loaders del curso filtran por la paciente logueada', () => {
-  assert.match(indexNjk, /from\('curso_progreso'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
-  assert.match(indexNjk, /from\('curso_overrides'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
+  assert.match(appJs, /from\('curso_progreso'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
+  assert.match(appJs, /from\('curso_overrides'\)[\s\S]{0,200}?\.eq\('paciente_id', pacienteId\)/);
 });
 
 // ---- Curso «Aprender» (Tarea 9: reproductor de lección) ----
 
 test('completar lección hace upsert de curso_progreso con la paciente logueada', () => {
   assert.match(
-    indexNjk,
+    appJs,
     /from\('curso_progreso'\)[\s\S]{0,300}?upsert\([\s\S]{0,200}?paciente_id: paciente\.id/
   );
 });
@@ -81,7 +82,7 @@ test('completar lección hace upsert de curso_progreso con la paciente logueada'
 
 test('guardar reto actualiza curso_progreso de la paciente logueada', () => {
   assert.match(
-    indexNjk,
+    appJs,
     /from\('curso_progreso'\)[\s\S]{0,300}?\.update\([\s\S]{0,300}?\.eq\('paciente_id', paciente\.id\)/
   );
 });
@@ -96,17 +97,68 @@ test('guardar reto actualiza curso_progreso de la paciente logueada', () => {
 // que completan").
 
 test('abrirLeccion: la tarjeta soporta una imagen opcional (c.img)', () => {
-  const block = indexNjk.match(/aprCur\.cards\.forEach\(\(c, i\) => \{[\s\S]*?\}\);/);
+  const block = appJs.match(/aprCur\.cards\.forEach\(\(c, i\) => \{[\s\S]*?\}\);/);
   assert.ok(block, 'no se encontró el forEach de tarjetas en abrirLeccion');
   assert.match(block[0], /c\.img/,
     'la tarjeta debe soportar c.img — ilustración como el método del plato');
 });
 
 test('abrirLeccion: la tarjeta pinta intro antes de la lista/párrafo y foot después', () => {
-  const block = indexNjk.match(/aprCur\.cards\.forEach\(\(c, i\) => \{[\s\S]*?\}\);/);
+  const block = appJs.match(/aprCur\.cards\.forEach\(\(c, i\) => \{[\s\S]*?\}\);/);
   assert.ok(block, 'no se encontró el forEach de tarjetas en abrirLeccion');
   assert.match(block[0], /c\.intro/,
     'falta pintar c.intro — 3 tarjetas de Construcción ya lo traen en el contenido aprobado (Tarea 9 del plan)');
   assert.match(block[0], /c\.foot/,
     'falta pintar c.foot — 3 tarjetas de Construcción ya lo traen en el contenido aprobado (Tarea 9 del plan)');
+});
+
+// ---- JS y CSS en ficheros propios (no inline en las plantillas) ----
+
+const PAGINAS = {
+  'index.njk': { css: ['/mi-seguimiento/app.css'], js: ['/mi-seguimiento/app.js'] },
+  'empezar.njk': {
+    css: ['/mi-seguimiento/onboarding.css', '/mi-seguimiento/empezar.css'],
+    js: ['/mi-seguimiento/empezar.js', '/mi-seguimiento/empezar-sesion.js']
+  },
+  'revision.njk': {
+    css: ['/mi-seguimiento/onboarding.css', '/mi-seguimiento/revision.css'],
+    js: ['/mi-seguimiento/revision.js', '/mi-seguimiento/revision-sesion.js']
+  }
+};
+
+for (const [pagina, { css, js }] of Object.entries(PAGINAS)) {
+  const njk = read(MS_DIR, pagina);
+
+  test(`${pagina}: sin <style> ni <script> inline`, () => {
+    assert.doesNotMatch(njk, /<style[\s>]/, `${pagina} no debe llevar CSS inline`);
+    const inline = (njk.match(/<script(?![^>]*src=)[^>]*>/g) || []);
+    assert.deepEqual(inline, [], `${pagina} no debe llevar JS inline`);
+  });
+
+  test(`${pagina}: declara sus hojas de estilo en orden y carga sus scripts`, () => {
+    const fm = njk.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    assert.ok(fm, `${pagina}: sin frontmatter`);
+    const declaradas = [...fm[1].matchAll(/^\s+- (\S+\.css)\r?$/gm)].map((m) => m[1]);
+    assert.deepEqual(declaradas, css);
+    for (const src of js) assert.ok(njk.includes(`src="${src}"`), `${pagina}: falta ${src}`);
+  });
+
+  for (const f of [...css, ...js]) {
+    test(`${pagina}: ${f} existe y no arrastra sintaxis Nunjucks`, () => {
+      const txt = read(MS_DIR, path.basename(f));
+      assert.doesNotMatch(txt, /\{\{|\{%|\{#/, `${f} contiene sintaxis Nunjucks — no se procesa en build`);
+    });
+  }
+}
+
+test('app.njk inyecta la config de Supabase y las hojas de estilo de la página', () => {
+  const layout = read(__dirname, '..', 'src', '_includes', 'layouts', 'app.njk');
+  assert.match(layout, /window\.__MS_ENV__\s*=\s*\{[\s\S]*?supabaseUrl: '\{\{ env\.supabaseUrl \}\}'[\s\S]*?supabasePublishableKey: '\{\{ env\.supabasePublishableKey \}\}'/);
+  assert.match(layout, /\{%-? for href in styles %\}\s*<link rel="stylesheet" href="\{\{ href \}\}">/);
+});
+
+test('los scripts con sesión leen la config de window.__MS_ENV__', () => {
+  for (const f of ['app.js', 'empezar-sesion.js', 'revision-sesion.js']) {
+    assert.match(read(MS_DIR, f), /window\.__MS_ENV__/, `${f} debe leer la config de window.__MS_ENV__`);
+  }
 });

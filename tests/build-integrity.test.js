@@ -185,6 +185,23 @@ test("enlaces internos en páginas core apuntan a páginas existentes", () => {
   scan(SITE);
 });
 
+test("scripts locales (<script src>) apuntan a ficheros existentes", () => {
+  const rotos = [];
+  (function scan(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) { scan(full); continue; }
+      if (!entry.name.endsWith(".html")) continue;
+      const html = fs.readFileSync(full, "utf8");
+      for (const [, src] of html.matchAll(/<script[^>]*\ssrc="(\/[^"/][^"]*)"/g)) {
+        const clean = src.split("?")[0];
+        if (!fs.existsSync(path.join(SITE, clean))) rotos.push(`${path.relative(SITE, full)} → ${src}`);
+      }
+    }
+  })(SITE);
+  assert.deepEqual(rotos, [], "scripts locales que no existen en _site");
+});
+
 test("booking embed presente en home y 3 landings con plan correcto", () => {
   const expected = [
     { file: "index.html",                              plan: "Acompañamiento personalizado en hábitos" },

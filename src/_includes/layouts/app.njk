@@ -16,6 +16,17 @@
   <meta name="apple-mobile-web-app-title" content="{{ appleTitle }}">
   <meta name="application-name" content="{{ appleTitle }}">
   {% endif %}
+  {%- for href in styles %}
+  <link rel="stylesheet" href="{{ href }}">
+  {%- endfor %}
+  <script>
+    /* Env vars del sitio inyectadas por Eleventy en build (mismo patrón que
+       window.__BO_ENV__ del backoffice). Los scripts de la PWA las leen de aquí. */
+    window.__MS_ENV__ = {
+      supabaseUrl: '{{ env.supabaseUrl }}',
+      supabasePublishableKey: '{{ env.supabasePublishableKey }}'
+    };
+  </script>
 </head>
 <body class="ms-body">
   <main>
