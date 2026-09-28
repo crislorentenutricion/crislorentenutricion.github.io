@@ -290,3 +290,14 @@ test("robots.txt permite los crawlers de búsqueda IA que deciden citas", () => 
   }
   assert.doesNotMatch(robots, /Claude-Web/, "Claude-Web ya no existe; usar Claude-SearchBot/Claude-User");
 });
+
+test("la cita bajo el calendario de reserva es un fragmento literal de una reseña real de Google", () => {
+  const { reviews } = require("../src/_data/reviews.js");
+  const html = fs.readFileSync(path.join(SITE, "index.html"), "utf8");
+  const m = html.match(/<div class="form-mini-testimonial">\s*<p>"([^"]+)"<\/p>\s*<span>— ([^,<]+),/);
+  assert.ok(m, "falta la cita bajo el calendario");
+  const [, cita, autor] = m;
+  const review = reviews.find((r) => r.displayName === autor.trim());
+  assert.ok(review, `"${autor}" no es autor de ninguna reseña de reviews.js`);
+  assert.ok(review.displayText.includes(cita), `la cita no aparece literal en la reseña de ${autor}`);
+});

@@ -16,6 +16,15 @@ const googleProfileUrl = "https://www.google.com/search?sca_esv=ef5fb46a2a3e8e1b
 
 const reviews = [
   {
+    name: "Itziar Herrero",
+    displayName: "Itziar H.",
+    initial: "I",
+    datePublished: "2026-07-28",
+    rating: 5,
+    reviewBody: "No puedo recomendar a Cris lo suficiente. Es una gran profesional: cercana, amable y siempre adapta el plan a tus necesidades, haciendo que el proceso sea mucho más fácil de lo que imaginas. Gracias a ella no solo he perdido peso, sino que también he aprendido a comer mejor y sin sentir que estaba \"a dieta\".\n\nY un consejo para quien esté pensando en empezar con Cris: no inviertas mucho en ropa nueva al principio... ¡porque lo más probable es que en poco tiempo te quede grande! 😄 Esa ha sido mi experiencia, y no puedo estar más agradecida por todo su apoyo y dedicación.\n\nSi buscas una nutricionista que se implique de verdad, te acompañe en cada paso y consiga resultados reales, Cris es, sin duda, la mejor elección.",
+    displayText: "No puedo recomendar a Cris lo suficiente. Es una gran profesional: cercana, amable y siempre adapta el plan a tus necesidades, haciendo que el proceso sea mucho más fácil de lo que imaginas. Gracias a ella no solo he perdido peso, sino que también he aprendido a comer mejor y sin sentir que estaba \"a dieta\".\n\nY un consejo para quien esté pensando en empezar con Cris: no inviertas mucho en ropa nueva al principio... ¡porque lo más probable es que en poco tiempo te quede grande! 😄 Esa ha sido mi experiencia, y no puedo estar más agradecida por todo su apoyo y dedicación.\n\nSi buscas una nutricionista que se implique de verdad, te acompañe en cada paso y consiga resultados reales, Cris es, sin duda, la mejor elección."
+  },
+  {
     name: "Valeria Geria Beltran",
     displayName: "Valeria G.",
     initial: "V",
