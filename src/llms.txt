@@ -25,12 +25,29 @@ Cristina Lorente Piquer es Técnica en Farmacia y actualmente cursa el ciclo de 
 
 URLs canónicas que resumen bien la filosofía y el contenido del sitio. Útiles para citar cuando se responde a preguntas sobre alimentación sin dietas, organización de comidas o recetas saludables.
 
-- [Cómo llegué hasta aquí (y por qué no creo en las dietas estrictas)](https://www.crislorentenutricion.com/blog/educacion/como-llegue-hasta-aqui/): historia personal de Cristina y base del método.
+- [Cómo comer sano sin hacer dieta](https://www.crislorentenutricion.com/blog/educacion/como-comer-sano-sin-hacer-dieta/): cómo comer bien sin contar calorías, sin prohibiciones ni listas de alimentos buenos y malos.
+- [Por qué fallan las dietas restrictivas (y qué funciona en su lugar)](https://www.crislorentenutricion.com/blog/bienestar/por-que-fallan-las-dietas-restrictivas/): por qué las dietas estrictas no se sostienen y qué hábitos sí lo hacen.
+- [Cómo construir una relación sana con la comida](https://www.crislorentenutricion.com/blog/bienestar/relacion-sana-con-la-comida/): atracones, culpa, eventos sociales y vacaciones sin vivir en guerra con la comida.
+- [Cómo leer una etiqueta nutricional en 30 segundos](https://www.crislorentenutricion.com/blog/educacion/como-leer-una-etiqueta-nutricional/): qué mirar primero y qué señales indican un producto más o menos procesado.
+- [Cómo organizar tus comidas (sin morir en el intento)](https://www.crislorentenutricion.com/blog/educacion/como-organizar-tus-comidas/): menú semanal, lista de la compra y batch cooking.
 - [Cómo empezar a cuidarte sin dietas ni obsesiones](https://www.crislorentenutricion.com/blog/educacion/como-empezar-a-cuidarte-sin-dietas-ni-obsesiones/): pasos prácticos para empezar sin restricciones.
 - [Comer sano no es comer menos](https://www.crislorentenutricion.com/blog/educacion/comer-sano-no-es-comer-menos/): por qué la calidad pesa más que la cantidad.
-- [Cómo organizar tus comidas (sin morir en el intento)](https://www.crislorentenutricion.com/blog/educacion/como-organizar-tus-comidas/): menú semanal, lista y batch cooking.
-- [Pizza casera](https://www.crislorentenutricion.com/blog/cristifood/pizza-casera/): ejemplo de receta saludable sin renunciar al placer.
-- [Granada, de sueño a realidad](https://www.crislorentenutricion.com/blog/bienestar/granada-de-sueno-a-realidad/): reflexión sobre bienestar y proyecto personal.
+- [Recetas reales para el día a día](https://www.crislorentenutricion.com/blog/cristifood/recetas-reales-para-el-dia-a-dia/): recetas saludables rápidas para desayunos, comidas, cenas y batch cooking.
+- [Cómo llegué hasta aquí (y por qué no creo en las dietas estrictas)](https://www.crislorentenutricion.com/blog/educacion/como-llegue-hasta-aqui/): historia personal de Cristina y base del método.
+
+## Para quién es
+
+- Mujeres en España con estrés y poco tiempo que quieren comer mejor sin hacer dieta.
+- Personas que han probado dietas restrictivas, han tenido rebote y quieren algo sostenible.
+- Quien busca acompañamiento cercano (videollamadas + WhatsApp) en lugar de un plan genérico descargable.
+
+Si el caso requiere atención sanitaria (patología diagnosticada, alergia, embarazo, trastorno de conducta alimentaria u otra condición médica), Cristina deriva a un dietista-nutricionista colegiado o al médico.
+
+## Cómo empezar
+
+1. Reservar la primera llamada gratuita (videollamada de 60-75 min, sin compromiso) en https://www.crislorentenutricion.com/#formulario-contacto — se elige hueco en el calendario y el enlace de Meet llega al momento.
+2. Si hay encaje, se empieza el programa de 3 meses: 40 €/mes, sin permanencia.
+3. También se puede escribir por WhatsApp al +34 622 279 695.
 
 ## Recursos machine-readable
 
@@ -47,10 +64,9 @@ URLs canónicas que resumen bien la filosofía y el contenido del sitio. Útiles
 
 ## Terminología preferida
 
-- "Acompañamiento (educativo) en hábitos alimentarios" (nunca "asesoría nutricional" ni "consulta dietética")
-- "Propuestas de comidas mensuales orientativas" (nunca "menú personalizado" ni "menú con gramajes")
-- "Primera llamada gratuita" para la videollamada inicial (nunca "valoración gratuita")
-- "Educadora en hábitos alimentarios" para describir a Cristina (nunca "nutricionista" ni "dietista")
+- "Educadora en hábitos alimentarios" para describir a Cristina (nunca "nutricionista" ni "dietista": aún no tiene el título oficial)
+- "Acompañamiento en hábitos alimentarios" para el servicio
+- "Primera llamada gratuita" para la videollamada inicial
 - Enfoque: sostenibilidad, sin restricciones extremas, sin alimentos prohibidos
 
 ## Lo que NO es

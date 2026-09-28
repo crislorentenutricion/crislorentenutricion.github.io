@@ -4,14 +4,15 @@
   <meta name="theme-color" content="#3E4A32">
   <meta name="color-scheme" content="light">
   <meta name="author" content="Cristina Lorente Piquer">
-  <title>{{ title }}{% if title %} — {% endif %}Cris Lorente</title>
+  {% set _metaTitle = seoTitle or title %}
+  <title>{{ _metaTitle }}{% if _metaTitle %} — {% endif %}Cris Lorente</title>
   <meta name="description" content="{{ description }}">
   {% if noindex %}<meta name="robots" content="noindex, follow">{% endif %}
   <!-- Open Graph -->
   <meta property="og:type" content="{{ ogType or 'website' }}">
   <meta property="og:site_name" content="{{ site.name }}">
   <meta property="og:url" content="{{ site.url }}{{ page.url }}">
-  <meta property="og:title" content="{{ title }}{% if title %} — {% endif %}Cris Lorente">
+  <meta property="og:title" content="{{ _metaTitle }}{% if _metaTitle %} — {% endif %}Cris Lorente">
   <meta property="og:description" content="{{ description }}">
   {% set _ogImagePath = ogImage or site.defaultImage %}
   <meta property="og:image" content="{{ site.url }}{{ _ogImagePath }}">
@@ -30,7 +31,7 @@
   <meta property="article:publisher" content="https://www.crislorentenutricion.com/">
   {% endif %}
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{ title }}{% if title %} — {% endif %}Cris Lorente">
+  <meta name="twitter:title" content="{{ _metaTitle }}{% if _metaTitle %} — {% endif %}Cris Lorente">
   <meta name="twitter:description" content="{{ description }}">
   <meta name="twitter:image" content="{{ site.url }}{{ ogImage or site.defaultImage }}">
   <link rel="canonical" href="{{ site.url }}{{ page.url }}">
