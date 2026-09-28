@@ -162,3 +162,9 @@ test('los scripts con sesión leen la config de window.__MS_ENV__', () => {
     assert.match(read(MS_DIR, f), /window\.__MS_ENV__/, `${f} debe leer la config de window.__MS_ENV__`);
   }
 });
+
+test('revision-sesion.js saca el primer nombre con MsLogic.primerNombre (sin copia local)', () => {
+  const js = read(MS_DIR, 'revision-sesion.js');
+  assert.match(js, /MsLogic\.primerNombre\(/);
+  assert.doesNotMatch(js, /charAt\(0\)\.toUpperCase\(\)/, 'capitalización duplicada: usar MsLogic.primerNombre');
+});

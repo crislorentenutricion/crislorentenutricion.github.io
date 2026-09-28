@@ -14,6 +14,12 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   });
   window.supa = supa;
 
+  // Primer nombre en Title Case para la pantalla de gracias ('tú' si no hay).
+  // logic.js se carga antes que este módulo (ver revision.njk).
+  function nombreGracias(nombre) {
+    return window.MsLogic.primerNombre(nombre) || 'tú';
+  }
+
   // Redacción del paso 2 para pacientes de plan base (menú de opciones):
   // reescribe textContent/placeholder de los elementos ya presentes en el
   // DOM. Los `name=` de los campos no cambian — los datos siguen siendo
@@ -71,8 +77,7 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
         .eq('email', session.user.email)
         .maybeSingle();
       if (pac && pac.id) {
-        const token = String(pac.nombre || '').trim().split(/\s+/)[0] || '';
-        firstName = token ? token.charAt(0).toUpperCase() + token.slice(1).toLowerCase() : 'tú';
+        firstName = nombreGracias(pac.nombre);
 
         // Redacción del paso 2 según plan: mismo formulario para todas,
         // solo cambia el texto si el menú vigente es de plan base
@@ -171,8 +176,6 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
     if (insErr) throw insErr;
 
     // Devuelve el primer nombre capitalizado para la pantalla de gracias.
-    const token = String(pac.nombre || '').trim().split(/\s+/)[0] || '';
-    const firstName = token ? token.charAt(0).toUpperCase() + token.slice(1).toLowerCase() : 'tú';
-    return { firstName: firstName };
+    return { firstName: nombreGracias(pac.nombre) };
   };
 }
