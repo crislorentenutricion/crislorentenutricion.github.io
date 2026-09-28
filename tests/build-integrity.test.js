@@ -257,3 +257,19 @@ test("header sin dropdown Servicios y con Método como item plano", () => {
   // /seguimiento/ tampoco está en el header (sigue accesible desde footer + cta-seguimiento).
   assert.doesNotMatch(header, /href="\/seguimiento\/"/, "header NO debe enlazar /seguimiento/");
 });
+
+test("seoTitle sustituye al <title> y og:title sin tocar el H1 visible", () => {
+  const html = fs.readFileSync(path.join(SITE, "blog", "cristifood", "pizza-casera", "index.html"), "utf8");
+  const title = html.match(/<title>([^<]*)<\/title>/)[1];
+  assert.match(title, /^Pizza casera saludable/, "el <title> usa seoTitle");
+  assert.match(html, /<meta property="og:title" content="Pizza casera saludable/);
+  assert.match(html, /<h1>Pizza casera<\/h1>/, "el H1 sigue siendo el título visible");
+});
+
+test("robots.txt permite los crawlers de búsqueda IA que deciden citas", () => {
+  const robots = fs.readFileSync(path.join(SITE, "robots.txt"), "utf8");
+  for (const bot of ["OAI-SearchBot", "ChatGPT-User", "Claude-SearchBot", "Claude-User", "PerplexityBot"]) {
+    assert.match(robots, new RegExp(`User-agent: ${bot}\\r?\\nAllow: /`), `falta Allow para ${bot}`);
+  }
+  assert.doesNotMatch(robots, /Claude-Web/, "Claude-Web ya no existe; usar Claude-SearchBot/Claude-User");
+});
