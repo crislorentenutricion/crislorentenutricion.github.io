@@ -291,13 +291,12 @@ test("robots.txt permite los crawlers de búsqueda IA que deciden citas", () => 
   assert.doesNotMatch(robots, /Claude-Web/, "Claude-Web ya no existe; usar Claude-SearchBot/Claude-User");
 });
 
-test("la cita bajo el calendario de reserva es un fragmento literal de una reseña real de Google", () => {
-  const { reviews } = require("../src/_data/reviews.js");
-  const html = fs.readFileSync(path.join(SITE, "index.html"), "utf8");
-  const m = html.match(/<div class="form-mini-testimonial">\s*<p>"([^"]+)"<\/p>\s*<span>— ([^,<]+),/);
-  assert.ok(m, "falta la cita bajo el calendario");
-  const [, cita, autor] = m;
-  const review = reviews.find((r) => r.displayName === autor.trim());
-  assert.ok(review, `"${autor}" no es autor de ninguna reseña de reviews.js`);
-  assert.ok(review.displayText.includes(cita), `la cita no aparece literal en la reseña de ${autor}`);
+test("home y landing de pérdida de peso no muestran reseñas con 'nutricionista', 'dietista' ni peso perdido", () => {
+  for (const page of ["index.html", "perdida-peso-sostenible/index.html"]) {
+    const html = fs.readFileSync(path.join(SITE, page), "utf8");
+    assert.doesNotMatch(html, /form-mini-testimonial/, `${page}: cita de reseña bajo el calendario`);
+    for (const m of html.matchAll(/<(?:p|div) class="testimonial-text">([^<]*)</g)) {
+      assert.doesNotMatch(m[1], /nutricionista|dietista|kg|kilos|peso|talla/i, `${page}: reseña con texto no permitido`);
+    }
+  }
 });

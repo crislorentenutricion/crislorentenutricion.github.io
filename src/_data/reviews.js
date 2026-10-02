@@ -1,6 +1,6 @@
 // Fuente única de las reseñas Google de CLN.
-// Consumida por testimonios.njk (todas), index.njk y perdida-peso-sostenible.njk
-// (las 2 primeras). La skill /sincronizar-resenas edita este fichero al añadir
+// Consumida solo por testimonios.njk (todas). La home y la landing de pérdida de
+// peso no muestran reseñas (retiradas por la regla de identidad pública). La skill /sincronizar-resenas edita este fichero al añadir
 // una reseña nueva.
 //
 // Campos por reseña:
