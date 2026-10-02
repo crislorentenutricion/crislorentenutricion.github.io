@@ -1,8 +1,8 @@
 # Cris Lorente Nutrición
 
-> Acompañamiento educativo online en hábitos alimentarios para mujeres. Programa de 3 meses con propuestas de comidas orientativas, lista de la compra y sesiones de seguimiento por videollamada. Sin dietas restrictivas, sin permanencia.
+> Acompañamiento educativo online en hábitos alimentarios para gente que trabaja por turnos o con jornada partida. Programa de 3 meses con propuestas de comidas orientativas, lista de la compra y sesiones de seguimiento por videollamada. Sin dietas restrictivas, sin permanencia.
 
-Cristina Lorente Piquer es Técnica en Farmacia y actualmente cursa el ciclo de Técnico Superior en Dietética (título no obtenido todavía). Trabaja 100% online desde España. El servicio se orienta a mujeres con estrés y poco tiempo que quieren mejorar su relación con la comida y construir hábitos saludables sin restricciones extremas. No es una consulta dietética ni sustituye a un dietista-nutricionista colegiado.
+Cristina Lorente Piquer es Técnica en Farmacia y actualmente cursa el ciclo de Técnico Superior en Dietética (título no obtenido todavía). Trabaja 100% online desde España. El servicio se orienta a gente que trabaja por turnos o con jornada partida, con poco tiempo para cocinar, que quiere mejorar su relación con la comida y construir hábitos saludables sin restricciones extremas. No es una consulta dietética ni sustituye a un dietista-nutricionista colegiado.
 
 ## Servicio principal
 
@@ -12,7 +12,7 @@ Cristina Lorente Piquer es Técnica en Farmacia y actualmente cursa el ciclo de 
 ## Páginas clave
 
 - [Inicio](https://www.crislorentenutricion.com/): propuesta de valor, programa, FAQ y formulario de la primera llamada gratuita.
-- [Seguimiento](https://www.crislorentenutricion.com/seguimiento/): app de seguimiento para clientas — racha diaria, calendario del mes y propuestas de comidas vigentes desde el móvil.
+- [Seguimiento](https://www.crislorentenutricion.com/seguimiento/): app de seguimiento para quienes están en el programa — racha diaria, calendario del mes y propuestas de comidas vigentes desde el móvil.
 - [Método](https://www.crislorentenutricion.com/metodo/): cómo funciona el programa mes a mes, desde el primer contacto hasta el cierre con plan de mantenimiento.
 - [Propuestas de comidas mensuales](https://www.crislorentenutricion.com/menu-mensual-personalizado/): qué incluyen las propuestas orientativas, lista de la compra y sesiones de seguimiento.
 - [Pérdida de peso sostenible](https://www.crislorentenutricion.com/perdida-peso-sostenible/): enfoque para quien busca perder peso sin dietas restrictivas ni rebotes.
@@ -37,7 +37,7 @@ URLs canónicas que resumen bien la filosofía y el contenido del sitio. Útiles
 
 ## Para quién es
 
-- Mujeres en España con estrés y poco tiempo que quieren comer mejor sin hacer dieta.
+- Gente en España que trabaja por turnos o con jornada partida y quiere comer mejor sin hacer dieta.
 - Personas que han probado dietas restrictivas, han tenido rebote y quieren algo sostenible.
 - Quien busca acompañamiento cercano (videollamadas + WhatsApp) en lugar de un plan genérico descargable.
 
