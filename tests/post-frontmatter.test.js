@@ -22,7 +22,7 @@ for (const p of posts) {
 
   test(`permalink coherente en ${p.slug}`, () => {
     assert.ok(fm, "frontmatter parseado");
-    const esperado = `/blog/${p.category}/${p.slug}/`;
+    const esperado = `/blog/${p.urlCategory}/${p.slug}/`;
     assert.equal(fm.permalink, esperado, `permalink debe ser ${esperado}`);
   });
 

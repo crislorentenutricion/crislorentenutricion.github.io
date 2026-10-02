@@ -18,8 +18,8 @@ ogType: article
   "datePublished": "{{ date | fechaISO }}",
   "dateModified": "{% if dateModified %}{{ dateModified | fechaISO }}{% else %}{{ date | fechaISO }}{% endif %}",
   "inLanguage": "es-ES",
-  "articleSection": "{{ categoryLabel }}",
-  "isAccessibleForFree": true,
+{% if categoryLabel %}  "articleSection": "{{ categoryLabel }}",
+{% endif %}  "isAccessibleForFree": true,
   "thumbnailUrl": "https://www.crislorentenutricion.com/img/blog/{{ postImage }}",
   "speakable": {
     "@type": "SpeakableSpecification",
@@ -59,7 +59,7 @@ ogType: article
 <section class="section-cream article-header">
   <div class="container">
     <p class="article-back"><a href="/blog/">← Volver al blog</a></p>
-    <span class="blog-category" data-category="{{ category }}">{{ categoryLabel }}</span>
+    {% if categoryLabel %}<span class="blog-category" data-category="{{ category }}">{{ categoryLabel }}</span>{% endif %}
     <h1>{{ title }}</h1>
     <p class="article-meta">{{ date | fechaEs }} · Cris Lorente</p>
     {% if postImage %}
@@ -116,4 +116,4 @@ ogType: article
 </section>
 {% endif %}
 
-{% include "cta-valoracion.njk" %}
+{% include "cta-planificador.njk" %}

@@ -75,10 +75,10 @@ eleventyExcludeFromCollections: true
   </url>
   {%- for post in blog | ordenarPorFecha %}
   <url>
-    <loc>{{ site.url }}/blog/{{ post.category }}/{{ post.slug }}/</loc>
+    <loc>{{ site.url }}/blog/{{ post.urlCategory }}/{{ post.slug }}/</loc>
     <lastmod>{{ post.date | fechaISO }}</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>{% if post.category == "educacion" %}0.6{% else %}0.5{% endif %}</priority>
+    <priority>{% if post.urlCategory == "educacion" %}0.6{% else %}0.5{% endif %}</priority>
     <image:image>
       <image:loc>{{ site.url }}/img/blog/{{ post.image }}</image:loc>
       <image:title>{{ post.title }}</image:title>

@@ -1,4 +1,4 @@
-<a href="/blog/{{ post.category }}/{{ post.slug }}/" class="blog-card-link" data-category="{{ post.category }}">
+<a href="/blog/{{ post.urlCategory }}/{{ post.slug }}/" class="blog-card-link" data-category="{{ post.category }}">
   <article class="blog-card card">
     <div class="blog-card-img-wrap">
       {% if post.image %}
@@ -11,7 +11,7 @@
       {% endif %}
     </div>
     <div class="blog-content">
-      <span class="blog-category">{{ post.categoryLabel }}</span>
+      {% if post.categoryLabel %}<span class="blog-category">{{ post.categoryLabel }}</span>{% endif %}
       <h3>{{ post.title }}</h3>
       <p>{{ post.description }}</p>
       <span class="blog-date">{{ post.date | fechaEs }}</span>

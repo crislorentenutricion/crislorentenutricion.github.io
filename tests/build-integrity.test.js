@@ -29,7 +29,7 @@ test("páginas core generadas", () => {
 
 test("cada post de blog.json tiene HTML generado en la URL correcta", () => {
   for (const p of posts) {
-    const file = path.join(SITE, "blog", p.category, p.slug, "index.html");
+    const file = path.join(SITE, "blog", p.urlCategory, p.slug, "index.html");
     assert.ok(fs.existsSync(file), `falta HTML para ${p.slug} en ${file}`);
   }
 });
@@ -37,7 +37,7 @@ test("cada post de blog.json tiene HTML generado en la URL correcta", () => {
 test("sitemap.xml incluye todos los posts", () => {
   const xml = fs.readFileSync(path.join(SITE, "sitemap.xml"), "utf8");
   for (const p of posts) {
-    const url = `/blog/${p.category}/${p.slug}/`;
+    const url = `/blog/${p.urlCategory}/${p.slug}/`;
     assert.ok(xml.includes(url), `sitemap no contiene ${url}`);
   }
 });
@@ -73,7 +73,7 @@ test("posts con .article-content tienen ids automáticos en todos sus h2/h3", ()
   // Exige que al menos un post tenga headings para que el test aporte señal real.
   let postsConHeadings = 0;
   for (const p of posts) {
-    const html = fs.readFileSync(path.join(SITE, "blog", p.category, p.slug, "index.html"), "utf8");
+    const html = fs.readFileSync(path.join(SITE, "blog", p.urlCategory, p.slug, "index.html"), "utf8");
     const articleMatch = html.match(/<div class="article-content">([\s\S]*?)<!--\/article-content-->/);
     if (!articleMatch) continue;
     const headings = articleMatch[1].match(/<h[23][^>]*>/g) || [];
@@ -299,4 +299,34 @@ test("home y landing de pérdida de peso no muestran reseñas con 'nutricionista
       assert.doesNotMatch(m[1], /nutricionista|dietista|kg|kilos|peso|talla/i, `${page}: reseña con texto no permitido`);
     }
   }
+});
+
+test("cada post cierra con el bloque del planificador y la primera llamada como enlace secundario", () => {
+  const { blog } = { blog: require("../src/_data/blog.json") };
+  for (const p of blog) {
+    const html = fs.readFileSync(path.join(SITE, "blog", p.urlCategory, p.slug, "index.html"), "utf8");
+    assert.ok(/class="[^"]*\bpost-lm\b[^"]*"/.test(html), `${p.slug}: falta el bloque de cierre`);
+    assert.ok(/\bpost-lm\b[\s\S]*href="\/#planificador-gratis"[\s\S]*href="\/#formulario-contacto"/.test(html), `${p.slug}: planificador primero, llamada después`);
+  }
+});
+
+test("cada post tiene un único H1, meta description y muestra su categoría", () => {
+  const blog = require("../src/_data/blog.json");
+  for (const p of blog) {
+    const html = fs.readFileSync(path.join(SITE, "blog", p.urlCategory, p.slug, "index.html"), "utf8");
+    assert.equal((html.match(/<h1[ >]/g) || []).length, 1, `${p.slug}: H1 no único`);
+    assert.match(html, /<meta name="description" content="[^"]{70,}"/, `${p.slug}: sin meta description`);
+    if (p.categoryLabel) {
+      assert.ok(html.includes(`<span class="blog-category" data-category="${p.category}">${p.categoryLabel}</span>`), `${p.slug}: no muestra su categoría`);
+    } else {
+      assert.doesNotMatch(html, /<span class="blog-category"/, `${p.slug}: sin categoría no debe mostrar etiqueta`);
+    }
+  }
+});
+
+test("el listado del blog filtra por las 4 categorías nuevas", () => {
+  const html = fs.readFileSync(path.join(SITE, "blog", "index.html"), "utf8");
+  const filtros = [...html.matchAll(/class="category-card[^"]*" data-filter="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepEqual(filtros, ["organizacion-semana", "comer-sin-tiempo", "suplementos-mitos", "sobre-mi"]);
+  assert.doesNotMatch(html, /CristiFood|data-filter="(educacion|bienestar|cristifood)"/);
 });

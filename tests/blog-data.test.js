@@ -6,8 +6,17 @@ const { BLOG_JSON, POSTS_DIR, IMG_BLOG } = require("./_helpers/paths");
 
 const posts = JSON.parse(fs.readFileSync(BLOG_JSON, "utf8"));
 
-const CATEGORIAS_VALIDAS = new Set(["cristifood", "educacion", "bienestar"]);
-const CAMPOS_REQUERIDOS = ["slug", "title", "description", "category", "categoryLabel", "date", "image", "imageAlt", "featured"];
+// Categorías visibles (filtro y etiqueta). "" = post sin categoría (no encaja en ninguna).
+const CATEGORIAS = {
+  "organizacion-semana": "Organización de la semana",
+  "comer-sin-tiempo": "Comer bien sin tiempo",
+  "suplementos-mitos": "Suplementos y mitos",
+  "sobre-mi": "Sobre mí",
+  "": "",
+};
+// Segmento de URL heredado: las URLs indexadas no cambian, es independiente de la categoría.
+const URL_CATEGORIAS = new Set(["cristifood", "educacion", "bienestar"]);
+const CAMPOS_REQUERIDOS = ["slug", "title", "description", "category", "categoryLabel", "urlCategory", "date", "image", "imageAlt", "featured"];
 
 // ----------------------------------------------------------------
 // Tests globales (forma de la colección)
@@ -50,9 +59,17 @@ for (const p of posts) {
     assert.match(p.slug, /^[a-z0-9]+(-[a-z0-9]+)*$/, `slug inválido: ${p.slug}`);
   });
 
-  test(`${id}: category pertenece al set válido`, () => {
-    assert.ok(CATEGORIAS_VALIDAS.has(p.category), `categoría inválida: ${p.category}`);
+  test(`${id}: category pertenece al set válido y su etiqueta coincide`, () => {
+    assert.ok(p.category in CATEGORIAS, `categoría inválida: ${p.category}`);
+    assert.equal(p.categoryLabel, CATEGORIAS[p.category]);
   });
+
+  test(`${id}: la URL no cambia (permalink = /blog/<urlCategory>/<slug>/)`, () => {
+    assert.ok(URL_CATEGORIAS.has(p.urlCategory), `urlCategory inválida: ${p.urlCategory}`);
+    const src = fs.readFileSync(path.join(POSTS_DIR, `${p.slug}.njk`), "utf8");
+    assert.match(src, new RegExp(`^permalink: /blog/${p.urlCategory}/${p.slug}/$`, "m"));
+  });
+
 
   test(`${id}: date YYYY-MM-DD y parseable`, () => {
     assert.match(p.date, /^\d{4}-\d{2}-\d{2}$/, `fecha mal formada: ${p.date}`);

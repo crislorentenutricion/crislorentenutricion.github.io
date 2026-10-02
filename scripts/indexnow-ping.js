@@ -28,7 +28,7 @@ function postUrlFromFile(file, blog) {
   if (!m) return null;
   const slug = m[1];
   const post = blog.find(p => p.slug === slug);
-  return post ? `/blog/${post.category}/${post.slug}/` : null;
+  return post ? `/blog/${post.urlCategory}/${post.slug}/` : null;
 }
 
 function resolveUrls(files) {

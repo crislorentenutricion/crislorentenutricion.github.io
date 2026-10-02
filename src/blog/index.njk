@@ -22,10 +22,10 @@ navActive: blog
     {
       "@type": "BlogPosting",
       "headline": "{{ post.title | replace('"', '\\"') }}",
-      "url": "https://www.crislorentenutricion.com/blog/{{ post.category }}/{{ post.slug }}/",
+      "url": "https://www.crislorentenutricion.com/blog/{{ post.urlCategory }}/{{ post.slug }}/",
       "datePublished": "{{ post.date | fechaISO }}",
-      "image": "https://www.crislorentenutricion.com/img/blog/{{ post.image }}",
-      "articleSection": "{{ post.categoryLabel }}"
+      "image": "https://www.crislorentenutricion.com/img/blog/{{ post.image }}"{% if post.categoryLabel %},
+      "articleSection": "{{ post.categoryLabel }}"{% endif %}
     }{% if not loop.last %},{% endif %}
     {%- endfor -%}
   ]
@@ -56,20 +56,25 @@ navActive: blog
   <div class="container">
     <h2 class="section-title reveal">Categorías</h2>
     <div class="categories-grid">
-      <div class="category-card card reveal reveal-delay-1" data-filter="educacion" role="button" tabindex="0" aria-pressed="false">
+      <div class="category-card card reveal reveal-delay-1" data-filter="organizacion-semana" role="button" tabindex="0" aria-pressed="false">
+        <div class="category-icon">{% set iconName = "clipboard-list" %}{% include "icon.njk" %}</div>
+        <h3>Organización de la semana</h3>
+        <p>Planificación, batch cooking, compra, nevera y congelador para llegar a la semana con las comidas resueltas.</p>
+      </div>
+      <div class="category-card card reveal reveal-delay-2" data-filter="comer-sin-tiempo" role="button" tabindex="0" aria-pressed="false">
+        <div class="category-icon">{% set iconName = "clock" %}{% include "icon.njk" %}</div>
+        <h3>Comer bien sin tiempo</h3>
+        <p>Turnos, jornada partida, táper y comer fuera de casa sin complicarte.</p>
+      </div>
+      <div class="category-card card reveal reveal-delay-3" data-filter="suplementos-mitos" role="button" tabindex="0" aria-pressed="false">
         <div class="category-icon">{% set iconName = "brain" %}{% include "icon.njk" %}</div>
-        <h3>Educación</h3>
-        <p>Nutrición sin mitos. Entiende cómo funciona tu cuerpo y toma decisiones informadas.</p>
+        <h3>Suplementos y mitos</h3>
+        <p>Lo que se pregunta en la farmacia: qué es verdad, qué no y cómo leer lo que compras.</p>
       </div>
-      <div class="category-card card reveal reveal-delay-2" data-filter="cristifood" role="button" tabindex="0" aria-pressed="false">
-        <div class="category-icon">{% set iconName = "chef-hat" %}{% include "icon.njk" %}</div>
-        <h3>Recetas</h3>
-        <p>Recetas sencillas y nutritivas para comer bien sin pasarte horas en la cocina.</p>
-      </div>
-      <div class="category-card card reveal reveal-delay-3" data-filter="bienestar" role="button" tabindex="0" aria-pressed="false">
-        <div class="category-icon">{% set iconName = "leaf" %}{% include "icon.njk" %}</div>
-        <h3>Bienestar</h3>
-        <p>Estrés, sueño, hormonas, emociones. Todo lo que afecta a cómo comes y cómo te sientes.</p>
+      <div class="category-card card reveal reveal-delay-4" data-filter="sobre-mi" role="button" tabindex="0" aria-pressed="false">
+        <div class="category-icon">{% set iconName = "heart" %}{% include "icon.njk" %}</div>
+        <h3>Sobre mí</h3>
+        <p>Mi proceso y mi día a día, contados sin filtros.</p>
       </div>
     </div>
   </div>
@@ -91,9 +96,10 @@ navActive: blog
 
 <script>
   const categoryNames = {
-    educacion: 'Educación',
-    cristifood: 'Recetas',
-    bienestar: 'Bienestar'
+    'organizacion-semana': 'Organización de la semana',
+    'comer-sin-tiempo': 'Comer bien sin tiempo',
+    'suplementos-mitos': 'Suplementos y mitos',
+    'sobre-mi': 'Sobre mí'
   };
   const ROW_SIZE = 3;
   const moreWrap = document.getElementById('blog-more-wrap');

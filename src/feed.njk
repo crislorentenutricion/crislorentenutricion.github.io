@@ -24,11 +24,13 @@ eleventyExcludeFromCollections: true
   {%- for post in posts %}
   <entry>
     <title>{{ post.title }}</title>
-    <link href="{{ site.url }}/blog/{{ post.category }}/{{ post.slug }}/"/>
+    <link href="{{ site.url }}/blog/{{ post.urlCategory }}/{{ post.slug }}/"/>
     <updated>{{ post.date | fechaISO }}T00:00:00Z</updated>
     <published>{{ post.date | fechaISO }}T00:00:00Z</published>
-    <id>{{ site.url }}/blog/{{ post.category }}/{{ post.slug }}/</id>
+    <id>{{ site.url }}/blog/{{ post.urlCategory }}/{{ post.slug }}/</id>
+    {%- if post.category %}
     <category term="{{ post.category }}" label="{{ post.categoryLabel }}"/>
+    {%- endif %}
     <summary>{{ post.description }}</summary>
   </entry>
   {%- endfor %}

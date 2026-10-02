@@ -3,8 +3,8 @@ const assert = require("node:assert/strict");
 const { postUrlFromFile, resolveUrls, CORE_PAGES } = require("../scripts/indexnow-ping");
 
 const BLOG_SAMPLE = [
-  { slug: "pizza-casera", category: "cristifood" },
-  { slug: "como-llegue-hasta-aqui", category: "educacion" },
+  { slug: "pizza-casera", category: "", urlCategory: "cristifood" },
+  { slug: "como-llegue-hasta-aqui", category: "sobre-mi", urlCategory: "educacion" },
 ];
 
 test("postUrlFromFile devuelve null para ficheros fuera de posts/", () => {
