@@ -330,3 +330,12 @@ test("el listado del blog filtra por las 4 categorías nuevas", () => {
   assert.deepEqual(filtros, ["organizacion-semana", "comer-sin-tiempo", "suplementos-mitos", "sobre-mi"]);
   assert.doesNotMatch(html, /CristiFood|data-filter="(educacion|bienestar|cristifood)"/);
 });
+
+test("la home usa fullTitle como <title>, og:title y twitter:title, sin sufijo automático ni «asesoría nutricional»", () => {
+  const html = fs.readFileSync(path.join(SITE, "index.html"), "utf8");
+  const esperado = "Comer bien con turnos y táper · Cris Lorente Nutrición";
+  assert.equal(html.match(/<title>([^<]*)<\/title>/)[1], esperado);
+  assert.ok(html.includes(`<meta property="og:title" content="${esperado}">`));
+  assert.ok(html.includes(`<meta name="twitter:title" content="${esperado}">`));
+  assert.doesNotMatch(html.match(/<title>([^<]*)<\/title>/)[1], /asesor[ií]a nutricional/i);
+});
