@@ -339,3 +339,11 @@ test("la home usa fullTitle como <title>, og:title y twitter:title, sin sufijo a
   assert.ok(html.includes(`<meta name="twitter:title" content="${esperado}">`));
   assert.doesNotMatch(html.match(/<title>([^<]*)<\/title>/)[1], /asesor[ií]a nutricional/i);
 });
+
+test("el botón de WhatsApp se aplaza hasta salir del hero de la home", () => {
+  const js = fs.readFileSync(path.join(__dirname, "..", "src", "js", "main.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "src", "css", "style.css"), "utf8");
+  assert.match(js, /querySelector\('\.hero-food-split'\)[\s\S]*is-deferred[\s\S]*is-visible/);
+  assert.match(css, /\.whatsapp-btn\.is-deferred\s*\{[^}]*opacity:\s*0/);
+  assert.match(css, /\.whatsapp-btn\.is-deferred\.is-visible\s*\{[^}]*opacity:\s*1/);
+});
