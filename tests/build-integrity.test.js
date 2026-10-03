@@ -327,8 +327,8 @@ test("cada post tiene un único H1, meta description y muestra su categoría", (
 test("el listado del blog filtra por las 4 categorías nuevas", () => {
   const html = fs.readFileSync(path.join(SITE, "blog", "index.html"), "utf8");
   const filtros = [...html.matchAll(/class="category-card[^"]*" data-filter="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(filtros, ["organizacion-semana", "comer-sin-tiempo", "suplementos-mitos", "sobre-mi"]);
-  assert.doesNotMatch(html, /CristiFood|data-filter="(educacion|bienestar|cristifood)"/);
+  assert.deepEqual(filtros, ["organizacion-semana", "comer-sin-tiempo", "suplementos-mitos", "bienestar"]);
+  assert.doesNotMatch(html, /CristiFood|data-filter="(educacion|cristifood)"/);
 });
 
 test("la home usa fullTitle como <title>, og:title y twitter:title, sin sufijo automático ni «asesoría nutricional»", () => {
