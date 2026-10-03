@@ -12,7 +12,7 @@ const CATEGORIAS = {
   "comer-sin-tiempo": "Comer bien sin tiempo",
   "suplementos-mitos": "Suplementos y mitos",
   "recetas": "Recetas",
-  "sobre-mi": "Sobre mí",
+  "mi-dia-a-dia": "Mi día a día",
   "": "",
 };
 // Segmento de URL heredado: las URLs indexadas no cambian, es independiente de la categoría.

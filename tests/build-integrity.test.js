@@ -327,7 +327,7 @@ test("cada post tiene un único H1, meta description y muestra su categoría", (
 test("el listado del blog filtra por las 5 categorías", () => {
   const html = fs.readFileSync(path.join(SITE, "blog", "index.html"), "utf8");
   const filtros = [...html.matchAll(/class="category-card[^"]*" data-filter="([^"]+)"/g)].map((m) => m[1]);
-  assert.deepEqual(filtros, ["organizacion-semana", "comer-sin-tiempo", "suplementos-mitos", "recetas", "sobre-mi"]);
+  assert.deepEqual(filtros, ["organizacion-semana", "comer-sin-tiempo", "suplementos-mitos", "recetas", "mi-dia-a-dia"]);
   assert.doesNotMatch(html, /CristiFood|data-filter="(educacion|bienestar|cristifood)"/);
 });
 
