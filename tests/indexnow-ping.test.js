@@ -4,7 +4,7 @@ const { postUrlFromFile, resolveUrls, CORE_PAGES } = require("../scripts/indexno
 
 const BLOG_SAMPLE = [
   { slug: "pizza-casera", category: "", urlCategory: "cristifood" },
-  { slug: "como-llegue-hasta-aqui", category: "bienestar", urlCategory: "educacion" },
+  { slug: "como-llegue-hasta-aqui", category: "sobre-mi", urlCategory: "educacion" },
 ];
 
 test("postUrlFromFile devuelve null para ficheros fuera de posts/", () => {

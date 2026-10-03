@@ -71,10 +71,15 @@ navActive: blog
         <h3>Suplementos y mitos</h3>
         <p>Lo que se pregunta en la farmacia: qué es verdad, qué no y cómo leer lo que compras.</p>
       </div>
-      <div class="category-card card reveal reveal-delay-4" data-filter="bienestar" role="button" tabindex="0" aria-pressed="false">
+      <div class="category-card card reveal reveal-delay-4" data-filter="recetas" role="button" tabindex="0" aria-pressed="false">
+        <div class="category-icon">{% set iconName = "chef-hat" %}{% include "icon.njk" %}</div>
+        <h3>Recetas</h3>
+        <p>Platos sencillos para llevar en el táper y comer bien cada día.</p>
+      </div>
+      <div class="category-card card reveal reveal-delay-4" data-filter="sobre-mi" role="button" tabindex="0" aria-pressed="false">
         <div class="category-icon">{% set iconName = "heart" %}{% include "icon.njk" %}</div>
-        <h3>Bienestar</h3>
-        <p>Reflexiones sobre la relación con la comida, el cuerpo y cómo cuidarte sin obsesiones.</p>
+        <h3>Sobre mí</h3>
+        <p>Mi proceso y mi día a día, contados sin filtros.</p>
       </div>
     </div>
   </div>
@@ -99,7 +104,8 @@ navActive: blog
     'organizacion-semana': 'Organización de la semana',
     'comer-sin-tiempo': 'Comer bien sin tiempo',
     'suplementos-mitos': 'Suplementos y mitos',
-    'bienestar': 'Bienestar'
+    'recetas': 'Recetas',
+    'sobre-mi': 'Sobre mí'
   };
   const ROW_SIZE = 3;
   const moreWrap = document.getElementById('blog-more-wrap');
