@@ -74,3 +74,14 @@ document.querySelectorAll('.plan-btn[data-plan]').forEach(function(btn) {
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   reveals.forEach(function(el) { observer.observe(el); });
 })();
+
+// Botón flotante de WhatsApp: en la home no aparece hasta salir del hero (no compite con el CTA de reserva)
+(function() {
+  var wa = document.querySelector('.whatsapp-btn');
+  var hero = document.querySelector('.hero-food-split');
+  if (!wa || !hero || !('IntersectionObserver' in window)) return;
+  wa.classList.add('is-deferred');
+  new IntersectionObserver(function(entries) {
+    wa.classList.toggle('is-visible', !entries[0].isIntersecting);
+  }).observe(hero);
+})();

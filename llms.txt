@@ -1,25 +1,25 @@
 # Cris Lorente Nutrición
 
-> Acompañamiento educativo online en hábitos alimentarios para mujeres. Programa de 3 meses con propuestas de comidas orientativas, lista de la compra y sesiones de seguimiento por videollamada. Sin dietas restrictivas, sin permanencia.
+> Acompañamiento educativo online en hábitos alimentarios para gente que trabaja por turnos o con jornada partida. Programa de 6 meses con propuestas de comidas orientativas, lista de la compra y sesiones de seguimiento por videollamada. Sin dietas restrictivas, sin permanencia.
 
-Cristina Lorente Piquer es Técnica en Farmacia y actualmente cursa el ciclo de Técnico Superior en Dietética (título no obtenido todavía). Trabaja 100% online desde España. El servicio se orienta a mujeres con estrés y poco tiempo que quieren mejorar su relación con la comida y construir hábitos saludables sin restricciones extremas. No es una consulta dietética ni sustituye a un dietista-nutricionista colegiado.
+Cristina Lorente Piquer es Técnica en Farmacia y actualmente cursa el ciclo de Técnico Superior en Dietética (título no obtenido todavía). Trabaja 100% online desde España. El servicio se orienta a gente que trabaja por turnos o con jornada partida, con poco tiempo para cocinar, que quiere mejorar su relación con la comida y construir hábitos saludables sin restricciones extremas. No es una consulta dietética ni sustituye a un dietista-nutricionista colegiado.
 
 ## Servicio principal
 
-- **Acompañamiento personalizado en hábitos**: programa estructurado de 3 meses (Cimientos · Construcción · Integración), 6 sesiones por videollamada (la primera, de 60-75 min, gratuita), propuestas de comidas mensuales orientativas, lista de la compra orientativa, material educativo semanal en la app CLN — Mi Seguimiento, y WhatsApp directo. 40 €/mes, sin permanencia.
+- **Acompañamiento personalizado en hábitos**: programa de 6 meses, 12 sesiones de seguimiento por videollamada, cada 15 días, más la primera llamada de 60-75 minutos, que es gratuita, propuestas de comidas mensuales orientativas, lista de la compra orientativa, material educativo semanal en mi aplicación, y WhatsApp directo. 55 €/mes, sin permanencia.
 - **Primera llamada gratuita**: videollamada de 60-75 min sin compromiso para conocerse y evaluar encaje.
 
 ## Páginas clave
 
 - [Inicio](https://www.crislorentenutricion.com/): propuesta de valor, programa, FAQ y formulario de la primera llamada gratuita.
-- [Seguimiento](https://www.crislorentenutricion.com/seguimiento/): app de seguimiento para clientas — racha diaria, calendario del mes y propuestas de comidas vigentes desde el móvil.
-- [Método](https://www.crislorentenutricion.com/metodo/): cómo funciona el programa mes a mes, desde el primer contacto hasta el cierre con plan de mantenimiento.
+- [Seguimiento](https://www.crislorentenutricion.com/seguimiento/): app de seguimiento para quienes están en el programa — racha diaria, calendario del mes y propuestas de comidas vigentes desde el móvil.
+- [Método](https://www.crislorentenutricion.com/metodo/): cómo funciona el programa, desde la primera llamada hasta el cierre con plan de mantenimiento.
 - [Propuestas de comidas mensuales](https://www.crislorentenutricion.com/menu-mensual-personalizado/): qué incluyen las propuestas orientativas, lista de la compra y sesiones de seguimiento.
 - [Pérdida de peso sostenible](https://www.crislorentenutricion.com/perdida-peso-sostenible/): enfoque para quien busca perder peso sin dietas restrictivas ni rebotes.
 - [Testimonios](https://www.crislorentenutricion.com/testimonios/): reseñas reales de las personas acompañadas.
 - [Sobre mí](https://www.crislorentenutricion.com/sobre-mi/): formación y filosofía de trabajo.
 - [Preguntas frecuentes](https://www.crislorentenutricion.com/preguntas-frecuentes/): dudas sobre el programa, las propuestas de comidas, resultados, privacidad y formación.
-- [Aprende](https://www.crislorentenutricion.com/blog/): blog con 3 pilares — Educación alimentaria, CristiFood (recetas saludables) y Bienestar.
+- [Blog](https://www.crislorentenutricion.com/blog/): blog con 3 pilares — Educación alimentaria, Recetas (recetas saludables) y Bienestar.
 
 ## Artículos destacados
 
@@ -37,7 +37,7 @@ URLs canónicas que resumen bien la filosofía y el contenido del sitio. Útiles
 
 ## Para quién es
 
-- Mujeres en España con estrés y poco tiempo que quieren comer mejor sin hacer dieta.
+- Gente en España que trabaja por turnos o con jornada partida y quiere comer mejor sin hacer dieta.
 - Personas que han probado dietas restrictivas, han tenido rebote y quieren algo sostenible.
 - Quien busca acompañamiento cercano (videollamadas + WhatsApp) en lugar de un plan genérico descargable.
 
@@ -46,7 +46,7 @@ Si el caso requiere atención sanitaria (patología diagnosticada, alergia, emba
 ## Cómo empezar
 
 1. Reservar la primera llamada gratuita (videollamada de 60-75 min, sin compromiso) en https://www.crislorentenutricion.com/#formulario-contacto — se elige hueco en el calendario y el enlace de Meet llega al momento.
-2. Si hay encaje, se empieza el programa de 3 meses: 40 €/mes, sin permanencia.
+2. Si hay encaje, se empieza el programa de 6 meses: 55 €/mes, sin permanencia.
 3. También se puede escribir por WhatsApp al +34 622 279 695.
 
 ## Recursos machine-readable
@@ -60,7 +60,7 @@ Si el caso requiere atención sanitaria (patología diagnosticada, alergia, emba
 
 - Email: cristina@crislorentenutricion.com
 - WhatsApp: +34 622 279 695
-- Instagram: @cristifood_by_cris
+- Instagram: @crislorentenutricion
 
 ## Terminología preferida
 
