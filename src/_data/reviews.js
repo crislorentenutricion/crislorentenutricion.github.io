@@ -59,9 +59,13 @@ const ratingAvg = ratingSum / reviewCount;
 // Si todas son enteras y la media es entera, mostrar sin decimal ("5"); si no, 1 decimal ("4.7").
 const ratingValue = Number.isInteger(ratingAvg) ? String(ratingAvg) : ratingAvg.toFixed(1);
 
+// Reseñas aptas para home: sin 'nutricionista', 'dietista' ni peso/kilos (regla de identidad pública).
+const reviewsHome = reviews.filter(r => !/nutricionista|dietista|kg|kilos|peso|talla/i.test(r.displayText));
+
 module.exports = {
   googleProfileUrl,
   reviews,
+  reviewsHome,
   aggregateRating: {
     ratingValue,
     reviewCount,

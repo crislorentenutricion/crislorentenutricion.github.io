@@ -9,6 +9,7 @@ jsonLd: true
 preloadImage: /img/hero/food.webp
 preloadImageType: image/webp
 ---
+{% from "testimonials.njk" import testimonialsGrid %}
 
 <script type="application/ld+json">
 {
@@ -422,6 +423,15 @@ preloadImageType: image/webp
         <p>No. Las propuestas están pensadas para semanas reales: recetas rápidas, ingredientes accesibles y sin necesidad de ser chef.</p>
       </details>
     </div>
+  </div>
+</section>
+
+{# ── LO QUE DICEN DE MÍ EN GOOGLE ── #}
+<section class="section section-cream">
+  <div class="container">
+    <h2 class="section-title reveal">Lo que dicen de mí en Google</h2>
+    {{ testimonialsGrid(reviews.reviewsHome, reviews.googleProfileUrl, "testimonials-grid testimonials-grid--col1") }}
+    <p class="testimonials-note reveal">Reseñas verificadas de Google · <a href="{{ reviews.googleProfileUrl }}" target="_blank" rel="noopener">Ver todas en Google&nbsp;→</a></p>
   </div>
 </section>
 
