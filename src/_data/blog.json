@@ -286,5 +286,17 @@
     "image": "como-leer-una-etiqueta-nutricional.jpg",
     "imageAlt": "Mano sosteniendo un envase de alimento leyendo la etiqueta de información nutricional en un supermercado",
     "featured": false
+  },
+  {
+    "slug": "cuantas-comidas-al-dia",
+    "title": "Cuántas veces al día hay que comer: la verdad",
+    "description": "¿Tres, cinco o seis comidas al día? No hay un número mágico: qué dicen las recomendaciones oficiales y cómo elegir el reparto que puedes sostener.",
+    "category": "suplementos-mitos",
+    "categoryLabel": "Suplementos y mitos",
+    "urlCategory": "educacion",
+    "date": "2026-10-13",
+    "image": "cuantas-comidas-al-dia.jpg",
+    "imageAlt": "Tres platos sobre una mesa de madera clara vistos desde arriba: un bol de yogur con fruta, un plato de pollo con brócoli y quinoa, y manzana con frutos secos",
+    "featured": false
   }
 ]
