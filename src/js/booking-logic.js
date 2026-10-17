@@ -19,7 +19,7 @@ const WORKING_HOURS = {
   6: []
 };
 
-const SLOT_DURATION_MINUTES = 30;
+const SLOT_DURATION_MINUTES = 60;
 
 function buildMockBusyEvents(today) {
   const base = today instanceof Date ? today : new Date(today);
