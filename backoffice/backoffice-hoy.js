@@ -144,7 +144,7 @@
   }
 
   // Fila del bloque "Pendientes de resolver". Surge cuando una valoración
-  // (primera consulta) ya pasó su slot (+30 min desde el inicio) y no se ha
+  // (primera consulta) ya pasó su slot (+60 min desde el inicio) y no se ha
   // resuelto: ni dada de alta (no existe paciente con ese email + alta
   // posterior) ni descartada (no se ha borrado). Persiste hasta que Cristina
   // pulse uno de los dos botones — no se autopurga al día siguiente.

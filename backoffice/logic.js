@@ -30,7 +30,7 @@
   // Duración del slot de primera consulta (primera llamada gratuita). Pasado este
   // tiempo desde el inicio, la fila migra de "Sesiones hoy" a "Pendientes de
   // resolver" con botones [Dar de alta] [Descartar].
-  const DURACION_VALORACION_MIN = 30;
+  const DURACION_VALORACION_MIN = 60;
 
   // Ventana de aviso anticipado para recordatorio de pago: si la fecha esperada
   // del próximo pago cae entre hoy (incl.) y hoy + UMBRAL_AVISO_DIAS (incl.),
@@ -542,9 +542,9 @@
     // Bloque 1bis + Pendientes: las valoraciones (primera consulta, prospectos
     // pre-pago) se reparten en dos buckets según si su slot ya terminó:
     //
-    //   - Slot vigente (now < fecha + 30min) y ES de hoy → `sesionesHoy` con
+    //   - Slot vigente (now < fecha + 60min) y ES de hoy → `sesionesHoy` con
     //     badge azul "Primera consulta", sin botones (igual que antes).
-    //   - Slot pasado (now >= fecha + 30min) y SIN resolver → `pendientes`
+    //   - Slot pasado (now >= fecha + 60min) y SIN resolver → `pendientes`
     //     con botones [Dar de alta] (copy /alta-paciente) y [Descartar]
     //     (acción directa con confirm). Persiste hasta que Cristina actúe;
     //     no se autopurga al día siguiente.
