@@ -36,7 +36,7 @@ src/
 
 ## Reglas
 
-- Marca: "acompañamiento (educativo) en hábitos alimentarios" — regla dura post-reposicionamiento 2026-05-08: NUNCA "asesoría nutricional", "nutricionista", "dietista", "menú personalizado", "gramajes", "valoración gratuita" en copy público. Diccionario completo en el CLAUDE.md raíz del proyecto
+- Identidad pública: se veta el título (`nutricionista`, `dietista`, `Técnica Superior en Dietética` sin "estudiante de") y las promesas de resultado con cifras, no el vocabulario del servicio. La lista de lo vetado y lo permitido está en la «Línea de identidad pública» del CLAUDE.md raíz, y esa es la que manda
 - Legal: cambios requieren confirmación de Cristina
 - SEO: mantener title, description, ogImage en frontmatter. El sitemap.xml se genera solo desde blog.json
 - SEO: posts de recetas deben incluir JSON-LD Recipe inline. Todos los posts heredan BlogPosting + BreadcrumbList de post.njk
