@@ -216,6 +216,18 @@
     "featured": true
   },
   {
+    "slug": "granada-de-sueno-a-realidad-dia-2",
+    "title": "Granada, de sueño a realidad — Día 2",
+    "description": "Segundo día en Granada, entre la Catedral, la Alcaicería, Sierra Nevada al fondo, salmorejo en Los Manueles y vuelta al Bar Bultaco.",
+    "category": "mi-dia-a-dia",
+    "categoryLabel": "Mi día a día",
+    "urlCategory": "bienestar",
+    "date": "2026-03-12",
+    "image": "granada-dia-2.jpg",
+    "imageAlt": "Río de Granada entre árboles y barandillas con Sierra Nevada nevada al fondo bajo un cielo azul",
+    "featured": false
+  },
+  {
     "slug": "la-importancia-de-dejar-ir",
     "title": "La importancia de dejar ir lo que no es para ti",
     "description": "Soltar no siempre duele. A veces lo que hace es liberarnos. Mi experiencia dejando ir relaciones, trabajos y formas de vivir que no eran para mí.",
