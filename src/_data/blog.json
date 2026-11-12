@@ -1,5 +1,17 @@
 [
   {
+    "slug": "desayuno-tostadas-casi-todos-los-dias",
+    "title": "Desayuno tostadas casi todos los días (y está bien)",
+    "description": "Desayuno tostadas casi todos los días y no me aburro. Así las combino, qué pan uso y por qué repetir desayuno te quita una decisión de encima por la mañana.",
+    "category": "comer-sin-tiempo",
+    "categoryLabel": "Comer bien sin tiempo",
+    "urlCategory": "cristifood",
+    "date": "2026-11-12",
+    "image": "desayuno-tostadas-casi-todos-los-dias.jpg",
+    "imageAlt": "Dos tostadas con tomate y atún junto a un café con leche, vistas desde arriba sobre una mesa de madera",
+    "featured": false
+  },
+  {
     "slug": "bol-atun-huevo-cebolla-pochada",
     "title": "Bol de atún, huevo y cebolla pochada",
     "description": "Receta de bol completo con arroz, atún, huevo cocido, cebolla pochada, zanahoria y surimi. Comida equilibrada en 25 minutos, alta en proteína.",
