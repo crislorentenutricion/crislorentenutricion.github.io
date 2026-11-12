@@ -4,7 +4,7 @@
   <subtitle>Acompañamiento online en hábitos alimentarios. Artículos sobre alimentación real, salud hormonal y hábitos sostenibles.</subtitle>
   <link href="https://www.crislorentenutricion.com/feed.xml" rel="self"/>
   <link href="https://www.crislorentenutricion.com/"/>
-  <updated>2026-10-13T00:00:00Z</updated>
+  <updated>2026-11-12T00:00:00Z</updated>
   <id>https://www.crislorentenutricion.com/</id>
   <rights>© Cristina Lorente Piquer — Cris Lorente Nutrición</rights>
   <generator uri="https://www.11ty.dev/" version="3.1.2">Eleventy</generator>
@@ -15,6 +15,15 @@
     <email>cristina@crislorentenutricion.com</email>
     <uri>https://www.crislorentenutricion.com/sobre-mi/</uri>
   </author>
+  <entry>
+    <title>Desayuno tostadas casi todos los días (y está bien)</title>
+    <link href="https://www.crislorentenutricion.com/blog/cristifood/desayuno-tostadas-casi-todos-los-dias/"/>
+    <updated>2026-11-12T00:00:00Z</updated>
+    <published>2026-11-12T00:00:00Z</published>
+    <id>https://www.crislorentenutricion.com/blog/cristifood/desayuno-tostadas-casi-todos-los-dias/</id>
+    <category term="comer-sin-tiempo" label="Comer bien sin tiempo"/>
+    <summary>Desayuno tostadas casi todos los días y no me aburro. Así las combino, qué pan uso y por qué repetir desayuno te quita una decisión de encima por la mañana.</summary>
+  </entry>
   <entry>
     <title>Cuántas veces al día hay que comer: la verdad</title>
     <link href="https://www.crislorentenutricion.com/blog/educacion/cuantas-comidas-al-dia/"/>
