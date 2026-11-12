@@ -32,7 +32,7 @@
     "urlCategory": "educacion",
     "date": "2025-06-20",
     "image": "como-empezar-cuidarte.jpg",
-    "imageAlt": "Mujer preparando comida saludable en la cocina de forma relajada",
+    "imageAlt": "Cristina caminando por un sendero de montaña con su perro",
     "featured": false
   },
   {
@@ -44,7 +44,7 @@
     "urlCategory": "educacion",
     "date": "2026-03-04",
     "image": "como-llegue-hasta-aqui.jpg",
-    "imageAlt": "Cristina Lorente sonriendo, camino hacia la nutrición sin dietas estrictas",
+    "imageAlt": "Cristina bebiendo de una taza con los ojos cerrados, en calma",
     "featured": true
   },
   {
@@ -56,7 +56,7 @@
     "urlCategory": "educacion",
     "date": "2025-06-09",
     "image": "como-organizar-comidas.jpg",
-    "imageAlt": "Tuppers organizados con comidas semanales preparadas con batch cooking",
+    "imageAlt": "Táper de pollo con verduras preparado en casa, listo para comer en el coche",
     "featured": false
   },
   {
@@ -68,7 +68,7 @@
     "urlCategory": "cristifood",
     "date": "2025-05-21",
     "image": "5-ensaladas-de-verano.jpg",
-    "imageAlt": "Bol de ensalada fresca con verduras de colores y aderezo casero",
+    "imageAlt": "Ensalada completa casera con lechuga, tomate, zanahoria, atún y queso fresco",
     "featured": false
   },
   {
@@ -110,13 +110,13 @@
   {
     "slug": "pizza-casera",
     "title": "Pizza casera",
-    "description": "Masa de pizza casera desde cero: tierna por dentro, crujiente por fuera. Con base de tomate, mozzarella, queso de cabra y pollo salteado.",
+    "description": "Pizza casera hecha de principio a fin en casa, con base de nata, mozzarella, cebolla pochada, bacon y huevos cuajados en el horno.",
     "category": "recetas",
     "categoryLabel": "Recetas",
     "urlCategory": "cristifood",
     "date": "2025-11-10",
     "image": "pizza-casera.jpg",
-    "imageAlt": "Pizza casera recién horneada con mozzarella, queso de cabra y albahaca fresca",
+    "imageAlt": "Pizza casera en bandeja de horno con cebolla pochada, bacon y huevos cuajados",
     "featured": true
   },
   {
@@ -128,7 +128,7 @@
     "urlCategory": "cristifood",
     "date": "2025-06-13",
     "image": "pollo-al-horno.jpg",
-    "imageAlt": "Plato de pollo al horno dorado con arroz integral y verduras salteadas de temporada",
+    "imageAlt": "Muslo de pollo al horno con arroz, servido en un plato de casa",
     "featured": false
   },
   {
@@ -176,7 +176,7 @@
     "urlCategory": "bienestar",
     "date": "2025-06-05",
     "image": "bienestar-personal.jpg",
-    "imageAlt": "Espacio tranquilo con luz natural que transmite calma y bienestar",
+    "imageAlt": "Camino rural entre olivos en un día despejado",
     "featured": false
   },
   {
@@ -200,7 +200,7 @@
     "urlCategory": "bienestar",
     "date": "2025-10-12",
     "image": "elegir-nuestro-destino.jpg",
-    "imageAlt": "Camino abierto entre naturaleza simbolizando la elección de nuestro destino",
+    "imageAlt": "Sendero al atardecer con el cielo rosado sobre la montaña",
     "featured": false
   },
   {
@@ -236,7 +236,7 @@
     "urlCategory": "bienestar",
     "date": "2025-07-13",
     "image": "la-importancia-dejar-ir.jpg",
-    "imageAlt": "Manos soltando hojas al viento, simbolizando dejar ir lo que no es para ti",
+    "imageAlt": "Cristina de espaldas mirando el paisaje desde lo alto de una montaña",
     "featured": false
   },
   {
@@ -260,7 +260,7 @@
     "urlCategory": "cristifood",
     "date": "2026-07-22",
     "image": "recetas-reales-para-el-dia-a-dia.jpg",
-    "imageAlt": "Varios recipientes de meal prep de cristal con arroz, pollo y verduras vistos desde arriba sobre una mesa de madera clara",
+    "imageAlt": "Táper con carne y verduras sobre las rodillas, comiendo dentro del coche",
     "featured": false
   },
   {
@@ -296,7 +296,7 @@
     "urlCategory": "educacion",
     "date": "2026-09-18",
     "image": "como-leer-una-etiqueta-nutricional.jpg",
-    "imageAlt": "Mano sosteniendo un envase de alimento leyendo la etiqueta de información nutricional en un supermercado",
+    "imageAlt": "Compra de la semana en la cinta de caja del supermercado",
     "featured": false
   },
   {

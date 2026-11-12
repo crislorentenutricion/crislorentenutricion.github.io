@@ -278,8 +278,8 @@ test("header sin dropdown Servicios y con Método como item plano", () => {
 test("seoTitle sustituye al <title> y og:title sin tocar el H1 visible", () => {
   const html = fs.readFileSync(path.join(SITE, "blog", "cristifood", "pizza-casera", "index.html"), "utf8");
   const title = html.match(/<title>([^<]*)<\/title>/)[1];
-  assert.match(title, /^Pizza casera saludable/, "el <title> usa seoTitle");
-  assert.match(html, /<meta property="og:title" content="Pizza casera saludable/);
+  assert.match(title, /^Pizza casera con cebolla, bacon y huevo/, "el <title> usa seoTitle");
+  assert.match(html, /<meta property="og:title" content="Pizza casera con cebolla, bacon y huevo/);
   assert.match(html, /<h1>Pizza casera<\/h1>/, "el H1 sigue siendo el título visible");
 });
 
