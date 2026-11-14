@@ -1,7 +1,7 @@
 // Fuente única de las reseñas Google de CLN.
-// Consumida solo por testimonios.njk (todas). La home y la landing de pérdida de
-// peso no muestran reseñas (retiradas por la regla de identidad pública). La skill /sincronizar-resenas edita este fichero al añadir
-// una reseña nueva.
+// Consumida por testimonios.njk (todas, `reviews`) y por la home (`reviewsHome`, las que
+// pasan el filtro de identidad pública). La landing de pérdida de peso no muestra reseñas.
+// La skill /sincronizar-resenas edita este fichero al añadir una reseña nueva.
 //
 // Campos por reseña:
 //   - name           Nombre completo tal y como aparece en Google (autor en JSON-LD).

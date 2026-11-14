@@ -1,1 +1,3 @@
-# Cris Lorente Nutrición\n\nWeb de [Cris Lorente Nutrición](https://crislorentenutricion.github.io) — Asesoría nutricional personalizada online.\n
+# Cris Lorente Nutrición
+
+Web de [Cris Lorente Nutrición](https://www.crislorentenutricion.com) — Asesoría nutricional personalizada online.

@@ -849,15 +849,30 @@ const REPO_WORKTREE = path.resolve(
   __dirname, "..", "..", ".claude", "skills"
 );
 
+// Carpetas de `dir` con algún fichero versionado en git. null si `dir` no está
+// en un repo git o git no responde (entonces vale el listado del filesystem).
+function skillsVersionadas(dir) {
+  const { spawnSync } = require("node:child_process");
+  const r = spawnSync("git", ["-C", dir, "ls-files", "-z", "--", "."], {
+    encoding: "utf8",
+  });
+  if (r.status !== 0 || !r.stdout) return null;
+  return new Set(r.stdout.split("\0").filter(Boolean).map(p => p.split("/")[0]));
+}
+
 function skillsEnDisco() {
   for (const dir of [REPO_WORKTREE, REPO_PRINCIPAL]) {
     try {
       const entries = fs.readdirSync(dir, { withFileTypes: true });
+      const versionadas = skillsVersionadas(dir);
       return entries
         .filter(e => e.isDirectory())
         .map(e => e.name)
         // excluir skill-factory (es clone read-only, no skill activa)
-        .filter(n => n !== "skill-factory");
+        .filter(n => n !== "skill-factory")
+        // el catálogo CLN son las skills versionadas en el repo privado; las
+        // instaladas solo en local (paquetes de terceros) no cuentan
+        .filter(n => !versionadas || versionadas.has(n));
     } catch (e) {
       // probar siguiente ruta
     }

@@ -117,6 +117,14 @@ test("stub de redirect /servicios/ mantiene canonical + meta refresh", () => {
   assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
 });
 
+test("stub de redirect /revision/ lleva noindex,follow", () => {
+  // head-meta.njk lee la clave `noindex` del frontmatter (en minúsculas).
+  const file = path.join(SITE, "revision", "index.html");
+  assert.ok(fs.existsSync(file), "falta el redirect stub /revision/index.html");
+  const html = fs.readFileSync(file, "utf8");
+  assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
+});
+
 test("header tiene items planos: Inicio, Testimonios, Sobre mí, Aprende, Método y CTA", () => {
   // Tras eliminar el dropdown 'Servicios', el header tiene 5 items planos + CTA.
   // Método pasa a ser item de primer nivel, las landings SEO quedan accesibles
