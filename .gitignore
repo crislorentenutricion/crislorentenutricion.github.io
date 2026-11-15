@@ -4,6 +4,15 @@
 # Claude Code (local only)
 .claude/
 
+# Secretos y credenciales: el repo es público, un git add . accidental no debe subirlos
+.env
+.env.*
+!.env.example
+*.pem
+*client_secret*
+*service-account*.json
+*.credentials.json
+
 # 11ty output y dependencias
 _site/
 node_modules/
