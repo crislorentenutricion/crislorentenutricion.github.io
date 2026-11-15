@@ -464,8 +464,6 @@
         track('booking_submitted', { date: state.selectedIso, start: state.selectedSlot.start });
         try {
           const payload = buildBookingPayload(data, state.selectedIso, state.selectedSlot);
-          // Elección del banner de cookies: el backend solo avisa a Meta si es 'accepted'.
-          try { payload.consent = window.cln.consent.status(); } catch (_) { payload.consent = null; }
           const result = await postBooking(payload);
           if (result.ok) {
             // Una reserva ocupa un slot: el cache local del mes deja de ser
@@ -475,13 +473,11 @@
             state.step = 'confirmed';
             render();
             track('booking_confirmed', { date: state.selectedIso, start: state.selectedSlot.start, plan: (data.get('plan') || '').toString() });
-            // Dispara evento Lead a Meta Pixel + Google Ads + Amplitude.
+            // Dispara el evento Lead a Amplitude (solo si se aceptaron las cookies).
             // Valor 55 € = precio mensual del servicio (lo que vale un cliente convertido).
             try {
               if (window.cln && typeof window.cln.trackLead === 'function') {
                 window.cln.trackLead({
-                  email: (data.get('email') || '').toString(),
-                  phone: (data.get('telefono') || '').toString(),
                   plan: (data.get('plan') || '').toString(),
                   value: 55,
                   eventId: (result && result.eventId) || ''

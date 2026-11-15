@@ -5,14 +5,13 @@
 //   · booking.js llama a window.cln.trackLead(...) al confirmarse la reserva.
 //   · main.js llama a window.cln.trackInitiateCheckout(...) en click de plan-btn.
 //   · base.njk incluye consent-banner + tracking.js si hay alguna herramienta de medición configurada.
-//   · Amplitude, Session Replay, Pixel y gtag solo se cargan desde tracking.js y tras «Aceptar».
-//   · La reserva lleva al backend la elección del banner (el backend decide el envío a Meta).
+//   · Amplitude y Session Replay solo se cargan desde tracking.js y tras «Aceptar».
+//   · No queda ningún rastro de publicidad (Meta, Google Ads) en el cliente.
 //   · tracking.js expone window.cln.trackLead y window.cln.trackInitiateCheckout.
 //   · tracking.js consume window.__CLN_TRACKING__ (configurado por base.njk).
 //
-// Existe porque sin estos cables, el evento Lead NUNCA se dispara aunque
-// los IDs estén configurados. Es el "cable rojo + cable azul" del dashboard
-// de Fase 1: si se cae, no nos enteramos hasta el primer euro gastado en ads.
+// Existe porque sin estos cables, el evento Lead NUNCA llega a Amplitude aunque
+// la clave esté configurada.
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
@@ -30,9 +29,11 @@ const envJs = fs.readFileSync(path.join(root, 'src/_data/env.js'), 'utf8');
 test('booking.js llama a window.cln.trackLead tras confirmar reserva', () => {
   assert.match(
     bookingJs,
-    /window\.cln\.trackLead\s*\(\s*\{[\s\S]*email[\s\S]*telefono[\s\S]*plan[\s\S]*value[\s\S]*eventId[\s\S]*\}\s*\)/,
-    'booking.js debe invocar window.cln.trackLead con email, telefono, plan, value, eventId'
+    /window\.cln\.trackLead\s*\(\s*\{[\s\S]*plan[\s\S]*value[\s\S]*eventId[\s\S]*\}\s*\)/,
+    'booking.js debe invocar window.cln.trackLead con plan, value, eventId'
   );
+  const llamada = bookingJs.match(/window\.cln\.trackLead\s*\(\s*\{[\s\S]*?\}\s*\)/)[0];
+  assert.doesNotMatch(llamada, /email|telefono|phone/, 'trackLead no recibe datos personales');
   assert.match(
     bookingJs,
     /track\(['"]booking_confirmed['"]/,
@@ -60,26 +61,22 @@ test('tracking.js lee la configuración de window.__CLN_TRACKING__', () => {
     /window\.__CLN_TRACKING__/,
     'tracking.js debe consumir la config inyectada por base.njk'
   );
-  assert.match(trackingJs, /metaPixelId/, 'debe usar metaPixelId');
-  assert.match(trackingJs, /googleAdsId/, 'debe usar googleAdsId');
-  assert.match(trackingJs, /googleAdsConversionLabel/, 'debe usar googleAdsConversionLabel');
+  assert.match(trackingJs, /amplitudeApiKey/, 'debe usar amplitudeApiKey');
 });
 
-test('tracking.js carga Pixel + gtag solo tras consent aceptado', () => {
-  // Rama consent === CONSENT_ACCEPTED debe disparar loadMarketingScripts.
+test('tracking.js carga Amplitude solo tras consent aceptado y no carga publicidad', () => {
+  // Rama consent === CONSENT_ACCEPTED debe disparar loadMeasurementScripts.
   assert.match(trackingJs, /consent\s*===\s*CONSENT_ACCEPTED/);
-  assert.match(trackingJs, /loadMarketingScripts/);
-  // Y debe cargar fbevents.js + googletagmanager.
-  assert.match(trackingJs, /connect\.facebook\.net\/en_US\/fbevents\.js/);
-  assert.match(trackingJs, /googletagmanager\.com\/gtag\/js/);
+  assert.match(trackingJs, /loadMeasurementScripts/);
+  assert.doesNotMatch(trackingJs, /facebook|fbq|gtag|googletagmanager|googleAds|metaPixel/i);
 });
 
-test('base.njk incluye tracking.js + consent-banner.njk si hay alguna herramienta de medición', () => {
+test('base.njk incluye tracking.js + consent-banner.njk si hay Amplitude está configurado', () => {
   // El bloque está gated por un {% if ... %}
   assert.match(
     baseNjk,
-    /\{%\s*if\s+env\.amplitudeApiKey\s+or\s+env\.metaPixelId\s+or\s+env\.googleAdsId\s*%\}/,
-    'base.njk debe gatear la inyección por env.amplitudeApiKey OR env.metaPixelId OR env.googleAdsId'
+    /\{%\s*if\s+env\.amplitudeApiKey\s*%\}/,
+    'base.njk debe gatear la inyección por env.amplitudeApiKey'
   );
   assert.match(
     baseNjk,
@@ -106,10 +103,14 @@ test('consent-banner.njk tiene los hooks esperados para tracking.js', () => {
   assert.match(consentNjk, /href="\/legal\/privacidad\/#cookies"/);
 });
 
-test('env.js expone metaPixelId, googleAdsId, googleAdsConversionLabel', () => {
-  assert.match(envJs, /metaPixelId:\s*process\.env\.META_PIXEL_ID/);
-  assert.match(envJs, /googleAdsId:\s*process\.env\.GOOGLE_ADS_ID/);
-  assert.match(envJs, /googleAdsConversionLabel:\s*process\.env\.GOOGLE_ADS_CONVERSION_LABEL/);
+test('env.js expone amplitudeApiKey y ninguna clave de publicidad', () => {
+  assert.match(envJs, /amplitudeApiKey:\s*process\.env\.AMPLITUDE_API_KEY/);
+  assert.doesNotMatch(envJs, /META_|GOOGLE_ADS|metaPixel|googleAds/);
+});
+
+test('el despliegue no pasa secretos de publicidad al build', () => {
+  const deploy = fs.readFileSync(path.join(root, '.github/workflows/deploy.yml'), 'utf8');
+  assert.doesNotMatch(deploy, /META_PIXEL|GOOGLE_ADS/);
 });
 
 /* ============================================================
@@ -174,7 +175,7 @@ function runTracking({ consent, cfg, cookies }) {
   return { window, banner, accept, reject, opener, injected, store, state };
 }
 
-const CFG = { amplitudeApiKey: 'k', metaPixelId: '1', googleAdsId: 'AW-1', googleAdsConversionLabel: 'l' };
+const CFG = { amplitudeApiKey: 'k' };
 
 test('sin elección guardada: se muestra el banner y no se inyecta ningún script', () => {
   const r = runTracking({ consent: null, cfg: CFG });
@@ -182,9 +183,9 @@ test('sin elección guardada: se muestra el banner y no se inyecta ningún scrip
   assert.deepEqual(r.injected, []);
 });
 
-test('solo con Amplitude configurado también se pregunta', () => {
-  const r = runTracking({ consent: null, cfg: { amplitudeApiKey: 'k', metaPixelId: '', googleAdsId: '' } });
-  assert.equal(r.banner.hidden, false);
+test('sin clave de Amplitude no hay nada que consentir: no se muestra el banner', () => {
+  const r = runTracking({ consent: null, cfg: { amplitudeApiKey: '' } });
+  assert.equal(r.banner.hidden, true);
   assert.deepEqual(r.injected, []);
 });
 
@@ -195,18 +196,17 @@ test('rechazado: no se inyecta ningún script ni se vuelve a preguntar', () => {
   assert.equal(r.window.cln.consent.status(), 'rejected');
 });
 
-test('al pulsar «Aceptar» se cargan Amplitude, Pixel y gtag', () => {
+test('al pulsar «Aceptar» se carga Amplitude y nada más', () => {
   const r = runTracking({ consent: null, cfg: CFG });
   r.accept._l.click();
   assert.equal(r.store.get('cln_consent_v1'), 'accepted');
   assert.equal(r.banner.hidden, true);
   assert.ok(r.injected.some((s) => /cdn\.amplitude\.com\/libs\/analytics-browser/.test(s)));
-  assert.ok(r.injected.some((s) => /connect\.facebook\.net/.test(s)));
-  assert.ok(r.injected.some((s) => /googletagmanager\.com/.test(s)));
+  assert.ok(r.injected.every((s) => /cdn\.amplitude\.com/.test(s)), 'solo scripts de Amplitude');
 });
 
 test('«Configurar cookies» reabre el banner y rechazar retira el consentimiento', () => {
-  const r = runTracking({ consent: 'accepted', cfg: CFG, cookies: 'AMP_abc=1; _gcl_au=2; otra=3' });
+  const r = runTracking({ consent: 'accepted', cfg: CFG, cookies: 'AMP_abc=1; otra=3' });
   r.store.set('AMP_unsent_abc', '[]');
   assert.equal(r.banner.hidden, true);
   r.opener._l.click({ preventDefault() {} });
@@ -215,16 +215,15 @@ test('«Configurar cookies» reabre el banner y rechazar retira el consentimient
   assert.equal(r.store.get('cln_consent_v1'), 'rejected');
   assert.equal(r.store.has('AMP_unsent_abc'), false, 'se limpia el almacenamiento de Amplitude');
   assert.ok(r.state.written.some((c) => c.startsWith('AMP_abc=;')), 'se caduca la cookie de Amplitude');
-  assert.ok(r.state.written.some((c) => c.startsWith('_gcl_au=;')), 'se caduca la cookie de Google Ads');
   assert.ok(!r.state.written.some((c) => c.startsWith('otra=')), 'no se tocan cookies ajenas');
   assert.equal(r.state.reloaded, true, 'se recarga para que los scripts dejen de ejecutarse');
 });
 
 test('isMeasurementCookie reconoce las cookies de medición y usa la misma expresión que tracking.js', () => {
-  for (const n of ['AMP_abc123', 'AMP_MKTG_abc', '_fbp', '_fbc', '_gcl_au', '_ga', '_ga_XYZ']) {
+  for (const n of ['AMP_abc123', 'AMP_MKTG_abc']) {
     assert.equal(trackingLogic.isMeasurementCookie(n), true, n);
   }
-  for (const n of ['cln_consent_v1', 'sb-access-token', '_fbpx', '', null]) {
+  for (const n of ['cln_consent_v1', 'sb-access-token', '_fbp', '_ga', '_gcl_au', '', null]) {
     assert.equal(trackingLogic.isMeasurementCookie(n), false, String(n));
   }
   const re = /MEASUREMENT_COOKIE_RE = (\/.*\/);/;
@@ -232,17 +231,17 @@ test('isMeasurementCookie reconoce las cookies de medición y usa la misma expre
   assert.equal(trackingJs.match(re)[1], logicSrc.match(re)[1]);
 });
 
-test('el banner ofrece aceptar y rechazar con el mismo peso visual y nombra a los terceros', () => {
+test('el banner ofrece aceptar y rechazar con el mismo peso visual y nombra a Amplitude, sin publicidad', () => {
   const btns = consentNjk.match(/<button[^>]*>/g);
   assert.equal(btns.length, 2);
   const cls = btns.map((b) => b.match(/class="([^"]*)"/)[1]);
   assert.equal(cls[0], cls[1], 'los dos botones comparten clase');
   assert.match(consentNjk, />Aceptar</);
   assert.match(consentNjk, />Rechazar</);
-  for (const tercero of ['Amplitude', 'Google', 'Meta']) assert.match(consentNjk, new RegExp(tercero));
+  assert.match(consentNjk, /Amplitude/);
+  assert.doesNotMatch(consentNjk, /Google|Meta|anuncios/);
 });
 
-test('el pie enlaza «Configurar cookies» y la reserva envía la elección al backend', () => {
+test('el pie enlaza «Configurar cookies»', () => {
   assert.match(footerNjk, /data-consent-open[^>]*>Configurar cookies</);
-  assert.match(bookingJs, /payload\.consent\s*=\s*window\.cln\.consent\.status\(\)/);
 });
