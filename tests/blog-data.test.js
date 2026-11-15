@@ -17,7 +17,7 @@ const CATEGORIAS = {
 };
 // Segmento de URL heredado: las URLs indexadas no cambian, es independiente de la categoría.
 const URL_CATEGORIAS = new Set(["cristifood", "educacion", "bienestar"]);
-const CAMPOS_REQUERIDOS = ["slug", "title", "description", "category", "categoryLabel", "urlCategory", "date", "image", "imageAlt", "featured"];
+const CAMPOS_REQUERIDOS = ["slug", "title", "description", "category", "categoryLabel", "urlCategory", "date", "image", "imageAlt"];
 
 // ----------------------------------------------------------------
 // Tests globales (forma de la colección)
@@ -76,10 +76,6 @@ for (const p of posts) {
     assert.match(p.date, /^\d{4}-\d{2}-\d{2}$/, `fecha mal formada: ${p.date}`);
     const d = new Date(p.date + "T00:00:00Z");
     assert.ok(!isNaN(d.getTime()), `fecha inválida: ${p.date}`);
-  });
-
-  test(`${id}: featured es boolean`, () => {
-    assert.equal(typeof p.featured, "boolean");
   });
 
   test(`${id}: description en rango SEO (70-200 chars)`, () => {

@@ -85,10 +85,9 @@ test("posts con .article-content tienen ids automáticos en todos sus h2/h3", ()
   assert.ok(postsConHeadings > 0, "ningún post tiene h2/h3 dentro de .article-content: test sin valor");
 });
 
-test("home: picker de reservas montado en #formulario-contacto (fase 3.2)", () => {
-  // Fase 3.2 del plan booking-v3: swap directo del form de Formspree por el picker.
-  // La home debe cargar booking.css + los dos scripts y renderizar el shell.
-  // El form legacy y la referencia a Formspree tienen que haber desaparecido.
+test("home: picker de reservas montado en #formulario-contacto, sin formulario Formspree", () => {
+  // La home carga booking.css + los dos scripts y renderiza el shell del picker.
+  // No lleva formulario de contacto ni referencia a Formspree.
   const file = path.join(SITE, "index.html");
   const html = fs.readFileSync(file, "utf8");
   assert.match(html, /id="formulario-contacto"/, "ancla #formulario-contacto rota");
@@ -125,10 +124,9 @@ test("stub de redirect /revision/ lleva noindex,follow", () => {
   assert.match(html, /name="robots" content="noindex, follow"/, "falta noindex,follow");
 });
 
-test("header tiene items planos: Inicio, Testimonios, Sobre mí, Aprende, Método y CTA", () => {
-  // Tras eliminar el dropdown 'Servicios', el header tiene 5 items planos + CTA.
-  // Método pasa a ser item de primer nivel, las landings SEO quedan accesibles
-  // desde sus propias páginas (picker embotrado) y desde el footer.
+test("header tiene items planos: Inicio, Sobre mí, Blog, Método y CTA", () => {
+  // El header no lleva dropdown: 4 items planos + CTA. Las landings SEO quedan
+  // accesibles desde sus propias páginas (picker embebido) y desde el footer.
   const file = path.join(SITE, "index.html");
   const html = fs.readFileSync(file, "utf8");
   const navMatch = html.match(/<nav class="main-nav"[\s\S]*?<\/nav>/);
@@ -140,6 +138,7 @@ test("header tiene items planos: Inicio, Testimonios, Sobre mí, Aprende, Métod
   assert.match(nav, /<a[^>]+href="\/"[^>]*>/, "debe haber enlace a Inicio");
   assert.match(nav, /<a[^>]+href="\/sobre-mi\/"/, "debe haber enlace a /sobre-mi/");
   assert.match(nav, /<a[^>]+href="\/blog\/"/, "debe haber enlace a /blog/");
+  assert.match(nav, /<a[^>]+href="\/#formulario-contacto"[^>]*>\s*Llamada gratis/, "debe haber CTA a la llamada gratis");
 });
 
 test("ninguna página HTML del site contiene 'asesoría alimentaria' (marca es 'nutricional')", () => {
@@ -299,7 +298,7 @@ test("robots.txt permite los crawlers de búsqueda IA que deciden citas", () => 
   assert.doesNotMatch(robots, /Claude-Web/, "Claude-Web ya no existe; usar Claude-SearchBot/Claude-User");
 });
 
-test("home y landing de pérdida de peso no muestran reseñas con 'nutricionista', 'dietista' ni peso perdido", () => {
+test("home y landing de pérdida de peso: sin cita de reseña bajo el calendario y reseñas sin 'nutricionista', 'dietista' ni peso perdido", () => {
   for (const page of ["index.html", "perdida-peso-sostenible/index.html"]) {
     const html = fs.readFileSync(path.join(SITE, page), "utf8");
     assert.doesNotMatch(html, /form-mini-testimonial/, `${page}: cita de reseña bajo el calendario`);
@@ -325,7 +324,7 @@ test("cada post tiene un único H1, meta description y muestra su categoría", (
     assert.equal((html.match(/<h1[ >]/g) || []).length, 1, `${p.slug}: H1 no único`);
     assert.match(html, /<meta name="description" content="[^"]{70,}"/, `${p.slug}: sin meta description`);
     if (p.categoryLabel) {
-      assert.ok(html.includes(`<span class="blog-category" data-category="${p.category}">${p.categoryLabel}</span>`), `${p.slug}: no muestra su categoría`);
+      assert.ok(html.includes(`<span class="blog-category">${p.categoryLabel}</span>`), `${p.slug}: no muestra su categoría`);
     } else {
       assert.doesNotMatch(html, /<span class="blog-category"/, `${p.slug}: sin categoría no debe mostrar etiqueta`);
     }

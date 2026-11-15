@@ -59,7 +59,7 @@ ogType: article
 <section class="section-cream article-header">
   <div class="container">
     <p class="article-back"><a href="/blog/">← Volver al blog</a></p>
-    {% if categoryLabel %}<span class="blog-category" data-category="{{ category }}">{{ categoryLabel }}</span>{% endif %}
+    {% if categoryLabel %}<span class="blog-category">{{ categoryLabel }}</span>{% endif %}
     <h1>{{ title }}</h1>
     <p class="article-meta">{{ date | fechaEs }} · Cris Lorente</p>
     {% if postImage %}

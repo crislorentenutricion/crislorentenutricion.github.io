@@ -8,8 +8,7 @@
     "urlCategory": "cristifood",
     "date": "2026-11-12",
     "image": "desayuno-tostadas-casi-todos-los-dias.jpg",
-    "imageAlt": "Dos tostadas con tomate y atún junto a un café con leche, vistas desde arriba sobre una mesa de madera",
-    "featured": false
+    "imageAlt": "Dos tostadas con tomate y atún junto a un café con leche, vistas desde arriba sobre una mesa de madera"
   },
   {
     "slug": "bol-atun-huevo-cebolla-pochada",
@@ -20,8 +19,7 @@
     "urlCategory": "cristifood",
     "date": "2026-04-16",
     "image": "bol-atun-huevo-cebolla-pochada.jpg",
-    "imageAlt": "Bol de cerámica con atún desmigado, huevo cocido picado, cebolla pochada, zanahoria rallada y palitos de surimi",
-    "featured": false
+    "imageAlt": "Bol de cerámica con atún desmigado, huevo cocido picado, cebolla pochada, zanahoria rallada y palitos de surimi"
   },
   {
     "slug": "comer-sano-no-es-comer-menos",
@@ -32,8 +30,7 @@
     "urlCategory": "educacion",
     "date": "2025-08-24",
     "image": "comer-sano-no-es-comer-menos.jpg",
-    "imageAlt": "Plato colorido con verduras y proteína representando una alimentación equilibrada",
-    "featured": false
+    "imageAlt": "Plato colorido con verduras y proteína representando una alimentación equilibrada"
   },
   {
     "slug": "como-empezar-a-cuidarte-sin-dietas-ni-obsesiones",
@@ -44,8 +41,7 @@
     "urlCategory": "educacion",
     "date": "2025-06-20",
     "image": "como-empezar-cuidarte.jpg",
-    "imageAlt": "Cristina caminando por un sendero de montaña con su perro",
-    "featured": false
+    "imageAlt": "Cristina caminando por un sendero de montaña con su perro"
   },
   {
     "slug": "como-llegue-hasta-aqui",
@@ -56,8 +52,7 @@
     "urlCategory": "educacion",
     "date": "2026-03-04",
     "image": "como-llegue-hasta-aqui.jpg",
-    "imageAlt": "Cristina bebiendo de una taza con los ojos cerrados, en calma",
-    "featured": true
+    "imageAlt": "Cristina bebiendo de una taza con los ojos cerrados, en calma"
   },
   {
     "slug": "como-organizar-tus-comidas",
@@ -68,8 +63,7 @@
     "urlCategory": "educacion",
     "date": "2025-06-09",
     "image": "como-organizar-comidas.jpg",
-    "imageAlt": "Táper de pollo con verduras preparado en casa, listo para comer en el coche",
-    "featured": false
+    "imageAlt": "Táper de pollo con verduras preparado en casa, listo para comer en el coche"
   },
   {
     "slug": "5-ensaladas-de-verano",
@@ -80,8 +74,7 @@
     "urlCategory": "cristifood",
     "date": "2025-05-21",
     "image": "5-ensaladas-de-verano.jpg",
-    "imageAlt": "Ensalada completa casera con lechuga, tomate, zanahoria, atún y queso fresco",
-    "featured": false
+    "imageAlt": "Ensalada completa casera con lechuga, tomate, zanahoria, atún y queso fresco"
   },
   {
     "slug": "agua-de-frutas",
@@ -92,8 +85,7 @@
     "urlCategory": "cristifood",
     "date": "2025-06-13",
     "image": "agua-de-frutas.jpg",
-    "imageAlt": "Jarra de agua infusionada con rodajas de limón, naranja, frambuesas y menta",
-    "featured": false
+    "imageAlt": "Jarra de agua infusionada con rodajas de limón, naranja, frambuesas y menta"
   },
   {
     "slug": "batido-veraniego",
@@ -104,8 +96,7 @@
     "urlCategory": "cristifood",
     "date": "2025-07-19",
     "image": "batido-veraniego.jpg",
-    "imageAlt": "Vaso de batido cremoso rosa de plátano y frutos rojos con fruta fresca encima",
-    "featured": false
+    "imageAlt": "Vaso de batido cremoso rosa de plátano y frutos rojos con fruta fresca encima"
   },
   {
     "slug": "galletas-de-avena-sin-azucar",
@@ -116,8 +107,7 @@
     "urlCategory": "cristifood",
     "date": "2025-06-13",
     "image": "galletas-de-avena.jpg",
-    "imageAlt": "Galletas de avena caseras doradas sobre bandeja de horno recién sacadas",
-    "featured": false
+    "imageAlt": "Galletas de avena caseras doradas sobre bandeja de horno recién sacadas"
   },
   {
     "slug": "pizza-casera",
@@ -128,8 +118,7 @@
     "urlCategory": "cristifood",
     "date": "2025-11-10",
     "image": "pizza-casera.jpg",
-    "imageAlt": "Pizza casera en bandeja de horno con cebolla pochada, bacon y huevos cuajados",
-    "featured": true
+    "imageAlt": "Pizza casera en bandeja de horno con cebolla pochada, bacon y huevos cuajados"
   },
   {
     "slug": "pollo-al-horno-con-arroz-y-verduras",
@@ -140,8 +129,7 @@
     "urlCategory": "cristifood",
     "date": "2025-06-13",
     "image": "pollo-al-horno.jpg",
-    "imageAlt": "Muslo de pollo al horno con arroz, servido en un plato de casa",
-    "featured": false
+    "imageAlt": "Muslo de pollo al horno con arroz, servido en un plato de casa"
   },
   {
     "slug": "tortilla-de-espinacas-y-cebolla",
@@ -152,8 +140,7 @@
     "urlCategory": "cristifood",
     "date": "2025-06-13",
     "image": "tortilla-espinacas.jpg",
-    "imageAlt": "Tortilla jugosa de espinacas y cebolla cortada por la mitad mostrando el relleno verde",
-    "featured": false
+    "imageAlt": "Tortilla jugosa de espinacas y cebolla cortada por la mitad mostrando el relleno verde"
   },
   {
     "slug": "tortilla-de-patata-con-verduras",
@@ -164,8 +151,7 @@
     "urlCategory": "cristifood",
     "date": "2025-07-20",
     "image": "tortilla-patata.jpg",
-    "imageAlt": "Tortilla de patata española con calabacín, pimiento y berenjena en plato de cerámica",
-    "featured": false
+    "imageAlt": "Tortilla de patata española con calabacín, pimiento y berenjena en plato de cerámica"
   },
   {
     "slug": "tostadas-integrales-con-aguacate-y-huevo",
@@ -176,8 +162,7 @@
     "urlCategory": "cristifood",
     "date": "2025-06-05",
     "image": "tostadas-aguacate-huevo.jpg",
-    "imageAlt": "Tostadas integrales con huevos revueltos cremosos, dados de aguacate y cebollino",
-    "featured": false
+    "imageAlt": "Tostadas integrales con huevos revueltos cremosos, dados de aguacate y cebollino"
   },
   {
     "slug": "bienestar-personal-introduccion",
@@ -188,8 +173,7 @@
     "urlCategory": "bienestar",
     "date": "2025-06-05",
     "image": "bienestar-personal.jpg",
-    "imageAlt": "Camino rural entre olivos en un día despejado",
-    "featured": false
+    "imageAlt": "Camino rural entre olivos en un día despejado"
   },
   {
     "slug": "cuando-acepte-que-tenia-un-cuerpo",
@@ -200,8 +184,7 @@
     "urlCategory": "bienestar",
     "date": "2025-07-07",
     "image": "cuando-acepte-cuerpo.jpg",
-    "imageAlt": "Silueta de mujer mirando al horizonte, reflexionando sobre aceptación corporal",
-    "featured": false
+    "imageAlt": "Silueta de mujer mirando al horizonte, reflexionando sobre aceptación corporal"
   },
   {
     "slug": "elegir-nuestro-destino",
@@ -212,8 +195,7 @@
     "urlCategory": "bienestar",
     "date": "2025-10-12",
     "image": "elegir-nuestro-destino.jpg",
-    "imageAlt": "Sendero al atardecer con el cielo rosado sobre la montaña",
-    "featured": false
+    "imageAlt": "Sendero al atardecer con el cielo rosado sobre la montaña"
   },
   {
     "slug": "granada-de-sueno-a-realidad",
@@ -224,8 +206,7 @@
     "urlCategory": "bienestar",
     "date": "2026-03-11",
     "image": "granada-viaje.jpg",
-    "imageAlt": "Vista del Albaicín de Granada con la Alhambra al fondo durante un viaje personal",
-    "featured": true
+    "imageAlt": "Vista del Albaicín de Granada con la Alhambra al fondo durante un viaje personal"
   },
   {
     "slug": "granada-de-sueno-a-realidad-dia-2",
@@ -236,8 +217,7 @@
     "urlCategory": "bienestar",
     "date": "2026-03-12",
     "image": "granada-dia-2.jpg",
-    "imageAlt": "Río de Granada entre árboles y barandillas con Sierra Nevada nevada al fondo bajo un cielo azul",
-    "featured": false
+    "imageAlt": "Río de Granada entre árboles y barandillas con Sierra Nevada nevada al fondo bajo un cielo azul"
   },
   {
     "slug": "la-importancia-de-dejar-ir",
@@ -248,8 +228,7 @@
     "urlCategory": "bienestar",
     "date": "2025-07-13",
     "image": "la-importancia-dejar-ir.jpg",
-    "imageAlt": "Cristina de espaldas mirando el paisaje desde lo alto de una montaña",
-    "featured": false
+    "imageAlt": "Cristina de espaldas mirando el paisaje desde lo alto de una montaña"
   },
   {
     "slug": "como-comer-sano-sin-hacer-dieta",
@@ -260,8 +239,7 @@
     "urlCategory": "educacion",
     "date": "2026-07-22",
     "image": "como-comer-sano-sin-hacer-dieta.jpg",
-    "imageAlt": "Bol de ensalada fresca y colorida con aguacate, tomate y frutos secos sobre una mesa de madera clara, luz natural cálida",
-    "featured": false
+    "imageAlt": "Bol de ensalada fresca y colorida con aguacate, tomate y frutos secos sobre una mesa de madera clara, luz natural cálida"
   },
   {
     "slug": "recetas-reales-para-el-dia-a-dia",
@@ -272,8 +250,7 @@
     "urlCategory": "cristifood",
     "date": "2026-07-22",
     "image": "recetas-reales-para-el-dia-a-dia.jpg",
-    "imageAlt": "Táper con carne y verduras sobre las rodillas, comiendo dentro del coche",
-    "featured": false
+    "imageAlt": "Táper con carne y verduras sobre las rodillas, comiendo dentro del coche"
   },
   {
     "slug": "relacion-sana-con-la-comida",
@@ -284,8 +261,7 @@
     "urlCategory": "bienestar",
     "date": "2026-09-18",
     "image": "relacion-sana-con-la-comida.jpg",
-    "imageAlt": "Mesa tranquila con un plato de comida casera y una taza, ambiente cálido y relajado sin báscula ni cinta métrica a la vista",
-    "featured": false
+    "imageAlt": "Mesa tranquila con un plato de comida casera y una taza, ambiente cálido y relajado sin báscula ni cinta métrica a la vista"
   },
   {
     "slug": "por-que-fallan-las-dietas-restrictivas",
@@ -296,8 +272,7 @@
     "urlCategory": "bienestar",
     "date": "2026-07-23",
     "image": "por-que-fallan-las-dietas-restrictivas.jpg",
-    "imageAlt": "Mesa de madera clara junto a una ventana con luz cálida, plato con pollo, verduras asadas y pan servido de forma relajada",
-    "featured": false
+    "imageAlt": "Mesa de madera clara junto a una ventana con luz cálida, plato con pollo, verduras asadas y pan servido de forma relajada"
   },
   {
     "slug": "como-leer-una-etiqueta-nutricional",
@@ -308,8 +283,7 @@
     "urlCategory": "educacion",
     "date": "2026-09-18",
     "image": "como-leer-una-etiqueta-nutricional.jpg",
-    "imageAlt": "Compra de la semana en la cinta de caja del supermercado",
-    "featured": false
+    "imageAlt": "Compra de la semana en la cinta de caja del supermercado"
   },
   {
     "slug": "cuantas-comidas-al-dia",
@@ -320,7 +294,6 @@
     "urlCategory": "educacion",
     "date": "2026-10-13",
     "image": "cuantas-comidas-al-dia.jpg",
-    "imageAlt": "Tres platos sobre una mesa de madera clara vistos desde arriba: un bol de yogur con fruta, un plato de pollo con brócoli y quinoa, y manzana con frutos secos",
-    "featured": false
+    "imageAlt": "Tres platos sobre una mesa de madera clara vistos desde arriba: un bol de yogur con fruta, un plato de pollo con brócoli y quinoa, y manzana con frutos secos"
   }
 ]

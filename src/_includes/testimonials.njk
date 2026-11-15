@@ -1,6 +1,6 @@
 {# Macros para componentizar las reseñas Google de CLN.
    Fuente única: src/_data/reviews.js (refrescada por la skill /sincronizar-resenas).
-   Consumido por testimonios.njk (grid completo). #}
+   Consumido por testimonios.njk (todas las reseñas) e index.njk (las de la home). #}
 
 {% macro testimonialCard(review, googleUrl, delay = 1) %}
 <div class="testimonial-card card reveal reveal-delay-{{ delay }}">
