@@ -1,5 +1,5 @@
-// Capa DOM de tracking: consent banner + carga de Amplitude, Meta Pixel y
-// Google Ads (ninguno se carga sin «Aceptar») + disparo de eventos Lead. Duplica funciones mínimas de tracking-logic.js
+// Capa DOM de tracking: consent banner + carga de Amplitude (no se carga sin
+// «Aceptar») + disparo de eventos Lead. Duplica funciones mínimas de tracking-logic.js
 // porque el sitio es estático sin bundler — los tests viven en Node y cargan
 // tracking-logic.js directamente; el navegador carga este fichero vía <script>.
 
@@ -29,21 +29,6 @@
     try { s.setItem(CONSENT_KEY, v); } catch (_) {}
   }
 
-  function normalizeEmail(email) {
-    if (typeof email !== 'string') return '';
-    return email.trim().toLowerCase();
-  }
-
-  function normalizePhone(phone) {
-    if (typeof phone !== 'string') return '';
-    var cleaned = phone.replace(/[^\d+]/g, '');
-    if (!cleaned) return '';
-    if (cleaned.charAt(0) === '+') return cleaned;
-    if (cleaned.length === 9) return '+34' + cleaned;
-    if (cleaned.length === 11 && cleaned.indexOf('34') === 0) return '+' + cleaned;
-    return cleaned;
-  }
-
   function makeEventId() {
     return 'cln_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
   }
@@ -53,12 +38,10 @@
   }
 
   /* ============================================================
-   * Carga dinámica de Amplitude, Pixel y Google Ads (solo con consent aceptado)
+   * Carga dinámica de Amplitude (solo con consent aceptado)
    * ============================================================ */
 
   var amplitudeLoaded = false;
-  var pixelLoaded = false;
-  var googleAdsLoaded = false;
 
   var AMPLITUDE_SDK_URL = 'https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz';
   var AMPLITUDE_REPLAY_URL = 'https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.2-min.js.gz';
@@ -99,56 +82,17 @@
     });
   }
 
-  function loadMetaPixel(pixelId) {
-    if (pixelLoaded || !pixelId) return;
-    safe(function () {
-      // Snippet oficial de Meta, reescrito en forma expandida para legibilidad.
-      var f = window, b = document;
-      if (f.fbq) { pixelLoaded = true; return; }
-      var n = f.fbq = function () {
-        n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-      };
-      if (!f._fbq) f._fbq = n;
-      n.push = n; n.loaded = true; n.version = '2.0'; n.queue = [];
-      var t = b.createElement('script');
-      t.async = true;
-      t.src = 'https://connect.facebook.net/en_US/fbevents.js';
-      var s = b.getElementsByTagName('script')[0];
-      s.parentNode.insertBefore(t, s);
-      window.fbq('init', pixelId);
-      window.fbq('track', 'PageView');
-      pixelLoaded = true;
-    });
-  }
-
-  function loadGoogleAds(googleAdsId) {
-    if (googleAdsLoaded || !googleAdsId) return;
-    safe(function () {
-      var s = document.createElement('script');
-      s.async = true;
-      s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(googleAdsId);
-      document.head.appendChild(s);
-      window.dataLayer = window.dataLayer || [];
-      window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
-      window.gtag('js', new Date());
-      window.gtag('config', googleAdsId, { allow_enhanced_conversions: true });
-      googleAdsLoaded = true;
-    });
-  }
-
-  function loadMarketingScripts(cfg) {
+  function loadMeasurementScripts(cfg) {
     loadAmplitude(cfg.amplitudeApiKey);
-    loadMetaPixel(cfg.metaPixelId);
-    loadGoogleAds(cfg.googleAdsId);
   }
 
   /* ============================================================
    * Consent banner
    * ============================================================ */
 
-  // Cookies y almacenamiento que dejan las herramientas de medición.
+  // Cookies y almacenamiento que deja Amplitude.
   // Misma expresión que isMeasurementCookie en tracking-logic.js.
-  var MEASUREMENT_COOKIE_RE = /^(AMP_|_fbp$|_fbc$|_gcl_|_ga)/;
+  var MEASUREMENT_COOKIE_RE = /^AMP_/;
 
   function clearMeasurementData() {
     safe(function () {
@@ -177,7 +121,7 @@
 
   function acceptConsent(cfg) {
     writeConsent(CONSENT_ACCEPTED);
-    loadMarketingScripts(cfg);
+    loadMeasurementScripts(cfg);
   }
 
   // Rechazar también es retirar: si antes se había aceptado, se borra lo que
@@ -219,12 +163,12 @@
 
   function init() {
     var cfg = window.__CLN_TRACKING__ || {};
-    // Sin ninguna herramienta configurada no hay nada que consentir.
-    if (!cfg.amplitudeApiKey && !cfg.metaPixelId && !cfg.googleAdsId) return;
+    // Sin herramienta configurada no hay nada que consentir.
+    if (!cfg.amplitudeApiKey) return;
     bindBanner(cfg);
     var consent = readConsent();
     if (consent === CONSENT_ACCEPTED) {
-      loadMarketingScripts(cfg);
+      loadMeasurementScripts(cfg);
     } else if (consent === null) {
       var banner = document.getElementById('cln-consent-banner');
       if (banner) banner.hidden = false;
@@ -243,37 +187,6 @@
     });
   }
 
-  function trackPixelLead(leadEvent) {
-    safe(function () {
-      if (typeof window.fbq !== 'function') return;
-      window.fbq('track', 'Lead', {
-        currency: leadEvent.currency || 'EUR',
-        value: leadEvent.value || 0,
-        content_name: leadEvent.plan || ''
-      }, { eventID: leadEvent.eventId || undefined });
-    });
-  }
-
-  function trackGoogleAdsConversion(leadEvent) {
-    safe(function () {
-      var cfg = window.__CLN_TRACKING__ || {};
-      if (!cfg.googleAdsId || !cfg.googleAdsConversionLabel) return;
-      if (typeof window.gtag !== 'function') return;
-      if (leadEvent.email || leadEvent.phone) {
-        window.gtag('set', 'user_data', {
-          email: leadEvent.email || undefined,
-          phone_number: leadEvent.phone || undefined
-        });
-      }
-      window.gtag('event', 'conversion', {
-        send_to: cfg.googleAdsId + '/' + cfg.googleAdsConversionLabel,
-        currency: leadEvent.currency || 'EUR',
-        value: leadEvent.value || 0,
-        transaction_id: leadEvent.eventId || ''
-      });
-    });
-  }
-
   /* ============================================================
    * API pública: window.cln.trackLead(), window.cln.trackInitiateCheckout()
    * ============================================================ */
@@ -281,8 +194,6 @@
   function trackLead(input) {
     input = input || {};
     var ev = {
-      email: normalizeEmail(input.email),
-      phone: normalizePhone(input.phone),
       plan: typeof input.plan === 'string' ? input.plan : '',
       value: typeof input.value === 'number' ? input.value : 0,
       currency: typeof input.currency === 'string' ? input.currency : 'EUR',
@@ -295,21 +206,11 @@
       currency: ev.currency,
       event_id: ev.eventId
     });
-    // Pixel + Google Ads solo con consent aceptado.
-    if (readConsent() === CONSENT_ACCEPTED) {
-      trackPixelLead(ev);
-      trackGoogleAdsConversion(ev);
-    }
     return ev;
   }
 
   function trackInitiateCheckout(plan) {
     trackAmplitude('plan_seleccionado', { plan: plan || '' });
-    if (readConsent() === CONSENT_ACCEPTED && typeof window.fbq === 'function') {
-      safe(function () {
-        window.fbq('track', 'InitiateCheckout', { content_name: plan || '' });
-      });
-    }
   }
 
   window.cln = window.cln || {};

@@ -39,7 +39,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
-// Plan button → pre-fill form + dispara evento "InitiateCheckout" a Pixel + Amplitude
+// Plan button → pre-fill form + dispara el evento "plan_seleccionado" a Amplitude
 document.querySelectorAll('.plan-btn[data-plan]').forEach(function(btn) {
   btn.addEventListener('click', function() {
     var plan = btn.getAttribute('data-plan');
