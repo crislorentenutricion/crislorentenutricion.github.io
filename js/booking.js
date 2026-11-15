@@ -137,6 +137,8 @@
       formPanel: root.querySelector('[data-form-panel]'),
       formSummary: root.querySelector('[data-form-summary]'),
       form: root.querySelector('[data-booking-form]'),
+      progress: root.querySelector('[data-booking-progress]'),
+      progressText: root.querySelector('[data-booking-progress-text]'),
       formBack: root.querySelector('[data-form-back]'),
       confirmPanel: root.querySelector('[data-confirm-panel]'),
       confirmSummary: root.querySelector('[data-confirm-summary]'),
@@ -453,12 +455,14 @@
         if (state.submitting) return;
         if (!state.selectedIso || !state.selectedSlot) return;
         state.submitting = true;
+        // Antes de bloquear los campos: un campo deshabilitado no entra en FormData.
+        const data = new FormData(els.form);
         const submitBtn = els.form.querySelector('button[type="submit"]');
         const prevLabel = submitBtn ? submitBtn.textContent : '';
-        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Reservando…'; }
+        if (submitBtn) submitBtn.textContent = 'Reservando…';
+        startSubmitProgress();
         track('booking_submitted', { date: state.selectedIso, start: state.selectedSlot.start });
         try {
-          const data = new FormData(els.form);
           const payload = buildBookingPayload(data, state.selectedIso, state.selectedSlot);
           // Elección del banner de cookies: el backend solo avisa a Meta si es 'accepted'.
           try { payload.consent = window.cln.consent.status(); } catch (_) { payload.consent = null; }
@@ -508,9 +512,40 @@
           track('booking_failed', { reason: 'network_error' });
         } finally {
           state.submitting = false;
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = prevLabel; }
+          stopSubmitProgress();
+          if (submitBtn) submitBtn.textContent = prevLabel;
         }
       });
+    }
+
+    // Feedback mientras el backend confirma: campos bloqueados, barra de
+    // progreso y un texto que avanza por fases (bookingProgressMessage).
+    let progressTimer = null;
+    function setFormLocked(locked) {
+      els.form.setAttribute('aria-busy', locked ? 'true' : 'false');
+      els.form.querySelectorAll('input, textarea, button').forEach(function (el) {
+        el.disabled = locked;
+      });
+    }
+    function startSubmitProgress() {
+      setFormLocked(true);
+      if (!els.progress) return;
+      const startedAt = Date.now();
+      const update = function () {
+        const msg = bookingProgressMessage(Date.now() - startedAt);
+        if (els.progressText.textContent !== msg) els.progressText.textContent = msg;
+      };
+      update();
+      els.progress.hidden = false;
+      progressTimer = setInterval(update, 500);
+    }
+    function stopSubmitProgress() {
+      setFormLocked(false);
+      if (progressTimer) { clearInterval(progressTimer); progressTimer = null; }
+      if (els.progress) {
+        els.progress.hidden = true;
+        els.progressText.textContent = '';
+      }
     }
 
     function renderConfirmed(formDataObj, result) {
