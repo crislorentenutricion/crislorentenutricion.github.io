@@ -235,6 +235,8 @@
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeModal();
   });
+  // Focus trap: la guía de medidas abierta atrapa Tab/Shift+Tab (focus-trap.js).
+  window.MsFocusTrap.autoTrapModals('.onb-modal-backdrop');
 
   function updateConditionals() {
     document.querySelectorAll('.onb-conditional').forEach(function(el) {

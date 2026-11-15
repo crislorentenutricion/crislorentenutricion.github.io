@@ -7,7 +7,7 @@ const {
   tipDelDia, buildCalendarCells, getRevisionCtaState,
   detectPlatform, detectInAppBrowser, nombreAppEmbebida,
   esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora,
-  slugifyItem, compraStorageKey, displayCat,
+  slugifyItem, compraStorageKey,
   mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones,
   validateLoginForm, validateOtpCode, resolveInitialLogin,
   shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, activeTabForView, shouldCelebrarMilestone,
@@ -17,6 +17,9 @@ const {
   buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal,
   hydrateDashboard
 } = window.MsLogic;
+
+// Focus trap: cada modal abierto (sin `hidden`) atrapa Tab/Shift+Tab (focus-trap.js).
+window.MsFocusTrap.autoTrapModals('[role="dialog"][aria-modal="true"]');
 
 const SUPABASE_URL = window.__MS_ENV__.supabaseUrl;
 const SUPABASE_KEY = window.__MS_ENV__.supabasePublishableKey;
@@ -794,7 +797,7 @@ function renderCompra(menu) {
     ).join('');
     return '<details class="ms-compra-cat" open>'
       + '<summary class="ms-compra-cat-head">'
-      + '<span class="ms-compra-cat-name">' + escapeHtml(displayCat(c.cat)) + '</span>'
+      + '<span class="ms-compra-cat-name">' + escapeHtml(c.cat) + '</span>'
       + '<span class="' + countCls + '" data-cat-count>' + c.comprados + '/' + c.total + '</span>'
       + '<span class="ms-compra-cat-chevron" aria-hidden="true">▾</span>'
       + '</summary>'
