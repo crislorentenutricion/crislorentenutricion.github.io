@@ -139,8 +139,17 @@ function makeEventId(now, rand) {
   return 'cln_' + n + '_' + r.toString(36).slice(2, 8);
 }
 
+// Cookies que dejan las herramientas de medición (Amplitude, Meta, Google Ads).
+// Se borran al retirar el consentimiento. Misma expresión que en tracking.js.
+var MEASUREMENT_COOKIE_RE = /^(AMP_|_fbp$|_fbc$|_gcl_|_ga)/;
+
+function isMeasurementCookie(name) {
+  return typeof name === 'string' && MEASUREMENT_COOKIE_RE.test(name);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    isMeasurementCookie: isMeasurementCookie,
     CONSENT_KEY: CONSENT_KEY,
     CONSENT_ACCEPTED: CONSENT_ACCEPTED,
     CONSENT_REJECTED: CONSENT_REJECTED,

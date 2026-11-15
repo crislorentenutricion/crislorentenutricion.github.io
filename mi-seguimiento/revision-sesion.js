@@ -1,5 +1,5 @@
 // Cliente Supabase + auth-guard. Mismo patrón que /mi-seguimiento/empezar/.
-// La revisión mensual vive dentro del perímetro auth del PWA: sin sesión la
+// La revisión quincenal vive dentro del perímetro auth del PWA: sin sesión la
 // paciente vuelve al login de Mi Seguimiento.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 

@@ -41,8 +41,6 @@
   <meta name="content-language" content="es">
   <link rel="alternate" type="application/atom+xml" title="Cris Lorente Nutrición — Blog" href="https://www.crislorentenutricion.com/feed.xml">
   <link rel="author" href="/humans.txt">
-  <link rel="preconnect" href="https://cdn.amplitude.com" crossorigin>
-  <link rel="dns-prefetch" href="https://api2.amplitude.com">
   <link rel="preload" href="/fonts/jost-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/style.css">
   <!-- Favicons -->
@@ -580,6 +578,7 @@
           <li><a href="/legal/privacidad/">Política de privacidad</a></li>
           <li><a href="/legal/aviso-legal/">Aviso legal</a></li>
           <li><a href="/legal/condiciones/">Condiciones de uso</a></li>
+          <li><a href="/legal/privacidad/#cookies" data-consent-open>Configurar cookies</a></li>
         </ul>
       </nav>
       <div class="footer-social">
@@ -606,28 +605,10 @@
   </a>
   <script src="/js/main.js" defer></script>
   
-  <script src="https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz" defer></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      window.amplitude.init('537e51949e243f051bdbcf440b4d42f9', { autocapture: true });
-    });
-    // Session Replay (95 KB) tras load: no compite con el primer pintado en móvil.
-    window.addEventListener('load', function() {
-      var s = document.createElement('script');
-      s.src = 'https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.2-min.js.gz';
-      s.onload = function() {
-        window.amplitude.add(window.sessionReplay.plugin({
-          sampleRate: 0.1,
-          privacyConfig: { defaultMaskLevel: 'medium', maskSelector: ['input', 'textarea', 'select', '.form-sensitive'] }
-        }));
-      };
-      document.head.appendChild(s);
-    });
-  </script>
-  
   
   <script>
     window.__CLN_TRACKING__ = {
+      amplitudeApiKey: '537e51949e243f051bdbcf440b4d42f9',
       metaPixelId: '',
       googleAdsId: 'AW-18111290293',
       googleAdsConversionLabel: 'I4hjCIi286EcELW3kbxD'
@@ -637,13 +618,14 @@
   <div class="cln-consent-banner__inner">
     <p class="cln-consent-banner__text">
       <strong id="cln-consent-title">Cookies y privacidad</strong><br>
-      Uso cookies técnicas propias para que la web funcione y analítica anónima para mejorarla.
-      Para medir la efectividad de mis anuncios también uso cookies de terceros (Meta, Google) — solo si las aceptas.
-      Más info en la <a href="/legal/privacidad/">política de privacidad</a>.
+      La web funciona sin cookies. Si aceptas, uso cookies de terceros para ver cómo se usa la web (Amplitude)
+      y para medir el resultado de mis anuncios (Google, Meta). Si las rechazas, no se carga nada de eso.
+      Puedes cambiar de opinión cuando quieras en «Configurar cookies», al pie de la página.
+      Más info en la <a href="/legal/privacidad/#cookies">política de privacidad</a>.
     </p>
     <div class="cln-consent-banner__actions">
-      <button type="button" class="cln-consent-banner__btn cln-consent-banner__btn--primary" data-consent-accept>Aceptar todas</button>
-      <button type="button" class="cln-consent-banner__btn cln-consent-banner__btn--secondary" data-consent-reject>Solo las técnicas</button>
+      <button type="button" class="cln-consent-banner__btn" data-consent-accept>Aceptar</button>
+      <button type="button" class="cln-consent-banner__btn" data-consent-reject>Rechazar</button>
     </div>
   </div>
 </div>

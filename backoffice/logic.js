@@ -385,7 +385,7 @@
   // aunque haya un evento residual en Calendar/Supabase).
   //
   // Mezcla dos fuentes:
-  //   - `sesiones` (seguimiento mensual de pacientes activas) → tipo='seguimiento'
+  //   - `sesiones` (seguimiento quincenal de pacientes activas) → tipo='seguimiento'
   //   - `valoraciones` con status='confirmed' (primera consulta de prospectos)
   //     → tipo='valoracion'
   //
