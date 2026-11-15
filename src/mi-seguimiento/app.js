@@ -7,7 +7,7 @@ const {
   tipDelDia, buildCalendarCells, getRevisionCtaState,
   detectPlatform, detectInAppBrowser, nombreAppEmbebida,
   esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora,
-  slugifyItem, compraStorageKey, displayCat,
+  slugifyItem, compraStorageKey,
   mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones,
   validateLoginForm, validateOtpCode, resolveInitialLogin,
   shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, activeTabForView, shouldCelebrarMilestone,
@@ -794,7 +794,7 @@ function renderCompra(menu) {
     ).join('');
     return '<details class="ms-compra-cat" open>'
       + '<summary class="ms-compra-cat-head">'
-      + '<span class="ms-compra-cat-name">' + escapeHtml(displayCat(c.cat)) + '</span>'
+      + '<span class="ms-compra-cat-name">' + escapeHtml(c.cat) + '</span>'
       + '<span class="' + countCls + '" data-cat-count>' + c.comprados + '/' + c.total + '</span>'
       + '<span class="ms-compra-cat-chevron" aria-hidden="true">▾</span>'
       + '</summary>'
