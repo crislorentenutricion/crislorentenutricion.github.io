@@ -870,7 +870,26 @@
     };
   }
 
-  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, activeTabForView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, esAyerEditable, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard };
+  // Grupos de casillas de la anamnesis (empezar.njk). Se guardan siempre como
+  // array en pacientes.anamnesis, también con una sola casilla marcada; sin
+  // ninguna marcada se guarda [] (la clave existe y dice "no marcó nada").
+  const CAMPOS_CASILLAS = ['alergias', 'condiciones', 'electrodomesticos', 'no_gustan'];
+
+  // Convierte las parejas [name, value] de un FormData en el objeto de la
+  // anamnesis: un name repetido pasa a array, los CAMPOS_CASILLAS son siempre
+  // array y el resto de campos conserva su valor (string).
+  function entriesToFormData(entries) {
+    const data = {};
+    for (const [k, v] of entries) {
+      data[k] = data[k] !== undefined ? [].concat(data[k], v) : v;
+    }
+    for (const campo of CAMPOS_CASILLAS) {
+      data[campo] = data[campo] === undefined ? [] : [].concat(data[campo]);
+    }
+    return data;
+  }
+
+  const api = { toISO, dayOfYear, MILESTONES, detectarMilestone, countStreak, detectarRachaRota, TIPS, tipDelDia, buildCalendarCells, getRevisionCtaState, formatFechaRelativa, visibleMeals, mealValueToOptions, opcionStorageKey, mealChoiceKey, applyMealChoice, menuTieneOpciones, detectPlatform, detectInAppBrowser, nombreAppEmbebida, esErrorTransitorio, primerNombre, primerNombreDesdeEmail, saludoPorHora, slugifyItem, compraStorageKey, totalItemsCompra, displayCat, normalizeEmail, validateLoginForm, validateOtpCode, resolveInitialLogin, shouldShowInstallHint, shouldRehydrateOnVisibility, resolveInitialView, activeTabForView, shouldCelebrarMilestone, WEEKDAY_KEYS_JSON, esAyerEditable, computeDayView, computeTodayView, buildCompraModel, computeCompraMeta, withCompraToggle, applyCheckinOptimistic, revertCheckin, buildRevisionCtaCopy, shouldMostrarRevisionModal, shouldMostrarMenuNuevoModal, hydrateDashboard, CAMPOS_CASILLAS, entriesToFormData };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else if (typeof window !== 'undefined') window.MsLogic = api;
 })();

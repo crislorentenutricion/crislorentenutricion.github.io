@@ -94,19 +94,12 @@
     return valid;
   }
 
-  // Recoge el form completo como objeto (único o array si el name se repite)
+  // Recoge el form completo como objeto. Los grupos de casillas (alergias,
+  // condiciones, electrodomesticos, no_gustan) salen siempre como array;
+  // la lógica vive en MsLogic.entriesToFormData (logic.js).
   function collectFormData() {
-    const data = {};
-    if (!form) return data;
-    const fd = new FormData(form);
-    for (const [k, v] of fd.entries()) {
-      if (data[k] !== undefined) {
-        data[k] = [].concat(data[k], v);
-      } else {
-        data[k] = v;
-      }
-    }
-    return data;
+    if (!form) return {};
+    return window.MsLogic.entriesToFormData(new FormData(form).entries());
   }
 
   // Persistencia en localStorage (draft)

@@ -115,6 +115,32 @@ test("BoPaciente.renderAnamnesis: arrays se formatean con comas y humanización"
   assert.match(html, /Gluten, Frutos secos/);
 });
 
+test("BoPaciente.renderAnamnesis: grupos de casillas con array de un elemento se muestran", () => {
+  const html = BoPaciente.renderAnamnesis({
+    alergias: ["lactosa"],
+    condiciones: ["sop"],
+    electrodomesticos: ["horno"],
+    no_gustan: ["verduras:Berenjena"]
+  });
+  assert.match(html, /Alergias \/ intolerancias/);
+  assert.match(html, />Lactosa</);
+  assert.match(html, />Sop</);
+  assert.match(html, />Horno</);
+  assert.match(html, /Verduras:Berenjena/);
+});
+
+test("BoPaciente.renderAnamnesis: un string suelto (fila guardada con string) se muestra igual", () => {
+  const html = BoPaciente.renderAnamnesis({
+    alergias: "lactosa",
+    condiciones: "sop",
+    electrodomesticos: "horno"
+  });
+  assert.match(html, /Alergias \/ intolerancias/);
+  assert.match(html, />Lactosa</);
+  assert.match(html, />Sop</);
+  assert.match(html, />Horno</);
+});
+
 test("BoPaciente.renderAnamnesis: texto largo NO se trunca en HTML", () => {
   const largo = "a".repeat(200);
   const html = BoPaciente.renderAnamnesis({ motivacion: largo });

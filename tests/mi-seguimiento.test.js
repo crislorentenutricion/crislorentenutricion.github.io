@@ -51,6 +51,8 @@ const {
   mealChoiceKey,
   applyMealChoice,
   menuTieneOpciones,
+  CAMPOS_CASILLAS,
+  entriesToFormData,
 } = require("../src/mi-seguimiento/logic.js");
 
 // ------------------------------- toISO -------------------------------
@@ -1819,4 +1821,61 @@ test("esAyerEditable: cruce de mes (1 jun mañana, ayer 31 may) → true", () =>
 test("esAyerEditable: cruce de año (1 ene 2026 mañana, ayer 31 dic 2025) → true", () => {
   const now = new Date(2026, 0, 1, 8, 0);
   assert.equal(esAyerEditable("2025-12-31", now), true);
+});
+
+// ------------------- entriesToFormData (anamnesis) -------------------
+// El formulario de /mi-seguimiento/empezar/ guarda en pacientes.anamnesis
+// los cuatro grupos de casillas siempre como array, también con una sola
+// marcada: los lectores (sync_anamnesis_notas.py, ficha del backoffice) no
+// deben recibir un string suelto donde esperan una lista.
+
+test("CAMPOS_CASILLAS lista los cuatro grupos de casillas de la anamnesis", () => {
+  assert.deepEqual([...CAMPOS_CASILLAS].sort(), ["alergias", "condiciones", "electrodomesticos", "no_gustan"]);
+});
+
+test("entriesToFormData: una sola casilla marcada sigue siendo array", () => {
+  const data = entriesToFormData([["alergias", "lactosa"]]);
+  assert.deepEqual(data.alergias, ["lactosa"]);
+});
+
+test("entriesToFormData: varias casillas del mismo grupo van en un array", () => {
+  const data = entriesToFormData([
+    ["alergias", "gluten"], ["nombre", "Ana"], ["alergias", "huevo"], ["alergias", "marisco"],
+  ]);
+  assert.deepEqual(data.alergias, ["gluten", "huevo", "marisco"]);
+});
+
+test("entriesToFormData: grupo sin casillas marcadas da [] en los cuatro grupos", () => {
+  const data = entriesToFormData([["nombre", "Ana"]]);
+  for (const g of ["alergias", "condiciones", "electrodomesticos", "no_gustan"]) {
+    assert.deepEqual(data[g], [], g + " debe ser []");
+  }
+});
+
+test("entriesToFormData: los cuatro grupos con un solo valor son array", () => {
+  const data = entriesToFormData([
+    ["alergias", "huevo"], ["condiciones", "sop"],
+    ["electrodomesticos", "horno"], ["no_gustan", "verduras:Berenjena"],
+  ]);
+  assert.deepEqual(data.alergias, ["huevo"]);
+  assert.deepEqual(data.condiciones, ["sop"]);
+  assert.deepEqual(data.electrodomesticos, ["horno"]);
+  assert.deepEqual(data.no_gustan, ["verduras:Berenjena"]);
+});
+
+test("entriesToFormData: un campo de texto normal sigue siendo string", () => {
+  const data = entriesToFormData([["nombre", "Ana"], ["peso", "60.5"], ["objetivo", "perder_grasa"]]);
+  assert.equal(data.nombre, "Ana");
+  assert.equal(data.peso, "60.5");
+  assert.equal(data.objetivo, "perder_grasa");
+});
+
+test("entriesToFormData: un campo no casilla repetido se agrupa en array", () => {
+  const data = entriesToFormData([["otro", "a"], ["otro", "b"]]);
+  assert.deepEqual(data.otro, ["a", "b"]);
+});
+
+test("entriesToFormData: acepta cualquier iterable (p. ej. FormData.entries())", () => {
+  const m = new Map([["alergias", "huevo"]]);
+  assert.deepEqual(entriesToFormData(m.entries()).alergias, ["huevo"]);
 });

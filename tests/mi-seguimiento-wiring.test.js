@@ -168,3 +168,10 @@ test('revision-sesion.js saca el primer nombre con MsLogic.primerNombre (sin cop
   assert.match(js, /MsLogic\.primerNombre\(/);
   assert.doesNotMatch(js, /charAt\(0\)\.toUpperCase\(\)/, 'capitalización duplicada: usar MsLogic.primerNombre');
 });
+
+test('empezar: collectFormData usa MsLogic.entriesToFormData y empezar.njk carga logic.js antes de empezar.js', () => {
+  const js = read(MS_DIR, 'empezar.js');
+  const njk = read(MS_DIR, 'empezar.njk');
+  assert.match(js, /MsLogic\.entriesToFormData\(/);
+  assert.match(njk, /<script src="\/mi-seguimiento\/logic\.js"><\/script>[\s\S]*<script src="\/mi-seguimiento\/empezar\.js"><\/script>/);
+});
