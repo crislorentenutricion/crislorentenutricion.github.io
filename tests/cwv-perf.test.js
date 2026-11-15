@@ -71,17 +71,21 @@ test('replay: el plugin de Session Replay no se carga con <script src> en el HTM
   assert.doesNotMatch(baseNjk, /<script[^>]+src="[^"]*plugin-session-replay[^"]*"/);
 });
 
+const trackingJs = fs.readFileSync(path.join(root, 'src/js/tracking.js'), 'utf8');
+
 test('replay: el plugin se inyecta tras el evento load y se añade a amplitude', () => {
-  assert.match(baseNjk, /addEventListener\('load'[\s\S]*plugin-session-replay-browser-[\d.]+-min\.js\.gz[\s\S]*amplitude\.add\(/);
+  assert.match(trackingJs, /plugin-session-replay-browser-[\d.]+-min\.js\.gz/);
+  assert.match(trackingJs, /afterWindowLoad\(function \(\) \{\s*loadScript\(AMPLITUDE_REPLAY_URL[\s\S]*amplitude\.add\(/);
+  assert.match(trackingJs, /function afterWindowLoad[\s\S]*addEventListener\('load'/);
 });
 
 test('replay: se conservan sampleRate 0.1 y el enmascarado de inputs', () => {
-  assert.match(baseNjk, /sampleRate:\s*0\.1/);
-  assert.match(baseNjk, /maskSelector:\s*\['input', 'textarea', 'select', '\.form-sensitive'\]/);
+  assert.match(trackingJs, /sampleRate:\s*0\.1/);
+  assert.match(trackingJs, /maskSelector:\s*\['input', 'textarea', 'select', '\.form-sensitive'\]/);
 });
 
-test('amplitude: init con autocapture sigue en DOMContentLoaded', () => {
-  assert.match(baseNjk, /DOMContentLoaded[\s\S]*amplitude\.init\('\{\{ env\.amplitudeApiKey \}\}', \{ autocapture: true \}\)/);
+test('amplitude: init con autocapture al cargar el SDK', () => {
+  assert.match(trackingJs, /amplitude\.init\(apiKey, \{ autocapture: true \}\)/);
 });
 
 // C) Fuentes autoalojadas: sin conexiones a Google Fonts en el camino crítico.

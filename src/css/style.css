@@ -1106,19 +1106,11 @@ h4 { font-size: 20px; line-height: 1.3; font-weight: 400; }
   border-radius: 0;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-.cln-consent-banner__btn--primary {
   background: var(--verde-oscuro);
   color: var(--papel);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
-.cln-consent-banner__btn--primary:hover { background: var(--verde-hover); }
-.cln-consent-banner__btn--secondary {
-  background: transparent;
-  color: var(--texto);
-  border-color: var(--verde-medio);
-}
-.cln-consent-banner__btn--secondary:hover { color: var(--verde-hover); }
+.cln-consent-banner__btn:hover { background: var(--verde-hover); }
 @media (max-width: 500px) {
   .cln-consent-banner { left: 8px; right: 8px; bottom: 8px; padding: 14px 16px; }
   .cln-consent-banner__actions { flex-direction: column-reverse; }

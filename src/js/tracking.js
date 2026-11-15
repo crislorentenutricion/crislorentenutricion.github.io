@@ -1,5 +1,5 @@
-// Capa DOM de tracking: consent banner + disparo de eventos Lead a Meta Pixel,
-// Google Ads y Amplitude. Duplica funciones mínimas de tracking-logic.js
+// Capa DOM de tracking: consent banner + carga de Amplitude, Meta Pixel y
+// Google Ads (ninguno se carga sin «Aceptar») + disparo de eventos Lead. Duplica funciones mínimas de tracking-logic.js
 // porque el sitio es estático sin bundler — los tests viven en Node y cargan
 // tracking-logic.js directamente; el navegador carga este fichero vía <script>.
 
@@ -53,11 +53,51 @@
   }
 
   /* ============================================================
-   * Carga dinámica de Pixel y Google Ads (solo con consent aceptado)
+   * Carga dinámica de Amplitude, Pixel y Google Ads (solo con consent aceptado)
    * ============================================================ */
 
+  var amplitudeLoaded = false;
   var pixelLoaded = false;
   var googleAdsLoaded = false;
+
+  var AMPLITUDE_SDK_URL = 'https://cdn.amplitude.com/libs/analytics-browser-2.11.1-min.js.gz';
+  var AMPLITUDE_REPLAY_URL = 'https://cdn.amplitude.com/libs/plugin-session-replay-browser-1.8.2-min.js.gz';
+
+  function loadScript(src, onload) {
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = src;
+    if (onload) s.onload = onload;
+    document.head.appendChild(s);
+  }
+
+  function afterWindowLoad(fn) {
+    if (document.readyState === 'complete') fn();
+    else window.addEventListener('load', fn);
+  }
+
+  function loadAmplitude(apiKey) {
+    if (amplitudeLoaded || !apiKey) return;
+    amplitudeLoaded = true;
+    safe(function () {
+      loadScript(AMPLITUDE_SDK_URL, function () {
+        safe(function () {
+          window.amplitude.init(apiKey, { autocapture: true });
+        });
+        // Session Replay (95 KB) tras load: no compite con el primer pintado en móvil.
+        afterWindowLoad(function () {
+          loadScript(AMPLITUDE_REPLAY_URL, function () {
+            safe(function () {
+              window.amplitude.add(window.sessionReplay.plugin({
+                sampleRate: 0.1,
+                privacyConfig: { defaultMaskLevel: 'medium', maskSelector: ['input', 'textarea', 'select', '.form-sensitive'] }
+              }));
+            });
+          });
+        });
+      });
+    });
+  }
 
   function loadMetaPixel(pixelId) {
     if (pixelLoaded || !pixelId) return;
@@ -97,6 +137,7 @@
   }
 
   function loadMarketingScripts(cfg) {
+    loadAmplitude(cfg.amplitudeApiKey);
     loadMetaPixel(cfg.metaPixelId);
     loadGoogleAds(cfg.googleAdsId);
   }
@@ -105,31 +146,88 @@
    * Consent banner
    * ============================================================ */
 
-  function showBanner(cfg) {
+  // Cookies y almacenamiento que dejan las herramientas de medición.
+  // Misma expresión que isMeasurementCookie en tracking-logic.js.
+  var MEASUREMENT_COOKIE_RE = /^(AMP_|_fbp$|_fbc$|_gcl_|_ga)/;
+
+  function clearMeasurementData() {
+    safe(function () {
+      var host = window.location.hostname;
+      var parts = host.split('.');
+      var domains = ['', host, '.' + (parts.length > 2 ? parts.slice(-2).join('.') : host)];
+      document.cookie.split(';').forEach(function (pair) {
+        var name = pair.split('=')[0].trim();
+        if (!MEASUREMENT_COOKIE_RE.test(name)) return;
+        domains.forEach(function (d) {
+          document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : '');
+        });
+      });
+    });
+    safe(function () {
+      var s = getStorage();
+      if (!s) return;
+      var keys = [];
+      for (var i = 0; i < s.length; i++) {
+        var k = s.key(i);
+        if (k && k.indexOf('AMP_') === 0) keys.push(k);
+      }
+      keys.forEach(function (k) { s.removeItem(k); });
+    });
+  }
+
+  function acceptConsent(cfg) {
+    writeConsent(CONSENT_ACCEPTED);
+    loadMarketingScripts(cfg);
+  }
+
+  // Rechazar también es retirar: si antes se había aceptado, se borra lo que
+  // dejaron las herramientas y se recarga para que dejen de ejecutarse.
+  function rejectConsent() {
+    var wasAccepted = readConsent() === CONSENT_ACCEPTED;
+    writeConsent(CONSENT_REJECTED);
+    if (!wasAccepted) return;
+    safe(function () {
+      if (window.amplitude && typeof window.amplitude.setOptOut === 'function') window.amplitude.setOptOut(true);
+    });
+    clearMeasurementData();
+    safe(function () { window.location.reload(); });
+  }
+
+  function bindBanner(cfg) {
     var banner = document.getElementById('cln-consent-banner');
     if (!banner) return;
-    banner.hidden = false;
     var accept = banner.querySelector('[data-consent-accept]');
     var reject = banner.querySelector('[data-consent-reject]');
     if (accept) accept.addEventListener('click', function () {
-      writeConsent(CONSENT_ACCEPTED);
       banner.hidden = true;
-      loadMarketingScripts(cfg);
+      acceptConsent(cfg);
     });
     if (reject) reject.addEventListener('click', function () {
-      writeConsent(CONSENT_REJECTED);
       banner.hidden = true;
+      rejectConsent();
     });
+    // «Configurar cookies» (pie de página): reabre el banner para cambiar la elección.
+    var openers = document.querySelectorAll('[data-consent-open]');
+    for (var i = 0; i < openers.length; i++) {
+      openers[i].addEventListener('click', function (e) {
+        e.preventDefault();
+        banner.hidden = false;
+        if (accept) accept.focus();
+      });
+    }
   }
 
   function init() {
     var cfg = window.__CLN_TRACKING__ || {};
+    // Sin ninguna herramienta configurada no hay nada que consentir.
+    if (!cfg.amplitudeApiKey && !cfg.metaPixelId && !cfg.googleAdsId) return;
+    bindBanner(cfg);
     var consent = readConsent();
     if (consent === CONSENT_ACCEPTED) {
       loadMarketingScripts(cfg);
     } else if (consent === null) {
-      // Si no hay IDs de marketing configurados, no hay razón para mostrar el banner.
-      if (cfg.metaPixelId || cfg.googleAdsId) showBanner(cfg);
+      var banner = document.getElementById('cln-consent-banner');
+      if (banner) banner.hidden = false;
     }
   }
 
@@ -190,7 +288,7 @@
       currency: typeof input.currency === 'string' ? input.currency : 'EUR',
       eventId: (typeof input.eventId === 'string' && input.eventId) ? input.eventId : makeEventId()
     };
-    // Amplitude SIEMPRE (primera-party, ya enmascarado por privacyConfig en base.njk).
+    // Amplitude: no-op si no se ha cargado (solo se carga con consent aceptado).
     trackAmplitude('valoracion_solicitada', {
       plan: ev.plan,
       value: ev.value,
@@ -219,12 +317,8 @@
   window.cln.trackInitiateCheckout = trackInitiateCheckout;
   window.cln.consent = {
     status: readConsent,
-    accept: function () {
-      writeConsent(CONSENT_ACCEPTED);
-      var cfg = window.__CLN_TRACKING__ || {};
-      loadMarketingScripts(cfg);
-    },
-    reject: function () { writeConsent(CONSENT_REJECTED); }
+    accept: function () { acceptConsent(window.__CLN_TRACKING__ || {}); },
+    reject: rejectConsent
   };
 
   if (document.readyState === 'loading') {

@@ -460,6 +460,8 @@
         try {
           const data = new FormData(els.form);
           const payload = buildBookingPayload(data, state.selectedIso, state.selectedSlot);
+          // Elección del banner de cookies: el backend solo avisa a Meta si es 'accepted'.
+          try { payload.consent = window.cln.consent.status(); } catch (_) { payload.consent = null; }
           const result = await postBooking(payload);
           if (result.ok) {
             // Una reserva ocupa un slot: el cache local del mes deja de ser
