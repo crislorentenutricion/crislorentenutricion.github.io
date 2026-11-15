@@ -473,7 +473,7 @@ function renderAprender() {
   renderMapaCurso(e);
 }
 
-// -------- próxima sesión + estado revisión mensual --------
+// -------- próxima sesión + estado revisión quincenal --------
 // Lee la próxima sesión futura del paciente (tabla `sesiones`) y, si existe,
 // comprueba si ya hay revisión (tabla `revisiones`) vinculada. Devuelve un
 // objeto plano para pasarlo a getRevisionCtaState (lógica pura en logic.js).

@@ -1454,14 +1454,14 @@ test("buildRevisionCtaCopy: fuera de la ventana → hidden:true sin copy", () =>
   assert.equal(r.hidden, true);
 });
 
-test("buildRevisionCtaCopy: estado urgent → copy con fecha relativa + action 'Enviar revisión mensual'", () => {
+test("buildRevisionCtaCopy: estado urgent → copy con fecha relativa + action 'Enviar revisión quincenal'", () => {
   const now = new Date(2026, 4, 4, 10, 0);
   const proxima = { id: 's1', fecha: new Date(2026, 4, 5, 14, 0) }; // mañana
   const r = buildRevisionCtaCopy({ proximaSesion: proxima, revisionEnviada: false, now });
   assert.equal(r.state, 'urgent');
   assert.equal(r.hidden, false);
   assert.match(r.msg, /mañana a las 14:00/);
-  assert.equal(r.action.label, 'Enviar revisión mensual');
+  assert.equal(r.action.label, 'Enviar revisión quincenal');
   assert.equal(r.action.href, '/mi-seguimiento/revision/');
 });
 

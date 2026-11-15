@@ -65,7 +65,7 @@
   }
 
   // Badge a la derecha del nombre/hora: identifica si la cita es seguimiento
-  // mensual de paciente activa (verde) o primera consulta de prospecto (azul).
+  // quincenal de paciente activa (verde) o primera consulta de prospecto (azul).
   // Pareja de feedback_copy_etiquetas_ui.md: el texto explícito hace el
   // trabajo, el color es solo refuerzo.
   function _renderBadgeTipo(tipo) {

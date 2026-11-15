@@ -108,7 +108,7 @@
   }
 
   // -----------------------------------------------------------------
-  // Recordatorio de revisión mensual
+  // Recordatorio de revisión quincenal
   // -----------------------------------------------------------------
 
   // Estados del CTA "Enviar revisión" en la home de /mi-seguimiento/.
@@ -714,7 +714,7 @@
   }
 
   // -----------------------------------------------------------------
-  // Revisión mensual: copy del CTA + modal one-shot
+  // Revisión quincenal: copy del CTA + modal one-shot
   // -----------------------------------------------------------------
 
   // Copy del CTA de revisión según el estado actual. Separa la decisión
@@ -734,7 +734,7 @@
       return {
         state, hidden: false,
         msg: 'Tienes sesión ' + (when || 'pronto') + '. Dedica 5 minutos a la revisión antes.',
-        action: { label: 'Enviar revisión mensual', href: '/mi-seguimiento/revision/' }
+        action: { label: 'Enviar revisión quincenal', href: '/mi-seguimiento/revision/' }
       };
     }
     // done
@@ -762,7 +762,7 @@
     const seen = Array.isArray(o.seenModalIds) ? o.seenModalIds : [];
     if (seen.indexOf(proxima.id) !== -1) return { show: false };
     const when = formatFechaRelativa(new Date(proxima.fecha), now);
-    const body = 'Tenemos sesión ' + when + '. Antes de vernos, cuéntame en 5 minutos cómo ha ido este mes — los platos que han funcionado, los que no, tu energía, tu ánimo. Así afino bien tu próximo menú.';
+    const body = 'Tenemos sesión ' + when + '. Antes de vernos, cuéntame en 5 minutos cómo han ido estas semanas — los platos que han funcionado, los que no, tu energía, tu ánimo. Así afino bien tu próximo menú.';
     return { show: true, lsKey: 'rev-modal-shown:' + proxima.id, body };
   }
 

@@ -1,4 +1,4 @@
-// /mi-seguimiento/revision/ — asistente por pasos de la revisión mensual. El
+// /mi-seguimiento/revision/ — asistente por pasos de la revisión quincenal. El
 // envío lo hace window.onbSubmitRevision, definido en revision-sesion.js.
 (function() {
   const steps = document.querySelectorAll('.onb-step');
