@@ -18,6 +18,9 @@ const {
   hydrateDashboard
 } = window.MsLogic;
 
+// Focus trap: cada modal abierto (sin `hidden`) atrapa Tab/Shift+Tab (focus-trap.js).
+window.MsFocusTrap.autoTrapModals('[role="dialog"][aria-modal="true"]');
+
 const SUPABASE_URL = window.__MS_ENV__.supabaseUrl;
 const SUPABASE_KEY = window.__MS_ENV__.supabasePublishableKey;
 

@@ -175,3 +175,59 @@ test('empezar: collectFormData usa MsLogic.entriesToFormData y empezar.njk carga
   assert.match(js, /MsLogic\.entriesToFormData\(/);
   assert.match(njk, /<script src="\/mi-seguimiento\/logic\.js"><\/script>[\s\S]*<script src="\/mi-seguimiento\/empezar\.js"><\/script>/);
 });
+
+// ---- Focus trap en todos los modales (aria-modal="true") ----
+// Cada página con modales carga focus-trap.js antes de su script y llama a
+// MsFocusTrap.autoTrapModals con un selector que cubre sus modales.
+
+const SRC_DIR = path.join(__dirname, '..', 'src');
+
+function ficherosSrc(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
+    const p = path.join(dir, d.name);
+    return d.isDirectory() ? ficherosSrc(p) : [p];
+  });
+}
+
+const TRAPS = {
+  'index.njk': { js: 'app.js', selector: '[role="dialog"][aria-modal="true"]' },
+  'empezar.njk': { js: 'empezar.js', selector: '.onb-modal-backdrop' },
+  'revision.njk': { js: 'revision.js', selector: '.onb-modal-backdrop' }
+};
+
+for (const [pagina, { js, selector }] of Object.entries(TRAPS)) {
+  test(`${js} llama a MsFocusTrap.autoTrapModals('${selector}')`, () => {
+    const src = read(MS_DIR, js);
+    const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    assert.match(src, new RegExp('MsFocusTrap\\.autoTrapModals\\(\\s*\'' + esc + '\'\\s*\\)'));
+  });
+
+  test(`${pagina} carga focus-trap.js antes de ${js}`, () => {
+    const njk = read(MS_DIR, pagina);
+    const i = njk.indexOf('src="/mi-seguimiento/focus-trap.js"');
+    const j = njk.indexOf(`src="/mi-seguimiento/${js}"`);
+    assert.ok(i !== -1, `${pagina} no carga focus-trap.js`);
+    assert.ok(j !== -1 && i < j, `focus-trap.js debe cargarse antes que ${js}`);
+  });
+}
+
+test('todo role="dialog" aria-modal="true" de src/ está cubierto por un selector de trap', () => {
+  const sinTrap = [];
+  for (const f of ficherosSrc(SRC_DIR).filter((p) => p.endsWith('.njk'))) {
+    const txt = fs.readFileSync(f, 'utf8');
+    const modales = txt.match(/<[^>]*role="dialog"[^>]*aria-modal="true"[^>]*>/g) || [];
+    if (!modales.length) continue;
+    const rel = path.relative(SRC_DIR, f);
+    // index.njk: el selector de app.js casa con el propio elemento.
+    if (rel === path.join('mi-seguimiento', 'index.njk')) continue;
+    // Plantilla de la guía de medidas: el backdrop `.onb-modal-backdrop` lleva el hidden.
+    if (rel === path.join('_includes', 'onb-modal-medidas.njk') && /class="onb-modal-backdrop"[^>]*hidden/.test(txt)) continue;
+    sinTrap.push(rel);
+  }
+  assert.deepEqual(sinTrap, [], 'modales sin trap de foco: ' + sinTrap.join(', '));
+});
+
+test('el banner de consentimiento (no modal) queda fuera del trap', () => {
+  const banner = read(SRC_DIR, '_includes', 'consent-banner.njk');
+  assert.doesNotMatch(banner, /aria-modal/);
+});
