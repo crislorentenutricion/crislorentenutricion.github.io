@@ -274,6 +274,17 @@ function bookingErrorMessage(reason) {
   }
 }
 
+// Texto de progreso mientras se confirma la reserva. El backend comprueba el
+// hueco, crea el evento con Meet y manda la invitación: tarda varios segundos
+// y, tras un rato sin visitas, más. Cada fase cambia el texto para que se vea
+// que sigue avanzando.
+function bookingProgressMessage(elapsedMs) {
+  if (elapsedMs < 3000) return 'Comprobando que el hueco sigue libre…';
+  if (elapsedMs < 7000) return 'Creando tu videollamada de Google Meet…';
+  if (elapsedMs < 12000) return 'Enviándote la invitación por correo…';
+  return 'Está tardando un poco más de lo normal. No cierres esta página…';
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     parseTime,
@@ -294,6 +305,7 @@ if (typeof module !== 'undefined' && module.exports) {
     buildBookingPayload,
     parseBookingResponse,
     bookingErrorMessage,
+    bookingProgressMessage,
     addDaysToIso,
     findFocusableIso,
     firstFocusableIsoInMonth

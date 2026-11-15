@@ -373,3 +373,15 @@ test('firstFocusableIsoInMonth: null si no hay ninguno', () => {
   const first = booking.firstFocusableIsoInMonth(avail, '2026-04-15', 2026, 3);
   assert.equal(first, null);
 });
+
+test('bookingProgressMessage avanza por fases según el tiempo de espera', () => {
+  const m = booking.bookingProgressMessage;
+  assert.match(m(0), /hueco/i);
+  assert.match(m(2999), /hueco/i);
+  assert.match(m(3000), /Meet/);
+  assert.match(m(7000), /invitación/i);
+  assert.match(m(12000), /no cierres/i);
+  assert.match(m(60000), /no cierres/i);
+  // Cada fase es un texto distinto: el lector de pantalla anuncia el cambio.
+  assert.equal(new Set([0, 3000, 7000, 12000].map(m)).size, 4);
+});
